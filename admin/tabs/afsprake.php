@@ -113,18 +113,18 @@ try {
         <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= T('Afsprake', 'Appointments') ?></h2>
+    <h2 class="admin-section-title"><?= t('appointments') ?></h2>
   </div>
 
   <?php if (!empty($myAppointments)): ?>
   <div class="afsprake-pending-section">
-    <h3 class="afsprake-subtitle"><?= T('Hangende Versoeke', 'Pending Requests') ?></h3>
+    <h3 class="afsprake-subtitle"><?= t('pending_requests') ?></h3>
     <div class="afsprake-list">
       <?php foreach ($myAppointments as $appt): ?>
       <div class="afsprake-card">
         <div class="afsprake-header">
           <strong><?= esc($appt['requester_name'] . ' ' . $appt['requester_surname']) ?></strong>
-          <?= T('wil \'n afspraak maak', 'wants to make an appointment') ?>
+          <?= t('wants_appointment') ?>
         </div>
         <div class="afsprake-details">
           <div class="afsprake-detail-item">
@@ -152,17 +152,17 @@ try {
           <?php endif; ?>
           <?php if ($appt['notes']): ?>
           <div class="afsprake-notes">
-            <strong><?= T('Notas', 'Notes') ?>:</strong>
+            <strong><?= t('notes') ?>:</strong>
             <p><?= esc($appt['notes']) ?></p>
           </div>
           <?php endif; ?>
         </div>
         <div class="afsprake-actions">
           <button class="afsprake-btn afsprake-btn-confirm confirm-appointment" data-id="<?= (int)$appt['id'] ?>">
-            ✓ <?= T('Bevestig', 'Confirm') ?>
+            ✓ <?= t('confirm') ?>
           </button>
           <button class="afsprake-btn afsprake-btn-cancel cancel-appointment" data-id="<?= (int)$appt['id'] ?>">
-            ✗ <?= T('Kanselleer', 'Cancel') ?>
+            ✗ <?= t('cancel') ?>
           </button>
         </div>
       </div>
@@ -172,7 +172,7 @@ try {
   <?php endif; ?>
 
   <div class="afsprake-search-wrapper">
-    <input type="text" id="afsprakeSearch" class="afsprake-search-input" placeholder="<?= T('Soek ampte...', 'Search offices...') ?>">
+    <input type="text" id="afsprakeSearch" class="afsprake-search-input" placeholder="<?= t('search_offices') ?>">
     <svg class="afsprake-search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
       <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
@@ -180,7 +180,7 @@ try {
   </div>
 
   <?php if (empty($groupedAmptes)): ?>
-  <p class="admin-muted"><?= T('Geen ampte gevind nie.', 'No office holders found.') ?></p>
+  <p class="admin-muted"><?= t('no_office_holders') ?></p>
   <?php else: ?>
   <div class="afsprake-container">
     <?php foreach ($groupedAmptes as $ampId => $ampList): ?>
@@ -199,18 +199,18 @@ try {
             <p class="afsprake-congregation"><?= esc($amp['congregation'] ?? '') ?></p>
           </div>
           <div class="afsprake-person-actions">
-            <a href="/profile/?u=<?= (int)$amp['id'] ?>" class="afsprake-btn-icon" title="<?= T('Profiel', 'Profile') ?>">
+            <a href="/profile/?u=<?= (int)$amp['id'] ?>" class="afsprake-btn-icon" title="<?= t('profile') ?>">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
               </svg>
             </a>
-            <a href="/calendar/view.php?u=<?= (int)$amp['id'] ?>" class="afsprake-btn-icon afsprake-btn-calendar" title="<?= T('Kyk Kalender', 'View Calendar') ?>">
+            <a href="/calendar/view.php?u=<?= (int)$amp['id'] ?>" class="afsprake-btn-icon afsprake-btn-calendar" title="<?= t('view_calendar') ?>">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                 <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
               </svg>
             </a>
-            <button type="button" class="afsprake-btn-icon afsprake-btn-appointment btn-make-appointment" data-id="<?= (int)$amp['id'] ?>" data-name="<?= esc($amp['name'] . ' ' . $amp['surname']) ?>" title="<?= T('Maak Afspraak', 'Make Appointment') ?>">
+            <button type="button" class="afsprake-btn-icon afsprake-btn-appointment btn-make-appointment" data-id="<?= (int)$amp['id'] ?>" data-name="<?= esc($amp['name'] . ' ' . $amp['surname']) ?>" title="<?= t('make_appointment') ?>">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/>
               </svg>
@@ -229,42 +229,42 @@ try {
   <div class="afsprake-modal-overlay"></div>
   <div class="afsprake-modal-content">
     <div class="afsprake-modal-header">
-      <h3><?= T('Maak Afspraak', 'Make Appointment') ?></h3>
+      <h3><?= t('make_appointment') ?></h3>
       <button type="button" class="afsprake-modal-close" onclick="closeAppointmentModal()">&times;</button>
     </div>
     <div class="afsprake-modal-body">
       <form id="appointmentForm">
         <input type="hidden" id="appointmentTargetId" name="target_user_id">
-        
+
         <div class="afsprake-form-group">
-          <label><?= T('Met', 'With') ?>:</label>
+          <label><?= t('with') ?>:</label>
           <div id="appointmentTargetName" class="afsprake-display-field"></div>
         </div>
-        
+
         <div class="afsprake-form-row">
           <div class="afsprake-form-group">
-            <label for="appointmentDate"><?= T('Datum', 'Date') ?></label>
+            <label for="appointmentDate"><?= t('date') ?></label>
             <input type="date" id="appointmentDate" name="appointment_date" class="afsprake-form-control" required>
           </div>
           <div class="afsprake-form-group">
-            <label for="appointmentTime"><?= T('Tyd', 'Time') ?></label>
+            <label for="appointmentTime"><?= t('time') ?></label>
             <input type="time" id="appointmentTime" name="appointment_time" class="afsprake-form-control" required>
           </div>
         </div>
-        
+
         <div class="afsprake-form-group">
-          <label for="appointmentLocation"><?= T('Plek', 'Location') ?></label>
+          <label for="appointmentLocation"><?= t('location') ?></label>
           <input type="text" id="appointmentLocation" name="location" class="afsprake-form-control">
         </div>
-        
+
         <div class="afsprake-form-group">
-          <label for="appointmentNotes"><?= T('Notas', 'Notes') ?></label>
+          <label for="appointmentNotes"><?= t('notes') ?></label>
           <textarea id="appointmentNotes" name="notes" class="afsprake-form-textarea" rows="4"></textarea>
         </div>
-        
+
         <div class="afsprake-modal-actions">
-          <button type="button" class="afsprake-btn afsprake-btn-secondary" onclick="closeAppointmentModal()"><?= T('Kanselleer', 'Cancel') ?></button>
-          <button type="submit" class="afsprake-btn afsprake-btn-primary"><?= T('Stuur Versoek', 'Send Request') ?></button>
+          <button type="button" class="afsprake-btn afsprake-btn-secondary" onclick="closeAppointmentModal()"><?= t('cancel') ?></button>
+          <button type="submit" class="afsprake-btn afsprake-btn-primary"><?= t('send_request') ?></button>
         </div>
       </form>
     </div>

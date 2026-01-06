@@ -941,6 +941,129 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Hlela imfundiso yenyanga yedolobha lakho nebandla.',
         'xh' => 'Hlela imfundiso yenyanga yedolophu kunye nebandla lakho.',
         'pt' => 'Edite o ensino mensal para sua cidade e congregação.'
+    ],
+
+    // ==================== AMPTES TAB ====================
+    'no_access' => [
+        'af' => 'Jy het nie toegang tot hierdie blad nie.',
+        'en' => 'You do not have access to this page.',
+        'zu' => 'Awunayo imvume yokungena kuleli khasi.',
+        'xh' => 'Awunayo imvume yokungena kweli phepha.',
+        'pt' => 'Você não tem acesso a esta página.'
+    ],
+    'search_offices' => [
+        'af' => 'Soek ampte...',
+        'en' => 'Search offices...',
+        'zu' => 'Sesha izikhundla...',
+        'xh' => 'Khangela izikhundla...',
+        'pt' => 'Pesquisar cargos...'
+    ],
+    'no_office_holders' => [
+        'af' => 'Geen ampte gevind nie.',
+        'en' => 'No office holders found.',
+        'zu' => 'Akukho zikhundla ezitholiwe.',
+        'xh' => 'Akukho zikhundla zifunyenweyo.',
+        'pt' => 'Nenhum titular de cargo encontrado.'
+    ],
+    'view_calendar' => [
+        'af' => 'Kyk Kalender',
+        'en' => 'View Calendar',
+        'zu' => 'Buka Ikhalenda',
+        'xh' => 'Jonga Ikhalenda',
+        'pt' => 'Ver Calendário'
+    ],
+    'change_role' => [
+        'af' => 'Verander Amp',
+        'en' => 'Change Role',
+        'zu' => 'Shintsha Isikhundla',
+        'xh' => 'Tshintsha Isikhundla',
+        'pt' => 'Alterar Cargo'
+    ],
+    'user' => [
+        'af' => 'Gebruiker',
+        'en' => 'User',
+        'zu' => 'Umsebenzisi',
+        'xh' => 'Umsebenzisi',
+        'pt' => 'Usuário'
+    ],
+    'new_role' => [
+        'af' => 'Nuwe Amp',
+        'en' => 'New Role',
+        'zu' => 'Isikhundla Esisha',
+        'xh' => 'Isikhundla Esitsha',
+        'pt' => 'Novo Cargo'
+    ],
+    'select_option' => [
+        'af' => 'Kies...',
+        'en' => 'Select...',
+        'zu' => 'Khetha...',
+        'xh' => 'Khetha...',
+        'pt' => 'Selecionar...'
+    ],
+
+    // ==================== AFSPRAKE TAB ====================
+    'pending_requests' => [
+        'af' => 'Hangende Versoeke',
+        'en' => 'Pending Requests',
+        'zu' => 'Izicelo Ezilindile',
+        'xh' => 'Izicelo Ezilindileyo',
+        'pt' => 'Solicitações Pendentes'
+    ],
+    'wants_appointment' => [
+        'af' => 'wil \'n afspraak maak',
+        'en' => 'wants to make an appointment',
+        'zu' => 'ufuna ukwenza isivumelwano',
+        'xh' => 'ufuna ukwenza isivumelwano',
+        'pt' => 'quer marcar um compromisso'
+    ],
+    'notes' => [
+        'af' => 'Notas',
+        'en' => 'Notes',
+        'zu' => 'Amanothi',
+        'xh' => 'Amanqaku',
+        'pt' => 'Notas'
+    ],
+    'make_appointment' => [
+        'af' => 'Maak Afspraak',
+        'en' => 'Make Appointment',
+        'zu' => 'Yenza Isivumelwano',
+        'xh' => 'Yenza Isivumelwano',
+        'pt' => 'Marcar Compromisso'
+    ],
+    'with' => [
+        'af' => 'Met',
+        'en' => 'With',
+        'zu' => 'No',
+        'xh' => 'No',
+        'pt' => 'Com'
+    ],
+    'date' => [
+        'af' => 'Datum',
+        'en' => 'Date',
+        'zu' => 'Usuku',
+        'xh' => 'Umhla',
+        'pt' => 'Data'
+    ],
+    'time' => [
+        'af' => 'Tyd',
+        'en' => 'Time',
+        'zu' => 'Isikhathi',
+        'xh' => 'Ixesha',
+        'pt' => 'Hora'
+    ],
+    'location' => [
+        'af' => 'Plek',
+        'en' => 'Location',
+        'zu' => 'Indawo',
+        'xh' => 'Indawo',
+        'pt' => 'Local'
+    ],
+    'send_request' => [
+        'af' => 'Stuur Versoek',
+        'en' => 'Send Request',
+        'zu' => 'Thumela Isicelo',
+        'xh' => 'Thumela Isicelo',
+        'pt' => 'Enviar Solicitação'
     ]
 ]);
 
