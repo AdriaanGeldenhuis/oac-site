@@ -767,6 +767,85 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Iphrofayela Yami',
         'xh' => 'Iprofayile Yam',
         'pt' => 'Meu Perfil'
+    ],
+
+    // ==================== ACCOUNTS & SETTINGS ====================
+    'accounts_billing' => [
+        'af' => 'Rekeninge & Betalings',
+        'en' => 'Accounts & Billing',
+        'zu' => 'Ama-akhawunti & Ukukhokhela',
+        'xh' => 'Iiakhawunti & Ukuhlawula',
+        'pt' => 'Contas e Faturamento'
+    ],
+    'no_billing_history' => [
+        'af' => 'Geen betalingsgeskiedenis beskikbaar nie.',
+        'en' => 'No billing history available.',
+        'zu' => 'Akukho mlando wokukhokha otholakalayo.',
+        'xh' => 'Akukho mbali yokuhlawula efumanekayo.',
+        'pt' => 'Nenhum histórico de faturamento disponível.'
+    ],
+    'current_password' => [
+        'af' => 'Huidige Wagwoord',
+        'en' => 'Current Password',
+        'zu' => 'Iphasiwedi Yamanje',
+        'xh' => 'Iphasiwedi Yangoku',
+        'pt' => 'Senha Atual'
+    ],
+    'new_password' => [
+        'af' => 'Nuwe Wagwoord',
+        'en' => 'New Password',
+        'zu' => 'Iphasiwedi Entsha',
+        'xh' => 'Iphasiwedi Entsha',
+        'pt' => 'Nova Senha'
+    ],
+    'confirm_password' => [
+        'af' => 'Bevestig Wagwoord',
+        'en' => 'Confirm Password',
+        'zu' => 'Qinisekisa Iphasiwedi',
+        'xh' => 'Qinisekisa Iphasiwedi',
+        'pt' => 'Confirmar Senha'
+    ],
+    'change_password' => [
+        'af' => 'Verander Wagwoord',
+        'en' => 'Change Password',
+        'zu' => 'Shintsha Iphasiwedi',
+        'xh' => 'Tshintsha Iphasiwedi',
+        'pt' => 'Alterar Senha'
+    ],
+    'passwords_no_match' => [
+        'af' => 'Wagwoorde stem nie ooreen nie',
+        'en' => 'Passwords do not match',
+        'zu' => 'Amaphasiwedi awafani',
+        'xh' => 'Iiphasiwedi azifani',
+        'pt' => 'As senhas não correspondem'
+    ],
+    'password_min_length' => [
+        'af' => 'Wagwoord moet minstens 6 karakters wees',
+        'en' => 'Password must be at least 6 characters',
+        'zu' => 'Iphasiwedi kufanele ibe okungenani izinhlamvu ezingu-6',
+        'xh' => 'Iphasiwedi kufuneka ibe ubuncinane iinimizi ezintandathu',
+        'pt' => 'A senha deve ter pelo menos 6 caracteres'
+    ],
+    'password_changed' => [
+        'af' => 'Wagwoord suksesvol verander',
+        'en' => 'Password changed successfully',
+        'zu' => 'Iphasiwedi ishintshwe ngempumelelo',
+        'xh' => 'Iphasiwedi itshintshwe ngempumelelo',
+        'pt' => 'Senha alterada com sucesso'
+    ],
+    'password_change_failed' => [
+        'af' => 'Kon nie wagwoord verander nie',
+        'en' => 'Could not change password',
+        'zu' => 'Ayikwazanga ukushintsha iphasiwedi',
+        'xh' => 'Ayikwazanga ukutshintsha iphasiwedi',
+        'pt' => 'Não foi possível alterar a senha'
+    ],
+    'network_error' => [
+        'af' => 'Netwerkfout',
+        'en' => 'Network error',
+        'zu' => 'Iphutha lenethiwekhi',
+        'xh' => 'Impazamo yenethiwekhi',
+        'pt' => 'Erro de rede'
     ]
 ]);
 

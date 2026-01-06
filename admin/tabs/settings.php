@@ -6,29 +6,29 @@
         <path d="M12 1v6m0 6v6M23 12h-6m-6 0H1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= T('Instellings', 'Settings') ?></h2>
+    <h2 class="admin-section-title"><?= t('settings') ?></h2>
   </div>
 
   <form id="password-form" class="admin-form">
     <div class="admin-form-row">
       <div class="admin-field">
-        <label for="current_password" class="admin-label"><?= T('Huidige Wagwoord', 'Current Password') ?></label>
+        <label for="current_password" class="admin-label"><?= t('current_password') ?></label>
         <input type="password" id="current_password" name="current_password" required class="admin-input">
       </div>
     </div>
     <div class="admin-form-row">
       <div class="admin-field">
-        <label for="new_password" class="admin-label"><?= T('Nuwe Wagwoord', 'New Password') ?></label>
+        <label for="new_password" class="admin-label"><?= t('new_password') ?></label>
         <input type="password" id="new_password" name="new_password" required class="admin-input">
       </div>
       <div class="admin-field">
-        <label for="confirm_password" class="admin-label"><?= T('Bevestig Wagwoord', 'Confirm Password') ?></label>
+        <label for="confirm_password" class="admin-label"><?= t('confirm_password') ?></label>
         <input type="password" id="confirm_password" name="confirm_password" required class="admin-input">
       </div>
     </div>
     <div class="admin-right">
       <button type="submit" class="admin-btn admin-btn-primary">
-        <?= T('Verander Wagwoord', 'Change Password') ?>
+        <?= t('change_password') ?>
       </button>
     </div>
   </form>
@@ -87,21 +87,21 @@
 <script>
 document.getElementById('password-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  
+
   const current = document.getElementById('current_password').value;
   const newPw = document.getElementById('new_password').value;
   const confirm = document.getElementById('confirm_password').value;
-  
+
   if (newPw !== confirm) {
-    alert('<?= T('Wagwoorde stem nie ooreen nie', 'Passwords do not match') ?>');
+    alert('<?= t('passwords_no_match') ?>');
     return;
   }
-  
+
   if (newPw.length < 6) {
-    alert('<?= T('Wagwoord moet minstens 6 karakters wees', 'Password must be at least 6 characters') ?>');
+    alert('<?= t('password_min_length') ?>');
     return;
   }
-  
+
   try {
     const response = await fetch('/api/users/change_password.php', {
       method: 'POST',
@@ -111,16 +111,16 @@ document.getElementById('password-form').addEventListener('submit', async functi
         new_password: newPw
       })
     });
-    
+
     const data = await response.json();
     if (data.success) {
-      alert('<?= T('Wagwoord suksesvol verander', 'Password changed successfully') ?>');
+      alert('<?= t('password_changed') ?>');
       this.reset();
     } else {
-      alert(data.error || '<?= T('Kon nie wagwoord verander nie', 'Could not change password') ?>');
+      alert(data.error || '<?= t('password_change_failed') ?>');
     }
   } catch (error) {
-    alert('<?= T('Netwerkfout', 'Network error') ?>: ' + error.message);
+    alert('<?= t('network_error') ?>: ' + error.message);
   }
 });
 </script>
