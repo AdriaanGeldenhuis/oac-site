@@ -2,19 +2,6 @@
 (function() {
   'use strict';
 
-  // Service Worker Registration (optional - fails silently if not available)
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-        .then(function(reg) {
-          console.log('SW registered successfully');
-        })
-        .catch(function() {
-          // Service worker not available - this is fine, site works without it
-        });
-    });
-  }
-
   // Smooth scroll for hero scroll indicator
   const scrollIndicator = document.querySelector('.wc-hero-scroll');
   if (scrollIndicator) {
