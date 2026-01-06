@@ -20,7 +20,6 @@
   const todayBtn = document.getElementById('todayBtn');
 
   function init() {
-    console.log('Calendar view init for user:', window.TARGET_USER_ID);
     attachListeners();
     loadEvents();
     renderView();
@@ -90,10 +89,9 @@
     try {
       const res = await fetch(`/calendar/api/view_user_calendar.php?user_id=${window.TARGET_USER_ID}`);
       events = await res.json();
-      console.log('Events loaded:', events.length);
       renderView();
     } catch (error) {
-      console.error('Load events error:', error);
+      // Silent fail
     }
   }
 
@@ -299,8 +297,6 @@
   }
 
   function requestAppointment(date, time) {
-    console.log('Request appointment:', {date, time, targetUser: window.TARGET_USER_ID});
-    
     // Redirect to admin afsprake tab with parameters
     const url = `/admin/index.php?tab=afsprake&make_appointment=1&target_user=${window.TARGET_USER_ID}&date=${date}${time ? '&time=' + time : ''}`;
     window.location.href = url;
@@ -332,7 +328,6 @@
         showToast('Export failed', 'error');
       }
     } catch (error) {
-      console.error('Export PDF error:', error);
       showToast('Network error', 'error');
     }
   };
@@ -341,13 +336,13 @@
   window.exportToExcel = async function() {
     try {
       showToast('Generating Excel...', 'info');
-      
+
       const response = await fetch('/calendar/api/export_excel.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `user_id=${window.TARGET_USER_ID}&view=${currentView}&date=${formatDate(currentDate)}`
       });
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -363,7 +358,6 @@
         showToast('Export failed', 'error');
       }
     } catch (error) {
-      console.error('Export Excel error:', error);
       showToast('Network error', 'error');
     }
   };
