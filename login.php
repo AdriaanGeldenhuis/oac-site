@@ -5,38 +5,39 @@ require_once __DIR__ . '/security/config.php';
 require_once __DIR__ . '/security/session.php';
 require_once __DIR__ . '/security/csrf.php';
 require_once __DIR__ . '/security/rate_limit.php';
+require_once __DIR__ . '/includes/languages.php';
 
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     if (!rate_limit_check('login:' . $ip, 5, 15)) {
-        $errors[] = 'Te veel pogings. Probeer oor 15 minute weer.';
+        $errors[] = 'Too many attempts. Please try again in 15 minutes.';
     }
-    
+
     if (!csrf_verify($_POST['csrf'] ?? '')) {
-        $errors[] = 'Ongeldige sessie. Probeer weer.';
+        $errors[] = 'Invalid session. Please try again.';
     }
 
     $email = trim($_POST['email'] ?? '');
     $pass = $_POST['password'] ?? '';
 
     if (empty($email) || empty($pass)) {
-        $errors[] = 'E-pos en wagwoord is nodig.';
+        $errors[] = 'Email and password are required.';
     }
 
     if (!$errors) {
         $stmt = $pdo->prepare(
-            "SELECT id, email, password_hash, name, surname, status 
+            "SELECT id, email, password_hash, name, surname, status, language
              FROM users WHERE email = ? LIMIT 1"
         );
         $stmt->execute([$email]);
         $u = $stmt->fetch();
 
         if (!$u || !password_verify($pass, $u['password_hash'] ?? '')) {
-            $errors[] = 'Verkeerde besonderhede.';
+            $errors[] = 'Invalid credentials.';
         } elseif ($u['status'] !== 'approved') {
-            $errors[] = 'Rekening nie goedgekeur nie.';
+            $errors[] = 'Account not yet approved.';
         } else {
             // ✅ SUCCESS - Login
             rate_limit_reset('login:' . $ip);
@@ -48,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = (int)$u['id'];
             $_SESSION['user_email'] = $u['email'];
             $_SESSION['user_name'] = $u['name'];
+            $_SESSION['language'] = validate_language($u['language'] ?? 'en');
             $_SESSION['created_at'] = time();
             $_SESSION['last_regenerate'] = time();
             $_SESSION['last_activity'] = time();
@@ -109,11 +111,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $csrf = csrf_token();
 ?>
 <!doctype html>
-<html lang="af">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aanmelding</title>
+<title>Login</title>
 <link rel="stylesheet" href="/assets/css/login.css">
 </head>
 <body>
@@ -135,20 +137,20 @@ $csrf = csrf_token();
   <form method="post" autocomplete="off">
     <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
     
-    <label>E-pos<br><input type="email" name="email" required></label>
-    
+    <label>Email<br><input type="email" name="email" required></label>
+
     <div class="password-wrapper">
       <label>
-        Wagwoord
+        Password
         <span class="toggle-pw" onclick="togglePw('pw')">👁️</span>
       </label>
       <input type="password" id="pw" name="password" required>
     </div>
-    
-    <button type="submit">Meld aan</button>
+
+    <button type="submit">Sign in</button>
   </form>
-  
-  <p><a href="/register.php">Skep rekening</a> | <a href="/forgot.php">Vergeet wagwoord?</a></p>
+
+  <p><a href="/register.php">Create account</a> | <a href="/forgot.php">Forgot password?</a></p>
 </div>
 
 <script>

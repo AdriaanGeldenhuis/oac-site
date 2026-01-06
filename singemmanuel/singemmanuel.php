@@ -1,19 +1,16 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../security/auth_gate.php';
+require_once __DIR__ . '/../includes/languages.php';
 
 // Language detection
-$lang = 'af';
-if (isset($_GET['lang']) && in_array(strtolower($_GET['lang']), ['af','en'], true)) {
-    $lang = strtolower($_GET['lang']);
+$lang = $_SESSION['language'] ?? 'af';
+if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
+    $lang = $_GET['lang'];
     $_SESSION['language'] = $lang;
-} else {
-    $pref = $_SESSION['language'] ?? null;
-    if ($pref === 'en' || $pref === 'af') {
-        $lang = $pref;
-    }
 }
 
+// T() for backwards compat: AF gets Afrikaans, all others get English
 function T($af, $en) {
     global $lang;
     return $lang === 'af' ? $af : $en;

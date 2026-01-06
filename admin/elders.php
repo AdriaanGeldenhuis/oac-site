@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../security/auth_gate.php';
+require_once __DIR__ . '/../includes/languages.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: /login.php');
@@ -10,6 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = (int)$_SESSION['user_id'];
 $lang = $_SESSION['language'] ?? 'af';
+$activeLang = in_array($lang, SUPPORTED_LANGS, true) ? $lang : 'af';
 
 // Check Elder permissions
 $stmt = $pdo->prepare('SELECT amp_id, town_id FROM users WHERE id = ? LIMIT 1');
@@ -57,16 +59,39 @@ if (!is_dir($baseDir)) {
     @mkdir($baseDir, 0755, true);
 }
 
-$fileAf = $baseDir . '/lering_content.html';
-$fileEn = $baseDir . '/teaching_content.html';
+// File paths for all 5 languages
+$contentFiles = [
+    'af' => $baseDir . '/lering_content.html',
+    'en' => $baseDir . '/teaching_content.en.html',
+    'zu' => $baseDir . '/teaching_content.zu.html',
+    'xh' => $baseDir . '/teaching_content.xh.html',
+    'pt' => $baseDir . '/teaching_content.pt.html'
+];
 
-// Load existing content
-$contentAf = file_exists($fileAf) ? file_get_contents($fileAf) : '<p>Begin tik hier...</p>';
-$contentEn = file_exists($fileEn) ? file_get_contents($fileEn) : '<p>Start typing here...</p>';
+// Backwards compatibility: check for legacy teaching_content.html for English
+if (!file_exists($contentFiles['en']) && file_exists($baseDir . '/teaching_content.html')) {
+    $contentFiles['en'] = $baseDir . '/teaching_content.html';
+}
 
+// Load existing content for all languages
+$contents = [];
+$defaultContent = [
+    'af' => '<p>Begin tik hier...</p>',
+    'en' => '<p>Start typing here...</p>',
+    'zu' => '<p>Qala ukuthayipha lapha...</p>',
+    'xh' => '<p>Qala ukuchwetheza apha...</p>',
+    'pt' => '<p>Comece a digitar aqui...</p>'
+];
+
+foreach (SUPPORTED_LANGS as $code) {
+    $file = $contentFiles[$code];
+    $contents[$code] = file_exists($file) ? file_get_contents($file) : $defaultContent[$code];
+}
+
+// T() for backwards compat: AF gets Afrikaans, all others get English
 function T($af, $en) {
     global $lang;
-    return ($lang === 'af') ? $af : $en;
+    return $lang === 'af' ? $af : $en;
 }
 ?>
 <!DOCTYPE html>
@@ -513,8 +538,9 @@ function T($af, $en) {
                 </span>
             </div>
             <div class="lang-switch">
-                <button class="lang-btn <?= $lang === 'af' ? 'active' : '' ?>" data-lang="af">Afrikaans</button>
-                <button class="lang-btn <?= $lang === 'en' ? 'active' : '' ?>" data-lang="en">English</button>
+                <?php foreach (SUPPORTED_LANGS as $code): ?>
+                <button class="lang-btn <?= $activeLang === $code ? 'active' : '' ?>" data-lang="<?= $code ?>"><?= htmlspecialchars(LANG_NAMES[$code]) ?></button>
+                <?php endforeach; ?>
             </div>
         </div>
         
@@ -578,8 +604,9 @@ function T($af, $en) {
         </div>
         
         <div class="editor-wrap">
-            <div class="editor" id="editor-af" contenteditable="true" <?= $lang === 'en' ? 'style="display:none"' : '' ?>><?= $contentAf ?></div>
-            <div class="editor" id="editor-en" contenteditable="true" <?= $lang === 'af' ? 'style="display:none"' : '' ?>><?= $contentEn ?></div>
+            <?php foreach (SUPPORTED_LANGS as $code): ?>
+            <div class="editor" id="editor-<?= $code ?>" contenteditable="true" <?= $activeLang !== $code ? 'style="display:none"' : '' ?>><?= $contents[$code] ?></div>
+            <?php endforeach; ?>
         </div>
         
         <div class="actions">
@@ -588,7 +615,7 @@ function T($af, $en) {
                 <span id="status-text"><?= T('Gereed om te stoor', 'Ready to save') ?></span>
             </span>
             <button class="btn btn-primary" id="btn-save">
-                💾 <?= T('Stoor en Vertaal', 'Save & Translate') ?>
+                💾 <?= T('Stoor Alles', 'Save All') ?>
             </button>
         </div>
     </div>
@@ -632,62 +659,98 @@ function T($af, $en) {
     <script>
         const CONFIG = {
             townId: <?= $townId ?? 'null' ?>,
-            lang: '<?= $lang ?>',
+            lang: '<?= $activeLang ?>',
+            supportedLangs: <?= json_encode(SUPPORTED_LANGS) ?>,
+            bibleFiles: <?= json_encode(BIBLE_FILES) ?>,
             t: {
                 af: {
                     saving: 'Besig om te stoor...',
-                    saved: 'Gestoor en vertaal!',
+                    saved: 'Gestoor!',
                     error: 'Fout',
                     improving: 'Besig om te verbeter...',
                     improved: 'Verbeter!',
                     selectVerse: 'Kies alle velde',
-                    verseInserted: 'Vers ingevoeg!'
+                    verseInserted: 'Vers ingevoeg!',
+                    noBible: 'Bybel nie beskikbaar vir hierdie taal nie'
                 },
                 en: {
                     saving: 'Saving...',
-                    saved: 'Saved and translated!',
+                    saved: 'Saved!',
                     error: 'Error',
                     improving: 'Improving...',
                     improved: 'Improved!',
                     selectVerse: 'Select all fields',
-                    verseInserted: 'Verse inserted!'
+                    verseInserted: 'Verse inserted!',
+                    noBible: 'Bible not available for this language'
+                },
+                zu: {
+                    saving: 'Ukulondoloza...',
+                    saved: 'Kulondoloziwe!',
+                    error: 'Iphutha',
+                    improving: 'Ukuthuthukisa...',
+                    improved: 'Kuthuthukisiwe!',
+                    selectVerse: 'Khetha zonke izindawo',
+                    verseInserted: 'Ivesi lifakiwe!',
+                    noBible: 'IBhayibheli alitholakali ngalolu limi'
+                },
+                xh: {
+                    saving: 'Ukugcina...',
+                    saved: 'Kugciniwe!',
+                    error: 'Impazamo',
+                    improving: 'Ukuphucula...',
+                    improved: 'Kuphuculiwe!',
+                    selectVerse: 'Khetha zonke iindawo',
+                    verseInserted: 'Ivesi lifakiwe!',
+                    noBible: 'IBhayibhile ayifumaneki ngolu lwimi'
+                },
+                pt: {
+                    saving: 'Salvando...',
+                    saved: 'Salvo!',
+                    error: 'Erro',
+                    improving: 'Melhorando...',
+                    improved: 'Melhorado!',
+                    selectVerse: 'Selecione todos os campos',
+                    verseInserted: 'Versículo inserido!',
+                    noBible: 'Bíblia não disponível para este idioma'
                 }
             }
         };
         
         (function() {
-            const T = k => CONFIG.t[CONFIG.lang][k] || k;
-            
-            let editorAf = document.getElementById('editor-af');
-            let editorEn = document.getElementById('editor-en');
-            let currentEditor = (CONFIG.lang === 'af') ? editorAf : editorEn;
+            const T = k => CONFIG.t[CONFIG.lang]?.[k] || CONFIG.t['en']?.[k] || k;
+
+            // Get all editors
+            const editors = {};
+            CONFIG.supportedLangs.forEach(code => {
+                editors[code] = document.getElementById('editor-' + code);
+            });
+
+            let currentEditor = editors[CONFIG.lang];
             let bible = null;
             let hasChanges = false;
-            
-            console.log('✅ Custom editor loaded');
-            
-            // Track changes
-            [editorAf, editorEn].forEach(ed => {
-                ed.addEventListener('input', () => hasChanges = true);
+
+            console.log('✅ Custom editor loaded for 5 languages');
+
+            // Track changes on all editors
+            Object.values(editors).forEach(ed => {
+                if (ed) ed.addEventListener('input', () => hasChanges = true);
             });
-            
+
             // Lang switch
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.onclick = () => {
                     CONFIG.lang = btn.dataset.lang;
                     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    
-                    if (CONFIG.lang === 'af') {
-                        currentEditor = editorAf;
-                        editorAf.style.display = 'block';
-                        editorEn.style.display = 'none';
-                    } else {
-                        currentEditor = editorEn;
-                        editorEn.style.display = 'block';
-                        editorAf.style.display = 'none';
-                    }
-                    
+
+                    // Hide all editors, show selected one
+                    CONFIG.supportedLangs.forEach(code => {
+                        if (editors[code]) {
+                            editors[code].style.display = (code === CONFIG.lang) ? 'block' : 'none';
+                        }
+                    });
+
+                    currentEditor = editors[CONFIG.lang];
                     loadBible();
                 };
             });
@@ -725,21 +788,27 @@ function T($af, $en) {
                 execCmd('foreColor', this.value);
             };
             
-            // Load Bible
+            // Load Bible for current language
             async function loadBible() {
-                const file = (CONFIG.lang === 'en') ? 'en_kjv1611.json' : 'af_1933_53.json';
+                const file = CONFIG.bibleFiles[CONFIG.lang] || CONFIG.bibleFiles['en'];
                 try {
                     const res = await fetch(`/bible/bibles/${file}`);
                     bible = await res.json();
-                    console.log('✅ Bible loaded');
+                    if (Object.keys(bible).length === 0) {
+                        bible = null;
+                        console.log('⚠️ Bible is empty for', CONFIG.lang);
+                    } else {
+                        console.log('✅ Bible loaded for', CONFIG.lang);
+                    }
                 } catch(e) {
+                    bible = null;
                     console.error('❌ Bible load failed:', e);
                 }
             }
             
             // Verse modal
             document.getElementById('btn-verse').onclick = () => {
-                if (!bible) { alert('Bible not loaded'); return; }
+                if (!bible) { alert(T('noBible')); return; }
                 const modal = document.getElementById('verse-modal');
                 const bookSel = document.getElementById('v-book');
                 bookSel.innerHTML = '<option value="">Kies...</option>';
@@ -872,42 +941,31 @@ function T($af, $en) {
                 }
             };
             
-            // Save & Translate
+            // Save all languages
             document.getElementById('btn-save').onclick = async () => {
                 const sourceContent = currentEditor.innerHTML;
                 if (!sourceContent.trim()) return;
-                
+
                 showStatus('saving', T('saving'));
-                
+
                 try {
-                    // Step 1: Translate
-                    const fd1 = new URLSearchParams();
-                    fd1.append('content', sourceContent);
-                    fd1.append('from_lang', CONFIG.lang);
-                    
-                    const res1 = await fetch('/admin/api/ai/translate.php', { method: 'POST', body: fd1 });
-                    const data1 = await res1.json();
-                    
-                    if (!data1.success) throw new Error(data1.error);
-                    
-                    // Update other editor
-                    const targetEditor = (CONFIG.lang === 'af') ? editorEn : editorAf;
-                    targetEditor.innerHTML = data1.translated;
-                    
-                    // Step 2: Save both
-                    const fd2 = new URLSearchParams();
-                    fd2.append('content_af', editorAf.innerHTML);
-                    fd2.append('content_en', editorEn.innerHTML);
-                    fd2.append('town_id', CONFIG.townId);
-                    
-                    const res2 = await fetch('/admin/api/elders/save_teaching.php', { method: 'POST', body: fd2 });
-                    const data2 = await res2.json();
-                    
-                    if (data2.success) {
+                    // Save all language contents
+                    const fd = new URLSearchParams();
+                    CONFIG.supportedLangs.forEach(code => {
+                        if (editors[code]) {
+                            fd.append('content_' + code, editors[code].innerHTML);
+                        }
+                    });
+                    fd.append('town_id', CONFIG.townId);
+
+                    const res = await fetch('/admin/api/elders/save_teaching.php', { method: 'POST', body: fd });
+                    const data = await res.json();
+
+                    if (data.success) {
                         showStatus('saved', T('saved'));
                         hasChanges = false;
                     } else {
-                        throw new Error(data2.error);
+                        throw new Error(data.error);
                     }
                 } catch(e) {
                     showStatus('error', e.message);

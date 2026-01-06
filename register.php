@@ -4,13 +4,14 @@ require_once __DIR__ . '/security/headers.php';
 require_once __DIR__ . '/security/config.php';
 require_once __DIR__ . '/security/session.php';
 require_once __DIR__ . '/security/csrf.php';
+require_once __DIR__ . '/includes/languages.php';
 
 $errors = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify($_POST['csrf'] ?? '')) {
-        $errors[] = 'Ongeldige sessie. Probeer weer.';
+        $errors[] = 'Invalid session. Please try again.';
     }
 
     $email = trim($_POST['email'] ?? '');
@@ -25,38 +26,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prov = (int)($_POST['province_id'] ?? 0);
     $town = (int)($_POST['town_id'] ?? 0);
     $cong = (int)($_POST['congregation_id'] ?? 0);
+    $language = validate_language($_POST['language'] ?? 'en');
     $pass = $_POST['password'] ?? '';
     $pass2 = $_POST['password2'] ?? '';
 
     if (empty($email) || empty($name) || empty($surname) || empty($pass)) {
-        $errors[] = 'Vul asseblief alles in.';
+        $errors[] = 'Please fill in all required fields.';
     }
     if ($pass !== $pass2) {
-        $errors[] = 'Wagwoorde stem nie ooreen nie.';
+        $errors[] = 'Passwords do not match.';
     }
     if (strlen($pass) < 8) {
-        $errors[] = 'Wagwoord moet minstens 8 karakters wees.';
+        $errors[] = 'Password must be at least 8 characters.';
     }
 
     if (!$errors) {
         $chk = $pdo->prepare("SELECT 1 FROM users WHERE email = ? LIMIT 1");
         $chk->execute([$email]);
         if ($chk->fetch()) {
-            $errors[] = 'E-pos bestaan reeds.';
+            $errors[] = 'Email already exists.';
         }
     }
 
     if (!$errors) {
         $hash = password_hash($pass, PASSWORD_BCRYPT, ['cost' => 12]);
         $stmt = $pdo->prepare(
-            "INSERT INTO users 
-             (email, password_hash, name, surname, phone, birthdate, gender, marital_status, 
+            "INSERT INTO users
+             (email, password_hash, name, surname, phone, birthdate, gender, marital_status,
               amp_id, status, province_id, town_id, congregation_id, language, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, 'af', NOW())"
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, NOW())"
         );
         $stmt->execute([
             $email, $hash, $name, $surname, $phone, $birthdate ?: null, $gender, $marital,
-            $amp ?: null, $prov ?: null, $town ?: null, $cong ?: null
+            $amp ?: null, $prov ?: null, $town ?: null, $cong ?: null, $language
         ]);
         $success = true;
     }
@@ -72,11 +74,11 @@ $towns = $pdo->query("SELECT * FROM towns ORDER BY name")->fetchAll();
 $congregations = $pdo->query("SELECT * FROM congregations ORDER BY name")->fetchAll();
 ?>
 <!doctype html>
-<html lang="af">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Registreer</title>
+<title>Register</title>
 <link rel="stylesheet" href="/assets/css/register.css">
 </head>
 <body>
@@ -86,10 +88,10 @@ $congregations = $pdo->query("SELECT * FROM congregations ORDER BY name")->fetch
     <img src="/assets/logo/bible2.webp" alt="Logo">
   </div>
   
-  <h1>Skep Rekening</h1>
-  
+  <h1>Create Account</h1>
+
   <?php if ($success): ?>
-    <div class="success">Registrasie suksesvol! Wag vir goedkeuring. <a href="/login.php">Login</a></div>
+    <div class="success">Registration successful! Awaiting approval. <a href="/login.php">Login</a></div>
   <?php elseif ($errors): ?>
     <div class="errors">
       <?php foreach ($errors as $e): ?>
@@ -102,108 +104,118 @@ $congregations = $pdo->query("SELECT * FROM congregations ORDER BY name")->fetch
     <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
     
     <div class="full-width">
-      <label>E-pos<br><input type="email" name="email" required></label>
+      <label>Email<br><input type="email" name="email" required></label>
     </div>
-    
+
     <div>
-      <label>Naam<br><input type="text" name="name" required></label>
+      <label>First Name<br><input type="text" name="name" required></label>
     </div>
-    
+
     <div>
-      <label>Van<br><input type="text" name="surname" required></label>
+      <label>Surname<br><input type="text" name="surname" required></label>
     </div>
-    
+
     <div>
-      <label>Foon<br><input type="tel" name="phone"></label>
+      <label>Phone<br><input type="tel" name="phone"></label>
     </div>
-    
+
     <div>
-      <label>Geboortedatum<br><input type="date" name="birthdate"></label>
+      <label>Date of Birth<br><input type="date" name="birthdate"></label>
     </div>
-    
+
     <div>
-      <label>Geslag<br>
+      <label>Gender<br>
         <select name="gender" id="gender" onchange="updateAmptes()">
-          <option value="">Kies...</option>
-          <option value="man">Man</option>
-          <option value="vrou">Vrou</option>
+          <option value="">Select...</option>
+          <option value="man">Male</option>
+          <option value="vrou">Female</option>
         </select>
       </label>
     </div>
-    
+
     <div>
-      <label>Huwelikstatus<br>
+      <label>Marital Status<br>
         <select name="marital_status">
-          <option value="">Kies...</option>
-          <option value="getroud">Getroud</option>
-          <option value="ongetroud">Ongetroud</option>
+          <option value="">Select...</option>
+          <option value="getroud">Married</option>
+          <option value="ongetroud">Single</option>
         </select>
       </label>
     </div>
-    
+
     <div>
-      <label>Amp<br>
+      <label>Office<br>
         <select name="amp_id" id="amp_id" disabled>
-          <option value="">Kies eers geslag...</option>
+          <option value="">Select gender first...</option>
         </select>
       </label>
     </div>
-    
+
     <div>
-      <label>Land<br>
+      <label>Country<br>
         <select name="country_id" id="country_id" onchange="updateProvinces()">
-          <option value="">Kies...</option>
+          <option value="">Select...</option>
           <?php foreach ($countries as $c): ?>
             <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
           <?php endforeach; ?>
         </select>
       </label>
     </div>
-    
+
     <div>
-      <label>Provinsie<br>
+      <label>Province<br>
         <select name="province_id" id="province_id" onchange="updateTowns()" disabled>
-          <option value="">Kies eers land...</option>
+          <option value="">Select country first...</option>
         </select>
       </label>
     </div>
-    
+
     <div>
-      <label>Dorp<br>
+      <label>Town<br>
         <select name="town_id" id="town_id" onchange="updateCongregations()" disabled>
-          <option value="">Kies eers provinsie...</option>
+          <option value="">Select province first...</option>
         </select>
       </label>
     </div>
-    
+
     <div>
-      <label>Gemeente<br>
+      <label>Congregation<br>
         <select name="congregation_id" id="congregation_id" disabled>
-          <option value="">Kies eers dorp...</option>
+          <option value="">Select town first...</option>
         </select>
       </label>
     </div>
-    
+
+    <div>
+      <label>Preferred Language<br>
+        <select name="language" id="language">
+          <?php foreach (SUPPORTED_LANGS as $code): ?>
+            <option value="<?= $code ?>"<?= $code === 'en' ? ' selected' : '' ?>><?= htmlspecialchars(LANG_NAMES[$code]) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+    </div>
+
     <div class="password-wrapper">
       <label>
-        Wagwoord
+        Password
         <span class="toggle-pw" onclick="togglePw('pw')">👁️</span>
       </label>
       <input type="password" id="pw" name="password" required>
     </div>
-    
+
     <div class="password-wrapper">
       <label>
-        Bevestig Wagwoord
+        Confirm Password
         <span class="toggle-pw" onclick="togglePw('pw2')">👁️</span>
       </label>
       <input type="password" id="pw2" name="password2" required>
     </div>
-    
-    <button type="submit" class="full-width">Registreer</button>
+
+    <button type="submit" class="full-width">Register</button>
   </form>
-  
-  <p>Het al 'n rekening? <a href="/login.php">Login</a></p>
+
+  <p>Already have an account? <a href="/login.php">Login</a></p>
 </div>
 
 <script>
@@ -217,9 +229,9 @@ const congregations = <?= json_encode($congregations) ?>;
 function updateAmptes() {
   const gender = document.getElementById('gender').value;
   const ampSelect = document.getElementById('amp_id');
-  
-  ampSelect.innerHTML = '<option value="">Kies...</option>';
-  
+
+  ampSelect.innerHTML = '<option value="">Select...</option>';
+
   if (gender) {
     ampSelect.disabled = false;
     amptes.forEach(amp => {
@@ -230,7 +242,7 @@ function updateAmptes() {
     });
   } else {
     ampSelect.disabled = true;
-    ampSelect.innerHTML = '<option value="">Kies eers geslag...</option>';
+    ampSelect.innerHTML = '<option value="">Select gender first...</option>';
   }
 }
 
@@ -240,14 +252,14 @@ function updateProvinces() {
   const provSelect = document.getElementById('province_id');
   const townSelect = document.getElementById('town_id');
   const congSelect = document.getElementById('congregation_id');
-  
+
   // Reset dependent dropdowns
-  provSelect.innerHTML = '<option value="">Kies...</option>';
-  townSelect.innerHTML = '<option value="">Kies eers provinsie...</option>';
+  provSelect.innerHTML = '<option value="">Select...</option>';
+  townSelect.innerHTML = '<option value="">Select province first...</option>';
   townSelect.disabled = true;
-  congSelect.innerHTML = '<option value="">Kies eers dorp...</option>';
+  congSelect.innerHTML = '<option value="">Select town first...</option>';
   congSelect.disabled = true;
-  
+
   if (countryId) {
     provSelect.disabled = false;
     const filtered = provinces.filter(p => p.country_id === countryId);
@@ -259,7 +271,7 @@ function updateProvinces() {
     });
   } else {
     provSelect.disabled = true;
-    provSelect.innerHTML = '<option value="">Kies eers land...</option>';
+    provSelect.innerHTML = '<option value="">Select country first...</option>';
   }
 }
 
@@ -268,12 +280,12 @@ function updateTowns() {
   const provId = parseInt(document.getElementById('province_id').value);
   const townSelect = document.getElementById('town_id');
   const congSelect = document.getElementById('congregation_id');
-  
+
   // Reset dependent dropdowns
-  townSelect.innerHTML = '<option value="">Kies...</option>';
-  congSelect.innerHTML = '<option value="">Kies eers dorp...</option>';
+  townSelect.innerHTML = '<option value="">Select...</option>';
+  congSelect.innerHTML = '<option value="">Select town first...</option>';
   congSelect.disabled = true;
-  
+
   if (provId) {
     townSelect.disabled = false;
     const filtered = towns.filter(t => t.province_id === provId);
@@ -285,7 +297,7 @@ function updateTowns() {
     });
   } else {
     townSelect.disabled = true;
-    townSelect.innerHTML = '<option value="">Kies eers provinsie...</option>';
+    townSelect.innerHTML = '<option value="">Select province first...</option>';
   }
 }
 
@@ -293,9 +305,9 @@ function updateTowns() {
 function updateCongregations() {
   const townId = parseInt(document.getElementById('town_id').value);
   const congSelect = document.getElementById('congregation_id');
-  
-  congSelect.innerHTML = '<option value="">Kies...</option>';
-  
+
+  congSelect.innerHTML = '<option value="">Select...</option>';
+
   if (townId) {
     congSelect.disabled = false;
     const filtered = congregations.filter(c => c.town_id === townId);
@@ -307,7 +319,7 @@ function updateCongregations() {
     });
   } else {
     congSelect.disabled = true;
-    congSelect.innerHTML = '<option value="">Kies eers dorp...</option>';
+    congSelect.innerHTML = '<option value="">Select town first...</option>';
   }
 }
 

@@ -4,16 +4,18 @@
 // =====================================================================
 
 require_once __DIR__ . '/../security/auth_gate.php';
+require_once __DIR__ . '/../includes/languages.php';
 
 // -------------------------- Taal --------------------------------------
 $pageLang = $_SESSION['language'] ?? 'af';
-if (isset($_GET['lang']) && ($_GET['lang'] === 'af' || $_GET['lang'] === 'en')) {
+if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
   $_SESSION['language'] = $_GET['lang'];
   $pageLang = $_GET['lang'];
   header('Location: /notifications/notifications.php');
   exit;
 }
-function T(string $af, string $en): string { global $pageLang; return $pageLang === 'en' ? $en : $af; }
+// T() for backwards compat: AF gets Afrikaans, all others get English
+function T(string $af, string $en): string { global $pageLang; return $pageLang === 'af' ? $af : $en; }
 function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 ?><!doctype html>
 <html lang="<?= $pageLang === 'af' ? 'af' : 'en' ?>">

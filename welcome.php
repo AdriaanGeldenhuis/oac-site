@@ -1,24 +1,41 @@
 <?php
-// Cache-busted: v2
+// Cache-busted: v3
 declare(strict_types=1);
 header('Cache-Control: no-cache, must-revalidate');
 header('Pragma: no-cache');
 require_once __DIR__ . '/security/auth_gate.php';
-
-// Language detection
-$lang = $_SESSION['language'] ?? 'af';
-if (isset($_GET['lang']) && in_array(strtolower($_GET['lang']), ['af','en'], true)) {
-    $lang = strtolower($_GET['lang']);
-    $_SESSION['language'] = $lang;
-}
-
-function T($af, $en) {
-    global $lang;
-    return $lang === 'af' ? $af : $en;
-}
-
-// Get user's town and province
+require_once __DIR__ . '/includes/languages.php';
 require_once __DIR__ . '/security/config.php';
+
+// Handle language change via GET parameter - redirect to apply cleanly
+if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
+    $_SESSION['language'] = $_GET['lang'];
+    header('Location: /welcome.php');
+    exit;
+}
+
+// Language detection - get from session, or load from DB
+$lang = $_SESSION['language'] ?? null;
+
+// If no session language, fetch from DB
+if (!$lang || !in_array($lang, SUPPORTED_LANGS, true)) {
+    try {
+        $langStmt = $pdo->prepare('SELECT language FROM users WHERE id = ? LIMIT 1');
+        $langStmt->execute([$_SESSION['user_id']]);
+        $langRow = $langStmt->fetch(PDO::FETCH_ASSOC);
+        $lang = validate_language($langRow['language'] ?? 'en');
+        $_SESSION['language'] = $lang;
+    } catch (Throwable $e) {
+        $lang = 'en';
+        $_SESSION['language'] = $lang;
+    }
+}
+
+// Translation helper using central system
+function t(string $key): string {
+    global $lang;
+    return __t($key, $lang);
+}
 
 $town = '';
 $province = '';
@@ -27,7 +44,7 @@ $provinceId = null;
 
 try {
     $stmt = $pdo->prepare('
-        SELECT 
+        SELECT
             t.id AS town_id,
             t.name AS town,
             p.id AS province_id,
@@ -39,7 +56,7 @@ try {
         LIMIT 1
     ');
     $stmt->execute([$_SESSION['user_id']]);
-    
+
     if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $town = $row['town'] ?? '';
         $province = $row['province'] ?? '';
@@ -61,21 +78,32 @@ $provSlug = $slug($province);
 $townSlug = $slug($town);
 $cityDir = ($provSlug && $townSlug) ? (__DIR__ . '/welcome/south_africa/' . $provSlug . '/' . $townSlug) : '';
 
-// Choose content file
-$contentFile = ($lang === 'af') ? (__DIR__ . '/welcome/lering_content.html') : (__DIR__ . '/welcome/teaching_content.html');
+// Choose content file based on language with proper fallback
+// Afrikaans: lering_content.html
+// Other languages: teaching_content.<lang>.html
+$contentFile = null;
 
 if ($lang === 'af') {
-    $cand = $cityDir ? ($cityDir . '/lering_content.html') : '';
+    // Afrikaans fallback chain
+    $candidates = [
+        $cityDir ? ($cityDir . '/lering_content.html') : '',
+        __DIR__ . '/welcome/lering_content.html'
+    ];
+} else {
+    // Other languages fallback chain
+    $candidates = [
+        $cityDir ? ($cityDir . '/teaching_content.' . $lang . '.html') : '',
+        $cityDir ? ($cityDir . '/teaching_content.html') : '',
+        __DIR__ . '/welcome/teaching_content.' . $lang . '.html',
+        __DIR__ . '/welcome/teaching_content.html'
+    ];
+}
+
+// Find first readable file
+foreach ($candidates as $cand) {
     if ($cand && is_readable($cand)) {
         $contentFile = $cand;
-    }
-} else {
-    $cand1 = $cityDir ? ($cityDir . '/teaching_content_' . $townSlug . '.html') : '';
-    $cand2 = $cityDir ? ($cityDir . '/teaching_content.html') : '';
-    if ($cand1 && is_readable($cand1)) {
-        $contentFile = $cand1;
-    } elseif ($cand2 && is_readable($cand2)) {
-        $contentFile = $cand2;
+        break;
     }
 }
 
@@ -85,7 +113,7 @@ $VER = time();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= T('Welkom - OAC APP', 'Welcome - OAC APP') ?></title>
+  <title><?= t('page_title_welcome') ?></title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -107,7 +135,7 @@ $VER = time();
   <div class="wc-hero">
     <div class="wc-hero-glow"></div>
     <div class="wc-hero-content">
-      <h1 class="wc-hero-title"><?= T('Welkom by Die Ou Aposteliese Kerk', 'Welcome to The Old Apostolic Chruch') ?></h1>
+      <h1 class="wc-hero-title"><?= t('welcome_title') ?></h1>
       <?php if ($town || $province): ?>
         <p class="wc-hero-location">
           <svg class="wc-location-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -141,8 +169,8 @@ $VER = time();
           </svg>
         </div>
         <div>
-          <h2 class="wc-section-title"><?= T('Lering van die Maand', 'Teaching of the Month') ?></h2>
-          <p class="wc-section-subtitle"><?= T('Groei in geloof en kennis', 'Growing in faith and knowledge') ?></p>
+          <h2 class="wc-section-title"><?= t('teaching_of_month') ?></h2>
+          <p class="wc-section-subtitle"><?= t('grow_faith') ?></p>
         </div>
       </div>
 
@@ -150,14 +178,14 @@ $VER = time();
         <div class="wc-card-decoration"></div>
         <div class="wc-teaching-content">
           <?php
-            if (is_readable($contentFile)) {
+            if ($contentFile && is_readable($contentFile)) {
               readfile($contentFile);
             } else {
               echo '<div class="wc-no-content">
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
                       </svg>
-                      <p>' . T('Geen lering-inhoud gevind nie.', 'No teaching content found.') . '</p>
+                      <p>' . t('no_content') . '</p>
                     </div>';
             }
           ?>
@@ -170,12 +198,9 @@ $VER = time();
       <div class="wc-quote-card">
         <div class="wc-quote-icon">❝</div>
         <blockquote class="wc-quote-text">
-          <?= T(
-            'Want waar twee of drie in My Naam vergader is, daar is Ek in hulle midde.',
-            'For where two or three gather in my name, there am I with them.'
-          ); ?>
+          <?= t('quote_matthew_18_20') ?>
         </blockquote>
-        <cite class="wc-quote-source"><?= T('Matthéüs 18:20', 'Matthew 18:20'); ?></cite>
+        <cite class="wc-quote-source"><?= t('quote_matthew_18_20_ref') ?></cite>
       </div>
     </section>
   </main>
