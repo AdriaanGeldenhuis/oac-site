@@ -14,15 +14,18 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
   header('Location: /notifications/notifications.php');
   exit;
 }
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T(string $af, string $en): string { global $pageLang; return $pageLang === 'af' ? $af : $en; }
+// Translation helper using central 5-language system
+function t(string $key): string {
+    global $pageLang;
+    return __t($key, $pageLang);
+}
 function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 ?><!doctype html>
 <html lang="<?= $pageLang === 'af' ? 'af' : 'en' ?>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= esc(T('AI Kennisgewings', 'AI Notifications')) ?></title>
+  <title><?= esc(t('ai_notifications')) ?></title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,8 +49,8 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
   <div class="notif-hero">
     <div class="notif-hero-glow"></div>
     <div class="notif-hero-content">
-      <h1 class="notif-hero-title"><?= esc(T('AI Kennisgewings', 'AI Notifications')) ?></h1>
-      <p class="notif-hero-subtitle"><?= esc(T('Bly Op Hoogte van Jou Reis', 'Stay Updated on Your Journey')) ?></p>
+      <h1 class="notif-hero-title"><?= esc(t('ai_notifications')) ?></h1>
+      <p class="notif-hero-subtitle"><?= esc(t('stay_updated')) ?></p>
     </div>
     <div class="notif-sparkles">
       <span class="notif-sparkle" style="--delay: 0s; --x: 10%; --y: 20%;"></span>
@@ -68,23 +71,23 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
             <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span class="notif-btn-text"><?= esc(T('Merk Alles as Gelees', 'Mark All as Read')) ?></span>
+          <span class="notif-btn-text"><?= esc(t('mark_all_read')) ?></span>
         </button>
         
         <button class="notif-btn notif-btn-secondary" id="filterToggle">
           <svg class="notif-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span class="notif-btn-text"><?= esc(T('Filter', 'Filter')) ?></span>
+          <span class="notif-btn-text"><?= esc(t('filter')) ?></span>
         </button>
       </div>
 
       <!-- Filter Options (hidden by default) -->
       <div class="notif-filters" id="filterOptions" hidden>
-        <button class="notif-filter-btn active" data-filter="all"><?= esc(T('Alles', 'All')) ?></button>
-        <button class="notif-filter-btn" data-filter="unread"><?= esc(T('Ongelees', 'Unread')) ?></button>
-        <button class="notif-filter-btn" data-filter="reminder"><?= esc(T('Herrineringe', 'Reminders')) ?></button>
-        <button class="notif-filter-btn" data-filter="info"><?= esc(T('Inligting', 'Info')) ?></button>
+        <button class="notif-filter-btn active" data-filter="all"><?= esc(t('all')) ?></button>
+        <button class="notif-filter-btn" data-filter="unread"><?= esc(t('unread')) ?></button>
+        <button class="notif-filter-btn" data-filter="reminder"><?= esc(t('reminders')) ?></button>
+        <button class="notif-filter-btn" data-filter="info"><?= esc(t('info')) ?></button>
       </div>
     </section>
 
@@ -96,7 +99,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
             <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <h2 class="notif-section-title"><?= esc(T('Jou Kennisgewings', 'Your Notifications')) ?></h2>
+        <h2 class="notif-section-title"><?= esc(t('your_notifications')) ?></h2>
         <div class="notif-loading" id="notifLoading" hidden>
           <div class="notif-spinner"></div>
         </div>
@@ -111,16 +114,16 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
   <script>
     window.LANG = '<?= $pageLang ?>';
     window.T = {
-      noNotifications: '<?= esc(T('Geen kennisgewings nie', 'No notifications')) ?>',
-      markRead: '<?= esc(T('Merk as gelees', 'Mark as read')) ?>',
-      delete: '<?= esc(T('Verwyder', 'Delete')) ?>',
-      confirm: '<?= esc(T('Is jy seker?', 'Are you sure?')) ?>',
-      success: '<?= esc(T('Sukses!', 'Success!')) ?>',
-      error: '<?= esc(T('Fout', 'Error')) ?>',
-      justNow: '<?= esc(T('Nou net', 'Just now')) ?>',
-      minutesAgo: '<?= esc(T('minute gelede', 'minutes ago')) ?>',
-      hoursAgo: '<?= esc(T('ure gelede', 'hours ago')) ?>',
-      daysAgo: '<?= esc(T('dae gelede', 'days ago')) ?>'
+      noNotifications: '<?= esc(t('no_notifications')) ?>',
+      markRead: '<?= esc(t('mark_as_read')) ?>',
+      delete: '<?= esc(t('delete')) ?>',
+      confirm: '<?= esc(t('are_you_sure')) ?>',
+      success: '<?= esc(t('success')) ?>',
+      error: '<?= esc(t('error')) ?>',
+      justNow: '<?= esc(t('just_now')) ?>',
+      minutesAgo: '<?= esc(t('minutes_ago')) ?>',
+      hoursAgo: '<?= esc(t('hours_ago')) ?>',
+      daysAgo: '<?= esc(t('days_ago')) ?>'
     };
   </script>
   <script src="/notifications/js/notifications.js?v=<?= time() ?>"></script>

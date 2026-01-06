@@ -2279,6 +2279,157 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Excel',
         'xh' => 'Excel',
         'pt' => 'Excel'
+    ],
+
+    // ==================== NOTIFICATIONS PAGE ====================
+    'ai_notifications' => [
+        'af' => 'AI Kennisgewings',
+        'en' => 'AI Notifications',
+        'zu' => 'Izaziso ze-AI',
+        'xh' => 'Izaziso ze-AI',
+        'pt' => 'Notificações IA'
+    ],
+    'stay_updated' => [
+        'af' => 'Bly Op Hoogte van Jou Reis',
+        'en' => 'Stay Updated on Your Journey',
+        'zu' => 'Hlala Ufundiswe Ngohambo Lwakho',
+        'xh' => 'Hlala Uhlaziwe Ngohambo Lwakho',
+        'pt' => 'Mantenha-se Atualizado na Sua Jornada'
+    ],
+    'mark_all_read' => [
+        'af' => 'Merk Alles as Gelees',
+        'en' => 'Mark All as Read',
+        'zu' => 'Phawula Konke Njengokufundiwe',
+        'xh' => 'Phawula Konke Njengokufundiweyo',
+        'pt' => 'Marcar Tudo como Lido'
+    ],
+    'filter' => [
+        'af' => 'Filter',
+        'en' => 'Filter',
+        'zu' => 'Hlunga',
+        'xh' => 'Hlela',
+        'pt' => 'Filtrar'
+    ],
+    'unread' => [
+        'af' => 'Ongelees',
+        'en' => 'Unread',
+        'zu' => 'Okungafundiwe',
+        'xh' => 'Okungafundiwe',
+        'pt' => 'Não Lido'
+    ],
+    'reminders' => [
+        'af' => 'Herrineringe',
+        'en' => 'Reminders',
+        'zu' => 'Izikhumbuzi',
+        'xh' => 'Izikhumbuzo',
+        'pt' => 'Lembretes'
+    ],
+    'info' => [
+        'af' => 'Inligting',
+        'en' => 'Info',
+        'zu' => 'Ulwazi',
+        'xh' => 'Ulwazi',
+        'pt' => 'Info'
+    ],
+    'your_notifications' => [
+        'af' => 'Jou Kennisgewings',
+        'en' => 'Your Notifications',
+        'zu' => 'Izaziso Zakho',
+        'xh' => 'Izaziso Zakho',
+        'pt' => 'Suas Notificações'
+    ],
+    'no_notifications' => [
+        'af' => 'Geen kennisgewings nie',
+        'en' => 'No notifications',
+        'zu' => 'Akukho zaziso',
+        'xh' => 'Akukho zaziso',
+        'pt' => 'Sem notificações'
+    ],
+    'mark_as_read' => [
+        'af' => 'Merk as gelees',
+        'en' => 'Mark as read',
+        'zu' => 'Phawula njengokufundiwe',
+        'xh' => 'Phawula njengokufundiweyo',
+        'pt' => 'Marcar como lido'
+    ],
+    'are_you_sure' => [
+        'af' => 'Is jy seker?',
+        'en' => 'Are you sure?',
+        'zu' => 'Uqinisekile?',
+        'xh' => 'Uqinisekile?',
+        'pt' => 'Tem certeza?'
+    ],
+    'just_now' => [
+        'af' => 'Nou net',
+        'en' => 'Just now',
+        'zu' => 'Manje nje',
+        'xh' => 'Ngoku nje',
+        'pt' => 'Agora mesmo'
+    ],
+    'minutes_ago' => [
+        'af' => 'minute gelede',
+        'en' => 'minutes ago',
+        'zu' => 'amaminithi edlule',
+        'xh' => 'imizuzu edlulileyo',
+        'pt' => 'minutos atrás'
+    ],
+    'hours_ago' => [
+        'af' => 'ure gelede',
+        'en' => 'hours ago',
+        'zu' => 'amahora edlule',
+        'xh' => 'iiyure ezidlulileyo',
+        'pt' => 'horas atrás'
+    ],
+    'days_ago' => [
+        'af' => 'dae gelede',
+        'en' => 'days ago',
+        'zu' => 'izinsuku ezedlule',
+        'xh' => 'iintsuku ezidlulileyo',
+        'pt' => 'dias atrás'
+    ],
+
+    // ==================== SING EMMANUEL PAGE ====================
+    'sing_emmanuel_title' => [
+        'af' => 'Sing Emmanuel - Getuienis van Geloof',
+        'en' => 'Sing Emmanuel - Testimony of Faith',
+        'zu' => 'Cula Emmanuel - Ubufakazi Bokholo',
+        'xh' => 'Cula Emmanuel - Ubungqina Bokholo',
+        'pt' => 'Cantar Emmanuel - Testemunho de Fé'
+    ],
+    'praise_lord_song' => [
+        'af' => 'Loof die Here met sang en jubel',
+        'en' => 'Praise the Lord with song and jubilation',
+        'zu' => 'Dumisani iNkosi ngengoma nokujabula',
+        'xh' => 'Dumisani iNkosi ngengoma nokuvuya',
+        'pt' => 'Louvai ao Senhor com cânticos e júbilo'
+    ],
+    'choose_song' => [
+        'af' => 'Kies \'n Lied',
+        'en' => 'Choose a Song',
+        'zu' => 'Khetha Ingoma',
+        'xh' => 'Khetha Ingoma',
+        'pt' => 'Escolha uma Canção'
+    ],
+    'search_song' => [
+        'af' => 'Soek Lied',
+        'en' => 'Search Song',
+        'zu' => 'Sesha Ingoma',
+        'xh' => 'Khangela Ingoma',
+        'pt' => 'Pesquisar Canção'
+    ],
+    'hymn' => [
+        'af' => 'Lied',
+        'en' => 'Hymn',
+        'zu' => 'Ihubo',
+        'xh' => 'Iculo',
+        'pt' => 'Hino'
+    ],
+    'song_not_found' => [
+        'af' => 'Lied nie gevind nie.',
+        'en' => 'Song not found.',
+        'zu' => 'Ingoma ayitholakali.',
+        'xh' => 'Ingoma ayifumaneki.',
+        'pt' => 'Canção não encontrada.'
     ]
 ]);
 
