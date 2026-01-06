@@ -293,6 +293,13 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Impazamo',
         'pt' => 'Erro'
     ],
+    'profile_no_town' => [
+        'af' => 'Jou profiel het geen dorp nie. Kontak admin.',
+        'en' => 'Your profile has no town. Contact admin.',
+        'zu' => 'Iphrofayela yakho ayinalo idolobha. Xhumana no-admin.',
+        'xh' => 'Iprofayile yakho ayinayo idolophu. Qhagamshelana no-admin.',
+        'pt' => 'Seu perfil não tem cidade. Contate o administrador.'
+    ],
     'you_sent_spouse_request' => [
         'af' => 'Jy het \'n eggenoot versoek gestuur na',
         'en' => 'You sent a spouse request to',

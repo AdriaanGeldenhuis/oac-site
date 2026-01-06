@@ -21,7 +21,7 @@ function t(string $key): string {
 }
 function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 ?><!doctype html>
-<html lang="<?= $pageLang === 'af' ? 'af' : 'en' ?>">
+<html lang="<?= $pageLang ?>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

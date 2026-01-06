@@ -39,7 +39,7 @@ try {
 $userName = $user ? trim($user['name'] . ' ' . $user['surname']) : 'User';
 
 ?><!doctype html>
-<html lang="<?= $pageLang === 'af' ? 'af' : 'en' ?>">
+<html lang="<?= $pageLang ?>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

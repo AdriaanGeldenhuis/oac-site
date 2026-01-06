@@ -45,7 +45,7 @@ if ($birthdate) {
 }
 
 if ($townId <= 0) {
-    die('Jou profiel het geen dorp nie. Kontak admin.');
+    die(t('profile_no_town'));
 }
 
 // Determine user capabilities
