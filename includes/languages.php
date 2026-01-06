@@ -1064,6 +1064,451 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Thumela Isicelo',
         'xh' => 'Thumela Isicelo',
         'pt' => 'Enviar Solicitação'
+    ],
+
+    // ==================== BIBLE ====================
+    'bible_reader' => [
+        'af' => 'Bybel Leser',
+        'en' => 'Bible Reader',
+        'zu' => 'Umfundi WeBhayibheli',
+        'xh' => 'Umfundi WeBhayibhile',
+        'pt' => 'Leitor da Bíblia'
+    ],
+    'quick_navigation' => [
+        'af' => 'Vinnige Navigasie',
+        'en' => 'Quick Navigation',
+        'zu' => 'Ukuzulazula Okusheshayo',
+        'xh' => 'Ukuhamba Okukhawulezileyo',
+        'pt' => 'Navegação Rápida'
+    ],
+    'choose_testament' => [
+        'af' => 'Kies Testament',
+        'en' => 'Choose Testament',
+        'zu' => 'Khetha Itestamente',
+        'xh' => 'Khetha Itestamente',
+        'pt' => 'Escolha Testamento'
+    ],
+    'old_testament' => [
+        'af' => 'Ou Testament',
+        'en' => 'Old Testament',
+        'zu' => 'Itestamente Elidala',
+        'xh' => 'Itestamente Endala',
+        'pt' => 'Antigo Testamento'
+    ],
+    'new_testament' => [
+        'af' => 'Nuwe Testament',
+        'en' => 'New Testament',
+        'zu' => 'Itestamente Elisha',
+        'xh' => 'Itestamente Entsha',
+        'pt' => 'Novo Testamento'
+    ],
+    'genesis_malachi' => [
+        'af' => 'Genesis - Maleagi',
+        'en' => 'Genesis - Malachi',
+        'zu' => 'UGenesisi - UMalaki',
+        'xh' => 'IGenesis - UMalaki',
+        'pt' => 'Gênesis - Malaquias'
+    ],
+    'matthew_revelation' => [
+        'af' => 'Matteus - Openbaring',
+        'en' => 'Matthew - Revelation',
+        'zu' => 'UMathewu - ISambulo',
+        'xh' => 'UMateyu - ISityhilelo',
+        'pt' => 'Mateus - Apocalipse'
+    ],
+    'back' => [
+        'af' => 'Terug',
+        'en' => 'Back',
+        'zu' => 'Emuva',
+        'xh' => 'Emva',
+        'pt' => 'Voltar'
+    ],
+    'choose_book' => [
+        'af' => 'Kies Boek',
+        'en' => 'Choose Book',
+        'zu' => 'Khetha Incwadi',
+        'xh' => 'Khetha Incwadi',
+        'pt' => 'Escolha Livro'
+    ],
+    'choose_chapter' => [
+        'af' => 'Kies Hoofstuk',
+        'en' => 'Choose Chapter',
+        'zu' => 'Khetha Isahluko',
+        'xh' => 'Khetha Isahluko',
+        'pt' => 'Escolha Capítulo'
+    ],
+    'search_bible' => [
+        'af' => 'Soek in die Bybel',
+        'en' => 'Search the Bible',
+        'zu' => 'Sesha IBhayibheli',
+        'xh' => 'Khangela IBhayibhile',
+        'pt' => 'Pesquisar na Bíblia'
+    ],
+    'type_search_term' => [
+        'af' => 'Tik soekwoord...',
+        'en' => 'Type search term...',
+        'zu' => 'Thayipha igama lokusesha...',
+        'xh' => 'Chwetheza igama lokukhangela...',
+        'pt' => 'Digite termo de pesquisa...'
+    ],
+    'no_notes_yet' => [
+        'af' => 'Geen notas nog nie. Klik op \'n vers om \'n nota by te voeg!',
+        'en' => 'No notes yet. Click on a verse to add a note!',
+        'zu' => 'Awukabi namanothi. Chofoza ivesi ukuze ungeze inothi!',
+        'xh' => 'Akukho manqaku okwangoku. Cofa ivesi ukongeza inqaku!',
+        'pt' => 'Nenhuma nota ainda. Clique em um versículo para adicionar uma nota!'
+    ],
+    'write_note_here' => [
+        'af' => 'Skryf jou nota hier...',
+        'en' => 'Write your note here...',
+        'zu' => 'Bhala inothi lakho lapha...',
+        'xh' => 'Bhala inqaku lakho apha...',
+        'pt' => 'Escreva sua nota aqui...'
+    ],
+    'bookmarks' => [
+        'af' => 'Boekmerke',
+        'en' => 'Bookmarks',
+        'zu' => 'Izimaki Zebhuku',
+        'xh' => 'Izimaki Zeencwadi',
+        'pt' => 'Favoritos'
+    ],
+    'no_bookmarks_yet' => [
+        'af' => 'Geen boekmerke nog nie.',
+        'en' => 'No bookmarks yet.',
+        'zu' => 'Azikho izimaki zebhuku okwamanje.',
+        'xh' => 'Akukho zimaki zeencwadi okwangoku.',
+        'pt' => 'Nenhum favorito ainda.'
+    ],
+    'ai_commentary' => [
+        'af' => 'AI Kommentaar',
+        'en' => 'AI Commentary',
+        'zu' => 'Ukuphawula kwe-AI',
+        'xh' => 'Inkcazelo ye-AI',
+        'pt' => 'Comentário IA'
+    ],
+    'select_verse_ai' => [
+        'af' => 'Kies \'n vers en vra AI \'n vraag.',
+        'en' => 'Select a verse and ask AI a question.',
+        'zu' => 'Khetha ivesi bese ubuza i-AI umbuzo.',
+        'xh' => 'Khetha ivesi uze ubuze i-AI umbuzo.',
+        'pt' => 'Selecione um versículo e pergunte à IA.'
+    ],
+    'cross_references' => [
+        'af' => 'Kruisverwysings',
+        'en' => 'Cross References',
+        'zu' => 'Izinkomba Ezihlanganisayo',
+        'xh' => 'Izalathiso Ezidibeneyo',
+        'pt' => 'Referências Cruzadas'
+    ],
+    'select_verse_cross_ref' => [
+        'af' => 'Kies \'n vers om kruisverwysings te sien.',
+        'en' => 'Select a verse to see cross-references.',
+        'zu' => 'Khetha ivesi ukubona izinkomba ezihlanganisayo.',
+        'xh' => 'Khetha ivesi ukubona izalathiso ezidibeneyo.',
+        'pt' => 'Selecione um versículo para ver referências cruzadas.'
+    ],
+    'reading_plan' => [
+        'af' => 'Leesplan',
+        'en' => 'Reading Plan',
+        'zu' => 'Uhlelo Lokufunda',
+        'xh' => 'Isicwangciso Sokufunda',
+        'pt' => 'Plano de Leitura'
+    ],
+    'choose_color' => [
+        'af' => 'Kies Kleur',
+        'en' => 'Choose Color',
+        'zu' => 'Khetha Umbala',
+        'xh' => 'Khetha Umbala',
+        'pt' => 'Escolha Cor'
+    ],
+    'pink' => [
+        'af' => 'Pienk',
+        'en' => 'Pink',
+        'zu' => 'Okupinki',
+        'xh' => 'Ipinki',
+        'pt' => 'Rosa'
+    ],
+    'orange' => [
+        'af' => 'Oranje',
+        'en' => 'Orange',
+        'zu' => 'Orenji',
+        'xh' => 'Iorenji',
+        'pt' => 'Laranja'
+    ],
+    'yellow' => [
+        'af' => 'Geel',
+        'en' => 'Yellow',
+        'zu' => 'Okuphuzi',
+        'xh' => 'Omthubi',
+        'pt' => 'Amarelo'
+    ],
+    'green' => [
+        'af' => 'Groen',
+        'en' => 'Green',
+        'zu' => 'Oluhlaza',
+        'xh' => 'Oluhlaza',
+        'pt' => 'Verde'
+    ],
+    'blue' => [
+        'af' => 'Blou',
+        'en' => 'Blue',
+        'zu' => 'Okuluhlaza Okwesibhakabhaka',
+        'xh' => 'Ebhlowu',
+        'pt' => 'Azul'
+    ],
+    'purple' => [
+        'af' => 'Pers',
+        'en' => 'Purple',
+        'zu' => 'Okumfusa',
+        'xh' => 'Okumfusa',
+        'pt' => 'Roxo'
+    ],
+    'bookmark' => [
+        'af' => 'Boekmerk',
+        'en' => 'Bookmark',
+        'zu' => 'Isimaki Sebhuku',
+        'xh' => 'Isimaki Sencwadi',
+        'pt' => 'Favorito'
+    ],
+    'add_note' => [
+        'af' => 'Voeg nota by',
+        'en' => 'Add note',
+        'zu' => 'Engeza inothi',
+        'xh' => 'Yongeza inqaku',
+        'pt' => 'Adicionar nota'
+    ],
+    'ask_ai' => [
+        'af' => 'Vra AI',
+        'en' => 'Ask AI',
+        'zu' => 'Buza i-AI',
+        'xh' => 'Buza i-AI',
+        'pt' => 'Perguntar à IA'
+    ],
+    'cross_refs' => [
+        'af' => 'Kruisverwysings',
+        'en' => 'Cross Refs',
+        'zu' => 'Izinkomba',
+        'xh' => 'Izalathiso',
+        'pt' => 'Refs Cruzadas'
+    ],
+    'copy' => [
+        'af' => 'Kopieer',
+        'en' => 'Copy',
+        'zu' => 'Kopisha',
+        'xh' => 'Kopa',
+        'pt' => 'Copiar'
+    ],
+    'share' => [
+        'af' => 'Deel',
+        'en' => 'Share',
+        'zu' => 'Yabelana',
+        'xh' => 'Yabelana',
+        'pt' => 'Compartilhar'
+    ],
+    'navigate' => [
+        'af' => 'Navigeer',
+        'en' => 'Navigate',
+        'zu' => 'Zulazula',
+        'xh' => 'Hambisa',
+        'pt' => 'Navegar'
+    ],
+    'decrease' => [
+        'af' => 'Verklein',
+        'en' => 'Decrease',
+        'zu' => 'Nciphisa',
+        'xh' => 'Nciphisa',
+        'pt' => 'Diminuir'
+    ],
+    'increase' => [
+        'af' => 'Vergroot',
+        'en' => 'Increase',
+        'zu' => 'Khulisa',
+        'xh' => 'Yandisa',
+        'pt' => 'Aumentar'
+    ],
+    'plan' => [
+        'af' => 'Plan',
+        'en' => 'Plan',
+        'zu' => 'Uhlelo',
+        'xh' => 'Isicwangciso',
+        'pt' => 'Plano'
+    ],
+    'remove' => [
+        'af' => 'Verwyder',
+        'en' => 'Remove',
+        'zu' => 'Susa',
+        'xh' => 'Susa',
+        'pt' => 'Remover'
+    ],
+
+    // ==================== CALENDAR ====================
+    'ai_calendar' => [
+        'af' => 'AI Kalender',
+        'en' => 'AI Calendar',
+        'zu' => 'Ikhalenda le-AI',
+        'xh' => 'Ikhalenda ye-AI',
+        'pt' => 'Calendário IA'
+    ],
+    'day' => [
+        'af' => 'Dag',
+        'en' => 'Day',
+        'zu' => 'Usuku',
+        'xh' => 'Usuku',
+        'pt' => 'Dia'
+    ],
+    'week' => [
+        'af' => 'Week',
+        'en' => 'Week',
+        'zu' => 'Iviki',
+        'xh' => 'Iveki',
+        'pt' => 'Semana'
+    ],
+    'today' => [
+        'af' => 'Vandag',
+        'en' => 'Today',
+        'zu' => 'Namuhla',
+        'xh' => 'Namhlanje',
+        'pt' => 'Hoje'
+    ],
+    'sun' => [
+        'af' => 'So',
+        'en' => 'Sun',
+        'zu' => 'Son',
+        'xh' => 'ICa',
+        'pt' => 'Dom'
+    ],
+    'mon' => [
+        'af' => 'Ma',
+        'en' => 'Mon',
+        'zu' => 'Mso',
+        'xh' => 'Mvu',
+        'pt' => 'Seg'
+    ],
+    'tue' => [
+        'af' => 'Di',
+        'en' => 'Tue',
+        'zu' => 'Bil',
+        'xh' => 'Lwe',
+        'pt' => 'Ter'
+    ],
+    'wed' => [
+        'af' => 'Wo',
+        'en' => 'Wed',
+        'zu' => 'Tha',
+        'xh' => 'Tha',
+        'pt' => 'Qua'
+    ],
+    'thu' => [
+        'af' => 'Do',
+        'en' => 'Thu',
+        'zu' => 'Sin',
+        'xh' => 'Sin',
+        'pt' => 'Qui'
+    ],
+    'fri' => [
+        'af' => 'Vr',
+        'en' => 'Fri',
+        'zu' => 'Hla',
+        'xh' => 'Hla',
+        'pt' => 'Sex'
+    ],
+    'sat' => [
+        'af' => 'Sa',
+        'en' => 'Sat',
+        'zu' => 'Mgq',
+        'xh' => 'Mgq',
+        'pt' => 'Sáb'
+    ],
+    'create_new' => [
+        'af' => 'Skep Nuwe',
+        'en' => 'Create New',
+        'zu' => 'Dala Okusha',
+        'xh' => 'Yenza Okutsha',
+        'pt' => 'Criar Novo'
+    ],
+    'event' => [
+        'af' => 'Gebeurtenis',
+        'en' => 'Event',
+        'zu' => 'Isenzakalo',
+        'xh' => 'Isiganeko',
+        'pt' => 'Evento'
+    ],
+    'title' => [
+        'af' => 'Titel',
+        'en' => 'Title',
+        'zu' => 'Isihloko',
+        'xh' => 'Isihloko',
+        'pt' => 'Título'
+    ],
+    'room' => [
+        'af' => 'Kamer',
+        'en' => 'Room',
+        'zu' => 'Igumbi',
+        'xh' => 'Igumbi',
+        'pt' => 'Sala'
+    ],
+    'select_room' => [
+        'af' => 'Kies kamer...',
+        'en' => 'Select room...',
+        'zu' => 'Khetha igumbi...',
+        'xh' => 'Khetha igumbi...',
+        'pt' => 'Selecionar sala...'
+    ],
+    'with_whom' => [
+        'af' => 'Met wie?',
+        'en' => 'With whom?',
+        'zu' => 'Nobani?',
+        'xh' => 'Nabani?',
+        'pt' => 'Com quem?'
+    ],
+    'select_user' => [
+        'af' => 'Kies gebruiker...',
+        'en' => 'Select user...',
+        'zu' => 'Khetha umsebenzisi...',
+        'xh' => 'Khetha umsebenzisi...',
+        'pt' => 'Selecionar usuário...'
+    ],
+    'type_name' => [
+        'af' => 'Tik naam in...',
+        'en' => 'Type name...',
+        'zu' => 'Thayipha igama...',
+        'xh' => 'Chwetheza igama...',
+        'pt' => 'Digite nome...'
+    ],
+    'share_with_spouse' => [
+        'af' => 'Deel met gade',
+        'en' => 'Share with spouse',
+        'zu' => 'Yabelana nomlingani',
+        'xh' => 'Yabelana nomlingani',
+        'pt' => 'Compartilhar com cônjuge'
+    ],
+    'no_events' => [
+        'af' => 'Geen gebeure',
+        'en' => 'No events',
+        'zu' => 'Akukho zenzakalo',
+        'xh' => 'Akukho ziganeko',
+        'pt' => 'Sem eventos'
+    ],
+    'confirm_delete' => [
+        'af' => 'Is jy seker jy wil hierdie inskrywing verwyder?',
+        'en' => 'Are you sure you want to delete this entry?',
+        'zu' => 'Uqinisekile ukuthi ufuna ukususa lokhu okufakiwe?',
+        'xh' => 'Uqinisekile ukuba ufuna ukucima oku okufakiweyo?',
+        'pt' => 'Tem certeza de que deseja excluir esta entrada?'
+    ],
+    'saved_success' => [
+        'af' => 'Suksesvol gestoor!',
+        'en' => 'Successfully saved!',
+        'zu' => 'Kugcinwe ngempumelelo!',
+        'xh' => 'Igcinwe ngempumelelo!',
+        'pt' => 'Salvo com sucesso!'
+    ],
+    'deleted_success' => [
+        'af' => 'Suksesvol verwyder!',
+        'en' => 'Successfully deleted!',
+        'zu' => 'Kususiwe ngempumelelo!',
+        'xh' => 'Icinyiwe ngempumelelo!',
+        'pt' => 'Excluído com sucesso!'
     ]
 ]);
 

@@ -15,10 +15,10 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     exit;
 }
 
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T(string $af, string $en): string {
+// Translation helper using central 5-language system
+function t(string $key): string {
     global $pageLang;
-    return $pageLang === 'af' ? $af : $en;
+    return __t($key, $pageLang);
 }
 
 function esc($s) { 
@@ -52,7 +52,7 @@ $VER = time();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= esc(T('AI Kalender', 'AI Calendar')) ?></title>
+    <title><?= esc(t('ai_calendar')) ?></title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,7 +79,7 @@ $VER = time();
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    <span><?= esc(T('Dag', 'Day')) ?></span>
+                    <span><?= esc(t('day')) ?></span>
                 </button>
                 
                 <button class="cal-view-btn active" data-view="week">
@@ -88,7 +88,7 @@ $VER = time();
                         <line x1="10" y1="10" x2="10" y2="22" stroke="currentColor"/>
                         <line x1="17" y1="10" x2="17" y2="22" stroke="currentColor"/>
                     </svg>
-                    <span><?= esc(T('Week', 'Week')) ?></span>
+                    <span><?= esc(t('week')) ?></span>
                 </button>
                 
                 <button class="cal-view-btn" data-view="month">
@@ -96,7 +96,7 @@ $VER = time();
                         <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                         <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    <span><?= esc(T('Maand', 'Month')) ?></span>
+                    <span><?= esc(t('month')) ?></span>
                 </button>
             </div>
             
@@ -106,7 +106,7 @@ $VER = time();
                         <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
                     </svg>
                 </button>
-                <button class="cal-nav-btn" id="todayBtn" type="button"><?= esc(T('Vandag', 'Today')) ?></button>
+                <button class="cal-nav-btn" id="todayBtn" type="button"><?= esc(t('today')) ?></button>
                 <button class="cal-nav-btn" id="nextBtn" type="button">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2"/>
@@ -118,7 +118,7 @@ $VER = time();
         <!-- Calendar Section -->
         <section class="cal-section">
             <div class="cal-section-header">
-                <h2 class="cal-section-title" id="calTitle"><?= esc(T('Kalender', 'Calendar')) ?></h2>
+                <h2 class="cal-section-title" id="calTitle"><?= esc(t('calendar')) ?></h2>
             </div>
             
             <div class="cal-views">
@@ -135,13 +135,13 @@ $VER = time();
                 <!-- Month View -->
                 <div class="cal-view-container" id="monthView" style="display:none;">
                     <div class="cal-month-weekdays">
-                        <div><?= esc(T('So', 'Sun')) ?></div>
-                        <div><?= esc(T('Ma', 'Mon')) ?></div>
-                        <div><?= esc(T('Di', 'Tue')) ?></div>
-                        <div><?= esc(T('Wo', 'Wed')) ?></div>
-                        <div><?= esc(T('Do', 'Thu')) ?></div>
-                        <div><?= esc(T('Vr', 'Fri')) ?></div>
-                        <div><?= esc(T('Sa', 'Sat')) ?></div>
+                        <div><?= esc(t('sun')) ?></div>
+                        <div><?= esc(t('mon')) ?></div>
+                        <div><?= esc(t('tue')) ?></div>
+                        <div><?= esc(t('wed')) ?></div>
+                        <div><?= esc(t('thu')) ?></div>
+                        <div><?= esc(t('fri')) ?></div>
+                        <div><?= esc(t('sat')) ?></div>
                     </div>
                     <div class="cal-month-grid" id="monthGrid"></div>
                 </div>
@@ -153,24 +153,24 @@ $VER = time();
     <div class="cal-quick-menu" id="quickMenu" style="display:none;">
         <div class="cal-quick-overlay" id="quickOverlay"></div>
         <div class="cal-quick-panel">
-            <h3 class="cal-quick-title"><?= esc(T('Skep Nuwe', 'Create New')) ?></h3>
+            <h3 class="cal-quick-title"><?= esc(t('create_new')) ?></h3>
             <button class="cal-quick-btn" data-action="gebeurtenis" type="button">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                 </svg>
-                <span><?= esc(T('Gebeurtenis', 'Event')) ?></span>
+                <span><?= esc(t('event')) ?></span>
             </button>
             <button class="cal-quick-btn" data-action="dagboek" type="button">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2"/>
                 </svg>
-                <span><?= esc(T('Dagboek', 'Diary')) ?></span>
+                <span><?= esc(t('diary')) ?></span>
             </button>
             <button class="cal-quick-btn" data-action="afspraak" type="button">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
                 </svg>
-                <span><?= esc(T('Afspraak', 'Appointment')) ?></span>
+                <span><?= esc(t('appointment')) ?></span>
             </button>
         </div>
     </div>
@@ -180,7 +180,7 @@ $VER = time();
         <div class="cal-modal-overlay" id="modalOverlay"></div>
         <div class="cal-modal-content">
             <div class="cal-modal-header">
-                <h3 class="cal-modal-title" id="modalTitle"><?= esc(T('Gebeurtenis', 'Event')) ?></h3>
+                <h3 class="cal-modal-title" id="modalTitle"><?= esc(t('event')) ?></h3>
                 <button class="cal-modal-close" id="closeModal" type="button">&times;</button>
             </div>
             
@@ -190,82 +190,82 @@ $VER = time();
                     <input type="hidden" id="eventType" name="type" value="event">
                     
                     <div class="cal-form-group">
-                        <label class="cal-form-label"><?= esc(T('Titel', 'Title')) ?></label>
+                        <label class="cal-form-label"><?= esc(t('title')) ?></label>
                         <input type="text" id="eventTitle" name="title" class="cal-form-input" required>
                     </div>
 
                     <div class="cal-form-row">
                         <div class="cal-form-group">
-                            <label class="cal-form-label"><?= esc(T('Datum', 'Date')) ?></label>
+                            <label class="cal-form-label"><?= esc(t('date')) ?></label>
                             <input type="date" id="eventDate" name="date" class="cal-form-input" required>
                         </div>
                         <div class="cal-form-group">
-                            <label class="cal-form-label"><?= esc(T('Tyd', 'Time')) ?></label>
+                            <label class="cal-form-label"><?= esc(t('time')) ?></label>
                             <input type="time" id="eventTime" name="time" class="cal-form-input">
                         </div>
                     </div>
 
                     <!-- Room selector (gebeurtenis) -->
                     <div class="cal-form-group" id="roomGroup" style="display:none;">
-                        <label class="cal-form-label"><?= esc(T('Kamer', 'Room')) ?></label>
+                        <label class="cal-form-label"><?= esc(t('room')) ?></label>
                         <select id="eventRoom" name="room_id" class="cal-form-select">
-                            <option value=""><?= esc(T('Kies kamer...', 'Select room...')) ?></option>
+                            <option value=""><?= esc(t('select_room')) ?></option>
                         </select>
                     </div>
 
                     <!-- User selector (afspraak) -->
                     <div class="cal-form-group" id="userGroup" style="display:none;">
-                        <label class="cal-form-label"><?= esc(T('Met wie?', 'With whom?')) ?></label>
+                        <label class="cal-form-label"><?= esc(t('with_whom')) ?></label>
                         
                         <div class="cal-person-toggle">
                             <button type="button" class="cal-toggle-btn active" data-mode="user">
                                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
                                 </svg>
-                                <?= esc(T('Gebruiker', 'User')) ?>
+                                <?= esc(t('user')) ?>
                             </button>
                             <button type="button" class="cal-toggle-btn" data-mode="text">
                                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2"/>
                                 </svg>
-                                <?= esc(T('Naam', 'Name')) ?>
+                                <?= esc(t('name')) ?>
                             </button>
                         </div>
 
                         <div id="userSelect">
                             <select id="linkedUser" name="linked_user_id" class="cal-form-select">
-                                <option value=""><?= esc(T('Kies gebruiker...', 'Select user...')) ?></option>
+                                <option value=""><?= esc(t('select_user')) ?></option>
                             </select>
                         </div>
 
                         <div id="userTextInput" style="display:none;">
-                            <input type="text" id="personName" name="person_name" class="cal-form-input" placeholder="<?= esc(T('Tik naam in...', 'Type name...')) ?>">
+                            <input type="text" id="personName" name="person_name" class="cal-form-input" placeholder="<?= esc(t('type_name')) ?>">
                         </div>
                     </div>
 
                     <div class="cal-form-group" id="locationGroup" style="display:none;">
-                        <label class="cal-form-label"><?= esc(T('Plek', 'Location')) ?></label>
+                        <label class="cal-form-label"><?= esc(t('location')) ?></label>
                         <input type="text" id="eventLocation" name="location" class="cal-form-input">
                     </div>
 
                     <div class="cal-form-group">
-                        <label class="cal-form-label"><?= esc(T('Notas', 'Notes')) ?></label>
+                        <label class="cal-form-label"><?= esc(t('notes')) ?></label>
                         <textarea id="eventNotes" name="notes" class="cal-form-textarea" rows="4"></textarea>
                     </div>
 
                     <div class="cal-form-group" id="shareGroup">
                         <label class="cal-checkbox-label">
                             <input type="checkbox" id="shareWithSpouse" name="share_with_spouse" value="1">
-                            <span><?= esc(T('Deel met gade', 'Share with spouse')) ?></span>
+                            <span><?= esc(t('share_with_spouse')) ?></span>
                         </label>
                     </div>
 
                     <div class="cal-modal-actions">
-                        <button type="button" class="cal-btn cal-btn-secondary" id="cancelBtn"><?= esc(T('Kanselleer', 'Cancel')) ?></button>
-                        <button type="button" class="cal-btn cal-btn-danger" id="deleteBtn" style="display:none;"><?= esc(T('Verwyder', 'Delete')) ?></button>
+                        <button type="button" class="cal-btn cal-btn-secondary" id="cancelBtn"><?= esc(t('cancel')) ?></button>
+                        <button type="button" class="cal-btn cal-btn-danger" id="deleteBtn" style="display:none;"><?= esc(t('delete')) ?></button>
                         <button type="submit" class="cal-btn cal-btn-primary">
                             <span class="cal-btn-shine"></span>
-                            <?= esc(T('Stoor', 'Save')) ?>
+                            <?= esc(t('save')) ?>
                         </button>
                     </div>
                 </form>
@@ -283,20 +283,20 @@ $VER = time();
         window.USER_TOWN = <?= $userTown ?>;
         window.USER_CONG = <?= $userCong ?>;
         window.T = {
-            day: '<?= esc(T('Dag', 'Day')) ?>',
-            week: '<?= esc(T('Week', 'Week')) ?>',
-            month: '<?= esc(T('Maand', 'Month')) ?>',
-            today: '<?= esc(T('Vandag', 'Today')) ?>',
-            noEvents: '<?= esc(T('Geen gebeure', 'No events')) ?>',
-            gebeurtenis: '<?= esc(T('Gebeurtenis', 'Event')) ?>',
-            dagboek: '<?= esc(T('Dagboek', 'Diary')) ?>',
-            afspraak: '<?= esc(T('Afspraak', 'Appointment')) ?>',
-            edit: '<?= esc(T('Wysig', 'Edit')) ?>',
-            delete: '<?= esc(T('Verwyder', 'Delete')) ?>',
-            confirmDelete: '<?= esc(T('Is jy seker jy wil hierdie inskrywing verwyder?', 'Are you sure you want to delete this entry?')) ?>',
-            saved: '<?= esc(T('Suksesvol gestoor!', 'Successfully saved!')) ?>',
-            deleted: '<?= esc(T('Suksesvol verwyder!', 'Successfully deleted!')) ?>',
-            error: '<?= esc(T('Fout', 'Error')) ?>',
+            day: '<?= esc(t('day')) ?>',
+            week: '<?= esc(t('week')) ?>',
+            month: '<?= esc(t('month')) ?>',
+            today: '<?= esc(t('today')) ?>',
+            noEvents: '<?= esc(t('no_events')) ?>',
+            gebeurtenis: '<?= esc(t('event')) ?>',
+            dagboek: '<?= esc(t('diary')) ?>',
+            afspraak: '<?= esc(t('appointment')) ?>',
+            edit: '<?= esc(t('edit')) ?>',
+            delete: '<?= esc(t('delete')) ?>',
+            confirmDelete: '<?= esc(t('confirm_delete')) ?>',
+            saved: '<?= esc(t('saved_success')) ?>',
+            deleted: '<?= esc(t('deleted_success')) ?>',
+            error: '<?= esc(t('error')) ?>',
             dayNames: <?= $pageLang === 'af' 
                 ? '["Sondag","Maandag","Dinsdag","Woensdag","Donderdag","Vrydag","Saterdag"]'
                 : '["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]'
