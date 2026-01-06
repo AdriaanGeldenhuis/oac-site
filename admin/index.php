@@ -9,8 +9,11 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     $_SESSION['language'] = $lang;
 }
 
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T($af, $en) { global $lang; return $lang === 'af' ? $af : $en; }
+// Translation helper using central 5-language system
+function t(string $key): string {
+    global $lang;
+    return __t($key, $lang);
+}
 function esc($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
@@ -49,7 +52,7 @@ $VER = time();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= T('Admin Bestuur', 'Admin Dashboard') ?></title>
+  <title><?= t('admin_dashboard') ?></title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -71,8 +74,8 @@ $VER = time();
   <div class="admin-hero">
     <div class="admin-hero-glow"></div>
     <div class="admin-hero-content">
-      <h1 class="admin-hero-title"><?= T('Admin Bestuur', 'Admin Dashboard') ?></h1>
-      <p class="admin-hero-subtitle"><?= T('Beheer jou profiel, goedkeurings en instellings', 'Manage your profile, approvals and settings') ?></p>
+      <h1 class="admin-hero-title"><?= t('admin_dashboard') ?></h1>
+      <p class="admin-hero-subtitle"><?= t('admin_subtitle') ?></p>
     </div>
   </div>
 
@@ -82,57 +85,57 @@ $VER = time();
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
         </svg>
-        <span><?= T('Profiel', 'Profile') ?></span>
+        <span><?= t('profile') ?></span>
       </a>
-      
+
       <a href="?tab=accounts" class="admin-tab <?= $activeTab === 'accounts' ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
         </svg>
-        <span><?= T('Rekeninge', 'Accounts') ?></span>
+        <span><?= t('accounts') ?></span>
       </a>
-      
+
       <?php if ($isElder): ?>
       <a href="?tab=teaching" class="admin-tab <?= $activeTab === 'teaching' ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 016.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" stroke="currentColor" stroke-width="2"/>
         </svg>
-        <span><?= T('Lering', 'Teaching') ?></span>
+        <span><?= t('teaching') ?></span>
       </a>
       <?php endif; ?>
-      
+
       <?php if ($canManageAmpte): ?>
       <a href="?tab=amptes" class="admin-tab <?= $activeTab === 'amptes' ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2"/>
         </svg>
-        <span><?= T('Ampte', 'Offices') ?></span>
+        <span><?= t('offices') ?></span>
       </a>
-      
+
       <a href="?tab=afsprake" class="admin-tab <?= $activeTab === 'afsprake' ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
           <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
         </svg>
-        <span><?= T('Afsprake', 'Appointments') ?></span>
+        <span><?= t('appointments') ?></span>
       </a>
       <?php endif; ?>
-      
+
       <a href="?tab=settings" class="admin-tab <?= $activeTab === 'settings' ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
           <path d="M12 1v6m0 6v6M23 12h-6m-6 0H1" stroke="currentColor" stroke-width="2"/>
         </svg>
-        <span><?= T('Instellings', 'Settings') ?></span>
+        <span><?= t('settings') ?></span>
       </a>
-      
+
       <?php if ($canApprove): ?>
       <a href="?tab=approvals" class="admin-tab <?= $activeTab === 'approvals' ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" stroke-width="2"/>
           <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
         </svg>
-        <span><?= T('Goedkeurings', 'Approvals') ?></span>
+        <span><?= t('approvals') ?></span>
       </a>
       <?php endif; ?>
     </nav>

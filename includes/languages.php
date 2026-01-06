@@ -192,6 +192,467 @@ define('UI_TRANSLATIONS', [
         'zu' => 'UMathewu 18:20',
         'xh' => 'UMateyu 18:20',
         'pt' => 'Mateus 18:20'
+    ],
+
+    // ==================== ADMIN SECTION ====================
+    'admin_dashboard' => [
+        'af' => 'Admin Bestuur',
+        'en' => 'Admin Dashboard',
+        'zu' => 'Iphaneli Yokuphatha',
+        'xh' => 'Iphaneli Yolawulo',
+        'pt' => 'Painel Admin'
+    ],
+    'admin_subtitle' => [
+        'af' => 'Beheer jou profiel, goedkeurings en instellings',
+        'en' => 'Manage your profile, approvals and settings',
+        'zu' => 'Phatha iphrofayela yakho, izimvume nezilungiselelo',
+        'xh' => 'Lawula iprofayile yakho, imvume kunye neesetingi',
+        'pt' => 'Gerencie seu perfil, aprovações e configurações'
+    ],
+    'profile' => [
+        'af' => 'Profiel',
+        'en' => 'Profile',
+        'zu' => 'Iphrofayela',
+        'xh' => 'Iprofayile',
+        'pt' => 'Perfil'
+    ],
+    'accounts' => [
+        'af' => 'Rekeninge',
+        'en' => 'Accounts',
+        'zu' => 'Ama-akhawunti',
+        'xh' => 'Iiakhawunti',
+        'pt' => 'Contas'
+    ],
+    'teaching' => [
+        'af' => 'Lering',
+        'en' => 'Teaching',
+        'zu' => 'Imfundiso',
+        'xh' => 'Imfundiso',
+        'pt' => 'Ensino'
+    ],
+    'offices' => [
+        'af' => 'Ampte',
+        'en' => 'Offices',
+        'zu' => 'Izihamba',
+        'xh' => 'Iiofisi',
+        'pt' => 'Cargos'
+    ],
+    'appointments' => [
+        'af' => 'Afsprake',
+        'en' => 'Appointments',
+        'zu' => 'Izicelo',
+        'xh' => 'Iintlanganiso',
+        'pt' => 'Compromissos'
+    ],
+    'settings' => [
+        'af' => 'Instellings',
+        'en' => 'Settings',
+        'zu' => 'Izilungiselelo',
+        'xh' => 'Iisetingi',
+        'pt' => 'Configurações'
+    ],
+    'approvals' => [
+        'af' => 'Goedkeurings',
+        'en' => 'Approvals',
+        'zu' => 'Izimvume',
+        'xh' => 'Imvume',
+        'pt' => 'Aprovações'
+    ],
+    'edit_profile' => [
+        'af' => 'Wysig Profiel',
+        'en' => 'Edit Profile',
+        'zu' => 'Hlela Iphrofayela',
+        'xh' => 'Hlela Iprofayile',
+        'pt' => 'Editar Perfil'
+    ],
+    'update_personal_info' => [
+        'af' => 'Werk jou persoonlike inligting by',
+        'en' => 'Update your personal information',
+        'zu' => 'Buyekeza ulwazi lwakho lomuntu siqu',
+        'xh' => 'Hlaziya ulwazi lwakho lobuqu',
+        'pt' => 'Atualize suas informações pessoais'
+    ],
+    'spouse_request_sent' => [
+        'af' => 'Eggenoot versoek gestuur. Wag vir goedkeuring.',
+        'en' => 'Spouse request sent. Waiting for approval.',
+        'zu' => 'Isicelo somshado sithunyelwe. Ilinde ukuvunywa.',
+        'xh' => 'Isicelo somyeni sithunyelwe. Silindele ukuvunywa.',
+        'pt' => 'Pedido de cônjuge enviado. Aguardando aprovação.'
+    ],
+    'profile_updated' => [
+        'af' => 'Profiel suksesvol opgedateer',
+        'en' => 'Profile updated successfully',
+        'zu' => 'Iphrofayela ibuyekezwe ngempumelelo',
+        'xh' => 'Iprofayile ihlaziywe ngempumelelo',
+        'pt' => 'Perfil atualizado com sucesso'
+    ],
+    'error' => [
+        'af' => 'Fout',
+        'en' => 'Error',
+        'zu' => 'Iphutha',
+        'xh' => 'Impazamo',
+        'pt' => 'Erro'
+    ],
+    'you_sent_spouse_request' => [
+        'af' => 'Jy het \'n eggenoot versoek gestuur na',
+        'en' => 'You sent a spouse request to',
+        'zu' => 'Uthumele isicelo somshado ku',
+        'xh' => 'Uthumele isicelo somyeni ku',
+        'pt' => 'Você enviou um pedido de cônjuge para'
+    ],
+    'waiting_approval' => [
+        'af' => 'Wag vir goedkeuring.',
+        'en' => 'Waiting for approval.',
+        'zu' => 'Ilinde ukuvunywa.',
+        'xh' => 'Ilindele ukuvunywa.',
+        'pt' => 'Aguardando aprovação.'
+    ],
+    'wants_to_marry_you' => [
+        'af' => 'wil met jou trou.',
+        'en' => 'wants to marry you.',
+        'zu' => 'ufuna ukushada nawe.',
+        'xh' => 'ufuna ukutshata nawe.',
+        'pt' => 'quer se casar com você.'
+    ],
+    'accept' => [
+        'af' => 'Aanvaar',
+        'en' => 'Accept',
+        'zu' => 'Yamukela',
+        'xh' => 'Yamkela',
+        'pt' => 'Aceitar'
+    ],
+    'reject' => [
+        'af' => 'Verwerp',
+        'en' => 'Reject',
+        'zu' => 'Yenqaba',
+        'xh' => 'Yala',
+        'pt' => 'Rejeitar'
+    ],
+    'profile_photo' => [
+        'af' => 'Profiel Foto',
+        'en' => 'Profile Photo',
+        'zu' => 'Isithombe Sephrofayela',
+        'xh' => 'Ifoto Yeprofayile',
+        'pt' => 'Foto do Perfil'
+    ],
+    'photo_hint' => [
+        'af' => 'Kies \'n foto om op te laai. Die foto sal outomaties 600x600px wees.',
+        'en' => 'Choose a photo to upload. The photo will be automatically resized to 600x600px.',
+        'zu' => 'Khetha isithombe ozosifaka. Isithombe sizoshintshwa ngokuzenzakalela sibe 600x600px.',
+        'xh' => 'Khetha ifoto ozoyilayisha. Ifoto iya kutshintshelwa ngokuzenzekelayo ku-600x600px.',
+        'pt' => 'Escolha uma foto para enviar. A foto será redimensionada automaticamente para 600x600px.'
+    ],
+    'name' => [
+        'af' => 'Naam',
+        'en' => 'Name',
+        'zu' => 'Igama',
+        'xh' => 'Igama',
+        'pt' => 'Nome'
+    ],
+    'surname' => [
+        'af' => 'Van',
+        'en' => 'Surname',
+        'zu' => 'Isibongo',
+        'xh' => 'Ifani',
+        'pt' => 'Sobrenome'
+    ],
+    'phone' => [
+        'af' => 'Selfoon',
+        'en' => 'Phone',
+        'zu' => 'Ucingo',
+        'xh' => 'Ifowuni',
+        'pt' => 'Telefone'
+    ],
+    'language' => [
+        'af' => 'Taal',
+        'en' => 'Language',
+        'zu' => 'Ulimi',
+        'xh' => 'Ulwimi',
+        'pt' => 'Idioma'
+    ],
+    'birthdate' => [
+        'af' => 'Geboortedatum',
+        'en' => 'Birthdate',
+        'zu' => 'Usuku Lokuzalwa',
+        'xh' => 'Umhla Wokuzalwa',
+        'pt' => 'Data de Nascimento'
+    ],
+    'marital_status' => [
+        'af' => 'Huwelikstatus',
+        'en' => 'Marital Status',
+        'zu' => 'Isimo Somshado',
+        'xh' => 'Imeko Yomtshato',
+        'pt' => 'Estado Civil'
+    ],
+    'select' => [
+        'af' => 'Kies',
+        'en' => 'Select',
+        'zu' => 'Khetha',
+        'xh' => 'Khetha',
+        'pt' => 'Selecionar'
+    ],
+    'married' => [
+        'af' => 'Getroud',
+        'en' => 'Married',
+        'zu' => 'Ushadile',
+        'xh' => 'Utshatile',
+        'pt' => 'Casado(a)'
+    ],
+    'unmarried' => [
+        'af' => 'Ongetroud',
+        'en' => 'Unmarried',
+        'zu' => 'Awushadile',
+        'xh' => 'Awutshatanga',
+        'pt' => 'Solteiro(a)'
+    ],
+    'province' => [
+        'af' => 'Provinsie',
+        'en' => 'Province',
+        'zu' => 'Isifundazwe',
+        'xh' => 'IPhondo',
+        'pt' => 'Província'
+    ],
+    'town_city' => [
+        'af' => 'Stad/Dorp',
+        'en' => 'Town/City',
+        'zu' => 'Idolobha',
+        'xh' => 'Idolophu',
+        'pt' => 'Cidade'
+    ],
+    'congregation' => [
+        'af' => 'Gemeente',
+        'en' => 'Congregation',
+        'zu' => 'Ibandla',
+        'xh' => 'Ibandla',
+        'pt' => 'Congregação'
+    ],
+    'select_province_first' => [
+        'af' => 'Kies provinsie eers',
+        'en' => 'Select province first',
+        'zu' => 'Khetha isifundazwe kuqala',
+        'xh' => 'Khetha iphondo kuqala',
+        'pt' => 'Selecione a província primeiro'
+    ],
+    'select_town_first' => [
+        'af' => 'Kies dorp eers',
+        'en' => 'Select town first',
+        'zu' => 'Khetha idolobha kuqala',
+        'xh' => 'Khetha idolophu kuqala',
+        'pt' => 'Selecione a cidade primeiro'
+    ],
+    'spouse' => [
+        'af' => 'Eggenoot/Eggenote',
+        'en' => 'Spouse',
+        'zu' => 'Umlingani',
+        'xh' => 'Umlingani',
+        'pt' => 'Cônjuge'
+    ],
+    'spouse_hint' => [
+        'af' => 'Stuur \'n versoek om jou eggenoot te koppel. Die ander persoon moet goedkeur.',
+        'en' => 'Send a request to link your spouse. The other person must approve.',
+        'zu' => 'Thumela isicelo sokuxhumanisa umlingani wakho. Omunye umuntu kufanele avume.',
+        'xh' => 'Thumela isicelo sokudibanisa umlingani wakho. Omnye umntu kufuneka avume.',
+        'pt' => 'Envie um pedido para vincular seu cônjuge. A outra pessoa deve aprovar.'
+    ],
+    'you_are_linked_to' => [
+        'af' => 'Jy is gekoppel aan',
+        'en' => 'You are linked to',
+        'zu' => 'Uxhunyiwe no',
+        'xh' => 'Udibanisiwe no',
+        'pt' => 'Você está vinculado a'
+    ],
+    'about' => [
+        'af' => 'Oor',
+        'en' => 'About',
+        'zu' => 'Mayelana',
+        'xh' => 'Malunga',
+        'pt' => 'Sobre'
+    ],
+    'about_placeholder' => [
+        'af' => 'Vertel ons meer van jouself',
+        'en' => 'Tell us more about yourself',
+        'zu' => 'Sitshele okwengeziwe ngawe',
+        'xh' => 'Sixelele ngakumbi ngawe',
+        'pt' => 'Conte-nos mais sobre você'
+    ],
+    'cancel' => [
+        'af' => 'Kanselleer',
+        'en' => 'Cancel',
+        'zu' => 'Khansela',
+        'xh' => 'Rhoxisa',
+        'pt' => 'Cancelar'
+    ],
+    'save' => [
+        'af' => 'Stoor',
+        'en' => 'Save',
+        'zu' => 'Gcina',
+        'xh' => 'Gcina',
+        'pt' => 'Salvar'
+    ],
+
+    // ==================== CHURCH OFFICES (Ampte) ====================
+    'apostle' => [
+        'af' => 'Apostel',
+        'en' => 'Apostle',
+        'zu' => 'Umphostoli',
+        'xh' => 'UmPostile',
+        'pt' => 'Apóstolo'
+    ],
+    'prophet' => [
+        'af' => 'Profeet',
+        'en' => 'Prophet',
+        'zu' => 'Umprofethi',
+        'xh' => 'Umprofeti',
+        'pt' => 'Profeta'
+    ],
+    'evangelist' => [
+        'af' => 'Evangelis',
+        'en' => 'Evangelist',
+        'zu' => 'Umvangeli',
+        'xh' => 'Umvangeli',
+        'pt' => 'Evangelista'
+    ],
+    'shepherd' => [
+        'af' => 'Herder',
+        'en' => 'Shepherd',
+        'zu' => 'Umalusi',
+        'xh' => 'Umalusi',
+        'pt' => 'Pastor'
+    ],
+    'teacher' => [
+        'af' => 'Leraar',
+        'en' => 'Teacher',
+        'zu' => 'Umfundisi',
+        'xh' => 'Umfundisi',
+        'pt' => 'Professor'
+    ],
+    'elder' => [
+        'af' => 'Ouderling',
+        'en' => 'Elder',
+        'zu' => 'Umdala',
+        'xh' => 'Umdala',
+        'pt' => 'Ancião'
+    ],
+    'overseer' => [
+        'af' => 'Opsiener',
+        'en' => 'Overseer',
+        'zu' => 'Umbonisi',
+        'xh' => 'Umbonisi',
+        'pt' => 'Supervisor'
+    ],
+    'deacon' => [
+        'af' => 'Diaken',
+        'en' => 'Deacon',
+        'zu' => 'Umdiakoni',
+        'xh' => 'Umdiakoni',
+        'pt' => 'Diácono'
+    ],
+    'deaconess' => [
+        'af' => 'Diakonesse',
+        'en' => 'Deaconess',
+        'zu' => 'Umdiakoni wesifazane',
+        'xh' => 'Umdiakoni obhinqileyo',
+        'pt' => 'Diaconisa'
+    ],
+    'priest' => [
+        'af' => 'Priester',
+        'en' => 'Priest',
+        'zu' => 'Umpristi',
+        'xh' => 'Umbingeleli',
+        'pt' => 'Sacerdote'
+    ],
+    'priestess' => [
+        'af' => 'Priesteres',
+        'en' => 'Priestess',
+        'zu' => 'Umpristi wesifazane',
+        'xh' => 'Umbingeleli obhinqileyo',
+        'pt' => 'Sacerdotisa'
+    ],
+    'member' => [
+        'af' => 'Lidmaat',
+        'en' => 'Member',
+        'zu' => 'Ilunga',
+        'xh' => 'Ilungu',
+        'pt' => 'Membro'
+    ],
+
+    // ==================== COMMON ACTIONS ====================
+    'delete' => [
+        'af' => 'Verwyder',
+        'en' => 'Delete',
+        'zu' => 'Susa',
+        'xh' => 'Cima',
+        'pt' => 'Excluir'
+    ],
+    'edit' => [
+        'af' => 'Wysig',
+        'en' => 'Edit',
+        'zu' => 'Hlela',
+        'xh' => 'Hlela',
+        'pt' => 'Editar'
+    ],
+    'view' => [
+        'af' => 'Bekyk',
+        'en' => 'View',
+        'zu' => 'Buka',
+        'xh' => 'Jonga',
+        'pt' => 'Ver'
+    ],
+    'search' => [
+        'af' => 'Soek',
+        'en' => 'Search',
+        'zu' => 'Sesha',
+        'xh' => 'Khangela',
+        'pt' => 'Pesquisar'
+    ],
+    'add' => [
+        'af' => 'Voeg by',
+        'en' => 'Add',
+        'zu' => 'Engeza',
+        'xh' => 'Yongeza',
+        'pt' => 'Adicionar'
+    ],
+    'confirm' => [
+        'af' => 'Bevestig',
+        'en' => 'Confirm',
+        'zu' => 'Qinisekisa',
+        'xh' => 'Qinisekisa',
+        'pt' => 'Confirmar'
+    ],
+    'approve' => [
+        'af' => 'Goedkeur',
+        'en' => 'Approve',
+        'zu' => 'Vuma',
+        'xh' => 'Vuma',
+        'pt' => 'Aprovar'
+    ],
+    'loading' => [
+        'af' => 'Laai...',
+        'en' => 'Loading...',
+        'zu' => 'Iyalayisha...',
+        'xh' => 'Iyalayisha...',
+        'pt' => 'Carregando...'
+    ],
+    'no_results' => [
+        'af' => 'Geen resultate nie',
+        'en' => 'No results',
+        'zu' => 'Akukho miphumela',
+        'xh' => 'Akukho ziphumo',
+        'pt' => 'Sem resultados'
+    ],
+    'success' => [
+        'af' => 'Suksesvol',
+        'en' => 'Success',
+        'zu' => 'Impumelelo',
+        'xh' => 'Impumelelo',
+        'pt' => 'Sucesso'
+    ],
+    'failed' => [
+        'af' => 'Misluk',
+        'en' => 'Failed',
+        'zu' => 'Kwehlulekile',
+        'xh' => 'Ayiphumelelanga',
+        'pt' => 'Falhou'
     ]
 ]);
 
