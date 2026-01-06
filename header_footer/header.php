@@ -33,10 +33,10 @@ if (empty($_SESSION['language']) || !in_array($_SESSION['language'], SUPPORTED_L
 
 $hdrLang = $_SESSION['language'];
 
-// Translation helper
+// Translation helper - fallback to English for non-Afrikaans languages
 function t_hdr($af, $en) {
   global $hdrLang;
-  return $hdrLang === 'en' ? $en : $af;
+  return $hdrLang === 'af' ? $af : $en;
 }
 
 // Get current page title
