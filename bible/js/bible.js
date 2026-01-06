@@ -1499,7 +1499,7 @@
         title: shareText,
         text: shareText,
         url: shareUrl
-      }).catch(e => console.log('Share failed:', e));
+      }).catch(() => {});
     } else {
       alert(state.lang === 'af' ? 'Deel nie ondersteun nie.' : 'Share not supported.');
     }

@@ -309,8 +309,6 @@
   }
 
   function showNotification(message, type = 'info') {
-    console.log(`[${type}] ${message}`);
-    
     // Create toast notification
     const toast = document.createElement('div');
     toast.className = `notif-toast notif-toast-${type}`;
