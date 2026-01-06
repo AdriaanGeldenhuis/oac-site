@@ -42,7 +42,7 @@
     card.addEventListener('mouseenter', function() {
       this.style.zIndex = '10';
     });
-    
+
     card.addEventListener('mouseleave', function() {
       this.style.zIndex = '1';
     });
@@ -76,16 +76,16 @@
 
   // Parallax scroll effect for hero glow
   let ticking = false;
-  
+
   function updateParallax() {
     const scrolled = window.pageYOffset;
     const heroGlow = document.querySelector('.wc-hero-glow');
-    
+
     if (heroGlow) {
       const parallaxSpeed = 0.5;
       heroGlow.style.transform = `translateY(${scrolled * parallaxSpeed}px)`;
     }
-    
+
     ticking = false;
   }
 
@@ -101,7 +101,7 @@
     card.addEventListener('mouseenter', function() {
       this.style.transform = 'translateY(-5px)';
     });
-    
+
     card.addEventListener('mouseleave', function() {
       this.style.transform = 'translateY(0)';
     });
@@ -133,6 +133,6 @@
     document.body.classList.add('loaded');
   }, 100);
 
-  console.log('Welcome page initialized ✨');
+  console.log('Welcome page initialized');
 
 })();
