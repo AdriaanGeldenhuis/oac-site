@@ -2430,6 +2430,141 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Ingoma ayitholakali.',
         'xh' => 'Ingoma ayifumaneki.',
         'pt' => 'Canção não encontrada.'
+    ],
+
+    // ==================== AI SLIMBYBEL PAGE ====================
+    'ai_slimbybel' => [
+        'af' => 'AI Slimbybel',
+        'en' => 'AI Smart Bible',
+        'zu' => 'I-AI Slimbybel',
+        'xh' => 'I-AI Slimbybel',
+        'pt' => 'IA Bíblia Inteligente'
+    ],
+    'spiritual_wisdom_ai' => [
+        'af' => 'Geestelike Wysheid deur Kunsmatige Intelligensie',
+        'en' => 'Spiritual Wisdom through Artificial Intelligence',
+        'zu' => 'Ukuhlakanipha Okungokomoya nge-AI',
+        'xh' => 'Ubulumko Bokomoya nge-AI',
+        'pt' => 'Sabedoria Espiritual através de Inteligência Artificial'
+    ],
+    'ask_scripture' => [
+        'af' => 'Vra die Skrif',
+        'en' => 'Ask the Scripture',
+        'zu' => 'Buza Izibhalo',
+        'xh' => 'Buza Izibhalo',
+        'pt' => 'Pergunte às Escrituras'
+    ],
+    'ask_placeholder' => [
+        'af' => 'bv. Wat beteken water in die Bybel?',
+        'en' => 'e.g. What does water mean in the Bible?',
+        'zu' => 'isb. Amanzi asho ukuthini eBhayibhelini?',
+        'xh' => 'umz. Amanzi athetha ukuthini eBhayibhileni?',
+        'pt' => 'ex. O que significa água na Bíblia?'
+    ],
+    'explain' => [
+        'af' => 'Verduidelik',
+        'en' => 'Explain',
+        'zu' => 'Chaza',
+        'xh' => 'Cacisa',
+        'pt' => 'Explicar'
+    ],
+    'spiritual_interpretation_help' => [
+        'af' => 'Geestelike uitleg • Afrikaans 1933/1953 • Skrif-met-Skrif',
+        'en' => 'Spiritual interpretation • KJV • Scripture with Scripture',
+        'zu' => 'Incazelo engokomoya • KJV • Izibhalo ngezibhalo',
+        'xh' => 'Inkcazelo engokomoya • KJV • Izibhalo ngezibhalo',
+        'pt' => 'Interpretação espiritual • ARC • Escritura com Escritura'
+    ],
+    'answer' => [
+        'af' => 'Antwoord',
+        'en' => 'Answer',
+        'zu' => 'Impendulo',
+        'xh' => 'Impendulo',
+        'pt' => 'Resposta'
+    ],
+    'answer_placeholder' => [
+        'af' => 'Jou antwoord sal hier in real-time verskyn...',
+        'en' => 'Your answer will stream here in real time...',
+        'zu' => 'Impendulo yakho izovela lapha ngesikhathi sangempela...',
+        'xh' => 'Impendulo yakho iya kuvela apha ngexesha lokwenyani...',
+        'pt' => 'Sua resposta aparecerá aqui em tempo real...'
+    ],
+    'example_questions' => [
+        'af' => 'Voorbeeldvrae',
+        'en' => 'Example Questions',
+        'zu' => 'Imibuzo Yesibonelo',
+        'xh' => 'Imibuzo Yomzekelo',
+        'pt' => 'Perguntas de Exemplo'
+    ],
+    'empty_question' => [
+        'af' => 'Leë vraag.',
+        'en' => 'Empty question.',
+        'zu' => 'Umbuzo ongenalutho.',
+        'xh' => 'Umbuzo ongenanto.',
+        'pt' => 'Pergunta vazia.'
+    ],
+    'missing_api_key' => [
+        'af' => 'Geen OPENAI_API_KEY gevind nie.',
+        'en' => 'Missing OPENAI_API_KEY.',
+        'zu' => 'I-OPENAI_API_KEY ayitholakali.',
+        'xh' => 'I-OPENAI_API_KEY ayifumaneki.',
+        'pt' => 'OPENAI_API_KEY não encontrada.'
+    ],
+    'water_question_full' => [
+        'af' => 'Wat beteken water in die Bybel?',
+        'en' => 'What does water mean in the Bible?',
+        'zu' => 'Amanzi asho ukuthini eBhayibhelini?',
+        'xh' => 'Amanzi athetha ukuthini eBhayibhileni?',
+        'pt' => 'O que significa água na Bíblia?'
+    ],
+    'water_question_short' => [
+        'af' => 'Wat beteken water?',
+        'en' => 'What does water mean?',
+        'zu' => 'Amanzi asho ukuthini?',
+        'xh' => 'Amanzi athetha ukuthini?',
+        'pt' => 'O que significa água?'
+    ],
+    'sower_question_full' => [
+        'af' => 'Verduidelik die gelykenis van die saaier',
+        'en' => 'Explain the parable of the sower',
+        'zu' => 'Chaza umfanekiso womhlwanyeli',
+        'xh' => 'Cacisa umzekeliso womhlwayeli',
+        'pt' => 'Explique a parábola do semeador'
+    ],
+    'sower_question_short' => [
+        'af' => 'Gelykenis van die saaier',
+        'en' => 'Parable of the sower',
+        'zu' => 'Umfanekiso womhlwanyeli',
+        'xh' => 'Umzekeliso womhlwayeli',
+        'pt' => 'Parábola do semeador'
+    ],
+    'spirit_question_full' => [
+        'af' => 'Wat is die vrug van die Gees?',
+        'en' => 'What is the fruit of the Spirit?',
+        'zu' => 'Yini isithelo sikaMoya?',
+        'xh' => 'Yintoni isiqhamo soMoya?',
+        'pt' => 'Qual é o fruto do Espírito?'
+    ],
+    'spirit_question_short' => [
+        'af' => 'Vrug van die Gees',
+        'en' => 'Fruit of the Spirit',
+        'zu' => 'Isithelo sikaMoya',
+        'xh' => 'Isiqhamo soMoya',
+        'pt' => 'Fruto do Espírito'
+    ],
+    'kingdom_question_full' => [
+        'af' => 'Verduidelik die Koninkryk van God',
+        'en' => 'Explain the Kingdom of God',
+        'zu' => 'Chaza uMbuso kaNkulunkulu',
+        'xh' => 'Cacisa uBukumkani bukaThixo',
+        'pt' => 'Explique o Reino de Deus'
+    ],
+    'kingdom_question_short' => [
+        'af' => 'Koninkryk van God',
+        'en' => 'Kingdom of God',
+        'zu' => 'UMbuso kaNkulunkulu',
+        'xh' => 'UBukumkani bukaThixo',
+        'pt' => 'Reino de Deus'
     ]
 ]);
 

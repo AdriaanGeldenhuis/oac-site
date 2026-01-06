@@ -14,8 +14,8 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
   header('Location: /aislimbybel/aislimbybel.php');
   exit;
 }
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T(string $af, string $en): string { global $pageLang; return $pageLang === 'af' ? $af : $en; }
+// Translation helper using central 5-language system
+function t(string $key): string { global $pageLang; return __t($key, $pageLang); }
 
 // --------------------- Laai ou konfig/riglyne -------------------------
 $OLD_CONFIG = __DIR__ . '/config.php';
@@ -56,8 +56,8 @@ if (isset($_GET['stream']) && $_GET['stream'] === '1') {
     @flush();
   };
 
-  if ($q === '') { $sse('error', T('Leë vraag.', 'Empty question.')); $sse('done', 'end'); exit; }
-  if (!$OPENAI_API_KEY) { $sse('error', T('Geen OPENAI_API_KEY gevind nie.', 'Missing OPENAI_API_KEY.')); $sse('done', 'end'); exit; }
+  if ($q === '') { $sse('error', t('empty_question')); $sse('done', 'end'); exit; }
+  if (!$OPENAI_API_KEY) { $sse('error', t('missing_api_key')); $sse('done', 'end'); exit; }
 
   $messages = [
     ['role' => 'system', 'content' => $SYSTEM_PROMPT],
@@ -110,11 +110,11 @@ if (isset($_GET['stream']) && $_GET['stream'] === '1') {
 // -------------------------- HTML UI -----------------------------------
 function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 ?><!doctype html>
-<html lang="<?= $pageLang === 'af' ? 'af' : 'en' ?>">
+<html lang="<?= $pageLang ?>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= esc(T('AI Slimbybel', 'AI Smart Bible')) ?></title>
+  <title><?= esc(t('ai_slimbybel')) ?></title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -138,8 +138,8 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
   <div class="sb-hero">
     <div class="sb-hero-glow"></div>
     <div class="sb-hero-content">
-      <h1 class="sb-hero-title"><?= esc(T('AI Slimbybel', 'AI Smart Bible')) ?></h1>
-      <p class="sb-hero-subtitle"><?= esc(T('Geestelike Wysheid deur Kunsmatige Intelligensie', 'Spiritual Wisdom through Artificial Intelligence')) ?></p>
+      <h1 class="sb-hero-title"><?= esc(t('ai_slimbybel')) ?></h1>
+      <p class="sb-hero-subtitle"><?= esc(t('spiritual_wisdom_ai')) ?></p>
     </div>
     <div class="sb-sparkles">
       <span class="sb-sparkle" style="--delay: 0s; --x: 10%; --y: 20%;"></span>
@@ -160,7 +160,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
             <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2 class="sb-section-title"><?= esc(T('Vra die Skrif', 'Ask the Scripture')) ?></h2>
+        <h2 class="sb-section-title"><?= esc(t('ask_scripture')) ?></h2>
       </div>
 
       <form id="sbForm" class="sb-form" action="#" method="get">
@@ -171,14 +171,14 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
             name="q" 
             class="sb-input" 
             autocomplete="off" 
-            placeholder="<?= esc(T('bv. Wat beteken water in die Bybel?', 'e.g. What does water mean in the Bible?')) ?>"
+            placeholder="<?= esc(t('ask_placeholder')) ?>"
           >
           <button class="sb-btn sb-btn-primary" id="askBtn" type="submit">
             <span class="sb-btn-shine"></span>
             <svg class="sb-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            <span class="sb-btn-text"><?= esc(T('Verduidelik', 'Explain')) ?></span>
+            <span class="sb-btn-text"><?= esc(t('explain')) ?></span>
           </button>
         </div>
       </form>
@@ -188,7 +188,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
           <path d="M12 16v.01M12 8v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
-        <p class="sb-help-text"><?= esc(T('Geestelike uitleg • Afrikaans 1933/1953 • Skrif-met-Skrif', 'Spiritual interpretation • KJV • Scripture with Scripture')) ?></p>
+        <p class="sb-help-text"><?= esc(t('spiritual_interpretation_help')) ?></p>
       </div>
     </section>
 
@@ -201,7 +201,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
             <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <h2 class="sb-section-title"><?= esc(T('Antwoord', 'Answer')) ?></h2>
+        <h2 class="sb-section-title"><?= esc(t('answer')) ?></h2>
         <div class="sb-loading" id="loadingIndicator" hidden>
           <div class="sb-spinner"></div>
         </div>
@@ -213,7 +213,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
             <svg class="sb-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/>
             </svg>
-            <p><?= esc(T('Jou antwoord sal hier in real-time verskyn...', 'Your answer will stream here in real time...')) ?></p>
+            <p><?= esc(t('answer_placeholder')) ?></p>
           </div>
           <div class="sb-answer-content" id="answerContent" hidden></div>
         </div>
@@ -222,26 +222,26 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
 
     <!-- Examples Section -->
     <section class="sb-section sb-examples-section">
-      <h3 class="sb-examples-title"><?= esc(T('Voorbeeldvrae', 'Example Questions')) ?></h3>
+      <h3 class="sb-examples-title"><?= esc(t('example_questions')) ?></h3>
       <div class="sb-examples-grid">
-        <button class="sb-example-card" data-question="<?= esc(T('Wat beteken water in die Bybel?', 'What does water mean in the Bible?')) ?>">
+        <button class="sb-example-card" data-question="<?= esc(t('water_question_full')) ?>">
           <div class="sb-example-icon">💧</div>
-          <p class="sb-example-text"><?= esc(T('Wat beteken water?', 'What does water mean?')) ?></p>
+          <p class="sb-example-text"><?= esc(t('water_question_short')) ?></p>
           <div class="sb-card-shine"></div>
         </button>
-        <button class="sb-example-card" data-question="<?= esc(T('Verduidelik die gelykenis van die saaier', 'Explain the parable of the sower')) ?>">
+        <button class="sb-example-card" data-question="<?= esc(t('sower_question_full')) ?>">
           <div class="sb-example-icon">🌱</div>
-          <p class="sb-example-text"><?= esc(T('Gelykenis van die saaier', 'Parable of the sower')) ?></p>
+          <p class="sb-example-text"><?= esc(t('sower_question_short')) ?></p>
           <div class="sb-card-shine"></div>
         </button>
-        <button class="sb-example-card" data-question="<?= esc(T('Wat is die vrug van die Gees?', 'What is the fruit of the Spirit?')) ?>">
+        <button class="sb-example-card" data-question="<?= esc(t('spirit_question_full')) ?>">
           <div class="sb-example-icon">🍇</div>
-          <p class="sb-example-text"><?= esc(T('Vrug van die Gees', 'Fruit of the Spirit')) ?></p>
+          <p class="sb-example-text"><?= esc(t('spirit_question_short')) ?></p>
           <div class="sb-card-shine"></div>
         </button>
-        <button class="sb-example-card" data-question="<?= esc(T('Verduidelik die Koninkryk van God', 'Explain the Kingdom of God')) ?>">
+        <button class="sb-example-card" data-question="<?= esc(t('kingdom_question_full')) ?>">
           <div class="sb-example-icon">👑</div>
-          <p class="sb-example-text"><?= esc(T('Koninkryk van God', 'Kingdom of God')) ?></p>
+          <p class="sb-example-text"><?= esc(t('kingdom_question_short')) ?></p>
           <div class="sb-card-shine"></div>
         </button>
       </div>
