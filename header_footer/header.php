@@ -7,21 +7,8 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 
-// Include languages config if available
-$langConfigPath = __DIR__ . '/../includes/languages.php';
-if (file_exists($langConfigPath)) {
-  require_once $langConfigPath;
-} else {
-  // Fallback if languages.php not loaded
-  define('SUPPORTED_LANGS', ['af', 'en', 'zu', 'xh', 'pt']);
-  define('LANG_NAMES', [
-    'af' => 'Afrikaans',
-    'en' => 'English',
-    'zu' => 'isiZulu',
-    'xh' => 'isiXhosa',
-    'pt' => 'Português'
-  ]);
-}
+// Include languages config
+require_once __DIR__ . '/../includes/languages.php';
 
 // Language handling - support all 5 languages
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
@@ -33,10 +20,10 @@ if (empty($_SESSION['language']) || !in_array($_SESSION['language'], SUPPORTED_L
 
 $hdrLang = $_SESSION['language'];
 
-// Translation helper - fallback to English for non-Afrikaans languages
-function t_hdr($af, $en) {
+// Translation helper using the central translation system
+function t_hdr(string $key): string {
   global $hdrLang;
-  return $hdrLang === 'af' ? $af : $en;
+  return __t($key, $hdrLang);
 }
 
 // Get current page title
@@ -47,36 +34,36 @@ $pageTitle = 'Old Apostolic Church';
 $isBiblePage = strpos($reqPath, '/bible/bible.php') !== false || strpos($reqPath, '/bybel/') !== false;
 
 if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !== false) {
-  $pageTitle = t_hdr('Welkom', 'Welcome');
+  $pageTitle = t_hdr('welcome');
 } elseif (strpos($reqPath, '/gospel_media/gospel.php') !== false) {
-  $pageTitle = t_hdr('Evangelie Media', 'Gospel Media');
+  $pageTitle = t_hdr('gospel_media');
 } elseif (strpos($reqPath, '/prayers/prayers.php') !== false) {
-  $pageTitle = t_hdr('Gebede', 'Prayers');
+  $pageTitle = t_hdr('prayers');
 } elseif (strpos($reqPath, '/aislimbybel/aislimbybel.php') !== false) {
-  $pageTitle = t_hdr('AI Slimbybel', 'AI Smart Bible');
+  $pageTitle = t_hdr('ai_smart_bible');
 } elseif ($isBiblePage) {
-  $pageTitle = t_hdr('Bybel', 'Bible');
+  $pageTitle = t_hdr('bible');
 } elseif (strpos($reqPath, '/calendar/calendar.php') !== false) {
-  $pageTitle = t_hdr('Kalender', 'Calendar');
+  $pageTitle = t_hdr('calendar');
 } elseif (strpos($reqPath, '/diary/diary.php') !== false) {
-  $pageTitle = t_hdr('Dagboek', 'Diary');
+  $pageTitle = t_hdr('diary');
 } elseif (strpos($reqPath, '/singemmanuel/singemmanuel.php') !== false) {
-  $pageTitle = 'Sing Emmanuel';
+  $pageTitle = t_hdr('sing_emmanuel');
 }
 
-// Navigation links
+// Navigation links with translation keys
 $navLinks = [
-  ['/welcome.php', 'Welkom', 'Welcome'],
-  ['/gospel_media/gospel.php', 'Evangelie Media', 'Gospel Media'],
-  ['/prayers/prayers.php', 'Gebede', 'Prayers'],
-  ['/aislimbybel/aislimbybel.php', 'AI Slimbybel', 'AI Smart Bible'],
-  ['/bible/bible.php', 'Bybel', 'Bible'],
-  ['/calendar/calendar.php', 'Kalender', 'Calendar'],
-  ['/diary/diary.php', 'Dagboek', 'Diary'],
-  ['/singemmanuel/singemmanuel.php', 'Sing Emmanuel', 'Sing Emmanuel'],
-  ['/notifications/notifications.php', 'Kennisgewings', 'Notifications'],
-  ['/admin/index.php', 'Admin', 'Admin'],
-  ['/logout.php', 'Teken uit', 'Log out']
+  ['/welcome.php', 'welcome'],
+  ['/gospel_media/gospel.php', 'gospel_media'],
+  ['/prayers/prayers.php', 'prayers'],
+  ['/aislimbybel/aislimbybel.php', 'ai_smart_bible'],
+  ['/bible/bible.php', 'bible'],
+  ['/calendar/calendar.php', 'calendar'],
+  ['/diary/diary.php', 'diary'],
+  ['/singemmanuel/singemmanuel.php', 'sing_emmanuel'],
+  ['/notifications/notifications.php', 'notifications'],
+  ['/admin/index.php', 'admin'],
+  ['/logout.php', 'logout']
 ];
 
 function isActive($url, $currentPath) {
@@ -87,9 +74,9 @@ function isActive($url, $currentPath) {
 
 <header class="ghf-header" id="ghfHeader">
   <div class="ghf-container">
-    
+
     <!-- Hamburger Button -->
-    <button class="ghf-hamburger" id="ghfHamburger" type="button" aria-label="<?= t_hdr('Open menu', 'Open menu') ?>">
+    <button class="ghf-hamburger" id="ghfHamburger" type="button" aria-label="<?= t_hdr('open_menu') ?>">
       <span class="ghf-bar"></span>
       <span class="ghf-bar"></span>
       <span class="ghf-bar"></span>
@@ -101,7 +88,7 @@ function isActive($url, $currentPath) {
 
     <!-- Bible View Toggle (only on Bible page) -->
     <?php if ($isBiblePage): ?>
-    <button class="ghf-view-toggle" id="ghfViewToggle" type="button" title="<?= t_hdr('Wissel Aansig', 'Toggle View') ?>">
+    <button class="ghf-view-toggle" id="ghfViewToggle" type="button" title="<?= t_hdr('toggle_view') ?>">
       <svg class="ghf-view-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="3" y="3" width="8" height="18" stroke="currentColor" stroke-width="1.5" rx="1"/>
         <rect x="13" y="3" width="8" height="18" stroke="currentColor" stroke-width="1.5" rx="1"/>
@@ -111,7 +98,7 @@ function isActive($url, $currentPath) {
     <?php endif; ?>
 
     <!-- Theme Toggle (Dark/Light) -->
-    <button class="ghf-theme-toggle" id="ghfThemeToggle" type="button" title="<?= t_hdr('Wissel Tema', 'Toggle Theme') ?>">
+    <button class="ghf-theme-toggle" id="ghfThemeToggle" type="button" title="<?= t_hdr('toggle_theme') ?>">
       <svg class="ghf-theme-icon ghf-theme-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.5"/>
         <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -155,8 +142,8 @@ function isActive($url, $currentPath) {
 <!-- Navigation Drawer -->
 <nav class="ghf-drawer" id="ghfDrawer" aria-hidden="true">
   <div class="ghf-drawer-header">
-    <h2 class="ghf-drawer-title"><?= t_hdr('Navigasie', 'Navigation') ?></h2>
-    <button class="ghf-drawer-close" id="ghfDrawerClose" type="button" aria-label="<?= t_hdr('Sluit', 'Close') ?>">
+    <h2 class="ghf-drawer-title"><?= t_hdr('navigation') ?></h2>
+    <button class="ghf-drawer-close" id="ghfDrawerClose" type="button" aria-label="<?= t_hdr('close') ?>">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
@@ -168,7 +155,7 @@ function isActive($url, $currentPath) {
       <li>
         <a href="<?= htmlspecialchars($link[0], ENT_QUOTES, 'UTF-8') ?>" class="ghf-nav-link<?= $active ?>">
           <span class="ghf-nav-shine"></span>
-          <?= htmlspecialchars(t_hdr($link[1], $link[2]), ENT_QUOTES, 'UTF-8') ?>
+          <?= htmlspecialchars(t_hdr($link[1]), ENT_QUOTES, 'UTF-8') ?>
         </a>
       </li>
     <?php endforeach; ?>

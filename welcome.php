@@ -24,17 +24,10 @@ if (!$lang || !in_array($lang, SUPPORTED_LANGS, true)) {
     }
 }
 
-// Translation helper - supports all 5 languages
-function T(string $af, string $en, string $zu = '', string $xh = '', string $pt = ''): string {
+// Translation helper using central system
+function t(string $key): string {
     global $lang;
-    $translations = [
-        'af' => $af,
-        'en' => $en,
-        'zu' => $zu ?: $en,  // Fallback to English if not provided
-        'xh' => $xh ?: $en,
-        'pt' => $pt ?: $en
-    ];
-    return $translations[$lang] ?? $en;
+    return __t($key, $lang);
 }
 
 $town = '';
@@ -113,7 +106,7 @@ $VER = time();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= T('Welkom - OAC APP', 'Welcome - OAC APP') ?></title>
+  <title><?= t('page_title_welcome') ?></title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -135,7 +128,7 @@ $VER = time();
   <div class="wc-hero">
     <div class="wc-hero-glow"></div>
     <div class="wc-hero-content">
-      <h1 class="wc-hero-title"><?= T('Welkom by Die Ou Aposteliese Kerk', 'Welcome to The Old Apostolic Chruch') ?></h1>
+      <h1 class="wc-hero-title"><?= t('welcome_title') ?></h1>
       <?php if ($town || $province): ?>
         <p class="wc-hero-location">
           <svg class="wc-location-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -169,8 +162,8 @@ $VER = time();
           </svg>
         </div>
         <div>
-          <h2 class="wc-section-title"><?= T('Lering van die Maand', 'Teaching of the Month') ?></h2>
-          <p class="wc-section-subtitle"><?= T('Groei in geloof en kennis', 'Growing in faith and knowledge') ?></p>
+          <h2 class="wc-section-title"><?= t('teaching_of_month') ?></h2>
+          <p class="wc-section-subtitle"><?= t('grow_faith') ?></p>
         </div>
       </div>
 
@@ -185,13 +178,7 @@ $VER = time();
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
                       </svg>
-                      <p>' . T(
-                        'Geen lering-inhoud gevind nie.',
-                        'No teaching content found.',
-                        'Akukho okuqukethwe okufundisayo okutholiwe.',
-                        'Akukho mfundiso ifunyenweyo.',
-                        'Nenhum conteúdo de ensino encontrado.'
-                      ) . '</p>
+                      <p>' . t('no_content') . '</p>
                     </div>';
             }
           ?>
@@ -204,12 +191,9 @@ $VER = time();
       <div class="wc-quote-card">
         <div class="wc-quote-icon">❝</div>
         <blockquote class="wc-quote-text">
-          <?= T(
-            'Want waar twee of drie in My Naam vergader is, daar is Ek in hulle midde.',
-            'For where two or three gather in my name, there am I with them.'
-          ); ?>
+          <?= t('quote_matthew_18_20') ?>
         </blockquote>
-        <cite class="wc-quote-source"><?= T('Matthéüs 18:20', 'Matthew 18:20'); ?></cite>
+        <cite class="wc-quote-source"><?= t('quote_matthew_18_20_ref') ?></cite>
       </div>
     </section>
   </main>
