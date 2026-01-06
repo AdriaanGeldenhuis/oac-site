@@ -8,10 +8,10 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     $_SESSION['language'] = $pageLang = $_GET['lang'];
 }
 
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T(string $af, string $en): string {
+// Translation helper using central 5-language system
+function t(string $key): string {
     global $pageLang;
-    return $pageLang === 'af' ? $af : $en;
+    return __t($key, $pageLang);
 }
 
 function esc($s) { 
@@ -90,7 +90,7 @@ $VER = time();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= esc(T('Kalender', 'Calendar')) ?> - <?= esc($fullName) ?></title>
+    <title><?= esc(t('calendar')) ?> - <?= esc($fullName) ?></title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -368,7 +368,7 @@ $VER = time();
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    <?= esc(T('Profiel', 'Profile')) ?>
+                    <?= esc(t('profile')) ?>
                 </a>
                 
                 <?php if ($canExport): ?>
@@ -377,7 +377,7 @@ $VER = time();
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2"/>
                         <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    <?= esc(T('PDF', 'PDF')) ?>
+                    <?= esc(t('pdf')) ?>
                 </button>
                 
                 <button type="button" class="cal-btn cal-btn-export" onclick="exportToExcel()">
@@ -385,7 +385,7 @@ $VER = time();
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2"/>
                         <path d="M14 2v6h6M8 13h2l2 4 2-4h2" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    <?= esc(T('Excel', 'Excel')) ?>
+                    <?= esc(t('excel')) ?>
                 </button>
                 <?php endif; ?>
             </div>
@@ -398,7 +398,7 @@ $VER = time();
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    <span><?= esc(T('Dag', 'Day')) ?></span>
+                    <span><?= esc(t('day')) ?></span>
                 </button>
                 
                 <button class="cal-view-btn active" data-view="week">
@@ -407,7 +407,7 @@ $VER = time();
                         <line x1="10" y1="10" x2="10" y2="22" stroke="currentColor"/>
                         <line x1="17" y1="10" x2="17" y2="22" stroke="currentColor"/>
                     </svg>
-                    <span><?= esc(T('Week', 'Week')) ?></span>
+                    <span><?= esc(t('week')) ?></span>
                 </button>
                 
                 <button class="cal-view-btn" data-view="month">
@@ -415,7 +415,7 @@ $VER = time();
                         <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                         <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    <span><?= esc(T('Maand', 'Month')) ?></span>
+                    <span><?= esc(t('month')) ?></span>
                 </button>
             </div>
             
@@ -425,7 +425,7 @@ $VER = time();
                         <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
                     </svg>
                 </button>
-                <button class="cal-nav-btn" id="todayBtn" type="button"><?= esc(T('Vandag', 'Today')) ?></button>
+                <button class="cal-nav-btn" id="todayBtn" type="button"><?= esc(t('today')) ?></button>
                 <button class="cal-nav-btn" id="nextBtn" type="button">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2"/>
@@ -437,7 +437,7 @@ $VER = time();
         <!-- Calendar Section -->
         <section class="cal-section">
             <div class="cal-section-header">
-                <h2 class="cal-section-title" id="calTitle"><?= esc(T('Kalender', 'Calendar')) ?></h2>
+                <h2 class="cal-section-title" id="calTitle"><?= esc(t('calendar')) ?></h2>
             </div>
             
             <div class="cal-views">
@@ -454,13 +454,13 @@ $VER = time();
                 <!-- Month View -->
                 <div class="cal-view-container" id="monthView" style="display:none;">
                     <div class="cal-month-weekdays">
-                        <div><?= esc(T('So', 'Sun')) ?></div>
-                        <div><?= esc(T('Ma', 'Mon')) ?></div>
-                        <div><?= esc(T('Di', 'Tue')) ?></div>
-                        <div><?= esc(T('Wo', 'Wed')) ?></div>
-                        <div><?= esc(T('Do', 'Thu')) ?></div>
-                        <div><?= esc(T('Vr', 'Fri')) ?></div>
-                        <div><?= esc(T('Sa', 'Sat')) ?></div>
+                        <div><?= esc(t('sun')) ?></div>
+                        <div><?= esc(t('mon')) ?></div>
+                        <div><?= esc(t('tue')) ?></div>
+                        <div><?= esc(t('wed')) ?></div>
+                        <div><?= esc(t('thu')) ?></div>
+                        <div><?= esc(t('fri')) ?></div>
+                        <div><?= esc(t('sat')) ?></div>
                     </div>
                     <div class="cal-month-grid" id="monthGrid"></div>
                 </div>
@@ -474,11 +474,11 @@ $VER = time();
         window.USER_ID = <?= $meId ?>;
         window.VIEW_ONLY = <?= $meId === $targetId ? 'false' : 'true' ?>;
         window.T = {
-            day: '<?= esc(T('Dag', 'Day')) ?>',
-            week: '<?= esc(T('Week', 'Week')) ?>',
-            month: '<?= esc(T('Maand', 'Month')) ?>',
-            today: '<?= esc(T('Vandag', 'Today')) ?>',
-            noEvents: '<?= esc(T('Geen gebeure', 'No events')) ?>',
+            day: '<?= esc(t('day')) ?>',
+            week: '<?= esc(t('week')) ?>',
+            month: '<?= esc(t('month')) ?>',
+            today: '<?= esc(t('today')) ?>',
+            noEvents: '<?= esc(t('no_events')) ?>',
             dayNames: <?= $pageLang === 'af' 
                 ? '["Sondag","Maandag","Dinsdag","Woensdag","Donderdag","Vrydag","Saterdag"]'
                 : '["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]'

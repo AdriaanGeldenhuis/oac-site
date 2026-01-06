@@ -2212,6 +2212,73 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Awukwazi ukushiya ibandla lakho',
         'xh' => 'Awukwazi ukushiya ibandla lakho',
         'pt' => 'Você não pode sair da sua congregação'
+    ],
+
+    // ==================== PROFILE PAGE ====================
+    'export' => [
+        'af' => 'Voer Uit',
+        'en' => 'Export',
+        'zu' => 'Thumela',
+        'xh' => 'Thumela',
+        'pt' => 'Exportar'
+    ],
+    'personal_information' => [
+        'af' => 'Persoonlike Inligting',
+        'en' => 'Personal Information',
+        'zu' => 'Ulwazi Lomuntu Siqu',
+        'xh' => 'Ulwazi Lobuqu',
+        'pt' => 'Informações Pessoais'
+    ],
+    'church_information' => [
+        'af' => 'Kerk Inligting',
+        'en' => 'Church Information',
+        'zu' => 'Ulwazi Lwebandla',
+        'xh' => 'Ulwazi Lwecawa',
+        'pt' => 'Informações da Igreja'
+    ],
+    'office' => [
+        'af' => 'Amp',
+        'en' => 'Office',
+        'zu' => 'Isikhundla',
+        'xh' => 'Isikhundla',
+        'pt' => 'Cargo'
+    ],
+    'gender' => [
+        'af' => 'Geslag',
+        'en' => 'Gender',
+        'zu' => 'Ubulili',
+        'xh' => 'Isini',
+        'pt' => 'Gênero'
+    ],
+    'view_profile' => [
+        'af' => 'Kyk profiel',
+        'en' => 'View profile',
+        'zu' => 'Buka iphrofayela',
+        'xh' => 'Jonga iprofayile',
+        'pt' => 'Ver perfil'
+    ],
+    'edit_user' => [
+        'af' => 'Wysig Gebruiker',
+        'en' => 'Edit User',
+        'zu' => 'Hlela Umsebenzisi',
+        'xh' => 'Hlela Umsebenzisi',
+        'pt' => 'Editar Usuário'
+    ],
+
+    // ==================== CALENDAR VIEW PAGE ====================
+    'pdf' => [
+        'af' => 'PDF',
+        'en' => 'PDF',
+        'zu' => 'PDF',
+        'xh' => 'PDF',
+        'pt' => 'PDF'
+    ],
+    'excel' => [
+        'af' => 'Excel',
+        'en' => 'Excel',
+        'zu' => 'Excel',
+        'xh' => 'Excel',
+        'pt' => 'Excel'
     ]
 ]);
 
