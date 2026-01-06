@@ -133,8 +133,8 @@ $VER = time();
         </div>
         <div class="profile-hero-info">
           <h1 class="profile-hero-name"><?= esc($fullName) ?></h1>
-          <?php if (!empty($user['amp_name'])): ?>
-          <p class="profile-hero-amp"><?= esc($user['amp_name']) ?></p>
+          <?php if (!empty($user['amp_id'])): ?>
+          <p class="profile-hero-amp"><?= esc(get_translated_office((int)$user['amp_id'], $user['gender'] ?? 'man', $lang)) ?></p>
           <?php endif; ?>
         </div>
       </div>
@@ -258,14 +258,14 @@ $VER = time();
       <div class="profile-card">
         <h2 class="profile-card-title"><?= esc(t('church_information')) ?></h2>
         <div class="profile-info-list">
-          <?php if (!empty($user['amp_name'])): ?>
+          <?php if (!empty($user['amp_id'])): ?>
           <div class="profile-info-item">
             <svg class="profile-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="2"/>
             </svg>
             <div class="profile-info-content">
               <span class="profile-info-label"><?= esc(t('office')) ?></span>
-              <span class="profile-info-value profile-info-highlight"><?= esc($user['amp_name']) ?></span>
+              <span class="profile-info-value profile-info-highlight"><?= esc(get_translated_office((int)$user['amp_id'], $user['gender'] ?? 'man', $lang)) ?></span>
             </div>
           </div>
           <?php endif; ?>

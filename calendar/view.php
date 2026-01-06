@@ -359,8 +359,8 @@ $VER = time();
             </div>
             <div class="cal-user-info">
                 <h1 class="cal-user-name"><?= esc($fullName) ?></h1>
-                <?php if (!empty($targetUser['amp_name'])): ?>
-                <p class="cal-user-amp"><?= esc($targetUser['amp_name']) ?></p>
+                <?php if (!empty($targetUser['amp_id'])): ?>
+                <p class="cal-user-amp"><?= esc(get_translated_office((int)$targetUser['amp_id'], $targetUser['gender'] ?? 'man', $pageLang)) ?></p>
                 <?php endif; ?>
             </div>
             <div class="cal-user-actions">

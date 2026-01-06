@@ -26,6 +26,34 @@ define('BIBLE_FILES', [
     'pt' => 'pt_dummy.json'
 ]);
 
+// Office/Amp ID to translation key mapping
+// Maps amp_id to [male_key, female_key]
+define('AMP_TRANSLATION_KEYS', [
+    1  => ['apostle', 'apostle'],
+    2  => ['prophet', 'prophet'],
+    3  => ['evangelist', 'evangelist'],
+    4  => ['shepherd', 'shepherd'],
+    5  => ['elder', 'elder'],
+    6  => ['deacon', 'deaconess'],
+    7  => ['priest', 'priestess'],
+    8  => ['priest', 'priestess'],
+    9  => ['member', 'member'],
+    10 => ['member', 'member']
+]);
+
+/**
+ * Get translated office name based on amp_id and gender
+ * @param int $ampId The office ID
+ * @param string $gender 'man' or 'vrou'
+ * @param string $lang Language code
+ * @return string Translated office name
+ */
+function get_translated_office(int $ampId, string $gender, string $lang): string {
+    $keys = AMP_TRANSLATION_KEYS[$ampId] ?? ['member', 'member'];
+    $key = (strtolower($gender) === 'vrou') ? $keys[1] : $keys[0];
+    return __t($key, $lang);
+}
+
 // UI Translations for all pages
 define('UI_TRANSLATIONS', [
     // Welcome page
