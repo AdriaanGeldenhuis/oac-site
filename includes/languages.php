@@ -1509,6 +1509,388 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Kususiwe ngempumelelo!',
         'xh' => 'Icinyiwe ngempumelelo!',
         'pt' => 'Excluído com sucesso!'
+    ],
+
+    // ==================== DIARY ====================
+    'ai_diary' => [
+        'af' => 'AI Dagboek',
+        'en' => 'AI Diary',
+        'zu' => 'Idayari ye-AI',
+        'xh' => 'Idayari ye-AI',
+        'pt' => 'Diário IA'
+    ],
+    'my_diary' => [
+        'af' => 'My Dagboek',
+        'en' => 'My Diary',
+        'zu' => 'Idayari Yami',
+        'xh' => 'Idayari Yam',
+        'pt' => 'Meu Diário'
+    ],
+    'preserve_thoughts' => [
+        'af' => 'Bewaar jou gedagtes, drome en gebede',
+        'en' => 'Preserve your thoughts, dreams and prayers',
+        'zu' => 'Gcina imicabango yakho, amaphupho nemithandazo',
+        'xh' => 'Gcina iingcinga zakho, amaphupha nemithandazo',
+        'pt' => 'Preserve seus pensamentos, sonhos e orações'
+    ],
+    'total_entries' => [
+        'af' => 'Totale Inskrywings',
+        'en' => 'Total Entries',
+        'zu' => 'Okufakiwe Kuphelele',
+        'xh' => 'Okufakiweyo Kupheleleyo',
+        'pt' => 'Total de Entradas'
+    ],
+    'this_month' => [
+        'af' => 'Hierdie Maand',
+        'en' => 'This Month',
+        'zu' => 'Lenyanga',
+        'xh' => 'Lenyanga',
+        'pt' => 'Este Mês'
+    ],
+    'day_streak' => [
+        'af' => 'Dag Reeks',
+        'en' => 'Day Streak',
+        'zu' => 'Ukulandelana Kwezinsuku',
+        'xh' => 'Ukulandelana Kweentsuku',
+        'pt' => 'Sequência de Dias'
+    ],
+    'total_words' => [
+        'af' => 'Totale Woorde',
+        'en' => 'Total Words',
+        'zu' => 'Amagama Aphelele',
+        'xh' => 'Amagama Apheleleyo',
+        'pt' => 'Total de Palavras'
+    ],
+    'timeline' => [
+        'af' => 'Tydlyn',
+        'en' => 'Timeline',
+        'zu' => 'Uhlelo Lwesikhathi',
+        'xh' => 'Uluhlu Lwexesha',
+        'pt' => 'Linha do Tempo'
+    ],
+    'gallery' => [
+        'af' => 'Galery',
+        'en' => 'Gallery',
+        'zu' => 'Igalari',
+        'xh' => 'Igalari',
+        'pt' => 'Galeria'
+    ],
+    'new_entry' => [
+        'af' => 'Nuwe Inskrywing',
+        'en' => 'New Entry',
+        'zu' => 'Okufakiwe Okusha',
+        'xh' => 'Okufakiweyo Okutsha',
+        'pt' => 'Nova Entrada'
+    ],
+    'search_entries' => [
+        'af' => 'Soek inskrywings...',
+        'en' => 'Search entries...',
+        'zu' => 'Sesha okufakiwe...',
+        'xh' => 'Khangela okufakiweyo...',
+        'pt' => 'Pesquisar entradas...'
+    ],
+    'newest_first' => [
+        'af' => 'Nuutste Eerste',
+        'en' => 'Newest First',
+        'zu' => 'Okusha Kuqala',
+        'xh' => 'Okutsha Kuqala',
+        'pt' => 'Mais Recente Primeiro'
+    ],
+    'oldest_first' => [
+        'af' => 'Oudste Eerste',
+        'en' => 'Oldest First',
+        'zu' => 'Okudala Kuqala',
+        'xh' => 'Okudala Kuqala',
+        'pt' => 'Mais Antigo Primeiro'
+    ],
+    'title_az' => [
+        'af' => 'Titel A-Z',
+        'en' => 'Title A-Z',
+        'zu' => 'Isihloko A-Z',
+        'xh' => 'Isihloko A-Z',
+        'pt' => 'Título A-Z'
+    ],
+    'all' => [
+        'af' => 'Alle',
+        'en' => 'All',
+        'zu' => 'Konke',
+        'xh' => 'Konke',
+        'pt' => 'Todos'
+    ],
+    'this_week' => [
+        'af' => 'Hierdie Week',
+        'en' => 'This Week',
+        'zu' => 'Leliviki',
+        'xh' => 'Leveki',
+        'pt' => 'Esta Semana'
+    ],
+    'this_year' => [
+        'af' => 'Hierdie Jaar',
+        'en' => 'This Year',
+        'zu' => 'Lonyaka',
+        'xh' => 'Lonyaka',
+        'pt' => 'Este Ano'
+    ],
+    'loading_entries' => [
+        'af' => 'Laai inskrywings...',
+        'en' => 'Loading entries...',
+        'zu' => 'Ilayisha okufakiwe...',
+        'xh' => 'Ilayisha okufakiweyo...',
+        'pt' => 'Carregando entradas...'
+    ],
+    'loading_gallery' => [
+        'af' => 'Laai galery...',
+        'en' => 'Loading gallery...',
+        'zu' => 'Ilayisha igalari...',
+        'xh' => 'Ilayisha igalari...',
+        'pt' => 'Carregando galeria...'
+    ],
+    'search_through_all' => [
+        'af' => 'Soek deur al jou inskrywings...',
+        'en' => 'Search through all your entries...',
+        'zu' => 'Sesha kuyo yonke okufakiwe kwakho...',
+        'xh' => 'Khangela kuyo yonke okufakiweyo kwakho...',
+        'pt' => 'Pesquisar em todas as suas entradas...'
+    ],
+    'titles' => [
+        'af' => 'Titels',
+        'en' => 'Titles',
+        'zu' => 'Izihloko',
+        'xh' => 'Izihloko',
+        'pt' => 'Títulos'
+    ],
+    'content' => [
+        'af' => 'Inhoud',
+        'en' => 'Content',
+        'zu' => 'Okuqukethwe',
+        'xh' => 'Okuqukethweyo',
+        'pt' => 'Conteúdo'
+    ],
+    'tags' => [
+        'af' => 'Etikette',
+        'en' => 'Tags',
+        'zu' => 'Amalebula',
+        'xh' => 'Iilebhuli',
+        'pt' => 'Etiquetas'
+    ],
+    'start_typing_search' => [
+        'af' => 'Begin tik om te soek...',
+        'en' => 'Start typing to search...',
+        'zu' => 'Qala ukuthayipha ukusesha...',
+        'xh' => 'Qala ukuchwetheza ukukhangela...',
+        'pt' => 'Comece a digitar para pesquisar...'
+    ],
+    'date_time' => [
+        'af' => 'Datum & Tyd',
+        'en' => 'Date & Time',
+        'zu' => 'Usuku & Isikhathi',
+        'xh' => 'Umhla & Ixesha',
+        'pt' => 'Data e Hora'
+    ],
+    'my_thoughts_today' => [
+        'af' => 'My gedagtes vir vandag...',
+        'en' => 'My thoughts for today...',
+        'zu' => 'Imicabango yami yanamuhla...',
+        'xh' => 'Iingcinga zam zanamhlanje...',
+        'pt' => 'Meus pensamentos para hoje...'
+    ],
+    'write_thoughts_here' => [
+        'af' => 'Skryf jou gedagtes hier...',
+        'en' => 'Write your thoughts here...',
+        'zu' => 'Bhala imicabango yakho lapha...',
+        'xh' => 'Bhala iingcinga zakho apha...',
+        'pt' => 'Escreva seus pensamentos aqui...'
+    ],
+    'type_tag_enter' => [
+        'af' => 'Tik etiket en druk Enter...',
+        'en' => 'Type tag and press Enter...',
+        'zu' => 'Thayipha ilebula bese ucindezela u-Enter...',
+        'xh' => 'Chwetheza ilebhuli uze ucinezele u-Enter...',
+        'pt' => 'Digite etiqueta e pressione Enter...'
+    ],
+    'mood' => [
+        'af' => 'Gemoed',
+        'en' => 'Mood',
+        'zu' => 'Umuzwa',
+        'xh' => 'Imvakalelo',
+        'pt' => 'Humor'
+    ],
+    'weather' => [
+        'af' => 'Weer',
+        'en' => 'Weather',
+        'zu' => 'Isimo Sezulu',
+        'xh' => 'Imozulu',
+        'pt' => 'Clima'
+    ],
+    'reminder' => [
+        'af' => 'Herinnering',
+        'en' => 'Reminder',
+        'zu' => 'Isikhumbuzo',
+        'xh' => 'Isikhumbuzo',
+        'pt' => 'Lembrete'
+    ],
+    'no_reminder' => [
+        'af' => 'Geen herinnering',
+        'en' => 'No reminder',
+        'zu' => 'Akukho sikhumbuzo',
+        'xh' => 'Akukho sikhumbuzo',
+        'pt' => 'Sem lembrete'
+    ],
+    'minutes_before' => [
+        'af' => 'minute voor',
+        'en' => 'minutes before',
+        'zu' => 'imizuzu ngaphambi',
+        'xh' => 'imizuzu phambi',
+        'pt' => 'minutos antes'
+    ],
+    'hour_before' => [
+        'af' => 'uur voor',
+        'en' => 'hour before',
+        'zu' => 'ihora ngaphambi',
+        'xh' => 'iyure phambi',
+        'pt' => 'hora antes'
+    ],
+    'hours_before' => [
+        'af' => 'ure voor',
+        'en' => 'hours before',
+        'zu' => 'amahora ngaphambi',
+        'xh' => 'iiyure phambi',
+        'pt' => 'horas antes'
+    ],
+    'day_before' => [
+        'af' => 'dag voor',
+        'en' => 'day before',
+        'zu' => 'usuku ngaphambi',
+        'xh' => 'usuku phambi',
+        'pt' => 'dia antes'
+    ],
+    'add_to_calendar' => [
+        'af' => 'Voeg by kalender',
+        'en' => 'Add to calendar',
+        'zu' => 'Engeza kukhalenda',
+        'xh' => 'Yongeza kwikhalenda',
+        'pt' => 'Adicionar ao calendário'
+    ],
+    'ai_assist' => [
+        'af' => 'AI Hulp',
+        'en' => 'AI Assist',
+        'zu' => 'Usizo lwe-AI',
+        'xh' => 'Uncedo lwe-AI',
+        'pt' => 'Assistência IA'
+    ],
+    'share_entry' => [
+        'af' => 'Deel Inskrywing',
+        'en' => 'Share Entry',
+        'zu' => 'Yabelana Ngokufakiwe',
+        'xh' => 'Yabelana Ngokufakiweyo',
+        'pt' => 'Compartilhar Entrada'
+    ],
+    'share_with_friend' => [
+        'af' => 'Deel met Vriend',
+        'en' => 'Share with Friend',
+        'zu' => 'Yabelana Nomngani',
+        'xh' => 'Yabelana Nomhlobo',
+        'pt' => 'Compartilhar com Amigo'
+    ],
+    'copy_link' => [
+        'af' => 'Kopieer Skakel',
+        'en' => 'Copy Link',
+        'zu' => 'Kopisha Isixhumanisi',
+        'xh' => 'Kopa Ikhonkco',
+        'pt' => 'Copiar Link'
+    ],
+    'export_pdf' => [
+        'af' => 'Voer Uit as PDF',
+        'en' => 'Export as PDF',
+        'zu' => 'Thumela nge-PDF',
+        'xh' => 'Thumela nge-PDF',
+        'pt' => 'Exportar como PDF'
+    ],
+    'words' => [
+        'af' => 'woorde',
+        'en' => 'words',
+        'zu' => 'amagama',
+        'xh' => 'amagama',
+        'pt' => 'palavras'
+    ],
+
+    // ==================== PRAYERS ====================
+    'prayers_testimonies' => [
+        'af' => 'Gebede & Getuienisse',
+        'en' => 'Prayers & Testimonies',
+        'zu' => 'Imithandazo & Ubufakazi',
+        'xh' => 'Imithandazo & Ubungqina',
+        'pt' => 'Orações e Testemunhos'
+    ],
+    'share_heart_pray' => [
+        'af' => 'Deel jou hart, bid saam, vier saam',
+        'en' => 'Share your heart, pray together, celebrate together',
+        'zu' => 'Yabelana ngenhliziyo yakho, thandaza ndawonye, gubha ndawonye',
+        'xh' => 'Yabelana ngentliziyo yakho, thandaza kunye, bhiyozela kunye',
+        'pt' => 'Compartilhe seu coração, ore junto, celebre junto'
+    ],
+    'share_prayer_testimony' => [
+        'af' => 'Deel jou gebedsnood of getuienis',
+        'en' => 'Share your prayer need or testimony',
+        'zu' => 'Yabelana ngesidingo sakho somthandazo noma ubufakazi',
+        'xh' => 'Yabelana ngesidingo sakho somthandazo okanye ubungqina',
+        'pt' => 'Compartilhe sua necessidade de oração ou testemunho'
+    ],
+    'prayer' => [
+        'af' => 'Gebed',
+        'en' => 'Prayer',
+        'zu' => 'Umthandazo',
+        'xh' => 'Umthandazo',
+        'pt' => 'Oração'
+    ],
+    'testimony' => [
+        'af' => 'Getuienis',
+        'en' => 'Testimony',
+        'zu' => 'Ubufakazi',
+        'xh' => 'Ubungqina',
+        'pt' => 'Testemunho'
+    ],
+    'share_heart_here' => [
+        'af' => 'Deel jou hart hier...',
+        'en' => 'Share your heart here...',
+        'zu' => 'Yabelana ngenhliziyo yakho lapha...',
+        'xh' => 'Yabelana ngentliziyo yakho apha...',
+        'pt' => 'Compartilhe seu coração aqui...'
+    ],
+    'choose_photo' => [
+        'af' => 'Kies foto (opsioneel)',
+        'en' => 'Choose photo (optional)',
+        'zu' => 'Khetha isithombe (uyazikhethela)',
+        'xh' => 'Khetha umfanekiso (uyazikhethela)',
+        'pt' => 'Escolher foto (opcional)'
+    ],
+    'loading_prayers' => [
+        'af' => 'Laai gebede...',
+        'en' => 'Loading prayers...',
+        'zu' => 'Ilayisha imithandazo...',
+        'xh' => 'Ilayisha imithandazo...',
+        'pt' => 'Carregando orações...'
+    ],
+    'comments' => [
+        'af' => 'Kommentaar',
+        'en' => 'Comments',
+        'zu' => 'Amazwana',
+        'xh' => 'Amagqabaza',
+        'pt' => 'Comentários'
+    ],
+    'write_encouraging' => [
+        'af' => 'Skryf \'n bemoedigende woord...',
+        'en' => 'Write an encouraging word...',
+        'zu' => 'Bhala igama elikhuthazayo...',
+        'xh' => 'Bhala ilizwi elikhuthazayo...',
+        'pt' => 'Escreva uma palavra de encorajamento...'
+    ],
+    'send' => [
+        'af' => 'Stuur',
+        'en' => 'Send',
+        'zu' => 'Thumela',
+        'xh' => 'Thumela',
+        'pt' => 'Enviar'
     ]
 ]);
 
