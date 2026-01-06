@@ -653,6 +653,120 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Kwehlulekile',
         'xh' => 'Ayiphumelelanga',
         'pt' => 'Falhou'
+    ],
+
+    // ==================== ELDERS / TEACHING ====================
+    'edit_teaching' => [
+        'af' => 'Wysig Lering',
+        'en' => 'Edit Teaching',
+        'zu' => 'Hlela Imfundiso',
+        'xh' => 'Hlela Imfundiso',
+        'pt' => 'Editar Ensino'
+    ],
+    'monthly_teaching' => [
+        'af' => 'Maandelikse Lering',
+        'en' => 'Monthly Teaching',
+        'zu' => 'Imfundiso Yenyanga',
+        'xh' => 'Imfundiso Yenyanga',
+        'pt' => 'Ensino Mensal'
+    ],
+    'font' => [
+        'af' => 'Lettertipe',
+        'en' => 'Font',
+        'zu' => 'Uhlobo Lwesibhalo',
+        'xh' => 'Uhlobo Lwesibhalo',
+        'pt' => 'Fonte'
+    ],
+    'size' => [
+        'af' => 'Grootte',
+        'en' => 'Size',
+        'zu' => 'Usayizi',
+        'xh' => 'Ubungakanani',
+        'pt' => 'Tamanho'
+    ],
+    'color' => [
+        'af' => 'Kleur',
+        'en' => 'Color',
+        'zu' => 'Umbala',
+        'xh' => 'Umbala',
+        'pt' => 'Cor'
+    ],
+    'add_verse' => [
+        'af' => 'Voeg Vers By',
+        'en' => 'Add Verse',
+        'zu' => 'Engeza Ivesi',
+        'xh' => 'Yongeza Ivesi',
+        'pt' => 'Adicionar Versículo'
+    ],
+    'improve' => [
+        'af' => 'Verbeter',
+        'en' => 'Improve',
+        'zu' => 'Thuthukisa',
+        'xh' => 'Phucula',
+        'pt' => 'Melhorar'
+    ],
+    'ready_to_save' => [
+        'af' => 'Gereed om te stoor',
+        'en' => 'Ready to save',
+        'zu' => 'Kulungele ukugcina',
+        'xh' => 'Kulungele ukugcina',
+        'pt' => 'Pronto para salvar'
+    ],
+    'save_all' => [
+        'af' => 'Stoor Alles',
+        'en' => 'Save All',
+        'zu' => 'Gcina Konke',
+        'xh' => 'Gcina Konke',
+        'pt' => 'Salvar Tudo'
+    ],
+    'add_bible_verse' => [
+        'af' => 'Voeg Bybelvers By',
+        'en' => 'Add Bible Verse',
+        'zu' => 'Engeza Ivesi LeBhayibheli',
+        'xh' => 'Yongeza Ivesi LeBhayibhile',
+        'pt' => 'Adicionar Versículo Bíblico'
+    ],
+    'book' => [
+        'af' => 'Boek',
+        'en' => 'Book',
+        'zu' => 'Incwadi',
+        'xh' => 'Incwadi',
+        'pt' => 'Livro'
+    ],
+    'chapter' => [
+        'af' => 'Hoofstuk',
+        'en' => 'Chapter',
+        'zu' => 'Isahluko',
+        'xh' => 'Isahluko',
+        'pt' => 'Capítulo'
+    ],
+    'from' => [
+        'af' => 'Van',
+        'en' => 'From',
+        'zu' => 'Kusuka',
+        'xh' => 'Ukusuka',
+        'pt' => 'De'
+    ],
+    'to' => [
+        'af' => 'Tot',
+        'en' => 'To',
+        'zu' => 'Kuya',
+        'xh' => 'Ukuya',
+        'pt' => 'Até'
+    ],
+    'insert' => [
+        'af' => 'Voeg In',
+        'en' => 'Insert',
+        'zu' => 'Faka',
+        'xh' => 'Faka',
+        'pt' => 'Inserir'
+    ],
+    'my_profile' => [
+        'af' => 'My Profiel',
+        'en' => 'My Profile',
+        'zu' => 'Iphrofayela Yami',
+        'xh' => 'Iprofayile Yam',
+        'pt' => 'Meu Perfil'
     ]
 ]);
 

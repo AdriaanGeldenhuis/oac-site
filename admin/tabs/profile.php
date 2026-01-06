@@ -11,7 +11,7 @@ $ampName = $currentUser['amp_name'] ?? '';
         <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= T('My Profiel', 'My Profile') ?></h2>
+    <h2 class="admin-section-title"><?= t('my_profile') ?></h2>
   </div>
 
   <div class="admin-profile-card">
@@ -27,7 +27,7 @@ $ampName = $currentUser['amp_name'] ?? '';
 
   <div class="admin-right">
     <a href="/admin/account.php" class="admin-btn admin-btn-primary">
-      <?= T('Wysig Profiel', 'Edit Profile') ?>
+      <?= t('edit_profile') ?>
     </a>
   </div>
 </div>
