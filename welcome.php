@@ -180,7 +180,7 @@ $VER = time();
     </section>
   </main>
 
-  <script src="/welcome/js/welcome-clean.js?v=<?= $VER ?>"></script>
+  <script src="/welcome/js/welcome.js?v=<?= $VER ?>"></script>
 
   <?php require_once __DIR__ . '/header_footer/footer.php'; ?>
 
