@@ -2,12 +2,15 @@
 (function() {
   'use strict';
 
-  // Service Worker Registration
+  // Service Worker Registration (optional - fails silently if not available)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
       navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-        .catch(function(err) {
-          console.error('SW registration failed:', err);
+        .then(function(reg) {
+          console.log('SW registered successfully');
+        })
+        .catch(function() {
+          // Service worker not available - this is fine, site works without it
         });
     });
   }
