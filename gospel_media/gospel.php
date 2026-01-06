@@ -15,10 +15,10 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     header('Location: /gospel_media/gospel.php?room_id=' . ($_GET['room_id'] ?? ''));
     exit;
 }
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T(string $af, string $en): string {
+// Translation helper using central 5-language system
+function t(string $key): string {
     global $pageLang;
-    return $pageLang === 'af' ? $af : $en;
+    return __t($key, $pageLang);
 }
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
@@ -64,7 +64,7 @@ if ($roomId <= 0) {
         header('Location: /gospel_media/gospel.php?room_id=' . $roomId);
         exit;
     } else {
-        die(T('Geen kamers beskikbaar nie. Kontak admin.', 'No rooms available. Contact admin.'));
+        die(t('no_rooms_available'));
     }
 }
 
@@ -97,7 +97,7 @@ if ($roomId > 0) {
 require_once __DIR__ . '/lib/permissions.php';
 $hasAccess = $roomObj ? user_has_access_to_room($pdo, $userId, $roomObj) : false;
 if (!$hasAccess) {
-    die(T('Jy het nie toegang tot hierdie kamer nie.', 'You do not have access to this room.'));
+    die(t('no_room_access'));
 }
 
 // Check posting rights
@@ -145,7 +145,7 @@ $VER = time();
                 <svg class="gm-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
-                <span><?= T('Kamers', 'Rooms') ?></span>
+                <span><?= t('rooms') ?></span>
             </button>
         </div>
     </div>
@@ -160,29 +160,29 @@ $VER = time();
                         <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                 </div>
-                <h2 class="gm-section-title"><?= T('Nuwe Plasing', 'New Post') ?></h2>
+                <h2 class="gm-section-title"><?= t('new_post') ?></h2>
             </div>
             
             <div class="composer-tabs">
                 <button id="composer-type-post" class="composer-tab active" type="button">
-                    <?= T('Plaas', 'Post') ?>
+                    <?= t('post') ?>
                 </button>
                 <button id="composer-type-event" class="composer-tab" type="button">
-                    <?= T('Gebeurtenis', 'Event') ?>
+                    <?= t('event') ?>
                 </button>
             </div>
             
             <div class="composer-body">
                 <textarea id="composer-text" class="composer-textarea" 
-                          placeholder="<?= T('Wat wil jy deel?', 'What do you want to share?') ?>"></textarea>
+                          placeholder="<?= t('what_share') ?>"></textarea>
                 
                 <div id="composer-event-fields" class="composer-event-fields hide">
                     <input id="composer-event-at" type="datetime-local" 
                            class="composer-input" 
-                           placeholder="<?= T('Datum/Tyd', 'Date/Time') ?>" />
+                           placeholder="<?= t('date_time_short') ?>" />
                     <input id="composer-event-place" type="text" 
                            class="composer-input" 
-                           placeholder="<?= T('Plek', 'Place') ?>" />
+                           placeholder="<?= t('place') ?>" />
                 </div>
                 
                 <input id="composer-image" type="file" accept="image/*" multiple style="display:none;" />
@@ -194,14 +194,14 @@ $VER = time();
                             <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" 
                                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span><?= T('Foto', 'Photo') ?></span>
+                        <span><?= t('photo') ?></span>
                     </button>
                     <button id="composer-submit" type="button" class="composer-submit">
                         <span class="sb-btn-shine"></span>
                         <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span><?= T('Plaas', 'Post') ?></span>
+                        <span><?= t('post') ?></span>
                     </button>
                 </div>
             </div>
@@ -213,7 +213,7 @@ $VER = time();
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
                     <path d="M12 16v.01M12 8v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
-                <p><?= T('Jy het nie plaas-regte in hierdie kamer nie.', 'You do not have posting rights in this room.') ?></p>
+                <p><?= t('no_posting_rights') ?></p>
             </div>
         </section>
         <?php endif; ?>
@@ -229,7 +229,7 @@ $VER = time();
                         <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
                     </svg>
                 </div>
-                <h2 class="gm-section-title"><?= T('Plasings', 'Posts') ?></h2>
+                <h2 class="gm-section-title"><?= t('posts') ?></h2>
                 <div class="gm-loading" id="loadingIndicator" hidden>
                     <div class="sb-spinner"></div>
                 </div>
@@ -240,7 +240,7 @@ $VER = time();
                     <svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/>
                     </svg>
-                    <p><?= T('Laai plasings...', 'Loading posts...') ?></p>
+                    <p><?= t('loading_posts') ?></p>
                 </div>
             </div>
         </section>

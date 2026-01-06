@@ -1891,6 +1891,327 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Thumela',
         'xh' => 'Thumela',
         'pt' => 'Enviar'
+    ],
+
+    // ==================== PRAYERS EXTRA ====================
+    'prayers_subtitle' => [
+        'af' => 'Deel jou hart, bid saam, vier saam',
+        'en' => 'Share your heart, pray together, celebrate together',
+        'zu' => 'Yabelana ngenhliziyo yakho, thandaza ndawonye, gubha ndawonye',
+        'xh' => 'Yabelana ngentliziyo yakho, thandaza kunye, bhiyozela kunye',
+        'pt' => 'Compartilhe seu coração, ore junto, celebre junto'
+    ],
+    'share_heart_placeholder' => [
+        'af' => 'Deel jou hart hier...',
+        'en' => 'Share your heart here...',
+        'zu' => 'Yabelana ngenhliziyo yakho lapha...',
+        'xh' => 'Yabelana ngentliziyo yakho apha...',
+        'pt' => 'Compartilhe seu coração aqui...'
+    ],
+    'choose_photo_optional' => [
+        'af' => 'Kies foto (opsioneel)',
+        'en' => 'Choose photo (optional)',
+        'zu' => 'Khetha isithombe (uyazikhethela)',
+        'xh' => 'Khetha umfanekiso (uyazikhethela)',
+        'pt' => 'Escolher foto (opcional)'
+    ],
+    'write_encouraging_word' => [
+        'af' => 'Skryf \'n bemoedigende woord...',
+        'en' => 'Write an encouraging word...',
+        'zu' => 'Bhala igama elikhuthazayo...',
+        'xh' => 'Bhala ilizwi elikhuthazayo...',
+        'pt' => 'Escreva uma palavra de encorajamento...'
+    ],
+
+    // ==================== GOSPEL MEDIA ====================
+    'no_rooms_available' => [
+        'af' => 'Geen kamers beskikbaar nie. Kontak admin.',
+        'en' => 'No rooms available. Contact admin.',
+        'zu' => 'Akukho magumbi atholakalayo. Xhumana no-admin.',
+        'xh' => 'Akukho magumbi afumanekayo. Qhagamshelana no-admin.',
+        'pt' => 'Nenhuma sala disponível. Contate o administrador.'
+    ],
+    'no_room_access' => [
+        'af' => 'Jy het nie toegang tot hierdie kamer nie.',
+        'en' => 'You do not have access to this room.',
+        'zu' => 'Awunayo imvume yokungena kuleli gumbi.',
+        'xh' => 'Awunayo imvume yokungena kweli gumbi.',
+        'pt' => 'Você não tem acesso a esta sala.'
+    ],
+    'rooms' => [
+        'af' => 'Kamers',
+        'en' => 'Rooms',
+        'zu' => 'Amagumbi',
+        'xh' => 'Amagumbi',
+        'pt' => 'Salas'
+    ],
+    'new_post' => [
+        'af' => 'Nuwe Plasing',
+        'en' => 'New Post',
+        'zu' => 'Ukuposa Okusha',
+        'xh' => 'Ukuposa Okutsha',
+        'pt' => 'Nova Postagem'
+    ],
+    'post' => [
+        'af' => 'Plaas',
+        'en' => 'Post',
+        'zu' => 'Posa',
+        'xh' => 'Posa',
+        'pt' => 'Postar'
+    ],
+    'what_share' => [
+        'af' => 'Wat wil jy deel?',
+        'en' => 'What do you want to share?',
+        'zu' => 'Ufuna ukwabelana ngani?',
+        'xh' => 'Ufuna ukwabelana ngantoni?',
+        'pt' => 'O que você quer compartilhar?'
+    ],
+    'date_time_short' => [
+        'af' => 'Datum/Tyd',
+        'en' => 'Date/Time',
+        'zu' => 'Usuku/Isikhathi',
+        'xh' => 'Umhla/Ixesha',
+        'pt' => 'Data/Hora'
+    ],
+    'place' => [
+        'af' => 'Plek',
+        'en' => 'Place',
+        'zu' => 'Indawo',
+        'xh' => 'Indawo',
+        'pt' => 'Local'
+    ],
+    'photo' => [
+        'af' => 'Foto',
+        'en' => 'Photo',
+        'zu' => 'Isithombe',
+        'xh' => 'Umfanekiso',
+        'pt' => 'Foto'
+    ],
+    'no_posting_rights' => [
+        'af' => 'Jy het nie plaas-regte in hierdie kamer nie.',
+        'en' => 'You do not have posting rights in this room.',
+        'zu' => 'Awunayo ilungelo lokuposa kuleli gumbi.',
+        'xh' => 'Awunayo ilungelo lokuposa kweli gumbi.',
+        'pt' => 'Você não tem direitos de postagem nesta sala.'
+    ],
+    'posts' => [
+        'af' => 'Plasings',
+        'en' => 'Posts',
+        'zu' => 'Iziposa',
+        'xh' => 'Iziposa',
+        'pt' => 'Postagens'
+    ],
+    'loading_posts' => [
+        'af' => 'Laai plasings...',
+        'en' => 'Loading posts...',
+        'zu' => 'Ilayisha iziposa...',
+        'xh' => 'Ilayisha iziposa...',
+        'pt' => 'Carregando postagens...'
+    ],
+
+    // ==================== ROOMS PAGE ====================
+    'your_rooms' => [
+        'af' => 'Jou Kamers',
+        'en' => 'Your Rooms',
+        'zu' => 'Amagumbi Akho',
+        'xh' => 'Amagumbi Akho',
+        'pt' => 'Suas Salas'
+    ],
+    'welcome' => [
+        'af' => 'Welkom',
+        'en' => 'Welcome',
+        'zu' => 'Siyakwemukela',
+        'xh' => 'Wamkelekile',
+        'pt' => 'Bem-vindo'
+    ],
+    'town' => [
+        'af' => 'Dorp',
+        'en' => 'Town',
+        'zu' => 'Idolobha',
+        'xh' => 'Idolophu',
+        'pt' => 'Cidade'
+    ],
+    'age' => [
+        'af' => 'Ouderdom',
+        'en' => 'Age',
+        'zu' => 'Iminyaka',
+        'xh' => 'Iminyaka',
+        'pt' => 'Idade'
+    ],
+    'years' => [
+        'af' => 'jaar',
+        'en' => 'years',
+        'zu' => 'iminyaka',
+        'xh' => 'iminyaka',
+        'pt' => 'anos'
+    ],
+    'amp_level' => [
+        'af' => 'Amp Vlak',
+        'en' => 'Amp Level',
+        'zu' => 'Izinga Le-Amp',
+        'xh' => 'Izinga Le-Amp',
+        'pt' => 'Nível do Cargo'
+    ],
+    'apostle_desc' => [
+        'af' => 'Apostel (Kan slegs opsienerskappe kies)',
+        'en' => 'Apostle (Can only choose oversights)',
+        'zu' => 'Umphostoli (Angakhetha ukuqashwa kuphela)',
+        'xh' => 'Umpostile (Angakhetha ukongamela kuphela)',
+        'pt' => 'Apóstolo (Pode apenas escolher supervisões)'
+    ],
+    'amp_2_6_desc' => [
+        'af' => 'Amp 2-6 (Kan gemeentes & jeug in eie dorp kies)',
+        'en' => 'Amp 2-6 (Can choose congregations & youth in own town)',
+        'zu' => 'Amp 2-6 (Angakhetha amabandla nentsha edolobheni lakhe)',
+        'xh' => 'Amp 2-6 (Angakhetha amabandla nolutsha edolophini yakhe)',
+        'pt' => 'Cargo 2-6 (Pode escolher congregações e jovens na própria cidade)'
+    ],
+    'amp_8_desc' => [
+        'af' => 'Amp 8+ (Kan slegs gemeente & opsienerskap sien, behalwe as bygevoeg)',
+        'en' => 'Amp 8+ (Can only see congregation & oversight, unless added)',
+        'zu' => 'Amp 8+ (Angabona ibandla nokuqashwa kuphela, ngaphandle uma wengezwe)',
+        'xh' => 'Amp 8+ (Angabona ibandla nokongamela kuphela, ngaphandle kokuba wongezwe)',
+        'pt' => 'Cargo 8+ (Pode ver apenas congregação e supervisão, a menos que adicionado)'
+    ],
+    'amp_7_desc' => [
+        'af' => 'Amp 7 (Kan jeug/sondagskool in eie dorp kies)',
+        'en' => 'Amp 7 (Can choose youth/sunday school in own town)',
+        'zu' => 'Amp 7 (Angakhetha intsha/isikole sesonto edolobheni lakhe)',
+        'xh' => 'Amp 7+ (Angakhetha ulutsha/isikolo sangesonto edolophini yakhe)',
+        'pt' => 'Cargo 7 (Pode escolher jovens/escola dominical na própria cidade)'
+    ],
+    'automatic' => [
+        'af' => 'Outomaties',
+        'en' => 'Automatic',
+        'zu' => 'Okuzenzakalelayo',
+        'xh' => 'Okuzenzakalelayo',
+        'pt' => 'Automático'
+    ],
+    'automatic_membership' => [
+        'af' => 'Outomatiese lidmaatskap',
+        'en' => 'Automatic membership',
+        'zu' => 'Ubulungu obuzenzakalelayo',
+        'xh' => 'Ubulungu obuzenzakalelayo',
+        'pt' => 'Associação automática'
+    ],
+    'officer_can_choose' => [
+        'af' => 'As offisier kan jy \'n ander gemeente kies',
+        'en' => 'As officer you can choose another congregation',
+        'zu' => 'Njengesikhulu ungakhetha elinye ibandla',
+        'xh' => 'Njengegosa ungakhetha elinye ibandla',
+        'pt' => 'Como oficial você pode escolher outra congregação'
+    ],
+    'auto_under_16' => [
+        'af' => 'Outomaties (onder 16 jaar)',
+        'en' => 'Automatic (under 16 years)',
+        'zu' => 'Okuzenzakalelayo (ngaphansi kweminyaka engu-16)',
+        'xh' => 'Okuzenzakalelayo (ngaphantsi kweminyaka eli-16)',
+        'pt' => 'Automático (menores de 16 anos)'
+    ],
+    'auto_16_25' => [
+        'af' => 'Outomaties (16-25 jaar, ongetroud)',
+        'en' => 'Automatic (16-25 years, unmarried)',
+        'zu' => 'Okuzenzakalelayo (iminyaka engu-16-25, ongashadile)',
+        'xh' => 'Okuzenzakalelayo (iminyaka eli-16-25, ongatshatanga)',
+        'pt' => 'Automático (16-25 anos, solteiro)'
+    ],
+    'auto_short' => [
+        'af' => 'Outo',
+        'en' => 'Auto',
+        'zu' => 'Okhozenzakalela',
+        'xh' => 'Okhozenzakalela',
+        'pt' => 'Auto'
+    ],
+    'leave' => [
+        'af' => 'Los',
+        'en' => 'Leave',
+        'zu' => 'Shiya',
+        'xh' => 'Shiya',
+        'pt' => 'Sair'
+    ],
+    'view' => [
+        'af' => 'Bekyk',
+        'en' => 'View',
+        'zu' => 'Buka',
+        'xh' => 'Jonga',
+        'pt' => 'Ver'
+    ],
+    'joined' => [
+        'af' => 'Gekose',
+        'en' => 'Joined',
+        'zu' => 'Ujoyine',
+        'xh' => 'Uzibandakanye',
+        'pt' => 'Associado'
+    ],
+    'available' => [
+        'af' => 'Beskikbaar',
+        'en' => 'Available',
+        'zu' => 'Iyatholakala',
+        'xh' => 'Iyafumaneka',
+        'pt' => 'Disponível'
+    ],
+    'join' => [
+        'af' => 'Sluit aan',
+        'en' => 'Join',
+        'zu' => 'Joyina',
+        'xh' => 'Joyina',
+        'pt' => 'Entrar'
+    ],
+    'no_rooms' => [
+        'af' => 'Geen kamers beskikbaar nie.',
+        'en' => 'No rooms available.',
+        'zu' => 'Akukho magumbi atholakalayo.',
+        'xh' => 'Akukho magumbi afumanekayo.',
+        'pt' => 'Nenhuma sala disponível.'
+    ],
+    'back_to_media' => [
+        'af' => 'Terug na Media',
+        'en' => 'Back to Media',
+        'zu' => 'Buyela ku-Media',
+        'xh' => 'Buyela ku-Media',
+        'pt' => 'Voltar para Mídia'
+    ],
+    'confirm_leave_congregation' => [
+        'af' => 'Is jy seker jy wil hierdie gemeente los? Jy sal \'n ander moet kies.',
+        'en' => 'Are you sure you want to leave this congregation? You will need to choose another.',
+        'zu' => 'Uqinisekile ukuthi ufuna ukushiya leli bandla? Uzodinga ukukhetha elinye.',
+        'xh' => 'Uqinisekile ukuba ufuna ukushiya eli bandla? Kuya kufuneka ukhethe elinye.',
+        'pt' => 'Tem certeza de que deseja sair desta congregação? Você precisará escolher outra.'
+    ],
+    'confirm_leave_room' => [
+        'af' => 'Is jy seker jy wil los',
+        'en' => 'Are you sure you want to leave',
+        'zu' => 'Uqinisekile ukuthi ufuna ukushiya',
+        'xh' => 'Uqinisekile ukuba ufuna ukushiya',
+        'pt' => 'Tem certeza de que deseja sair'
+    ],
+    'successfully_joined' => [
+        'af' => 'Suksesvol aangesluit!',
+        'en' => 'Successfully joined!',
+        'zu' => 'Ujoyine ngempumelelo!',
+        'xh' => 'Uzibandakanye ngempumelelo!',
+        'pt' => 'Associado com sucesso!'
+    ],
+    'successfully_left' => [
+        'af' => 'Suksesvol gelos!',
+        'en' => 'Successfully left!',
+        'zu' => 'Ushiye ngempumelelo!',
+        'xh' => 'Ushiye ngempumelelo!',
+        'pt' => 'Saiu com sucesso!'
+    ],
+    'cannot_leave_oversight' => [
+        'af' => 'Jy kan nie jou opsienerskap los nie',
+        'en' => 'You cannot leave your oversight',
+        'zu' => 'Awukwazi ukushiya ukuqashwa kwakho',
+        'xh' => 'Awukwazi ukushiya ukongamela kwakho',
+        'pt' => 'Você não pode sair da sua supervisão'
+    ],
+    'cannot_leave_congregation' => [
+        'af' => 'Jy kan nie jou gemeente los nie',
+        'en' => 'You cannot leave your congregation',
+        'zu' => 'Awukwazi ukushiya ibandla lakho',
+        'xh' => 'Awukwazi ukushiya ibandla lakho',
+        'pt' => 'Você não pode sair da sua congregação'
     ]
 ]);
 
