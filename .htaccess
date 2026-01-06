@@ -1,4 +1,34 @@
 Options -Indexes
+
+# ===========================================
+# SMART CACHING STRATEGY
+# ===========================================
+
+<IfModule mod_headers.c>
+  # STATIC FILES - Cache for 1 day (Varnish + browser)
+  # These rarely change, so caching = fast loading
+  <FilesMatch "\.(jpg|jpeg|png|gif|webp|ico|svg|css|js|woff|woff2|ttf|eot)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+
+  # PHP FILES - Never cache (always fresh)
+  # Dynamic content, user-specific data
+  <FilesMatch "\.php$">
+    Header set Cache-Control "private, no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # HTML FILES - Short cache (5 minutes)
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=300"
+  </FilesMatch>
+</IfModule>
+
+# ===========================================
+# SECURITY HEADERS
+# ===========================================
+
 <IfModule mod_headers.c>
   Header always set X-Frame-Options "DENY"
   Header always set X-Content-Type-Options "nosniff"
@@ -7,19 +37,16 @@ Options -Indexes
   Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 </IfModule>
 
-# Blokkeer toegang tot sensitiewe bestande
+# ===========================================
+# PROTECT SENSITIVE FILES
+# ===========================================
+
 <FilesMatch "^(config|session|auth|csrf|headers|session_guard)\.php$">
   Order allow,deny
   Deny from all
 </FilesMatch>
 
-# Protect all config files
 <FilesMatch "^config\.php$">
-    Order Allow,Deny
-    Deny from all
+  Order Allow,Deny
+  Deny from all
 </FilesMatch>
-
-# Dwing HTTPS (produksie)
-# RewriteEngine On
-# RewriteCond %{HTTPS} off
-# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

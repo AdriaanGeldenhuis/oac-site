@@ -1,5 +1,8 @@
 <?php
+// Cache-busted: v2
 declare(strict_types=1);
+header('Cache-Control: no-cache, must-revalidate');
+header('Pragma: no-cache');
 require_once __DIR__ . '/security/auth_gate.php';
 
 // Language detection
