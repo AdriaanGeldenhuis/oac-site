@@ -1,3 +1,11 @@
+<?php
+// Get current language for translations
+$ftrLang = $_SESSION['language'] ?? 'af';
+function t_ftr(string $key): string {
+    global $ftrLang;
+    return __t($key, $ftrLang);
+}
+?>
 <!-- Global Notification Badge - Bottom Right -->
 <div class="global-notif-badge" id="globalNotifBadge" style="
   position: fixed;
@@ -110,7 +118,7 @@
   cursor: pointer;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(192, 192, 192, 0.3);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-" aria-label="Go back">
+" aria-label="<?= t_ftr('back') ?>">
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">
     <path d="M19 12H5M12 19l-7-7 7-7" stroke="#c0c0c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>

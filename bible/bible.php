@@ -187,7 +187,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
         </div>
         <div class="bible-column bible-column-right" id="rightColumn">
           <div class="bible-column-content" id="rightContent">
-            <div class="bible-loading">Loading...</div>
+            <div class="bible-loading"><?= esc(t('loading')) ?></div>
           </div>
         </div>
       </div>

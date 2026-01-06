@@ -405,6 +405,62 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Awutshatanga',
         'pt' => 'Solteiro(a)'
     ],
+    'male' => [
+        'af' => 'Man',
+        'en' => 'Male',
+        'zu' => 'Owesilisa',
+        'xh' => 'Indoda',
+        'pt' => 'Masculino'
+    ],
+    'female' => [
+        'af' => 'Vrou',
+        'en' => 'Female',
+        'zu' => 'Owesifazane',
+        'xh' => 'Umfazi',
+        'pt' => 'Feminino'
+    ],
+    'man' => [
+        'af' => 'Man',
+        'en' => 'Male',
+        'zu' => 'Owesilisa',
+        'xh' => 'Indoda',
+        'pt' => 'Masculino'
+    ],
+    'vrou' => [
+        'af' => 'Vrou',
+        'en' => 'Female',
+        'zu' => 'Owesifazane',
+        'xh' => 'Umfazi',
+        'pt' => 'Feminino'
+    ],
+    'getroud' => [
+        'af' => 'Getroud',
+        'en' => 'Married',
+        'zu' => 'Ushadile',
+        'xh' => 'Utshatile',
+        'pt' => 'Casado(a)'
+    ],
+    'ongetroud' => [
+        'af' => 'Ongetroud',
+        'en' => 'Unmarried',
+        'zu' => 'Awushadile',
+        'xh' => 'Awutshatanga',
+        'pt' => 'Solteiro(a)'
+    ],
+    'widowed' => [
+        'af' => 'Wewenaar/Weduwee',
+        'en' => 'Widowed',
+        'zu' => 'Umfelokazi',
+        'xh' => 'Umhlolokazi',
+        'pt' => 'Viúvo(a)'
+    ],
+    'divorced' => [
+        'af' => 'Geskei',
+        'en' => 'Divorced',
+        'zu' => 'Ohlukanisile',
+        'xh' => 'Oqhawukileyo',
+        'pt' => 'Divorciado(a)'
+    ],
     'province' => [
         'af' => 'Provinsie',
         'en' => 'Province',
@@ -1418,6 +1474,149 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Mgq',
         'xh' => 'Mgq',
         'pt' => 'Sáb'
+    ],
+    // Full day names for calendar
+    'sunday' => [
+        'af' => 'Sondag',
+        'en' => 'Sunday',
+        'zu' => 'ISonto',
+        'xh' => 'ICawa',
+        'pt' => 'Domingo'
+    ],
+    'monday' => [
+        'af' => 'Maandag',
+        'en' => 'Monday',
+        'zu' => 'UMsombuluko',
+        'xh' => 'UMvulo',
+        'pt' => 'Segunda-feira'
+    ],
+    'tuesday' => [
+        'af' => 'Dinsdag',
+        'en' => 'Tuesday',
+        'zu' => 'ULwesibili',
+        'xh' => 'ULwesibini',
+        'pt' => 'Terça-feira'
+    ],
+    'wednesday' => [
+        'af' => 'Woensdag',
+        'en' => 'Wednesday',
+        'zu' => 'ULwesithathu',
+        'xh' => 'ULwesithathu',
+        'pt' => 'Quarta-feira'
+    ],
+    'thursday' => [
+        'af' => 'Donderdag',
+        'en' => 'Thursday',
+        'zu' => 'ULwesine',
+        'xh' => 'ULwesine',
+        'pt' => 'Quinta-feira'
+    ],
+    'friday' => [
+        'af' => 'Vrydag',
+        'en' => 'Friday',
+        'zu' => 'ULwesihlanu',
+        'xh' => 'ULwesihlanu',
+        'pt' => 'Sexta-feira'
+    ],
+    'saturday' => [
+        'af' => 'Saterdag',
+        'en' => 'Saturday',
+        'zu' => 'UMgqibelo',
+        'xh' => 'UMgqibelo',
+        'pt' => 'Sábado'
+    ],
+    // Month names for calendar
+    'january' => [
+        'af' => 'Januarie',
+        'en' => 'January',
+        'zu' => 'UMasingana',
+        'xh' => 'UJanyuwari',
+        'pt' => 'Janeiro'
+    ],
+    'february' => [
+        'af' => 'Februarie',
+        'en' => 'February',
+        'zu' => 'UNhlolanja',
+        'xh' => 'UFebruwari',
+        'pt' => 'Fevereiro'
+    ],
+    'march' => [
+        'af' => 'Maart',
+        'en' => 'March',
+        'zu' => 'UNdasa',
+        'xh' => 'UMatshi',
+        'pt' => 'Março'
+    ],
+    'april' => [
+        'af' => 'April',
+        'en' => 'April',
+        'zu' => 'UMbasa',
+        'xh' => 'UEpreli',
+        'pt' => 'Abril'
+    ],
+    'may' => [
+        'af' => 'Mei',
+        'en' => 'May',
+        'zu' => 'UNhlaba',
+        'xh' => 'UMeyi',
+        'pt' => 'Maio'
+    ],
+    'june' => [
+        'af' => 'Junie',
+        'en' => 'June',
+        'zu' => 'UNhlangulana',
+        'xh' => 'UJuni',
+        'pt' => 'Junho'
+    ],
+    'july' => [
+        'af' => 'Julie',
+        'en' => 'July',
+        'zu' => 'UNtulikazi',
+        'xh' => 'UJulayi',
+        'pt' => 'Julho'
+    ],
+    'august' => [
+        'af' => 'Augustus',
+        'en' => 'August',
+        'zu' => 'UNcwaba',
+        'xh' => 'UAgasti',
+        'pt' => 'Agosto'
+    ],
+    'september' => [
+        'af' => 'September',
+        'en' => 'September',
+        'zu' => 'UMandulo',
+        'xh' => 'USeptemba',
+        'pt' => 'Setembro'
+    ],
+    'october' => [
+        'af' => 'Oktober',
+        'en' => 'October',
+        'zu' => 'UMfumfu',
+        'xh' => 'UOktobha',
+        'pt' => 'Outubro'
+    ],
+    'november' => [
+        'af' => 'November',
+        'en' => 'November',
+        'zu' => 'ULwezi',
+        'xh' => 'UNovemba',
+        'pt' => 'Novembro'
+    ],
+    'december' => [
+        'af' => 'Desember',
+        'en' => 'December',
+        'zu' => 'UZibandlela',
+        'xh' => 'UDisemba',
+        'pt' => 'Dezembro'
+    ],
+    // Singular appointment
+    'appointment' => [
+        'af' => 'Afspraak',
+        'en' => 'Appointment',
+        'zu' => 'Isivumelwano',
+        'xh' => 'Isivumelwano',
+        'pt' => 'Compromisso'
     ],
     'create_new' => [
         'af' => 'Skep Nuwe',

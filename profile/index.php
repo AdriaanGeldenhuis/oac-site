@@ -236,11 +236,11 @@ $VER = time();
             </svg>
             <div class="profile-info-content">
               <span class="profile-info-label"><?= esc(t('gender')) ?></span>
-              <span class="profile-info-value"><?= esc(ucfirst($user['gender'])) ?></span>
+              <span class="profile-info-value"><?= esc(t(strtolower($user['gender']))) ?></span>
             </div>
           </div>
           <?php endif; ?>
-          
+
           <?php if (!empty($user['marital_status'])): ?>
           <div class="profile-info-item">
             <svg class="profile-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -248,7 +248,7 @@ $VER = time();
             </svg>
             <div class="profile-info-content">
               <span class="profile-info-label"><?= esc(t('marital_status')) ?></span>
-              <span class="profile-info-value"><?= esc(ucfirst($user['marital_status'])) ?></span>
+              <span class="profile-info-value"><?= esc(t(strtolower($user['marital_status']))) ?></span>
             </div>
           </div>
           <?php endif; ?>
