@@ -1,20 +1,14 @@
 Options -Indexes
 
-# Bypass Varnish cache for JS files (force revalidation)
+# DISABLE ALL VARNISH CACHING - serve fresh content always
 <IfModule mod_headers.c>
-  <FilesMatch "\.(js|css)$">
-    Header set Cache-Control "no-cache, must-revalidate"
-  </FilesMatch>
+  # Tell Varnish and browsers not to cache anything
+  Header set Cache-Control "private, no-cache, no-store, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
 </IfModule>
 
-# Service Worker - ensure correct MIME type and headers
-<Files "service-worker.js">
-  <IfModule mod_headers.c>
-    Header set Content-Type "application/javascript"
-    Header set Service-Worker-Allowed "/"
-    Header set Cache-Control "no-cache, no-store"
-  </IfModule>
-</Files>
+# Security headers
 <IfModule mod_headers.c>
   Header always set X-Frame-Options "DENY"
   Header always set X-Content-Type-Options "nosniff"
@@ -31,11 +25,6 @@ Options -Indexes
 
 # Protect all config files
 <FilesMatch "^config\.php$">
-    Order Allow,Deny
-    Deny from all
+  Order Allow,Deny
+  Deny from all
 </FilesMatch>
-
-# Dwing HTTPS (produksie)
-# RewriteEngine On
-# RewriteCond %{HTTPS} off
-# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
