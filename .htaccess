@@ -1,4 +1,13 @@
 Options -Indexes
+
+# Service Worker - ensure correct MIME type and headers
+<Files "service-worker.js">
+  <IfModule mod_headers.c>
+    Header set Content-Type "application/javascript"
+    Header set Service-Worker-Allowed "/"
+    Header set Cache-Control "no-cache"
+  </IfModule>
+</Files>
 <IfModule mod_headers.c>
   Header always set X-Frame-Options "DENY"
   Header always set X-Content-Type-Options "nosniff"
