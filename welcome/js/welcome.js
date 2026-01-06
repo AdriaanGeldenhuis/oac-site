@@ -50,7 +50,7 @@
 
   // Theme sync - listen to header theme changes
   window.addEventListener('themeChanged', function(e) {
-    console.log('Welcome page detected theme change:', e.detail.theme);
+    // Theme changed - could add visual feedback here if needed
   });
 
   // Sparkle effect enhancement
@@ -132,7 +132,5 @@
   setTimeout(function() {
     document.body.classList.add('loaded');
   }, 100);
-
-  console.log('Welcome page initialized');
 
 })();

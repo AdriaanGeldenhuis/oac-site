@@ -40,13 +40,6 @@
 
   // Initialize
   function init() {
-    console.log('Calendar init...', {
-      userId: window.USER_ID,
-      ampId: window.USER_AMP_ID,
-      town: window.USER_TOWN,
-      cong: window.USER_CONG
-    });
-    
     attachListeners();
     checkSpouse();
     loadRooms();
@@ -60,38 +53,25 @@
     // View buttons
     viewBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        const view = btn.dataset.view;
-        console.log('View button clicked:', view);
-        switchView(view);
+        switchView(btn.dataset.view);
       });
     });
 
     // Navigation
-    prevBtn.addEventListener('click', () => {
-      console.log('Prev clicked');
-      navigate(-1);
-    });
-    
-    nextBtn.addEventListener('click', () => {
-      console.log('Next clicked');
-      navigate(1);
-    });
-    
+    prevBtn.addEventListener('click', () => navigate(-1));
+    nextBtn.addEventListener('click', () => navigate(1));
     todayBtn.addEventListener('click', () => {
-      console.log('Today clicked');
       currentDate = new Date();
       renderView();
     });
 
     // Quick menu
     quickOverlay.addEventListener('click', closeQuickMenu);
-    
+
     document.querySelectorAll('.cal-quick-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const action = btn.dataset.action;
-        console.log('Quick action:', action);
         closeQuickMenu();
-        handleQuickAction(action);
+        handleQuickAction(btn.dataset.action);
       });
     });
 
@@ -122,7 +102,6 @@
 
   // Switch View
   function switchView(view) {
-    console.log('Switching to view:', view);
     currentView = view;
     
     viewBtns.forEach(btn => {
@@ -369,7 +348,6 @@
     
     el.addEventListener('click', (e) => {
       e.stopPropagation();
-      console.log('Event clicked:', event);
       editEvent(event);
     });
     
@@ -394,22 +372,18 @@
 
   // Show Quick Menu
   function showQuickMenu() {
-    console.log('Show quick menu', {date: selectedDate, time: selectedTime});
     quickMenu.style.display = 'flex';
     setTimeout(() => quickMenu.classList.add('active'), 10);
   }
 
   // Close Quick Menu
   function closeQuickMenu() {
-    console.log('Close quick menu');
     quickMenu.classList.remove('active');
     setTimeout(() => quickMenu.style.display = 'none', 300);
   }
 
   // Handle Quick Action
   function handleQuickAction(action) {
-    console.log('Handle quick action:', action);
-    
     if (action === 'gebeurtenis') {
       showModal('event', selectedDate, selectedTime);
     } else if (action === 'dagboek') {
@@ -430,17 +404,14 @@
   // Load Rooms
   async function loadRooms() {
     try {
-      console.log('Loading rooms...');
       const res = await fetch('/calendar/api/rooms.php');
       const data = await res.json();
-      console.log('Rooms loaded:', data);
-      
       if (data.success) {
         rooms = data.rooms;
         populateRoomSelect();
       }
     } catch (error) {
-      console.error('Load rooms error:', error);
+      // Silent fail
     }
   }
 
@@ -448,31 +419,25 @@
   function populateRoomSelect() {
     const select = document.getElementById('eventRoom');
     select.innerHTML = '<option value="">Kies kamer...</option>';
-    
     rooms.forEach(room => {
       const opt = document.createElement('option');
       opt.value = room.id;
       opt.textContent = room.name;
       select.appendChild(opt);
     });
-    
-    console.log('Room select populated with', rooms.length, 'rooms');
   }
 
   // Load Users
   async function loadUsers() {
     try {
-      console.log('Loading users...');
       const res = await fetch('/calendar/api/users.php');
       const data = await res.json();
-      console.log('Users loaded:', data);
-      
       if (data.success) {
         users = data.users;
         populateUserSelect();
       }
     } catch (error) {
-      console.error('Load users error:', error);
+      // Silent fail
     }
   }
 
@@ -480,15 +445,12 @@
   function populateUserSelect() {
     const select = document.getElementById('linkedUser');
     select.innerHTML = '<option value="">Kies gebruiker...</option>';
-    
     users.forEach(user => {
       const opt = document.createElement('option');
       opt.value = user.id;
       opt.textContent = `${user.name} ${user.surname}`;
       select.appendChild(opt);
     });
-    
-    console.log('User select populated with', users.length, 'users');
   }
 
   // Check Spouse
@@ -497,35 +459,28 @@
       const res = await fetch('/calendar/api/spouse_status.php');
       const data = await res.json();
       hasSpouse = data.has_spouse || false;
-      
-      console.log('Has spouse:', hasSpouse);
-      
       const shareGroup = document.getElementById('shareGroup');
       if (shareGroup) {
         shareGroup.style.display = hasSpouse ? 'block' : 'none';
       }
     } catch (error) {
-      console.error('Check spouse error:', error);
+      // Silent fail
     }
   }
 
   // Load Events
   async function loadEvents() {
     try {
-      console.log('Loading events...');
       const res = await fetch('/calendar/api/list.php');
       events = await res.json();
-      console.log('Events loaded:', events.length, events);
       renderView();
     } catch (error) {
-      console.error('Load events error:', error);
+      // Silent fail
     }
   }
 
   // Show Modal
   function showModal(type, date, time) {
-    console.log('Show modal:', type, date, time);
-    
     currentEvent = null;
     
     document.getElementById('eventId').value = '';
@@ -573,8 +528,6 @@
 
   // Edit Event
   function editEvent(event) {
-    console.log('Edit event:', event);
-    
     currentEvent = event;
     
     document.getElementById('eventId').value = event.id;
@@ -663,7 +616,6 @@
 
   // Hide Modal
   function hideModal() {
-    console.log('Hide modal');
     eventModal.style.display = 'none';
     eventForm.reset();
     currentEvent = null;
@@ -688,19 +640,14 @@
   // Handle Submit
   async function handleSubmit(e) {
     e.preventDefault();
-    console.log('Submit form');
-    
     const formData = new FormData(eventForm);
-    
+
     try {
       const res = await fetch('/calendar/api/upsert.php', {
         method: 'POST',
         body: formData
       });
-      
       const data = await res.json();
-      console.log('Submit response:', data);
-      
       if (data.success) {
         hideModal();
         loadEvents();
@@ -709,32 +656,25 @@
         showToast(data.error || window.T.error, 'error');
       }
     } catch (error) {
-      console.error('Submit error:', error);
       showToast(window.T.error, 'error');
     }
   }
 
   // Handle Delete
   async function handleDelete() {
-    console.log('Delete event');
-    
     const eventId = document.getElementById('eventId').value;
     const eventType = document.getElementById('eventType').value;
-    
+
     if (!eventId) return;
-    
     if (!confirm(window.T.confirmDelete)) return;
-    
+
     try {
       const res = await fetch('/calendar/api/delete.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `id=${eventId}&type=${eventType}`
       });
-      
       const data = await res.json();
-      console.log('Delete response:', data);
-      
       if (data.success) {
         hideModal();
         loadEvents();
@@ -743,7 +683,6 @@
         showToast(data.error || window.T.error, 'error');
       }
     } catch (error) {
-      console.error('Delete error:', error);
       showToast(window.T.error, 'error');
     }
   }
