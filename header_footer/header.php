@@ -7,11 +7,27 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 
-// Language handling
-if (isset($_GET['lang']) && ($_GET['lang'] === 'af' || $_GET['lang'] === 'en')) {
+// Include languages config if available
+$langConfigPath = __DIR__ . '/../includes/languages.php';
+if (file_exists($langConfigPath)) {
+  require_once $langConfigPath;
+} else {
+  // Fallback if languages.php not loaded
+  define('SUPPORTED_LANGS', ['af', 'en', 'zu', 'xh', 'pt']);
+  define('LANG_NAMES', [
+    'af' => 'Afrikaans',
+    'en' => 'English',
+    'zu' => 'isiZulu',
+    'xh' => 'isiXhosa',
+    'pt' => 'Português'
+  ]);
+}
+
+// Language handling - support all 5 languages
+if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
   $_SESSION['language'] = $_GET['lang'];
 }
-if (empty($_SESSION['language'])) {
+if (empty($_SESSION['language']) || !in_array($_SESSION['language'], SUPPORTED_LANGS, true)) {
   $_SESSION['language'] = 'af';
 }
 
@@ -120,12 +136,13 @@ function isActive($url, $currentPath) {
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
           <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="currentColor" stroke-width="1.5"/>
         </svg>
-        <span class="ghf-lang-text"><?= $hdrLang === 'af' ? 'AF' : 'EN' ?></span>
+        <span class="ghf-lang-text"><?= strtoupper($hdrLang) ?></span>
         <span class="ghf-lang-shine"></span>
       </button>
       <ul class="ghf-lang-menu" id="ghfLangMenu" hidden>
-        <li><a href="#" data-lang="af" class="<?= $hdrLang === 'af' ? 'active' : '' ?>">Afrikaans</a></li>
-        <li><a href="#" data-lang="en" class="<?= $hdrLang === 'en' ? 'active' : '' ?>">English</a></li>
+        <?php foreach (SUPPORTED_LANGS as $code): ?>
+        <li><a href="#" data-lang="<?= $code ?>" class="<?= $hdrLang === $code ? 'active' : '' ?>"><?= htmlspecialchars(LANG_NAMES[$code]) ?></a></li>
+        <?php endforeach; ?>
       </ul>
     </div>
 
