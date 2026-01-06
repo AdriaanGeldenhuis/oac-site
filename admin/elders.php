@@ -88,9 +88,10 @@ foreach (SUPPORTED_LANGS as $code) {
     $contents[$code] = file_exists($file) ? file_get_contents($file) : $defaultContent[$code];
 }
 
+// T() for backwards compat: AF gets Afrikaans, all others get English
 function T($af, $en) {
     global $lang;
-    return ($lang === 'af') ? $af : $en;
+    return $lang === 'af' ? $af : $en;
 }
 ?>
 <!DOCTYPE html>

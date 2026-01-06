@@ -6,17 +6,19 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../security/auth_gate.php';
+require_once __DIR__ . '/../includes/languages.php';
 
 $pageLang = $_SESSION['language'] ?? 'af';
-if (isset($_GET['lang']) && in_array($_GET['lang'], ['af','en'], true)) {
+if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     $_SESSION['language'] = $pageLang = $_GET['lang'];
     header('Location: /calendar/calendar.php');
     exit;
 }
 
-function T(string $af, string $en): string { 
-    global $pageLang; 
-    return $pageLang === 'en' ? $en : $af; 
+// T() for backwards compat: AF gets Afrikaans, all others get English
+function T(string $af, string $en): string {
+    global $pageLang;
+    return $pageLang === 'af' ? $af : $en;
 }
 
 function esc($s) { 
