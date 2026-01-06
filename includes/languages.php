@@ -846,6 +846,101 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Iphutha lenethiwekhi',
         'xh' => 'Impazamo yenethiwekhi',
         'pt' => 'Erro de rede'
+    ],
+
+    // ==================== APPROVALS TAB ====================
+    'user_approvals' => [
+        'af' => 'Gebruiker Goedkeurings',
+        'en' => 'User Approvals',
+        'zu' => 'Izimvume Zabasebenzisi',
+        'xh' => 'Imvume Yabasebenzisi',
+        'pt' => 'Aprovações de Usuários'
+    ],
+    'no_pending_approvals' => [
+        'af' => 'Geen hangende gebruiker goedkeurings nie.',
+        'en' => 'No pending user approvals.',
+        'zu' => 'Azikho izimvume zabasebenzisi ezilindile.',
+        'xh' => 'Akukho mvume yabasebenzisi elindileyo.',
+        'pt' => 'Nenhuma aprovação de usuário pendente.'
+    ],
+    'role' => [
+        'af' => 'Amp',
+        'en' => 'Role',
+        'zu' => 'Isikhundla',
+        'xh' => 'Isikhundla',
+        'pt' => 'Cargo'
+    ],
+    'actions' => [
+        'af' => 'Aksies',
+        'en' => 'Actions',
+        'zu' => 'Izenzo',
+        'xh' => 'Izenzo',
+        'pt' => 'Ações'
+    ],
+    'spouse_requests' => [
+        'af' => 'Eggenoot Versoeke',
+        'en' => 'Spouse Requests',
+        'zu' => 'Izicelo Zomlingani',
+        'xh' => 'Izicelo Zomlingani',
+        'pt' => 'Pedidos de Cônjuge'
+    ],
+    'no_pending_spouse' => [
+        'af' => 'Geen hangende eggenoot versoeke nie.',
+        'en' => 'No pending spouse requests.',
+        'zu' => 'Azikho izicelo zomlingani ezilindile.',
+        'xh' => 'Akukho zicelo zomlingani ezilindileyo.',
+        'pt' => 'Nenhum pedido de cônjuge pendente.'
+    ],
+    'requester' => [
+        'af' => 'Versoeker',
+        'en' => 'Requester',
+        'zu' => 'Umceli',
+        'xh' => 'Umceli',
+        'pt' => 'Solicitante'
+    ],
+    'receiver' => [
+        'af' => 'Ontvanger',
+        'en' => 'Receiver',
+        'zu' => 'Umamukeli',
+        'xh' => 'Umamkeli',
+        'pt' => 'Destinatário'
+    ],
+    'status' => [
+        'af' => 'Status',
+        'en' => 'Status',
+        'zu' => 'Isimo',
+        'xh' => 'Isimo',
+        'pt' => 'Status'
+    ],
+    'pending' => [
+        'af' => 'Hangende',
+        'en' => 'Pending',
+        'zu' => 'Iyalinda',
+        'xh' => 'Iyalinda',
+        'pt' => 'Pendente'
+    ],
+    'spouse_auto_approve_note' => [
+        'af' => 'Eggenoot versoeke word outomaties goedgekeur wanneer beide partye aanvaar.',
+        'en' => 'Spouse requests are automatically approved when both parties accept.',
+        'zu' => 'Izicelo zomlingani zivunywa ngokuzenzakalela uma zonke izinhlangothi zivuma.',
+        'xh' => 'Izicelo zomlingani ziyavunywa ngokuzenzekelayo xa zonke iiqela ziyavuma.',
+        'pt' => 'Os pedidos de cônjuge são aprovados automaticamente quando ambas as partes aceitam.'
+    ],
+
+    // ==================== TEACHING TAB ====================
+    'teaching_management' => [
+        'af' => 'Lering Bestuur',
+        'en' => 'Teaching Management',
+        'zu' => 'Ukuphathwa Kwemfundiso',
+        'xh' => 'Ulawulo Lwemfundiso',
+        'pt' => 'Gerenciamento de Ensino'
+    ],
+    'edit_teaching_desc' => [
+        'af' => 'Wysig die maandelikse lering vir jou dorp en gemeente.',
+        'en' => 'Edit the monthly teaching for your town and congregation.',
+        'zu' => 'Hlela imfundiso yenyanga yedolobha lakho nebandla.',
+        'xh' => 'Hlela imfundiso yenyanga yedolophu kunye nebandla lakho.',
+        'pt' => 'Edite o ensino mensal para sua cidade e congregação.'
     ]
 ]);
 

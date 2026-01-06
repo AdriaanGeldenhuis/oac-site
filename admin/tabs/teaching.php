@@ -6,14 +6,14 @@
         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" stroke-width="2"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= T('Lering Bestuur', 'Teaching Management') ?></h2>
+    <h2 class="admin-section-title"><?= t('teaching_management') ?></h2>
   </div>
 
-  <p><?= T('Wysig die maandelikse lering vir jou dorp en gemeente.', 'Edit the monthly teaching for your town and congregation.') ?></p>
+  <p><?= t('edit_teaching_desc') ?></p>
 
   <div class="admin-right">
     <a href="/admin/elders.php" class="admin-btn admin-btn-primary">
-      <?= T('Wysig Lering', 'Edit Teaching') ?>
+      <?= t('edit_teaching') ?>
     </a>
   </div>
 </div>
