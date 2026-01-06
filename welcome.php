@@ -7,6 +7,13 @@ require_once __DIR__ . '/security/auth_gate.php';
 require_once __DIR__ . '/includes/languages.php';
 require_once __DIR__ . '/security/config.php';
 
+// Handle language change via GET parameter - redirect to apply cleanly
+if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
+    $_SESSION['language'] = $_GET['lang'];
+    header('Location: /welcome.php');
+    exit;
+}
+
 // Language detection - get from session, or load from DB
 $lang = $_SESSION['language'] ?? null;
 
