@@ -6,12 +6,24 @@ declare(strict_types=1);
  * Uses AI for text translation but preserves Bible verses from actual Bible files
  */
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 // Load dependencies
-require_once dirname(__DIR__, 3) . '/security/config.php';
-require_once dirname(__DIR__, 3) . '/security/session.php';
-require_once dirname(__DIR__, 3) . '/security/auth.php';
-require_once dirname(__DIR__, 3) . '/includes/languages.php';
-require_once dirname(__DIR__, 2) . '/config/ai_config.php';
+try {
+    require_once dirname(__DIR__, 3) . '/security/config.php';
+    require_once dirname(__DIR__, 3) . '/security/session.php';
+    require_once dirname(__DIR__, 3) . '/security/auth.php';
+    require_once dirname(__DIR__, 3) . '/includes/languages.php';
+    require_once dirname(__DIR__, 2) . '/config/ai_config.php';
+} catch (Throwable $e) {
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Failed to load dependencies', 'detail' => $e->getMessage()]);
+    exit;
+}
 
 // Headers
 ob_start();
