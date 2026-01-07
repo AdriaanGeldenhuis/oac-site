@@ -3,6 +3,7 @@ config.php
 **/config.php
 bible/config.php
 **/secrets.php
+**/firebase-service-account.json
 node_modules/
 .DS_Store
 *.log

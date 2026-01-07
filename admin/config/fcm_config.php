@@ -1,20 +1,116 @@
 <?php
 // =====================================================================
-// /admin/config/fcm_config.php — Firebase Cloud Messaging Configuration
+// /admin/config/fcm_config.php — Firebase Cloud Messaging V1 API
 // =====================================================================
 
 declare(strict_types=1);
 
 // Firebase Project Config
 define('FCM_PROJECT_ID', 'oac-app-5728d');
-define('FCM_API_KEY', 'AIzaSyDt0ZJqlSnVLBE-r111eH1g0GBfa7X60zY');
-
-// Legacy FCM Server Key (get from Firebase Console -> Cloud Messaging -> Server key)
-// You need to add this from Firebase Console
-define('FCM_SERVER_KEY', ''); // TODO: Add your server key here
+define('FCM_SERVICE_ACCOUNT_FILE', __DIR__ . '/firebase-service-account.json');
 
 /**
- * Send push notification via FCM
+ * Get OAuth2 access token for FCM V1 API
+ * Uses service account credentials to generate JWT and exchange for access token
+ */
+function getFcmAccessToken(): ?string {
+    static $cachedToken = null;
+    static $tokenExpiry = 0;
+
+    // Return cached token if still valid (with 5 min buffer)
+    if ($cachedToken && time() < ($tokenExpiry - 300)) {
+        return $cachedToken;
+    }
+
+    if (!file_exists(FCM_SERVICE_ACCOUNT_FILE)) {
+        error_log('FCM: Service account file not found');
+        return null;
+    }
+
+    $serviceAccount = json_decode(file_get_contents(FCM_SERVICE_ACCOUNT_FILE), true);
+
+    if (!$serviceAccount || !isset($serviceAccount['private_key'])) {
+        error_log('FCM: Invalid service account file');
+        return null;
+    }
+
+    // Create JWT header
+    $header = [
+        'alg' => 'RS256',
+        'typ' => 'JWT'
+    ];
+
+    // Create JWT claims
+    $now = time();
+    $claims = [
+        'iss' => $serviceAccount['client_email'],
+        'sub' => $serviceAccount['client_email'],
+        'aud' => 'https://oauth2.googleapis.com/token',
+        'iat' => $now,
+        'exp' => $now + 3600,
+        'scope' => 'https://www.googleapis.com/auth/firebase.messaging'
+    ];
+
+    // Encode header and claims
+    $headerEncoded = rtrim(strtr(base64_encode(json_encode($header)), '+/', '-_'), '=');
+    $claimsEncoded = rtrim(strtr(base64_encode(json_encode($claims)), '+/', '-_'), '=');
+
+    // Sign with private key
+    $dataToSign = $headerEncoded . '.' . $claimsEncoded;
+    $privateKey = openssl_pkey_get_private($serviceAccount['private_key']);
+
+    if (!$privateKey) {
+        error_log('FCM: Failed to parse private key');
+        return null;
+    }
+
+    $signature = '';
+    if (!openssl_sign($dataToSign, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
+        error_log('FCM: Failed to sign JWT');
+        return null;
+    }
+
+    $signatureEncoded = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
+    $jwt = $dataToSign . '.' . $signatureEncoded;
+
+    // Exchange JWT for access token
+    $ch = curl_init('https://oauth2.googleapis.com/token');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POSTFIELDS => http_build_query([
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $jwt
+        ]),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+        CURLOPT_TIMEOUT => 30
+    ]);
+
+    $response = curl_exec($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($error) {
+        error_log('FCM: Token request error: ' . $error);
+        return null;
+    }
+
+    $data = json_decode($response, true);
+
+    if (!isset($data['access_token'])) {
+        error_log('FCM: Failed to get access token: ' . $response);
+        return null;
+    }
+
+    // Cache the token
+    $cachedToken = $data['access_token'];
+    $tokenExpiry = $now + ($data['expires_in'] ?? 3600);
+
+    return $cachedToken;
+}
+
+/**
+ * Send push notification via FCM V1 API
  *
  * @param string|array $tokens FCM token(s) to send to
  * @param string $title Notification title
@@ -23,9 +119,10 @@ define('FCM_SERVER_KEY', ''); // TODO: Add your server key here
  * @return array Result with success status
  */
 function sendFcmNotification($tokens, string $title, string $body, array $data = []): array {
-    if (empty(FCM_SERVER_KEY)) {
-        error_log('FCM Server Key not configured');
-        return ['success' => false, 'error' => 'FCM not configured'];
+    $accessToken = getFcmAccessToken();
+
+    if (!$accessToken) {
+        return ['success' => false, 'error' => 'Failed to get FCM access token'];
     }
 
     $tokens = is_array($tokens) ? $tokens : [$tokens];
@@ -34,63 +131,73 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
         return ['success' => false, 'error' => 'No tokens provided'];
     }
 
-    $notification = [
-        'title' => $title,
-        'body' => $body,
-        'sound' => 'default',
-        'click_action' => 'OPEN_APP'
-    ];
+    $url = 'https://fcm.googleapis.com/v1/projects/' . FCM_PROJECT_ID . '/messages:send';
 
-    // For single token
-    if (count($tokens) === 1) {
-        $payload = [
-            'to' => $tokens[0],
-            'notification' => $notification,
-            'data' => $data,
-            'priority' => 'high'
+    $results = [];
+    $successCount = 0;
+    $failureCount = 0;
+
+    // V1 API requires sending one message at a time
+    foreach ($tokens as $token) {
+        $message = [
+            'message' => [
+                'token' => $token,
+                'notification' => [
+                    'title' => $title,
+                    'body' => $body
+                ],
+                'android' => [
+                    'priority' => 'high',
+                    'notification' => [
+                        'sound' => 'default',
+                        'click_action' => 'OPEN_APP'
+                    ]
+                ],
+                'data' => array_map('strval', $data) // V1 API requires string values
+            ]
         ];
-    } else {
-        // For multiple tokens (max 500 per request)
-        $payload = [
-            'registration_ids' => array_slice($tokens, 0, 500),
-            'notification' => $notification,
-            'data' => $data,
-            'priority' => 'high'
-        ];
-    }
 
-    $ch = curl_init('https://fcm.googleapis.com/fcm/send');
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER => [
-            'Authorization: key=' . FCM_SERVER_KEY,
-            'Content-Type: application/json'
-        ],
-        CURLOPT_POSTFIELDS => json_encode($payload),
-        CURLOPT_TIMEOUT => 30
-    ]);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $accessToken,
+                'Content-Type: application/json'
+            ],
+            CURLOPT_POSTFIELDS => json_encode($message),
+            CURLOPT_TIMEOUT => 30
+        ]);
 
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    curl_close($ch);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
 
-    if ($error) {
-        error_log('FCM curl error: ' . $error);
-        return ['success' => false, 'error' => $error];
-    }
+        if ($error) {
+            error_log('FCM curl error: ' . $error);
+            $results[] = ['token' => $token, 'success' => false, 'error' => $error];
+            $failureCount++;
+            continue;
+        }
 
-    $result = json_decode($response, true);
+        $result = json_decode($response, true);
 
-    if ($httpCode !== 200) {
-        error_log('FCM error response: ' . $response);
-        return ['success' => false, 'error' => 'FCM request failed', 'http_code' => $httpCode];
+        if ($httpCode === 200) {
+            $results[] = ['token' => $token, 'success' => true, 'message_id' => $result['name'] ?? null];
+            $successCount++;
+        } else {
+            error_log('FCM error for token ' . substr($token, 0, 20) . '...: ' . $response);
+            $results[] = ['token' => $token, 'success' => false, 'error' => $result['error']['message'] ?? 'Unknown error'];
+            $failureCount++;
+        }
     }
 
     return [
-        'success' => true,
-        'result' => $result
+        'success' => $successCount > 0,
+        'success_count' => $successCount,
+        'failure_count' => $failureCount,
+        'results' => $results
     ];
 }
 
