@@ -15,7 +15,7 @@
     return n;
   };
 
-  const T = (af, en) => (window.PAGE_LANG === 'en' ? en : af);
+  const T = (key) => (window.JS_T && window.JS_T[key]) ? window.JS_T[key] : key;
 
   function injectCSS() {
     if ($('#roommenu-styles')) return;
@@ -389,7 +389,7 @@
     const panel = ce('div', 'rmx-panel');
     
     const head = ce('div', 'rmx-head');
-    const hb = ce('div', 'rmx-hbubble', T("Kamers", 'Rooms'));
+    const hb = ce('div', 'rmx-hbubble', T('rooms'));
     const close = ce('button', 'rmx-close', '×');
     close.type = 'button';
     head.appendChild(hb);
@@ -405,7 +405,7 @@
       <svg style="width:18px;height:18px;stroke:currentColor;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <span>${T('Bestuur Kamers', 'Manage Rooms')}</span>
+      <span>${T('manage_rooms')}</span>
     `;
     foot.appendChild(manage);
     
@@ -428,7 +428,7 @@
     wrap.hidden = false;
     
     const list = $('#roommenu-list', wrap);
-    list.innerHTML = '<div class="rmx-empty">' + T('Laai kamers…', 'Loading rooms…') + '</div>';
+    list.innerHTML = '<div class="rmx-empty">' + T('loading_rooms') + '</div>';
 
     const currentRoomId = window.CURRENT_ROOM_ID || 0;
 
@@ -439,14 +439,14 @@
       const joinedRooms = data.joined || [];
       
       if (!autoRooms.length && !joinedRooms.length) {
-        list.innerHTML = '<div class="rmx-empty">' + T('Geen kamers nie', 'No rooms') + '</div>';
+        list.innerHTML = '<div class="rmx-empty">' + T('no_rooms') + '</div>';
         return;
       }
       
       // Auto rooms section
       if (autoRooms.length) {
         const autoSection = ce('div', 'rmx-section');
-        const autoTitle = ce('div', 'rmx-section-title', T('Outomaties', 'Automatic'));
+        const autoTitle = ce('div', 'rmx-section-title', T('automatic'));
         autoSection.appendChild(autoTitle);
         
         autoRooms.forEach(function (r) {
@@ -458,7 +458,7 @@
           const a = ce('a', 'rmx-link', labelForRoom(r));
           a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
 
-          const badge = ce('span', 'rmx-badge auto', T('Outo', 'Auto'));
+          const badge = ce('span', 'rmx-badge auto', T('auto'));
           
           row.appendChild(a);
           row.appendChild(badge);
@@ -471,7 +471,7 @@
       // Joined rooms section
       if (joinedRooms.length) {
         const joinedSection = ce('div', 'rmx-section');
-        const joinedTitle = ce('div', 'rmx-section-title', T('Gekose', 'Joined'));
+        const joinedTitle = ce('div', 'rmx-section-title', T('joined_section'));
         joinedSection.appendChild(joinedTitle);
         
         joinedRooms.forEach(function (r) {
@@ -483,7 +483,7 @@
           const a = ce('a', 'rmx-link', labelForRoom(r));
           a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
 
-          const badge = ce('span', 'rmx-badge joined', T('Gekies', 'Joined'));
+          const badge = ce('span', 'rmx-badge joined', T('joined_badge'));
           
           row.appendChild(a);
           row.appendChild(badge);

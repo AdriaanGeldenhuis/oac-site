@@ -2933,11 +2933,11 @@ define('UI_TRANSLATIONS', [
 
     // Admin notifications
     'notif_account_approved' => [
-        'af' => 'Account Goedgekeur',
-        'en' => 'Account Approved',
-        'zu' => 'I-akhawunti Yamukelwe',
-        'xh' => 'I-akhawunti Yamkelwe',
-        'pt' => 'Conta Aprovada'
+        'af' => '✅ Account Goedgekeur',
+        'en' => '✅ Account Approved',
+        'zu' => '✅ I-akhawunti Yamukelwe',
+        'xh' => '✅ I-akhawunti Yamkelwe',
+        'pt' => '✅ Conta Aprovada'
     ],
     'notif_account_approved_msg' => [
         'af' => 'Jou rekening is goedgekeur. Jy kan nou aanmeld.',
@@ -2947,11 +2947,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Sua conta foi aprovada. Você pode entrar agora.'
     ],
     'notif_account_rejected' => [
-        'af' => 'Account Afgekeur',
-        'en' => 'Account Rejected',
-        'zu' => 'I-akhawunti Yenqatshiwe',
-        'xh' => 'I-akhawunti Yaliwe',
-        'pt' => 'Conta Rejeitada'
+        'af' => '❌ Account Afgekeur',
+        'en' => '❌ Account Rejected',
+        'zu' => '❌ I-akhawunti Yenqatshiwe',
+        'xh' => '❌ I-akhawunti Yaliwe',
+        'pt' => '❌ Conta Rejeitada'
     ],
     'notif_account_rejected_msg' => [
         'af' => 'Jou rekening is afgekeur. Kontak admin vir meer inligting.',
@@ -2961,11 +2961,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Sua conta foi rejeitada. Entre em contato com o administrador para mais informações.'
     ],
     'notif_spouse_request' => [
-        'af' => 'Eggenoot Versoek',
-        'en' => 'Spouse Request',
-        'zu' => 'Isicelo Somngani',
-        'xh' => 'Isicelo Somlingani',
-        'pt' => 'Solicitação de Cônjuge'
+        'af' => '💍 Eggenoot Versoek',
+        'en' => '💍 Spouse Request',
+        'zu' => '💍 Isicelo Somngani',
+        'xh' => '💍 Isicelo Somlingani',
+        'pt' => '💍 Solicitação de Cônjuge'
     ],
     'notif_spouse_request_msg' => [
         'af' => '{name} wil met jou as eggenoot koppel.',
@@ -2975,11 +2975,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{name} quer se conectar com você como cônjuge.'
     ],
     'notif_spouse_accepted' => [
-        'af' => 'Eggenoot Gekoppel',
-        'en' => 'Spouse Linked',
-        'zu' => 'Umngani Uxhunyiwe',
-        'xh' => 'Umlingani Udibanisiwe',
-        'pt' => 'Cônjuge Vinculado'
+        'af' => '💕 Eggenoot Gekoppel',
+        'en' => '💕 Spouse Linked',
+        'zu' => '💕 Umngani Uxhunyiwe',
+        'xh' => '💕 Umlingani Udibanisiwe',
+        'pt' => '💕 Cônjuge Vinculado'
     ],
     'notif_spouse_accepted_msg' => [
         'af' => '{name} het jou versoek aanvaar!',
@@ -2989,11 +2989,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{name} aceitou seu pedido!'
     ],
     'notif_appointment_request' => [
-        'af' => 'Afspraak Versoek',
-        'en' => 'Appointment Request',
-        'zu' => 'Isicelo Sesikhathi',
-        'xh' => 'Isicelo Sokuhlangana',
-        'pt' => 'Solicitação de Compromisso'
+        'af' => '📅 Afspraak Versoek',
+        'en' => '📅 Appointment Request',
+        'zu' => '📅 Isicelo Sesikhathi',
+        'xh' => '📅 Isicelo Sokuhlangana',
+        'pt' => '📅 Solicitação de Compromisso'
     ],
     'notif_appointment_request_msg' => [
         'af' => "{name} wil 'n afspraak maak op {date} om {time}.",
@@ -3003,11 +3003,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{name} quer marcar um compromisso em {date} às {time}.'
     ],
     'notif_appointment_confirmed' => [
-        'af' => 'Afspraak Bevestig',
-        'en' => 'Appointment Confirmed',
-        'zu' => 'Isikhathi Siqinisekisiwe',
-        'xh' => 'Ukuhlangana Kuqinisekisiwe',
-        'pt' => 'Compromisso Confirmado'
+        'af' => '✅ Afspraak Bevestig',
+        'en' => '✅ Appointment Confirmed',
+        'zu' => '✅ Isikhathi Siqinisekisiwe',
+        'xh' => '✅ Ukuhlangana Kuqinisekisiwe',
+        'pt' => '✅ Compromisso Confirmado'
     ],
     'notif_appointment_confirmed_msg' => [
         'af' => 'Jou afspraak is bevestig!',
@@ -3017,11 +3017,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Seu compromisso foi confirmado!'
     ],
     'notif_ampte_change' => [
-        'af' => 'Amp Verander',
-        'en' => 'Office Changed',
-        'zu' => 'Isikhundla Sishintshiwe',
-        'xh' => 'Isikhundla Sitshintshiwe',
-        'pt' => 'Cargo Alterado'
+        'af' => '⭐ Amp Verander',
+        'en' => '⭐ Office Changed',
+        'zu' => '⭐ Isikhundla Sishintshiwe',
+        'xh' => '⭐ Isikhundla Sitshintshiwe',
+        'pt' => '⭐ Cargo Alterado'
     ],
     'notif_ampte_change_msg' => [
         'af' => 'Jou amp is verander na: {amp}',
@@ -3033,11 +3033,11 @@ define('UI_TRANSLATIONS', [
 
     // Gospel notifications
     'notif_new_post' => [
-        'af' => 'Nuwe Plasing',
-        'en' => 'New Post',
-        'zu' => 'Okutsha Okufakiwe',
-        'xh' => 'Okutsha Okufakiweyo',
-        'pt' => 'Nova Publicação'
+        'af' => '✍️ Nuwe Plasing',
+        'en' => '✍️ New Post',
+        'zu' => '✍️ Okutsha Okufakiwe',
+        'xh' => '✍️ Okutsha Okufakiweyo',
+        'pt' => '✍️ Nova Publicação'
     ],
     'notif_new_post_msg' => [
         'af' => '{name} het in {room} geplaas.',
@@ -3047,11 +3047,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{name} publicou em {room}.'
     ],
     'notif_new_comment' => [
-        'af' => 'Nuwe Kommentaar',
-        'en' => 'New Comment',
-        'zu' => 'Ukuphawula Okusha',
-        'xh' => 'Ukuphawula Okutsha',
-        'pt' => 'Novo Comentário'
+        'af' => '💬 Nuwe Kommentaar',
+        'en' => '💬 New Comment',
+        'zu' => '💬 Ukuphawula Okusha',
+        'xh' => '💬 Ukuphawula Okutsha',
+        'pt' => '💬 Novo Comentário'
     ],
     'notif_new_comment_msg' => [
         'af' => '{name} het op jou plasing gereageer.',
@@ -3061,11 +3061,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{name} comentou na sua publicação.'
     ],
     'notif_reaction' => [
-        'af' => 'Reaksie',
-        'en' => 'Reaction',
-        'zu' => 'Ukusabela',
-        'xh' => 'Ukusabela',
-        'pt' => 'Reação'
+        'af' => '{emoji} Reaksie',
+        'en' => '{emoji} Reaction',
+        'zu' => '{emoji} Ukusabela',
+        'xh' => '{emoji} Ukusabela',
+        'pt' => '{emoji} Reação'
     ],
     'notif_reaction_msg' => [
         'af' => '{name} het {emoji} op jou plasing gegee.',
@@ -3075,11 +3075,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{name} reagiu com {emoji} à sua publicação.'
     ],
     'notif_tagged' => [
-        'af' => 'Ge-tag',
-        'en' => 'Tagged',
-        'zu' => 'Umakiwe',
-        'xh' => 'Umakiwe',
-        'pt' => 'Marcado'
+        'af' => '🏷️ Ge-tag',
+        'en' => '🏷️ Tagged',
+        'zu' => '🏷️ Umakiwe',
+        'xh' => '🏷️ Umakiwe',
+        'pt' => '🏷️ Marcado'
     ],
     'notif_tagged_msg' => [
         'af' => "{name} het jou in 'n plasing ge-tag.",
@@ -3091,11 +3091,11 @@ define('UI_TRANSLATIONS', [
 
     // Calendar notifications
     'notif_event_reminder' => [
-        'af' => 'Herinnering',
-        'en' => 'Reminder',
-        'zu' => 'Isikhumbuzo',
-        'xh' => 'Isikhumbuzo',
-        'pt' => 'Lembrete'
+        'af' => '⏰ Herinnering',
+        'en' => '⏰ Reminder',
+        'zu' => '⏰ Isikhumbuzo',
+        'xh' => '⏰ Isikhumbuzo',
+        'pt' => '⏰ Lembrete'
     ],
     'notif_event_reminder_msg' => [
         'af' => '{event} begin oor 30 minute om {time}',
@@ -3105,11 +3105,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{event} começa em 30 minutos às {time}'
     ],
     'notif_event_shared' => [
-        'af' => 'Gebeurtenis Gedeel',
-        'en' => 'Event Shared',
-        'zu' => 'Umcimbi Wabelwe',
-        'xh' => 'Isiganeko Sabelwe',
-        'pt' => 'Evento Compartilhado'
+        'af' => '📅 Gebeurtenis Gedeel',
+        'en' => '📅 Event Shared',
+        'zu' => '📅 Umcimbi Wabelwe',
+        'xh' => '📅 Isiganeko Sabelwe',
+        'pt' => '📅 Evento Compartilhado'
     ],
     'notif_event_shared_msg' => [
         'af' => "{name} het '{event}' met jou gedeel.",
@@ -3119,11 +3119,11 @@ define('UI_TRANSLATIONS', [
         'pt' => "{name} compartilhou '{event}' com você."
     ],
     'notif_diary_reminder' => [
-        'af' => 'Dagboek Herinnering',
-        'en' => 'Diary Reminder',
-        'zu' => 'Isikhumbuzo Sedayari',
-        'xh' => 'Isikhumbuzo Sedayari',
-        'pt' => 'Lembrete do Diário'
+        'af' => '📓 Dagboek Herinnering',
+        'en' => '📓 Diary Reminder',
+        'zu' => '📓 Isikhumbuzo Sedayari',
+        'xh' => '📓 Isikhumbuzo Sedayari',
+        'pt' => '📓 Lembrete do Diário'
     ],
     'notif_diary_reminder_msg' => [
         'af' => 'Onthou om jou dagboek vandag by te werk!',
@@ -3133,11 +3133,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Lembre-se de atualizar seu diário hoje!'
     ],
     'notif_visit_scheduled' => [
-        'af' => 'Besoek Geskeduleer',
-        'en' => 'Visit Scheduled',
-        'zu' => 'Ukuvakasha Kuhleliwe',
-        'xh' => 'Utyelelo Lucwangcisiwe',
-        'pt' => 'Visita Agendada'
+        'af' => '🏠 Besoek Geskeduleer',
+        'en' => '🏠 Visit Scheduled',
+        'zu' => '🏠 Ukuvakasha Kuhleliwe',
+        'xh' => '🏠 Utyelelo Lucwangcisiwe',
+        'pt' => '🏠 Visita Agendada'
     ],
     'notif_visit_scheduled_msg' => [
         'af' => 'Besoek by {name} op {date}',
@@ -3520,6 +3520,63 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Susa',
         'xh' => 'Susa',
         'pt' => 'Remover'
+    ],
+    // Rooms menu translations
+    'js_rooms' => [
+        'af' => 'Kamers',
+        'en' => 'Rooms',
+        'zu' => 'Amagumbi',
+        'xh' => 'Amagumbi',
+        'pt' => 'Salas'
+    ],
+    'js_manage_rooms' => [
+        'af' => 'Bestuur Kamers',
+        'en' => 'Manage Rooms',
+        'zu' => 'Phatha Amagumbi',
+        'xh' => 'Lawula Amagumbi',
+        'pt' => 'Gerenciar Salas'
+    ],
+    'js_loading_rooms' => [
+        'af' => 'Laai kamers…',
+        'en' => 'Loading rooms…',
+        'zu' => 'Iyalayisha amagumbi…',
+        'xh' => 'Ilayisha amagumbi…',
+        'pt' => 'Carregando salas…'
+    ],
+    'js_no_rooms' => [
+        'af' => 'Geen kamers nie',
+        'en' => 'No rooms',
+        'zu' => 'Awekho amagumbi',
+        'xh' => 'Akukho magumbi',
+        'pt' => 'Nenhuma sala'
+    ],
+    'js_automatic' => [
+        'af' => 'Outomaties',
+        'en' => 'Automatic',
+        'zu' => 'Okuzenzakalelayo',
+        'xh' => 'Ngokuzenzekelayo',
+        'pt' => 'Automático'
+    ],
+    'js_auto' => [
+        'af' => 'Outo',
+        'en' => 'Auto',
+        'zu' => 'Outo',
+        'xh' => 'Outo',
+        'pt' => 'Auto'
+    ],
+    'js_joined_section' => [
+        'af' => 'Gekose',
+        'en' => 'Joined',
+        'zu' => 'Kujoyinwe',
+        'xh' => 'Kujoyinwe',
+        'pt' => 'Inscritas'
+    ],
+    'js_joined_badge' => [
+        'af' => 'Gekies',
+        'en' => 'Joined',
+        'zu' => 'Kujoyinwe',
+        'xh' => 'Kujoyinwe',
+        'pt' => 'Inscrita'
     ]
 ]);
 

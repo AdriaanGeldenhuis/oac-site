@@ -161,7 +161,16 @@ $VER = time();
             delete_photo: <?= json_encode(__t('js_delete_photo', $pageLang)) ?>,
             datetime: <?= json_encode(__t('js_datetime', $pageLang)) ?>,
             place: <?= json_encode(__t('js_place', $pageLang)) ?>,
-            remove: <?= json_encode(__t('js_remove', $pageLang)) ?>
+            remove: <?= json_encode(__t('js_remove', $pageLang)) ?>,
+            // Rooms menu translations
+            rooms: <?= json_encode(__t('js_rooms', $pageLang)) ?>,
+            manage_rooms: <?= json_encode(__t('js_manage_rooms', $pageLang)) ?>,
+            loading_rooms: <?= json_encode(__t('js_loading_rooms', $pageLang)) ?>,
+            no_rooms: <?= json_encode(__t('js_no_rooms', $pageLang)) ?>,
+            automatic: <?= json_encode(__t('js_automatic', $pageLang)) ?>,
+            auto: <?= json_encode(__t('js_auto', $pageLang)) ?>,
+            joined_section: <?= json_encode(__t('js_joined_section', $pageLang)) ?>,
+            joined_badge: <?= json_encode(__t('js_joined_badge', $pageLang)) ?>
         };
     </script>
 </head>
