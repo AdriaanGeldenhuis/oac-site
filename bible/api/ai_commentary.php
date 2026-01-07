@@ -78,9 +78,9 @@ function loadBible(string $lang): ?array {
  * Get surrounding verses for context
  */
 function getSurroundingVerses(array $bible, string $bookEN, int $chapter, int $verse, string $lang): array {
-    // Map English book names to Afrikaans if needed
+    // Map English book names to Afrikaans - MUST match af_1933_53.json exactly
     $afBookMap = [
-        'Genesis' => 'Genesis', 'Exodus' => 'Exodus', 'Leviticus' => 'Levitikus',
+        'Genesis' => 'Genesis', 'Exodus' => 'Eksodus', 'Leviticus' => 'Levitikus',
         'Numbers' => 'Numeri', 'Deuteronomy' => 'Deuteronomium', 'Joshua' => 'Josua',
         'Judges' => 'Rigters', 'Ruth' => 'Rut', '1 Samuel' => '1 Samuel',
         '2 Samuel' => '2 Samuel', '1 Kings' => '1 Konings', '2 Kings' => '2 Konings',
@@ -88,14 +88,14 @@ function getSurroundingVerses(array $bible, string $bookEN, int $chapter, int $v
         'Nehemiah' => 'Nehemia', 'Esther' => 'Ester', 'Job' => 'Job',
         'Psalms' => 'Psalms', 'Proverbs' => 'Spreuke', 'Ecclesiastes' => 'Prediker',
         'Song of Solomon' => 'Hooglied', 'Isaiah' => 'Jesaja', 'Jeremiah' => 'Jeremia',
-        'Lamentations' => 'Klaagliedere', 'Ezekiel' => 'Esegiel', 'Daniel' => 'Daniel',
+        'Lamentations' => 'Klaagliedere', 'Ezekiel' => 'Esegiel', 'Daniel' => 'Daniël',
         'Hosea' => 'Hosea', 'Joel' => 'Joel', 'Amos' => 'Amos',
         'Obadiah' => 'Obadja', 'Jonah' => 'Jona', 'Micah' => 'Miga',
         'Nahum' => 'Nahum', 'Habakkuk' => 'Habakuk', 'Zephaniah' => 'Sefanja',
         'Haggai' => 'Haggai', 'Zechariah' => 'Sagaria', 'Malachi' => 'Maleagi',
         'Matthew' => 'Matteus', 'Mark' => 'Markus', 'Luke' => 'Lukas',
         'John' => 'Johannes', 'Acts' => 'Handelinge', 'Romans' => 'Romeine',
-        '1 Corinthians' => '1 Korinthiers', '2 Corinthians' => '2 Korinthiers',
+        '1 Corinthians' => '1 Korinthiërs', '2 Corinthians' => '2 Korinthiers',
         'Galatians' => 'Galasiers', 'Ephesians' => 'Efesiers', 'Philippians' => 'Filippense',
         'Colossians' => 'Kolossense', '1 Thessalonians' => '1 Thessalonisense',
         '2 Thessalonians' => '2 Thessalonisense', '1 Timothy' => '1 Timotheus',

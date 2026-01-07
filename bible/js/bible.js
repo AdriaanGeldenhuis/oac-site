@@ -68,9 +68,10 @@
   }
 
   // ===== BOOK NAME MAPPINGS =====
+  // Names MUST match exactly what's in af_1933_53.json (including special characters)
   const AF_TO_EN_BOOKS = {
     'Genesis': 'Genesis',
-    'Exodus': 'Exodus',
+    'Eksodus': 'Exodus',
     'Levitikus': 'Leviticus',
     'Numeri': 'Numbers',
     'Deuteronomium': 'Deuteronomy',
@@ -95,7 +96,7 @@
     'Jeremia': 'Jeremiah',
     'Klaagliedere': 'Lamentations',
     'Esegiel': 'Ezekiel',
-    'Daniel': 'Daniel',
+    'Daniël': 'Daniel',
     'Hosea': 'Hosea',
     'Joel': 'Joel',
     'Amos': 'Amos',
@@ -114,7 +115,7 @@
     'Johannes': 'John',
     'Handelinge': 'Acts',
     'Romeine': 'Romans',
-    '1 Korinthiers': '1 Corinthians',
+    '1 Korinthiërs': '1 Corinthians',
     '2 Korinthiers': '2 Corinthians',
     'Galasiers': 'Galatians',
     'Efesiers': 'Ephesians',
