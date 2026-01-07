@@ -88,10 +88,10 @@ foreach (SUPPORTED_LANGS as $code) {
     $contents[$code] = file_exists($file) ? file_get_contents($file) : $defaultContent[$code];
 }
 
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T($af, $en) {
+// Translation helper using central 5-language system
+function t(string $key): string {
     global $lang;
-    return $lang === 'af' ? $af : $en;
+    return __t($key, $lang);
 }
 ?>
 <!DOCTYPE html>
@@ -99,7 +99,7 @@ function T($af, $en) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= T('Wysig Lering', 'Edit Teaching') ?></title>
+    <title><?= t('edit_teaching') ?></title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -532,7 +532,7 @@ function T($af, $en) {
     <div class="container">
         <div class="header">
             <div>
-                <h1><?= T('Maandelikse Lering', 'Monthly Teaching') ?></h1>
+                <h1><?= t('monthly_teaching') ?></h1>
                 <span class="location">
                     📍 <?= htmlspecialchars($cityName) ?>, <?= htmlspecialchars($provinceName) ?>
                 </span>
@@ -546,7 +546,7 @@ function T($af, $en) {
         
         <div class="toolbar">
             <div class="tool-group">
-                <label><?= T('Lettertipe', 'Font') ?></label>
+                <label><?= t('font') ?></label>
                 <select id="font-family">
                     <option value="Georgia, serif">Georgia</option>
                     <option value="'Parisienne', cursive">Parisienne</option>
@@ -555,9 +555,9 @@ function T($af, $en) {
                     <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">System UI</option>
                 </select>
             </div>
-            
+
             <div class="tool-group">
-                <label><?= T('Grootte', 'Size') ?></label>
+                <label><?= t('size') ?></label>
                 <select id="font-size">
                     <option value="12px">12</option>
                     <option value="14px">14</option>
@@ -589,17 +589,17 @@ function T($af, $en) {
             <div class="sep"></div>
             
             <div class="tool-group">
-                <label><?= T('Kleur', 'Color') ?></label>
+                <label><?= t('color') ?></label>
                 <input type="color" id="text-color" value="#333333">
             </div>
-            
+
             <div class="sep"></div>
-            
+
             <button class="tool-btn btn-bible" id="btn-verse">
-                📖 <?= T('Voeg Vers By', 'Add Verse') ?>
+                📖 <?= t('add_verse') ?>
             </button>
             <button class="tool-btn btn-ai" id="btn-improve">
-                ✨ <?= T('Verbeter', 'Improve') ?>
+                ✨ <?= t('improve') ?>
             </button>
         </div>
         
@@ -612,10 +612,10 @@ function T($af, $en) {
         <div class="actions">
             <span class="status" id="status">
                 <span id="status-icon">💾</span>
-                <span id="status-text"><?= T('Gereed om te stoor', 'Ready to save') ?></span>
+                <span id="status-text"><?= t('ready_to_save') ?></span>
             </span>
             <button class="btn btn-primary" id="btn-save">
-                💾 <?= T('Stoor Alles', 'Save All') ?>
+                💾 <?= t('save_all') ?>
             </button>
         </div>
     </div>
@@ -623,35 +623,35 @@ function T($af, $en) {
     <div id="verse-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><?= T('Voeg Bybelvers By', 'Add Bible Verse') ?></h2>
+                <h2><?= t('add_bible_verse') ?></h2>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label><?= T('Boek', 'Book') ?></label>
+                        <label><?= t('book') ?></label>
                         <select id="v-book" class="form-control">
-                            <option value=""><?= T('Kies...', 'Select...') ?></option>
+                            <option value=""><?= t('select') ?>...</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label><?= T('Hoofstuk', 'Chapter') ?></label>
+                        <label><?= t('chapter') ?></label>
                         <select id="v-chapter" class="form-control"></select>
                     </div>
                     <div class="form-group">
-                        <label><?= T('Van', 'From') ?></label>
+                        <label><?= t('from') ?></label>
                         <select id="v-from" class="form-control"></select>
                     </div>
                     <div class="form-group">
-                        <label><?= T('Tot', 'To') ?></label>
+                        <label><?= t('to') ?></label>
                         <select id="v-to" class="form-control"></select>
                     </div>
                 </div>
                 <div id="v-preview" class="verse-preview"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary modal-close"><?= T('Kanselleer', 'Cancel') ?></button>
-                <button class="btn btn-primary" id="btn-insert"><?= T('Voeg In', 'Insert') ?></button>
+                <button class="btn btn-secondary modal-close"><?= t('cancel') ?></button>
+                <button class="btn btn-primary" id="btn-insert"><?= t('insert') ?></button>
             </div>
         </div>
     </div>

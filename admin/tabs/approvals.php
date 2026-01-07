@@ -73,22 +73,22 @@ try {
         <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= T('Goedkeurings', 'Approvals') ?></h2>
+    <h2 class="admin-section-title"><?= t('approvals') ?></h2>
   </div>
 
-  <h3 class="approval-subtitle"><?= T('Gebruiker Goedkeurings', 'User Approvals') ?></h3>
+  <h3 class="approval-subtitle"><?= t('user_approvals') ?></h3>
   
   <?php if (empty($pending)): ?>
-    <p class="admin-muted"><?= T('Geen hangende gebruiker goedkeurings nie.', 'No pending user approvals.') ?></p>
+    <p class="admin-muted"><?= t('no_pending_approvals') ?></p>
   <?php else: ?>
     <div class="admin-table-wrap">
       <table class="admin-table">
         <thead>
           <tr>
-            <th><?= T('Naam', 'Name') ?></th>
-            <th><?= T('Amp', 'Role') ?></th>
-            <th><?= T('Gemeente', 'Congregation') ?></th>
-            <th><?= T('Aksies', 'Actions') ?></th>
+            <th><?= t('name') ?></th>
+            <th><?= t('role') ?></th>
+            <th><?= t('congregation') ?></th>
+            <th><?= t('actions') ?></th>
           </tr>
         </thead>
         <tbody>
@@ -114,18 +114,18 @@ try {
     </div>
   <?php endif; ?>
 
-  <h3 class="approval-subtitle" style="margin-top:40px"><?= T('Eggenoot Versoeke', 'Spouse Requests') ?></h3>
+  <h3 class="approval-subtitle" style="margin-top:40px"><?= t('spouse_requests') ?></h3>
   
   <?php if (empty($spouseRequests)): ?>
-    <p class="admin-muted"><?= T('Geen hangende eggenoot versoeke nie.', 'No pending spouse requests.') ?></p>
+    <p class="admin-muted"><?= t('no_pending_spouse') ?></p>
   <?php else: ?>
     <div class="admin-table-wrap">
       <table class="admin-table">
         <thead>
           <tr>
-            <th><?= T('Versoeker', 'Requester') ?></th>
-            <th><?= T('Ontvanger', 'Receiver') ?></th>
-            <th><?= T('Status', 'Status') ?></th>
+            <th><?= t('requester') ?></th>
+            <th><?= t('receiver') ?></th>
+            <th><?= t('status') ?></th>
           </tr>
         </thead>
         <tbody>
@@ -134,7 +134,7 @@ try {
             <td><?= htmlspecialchars($req['req_name'] . ' ' . $req['req_surname']) ?></td>
             <td><?= htmlspecialchars($req['rec_name'] . ' ' . $req['rec_surname']) ?></td>
             <td>
-              <span class="admin-badge admin-badge-warning"><?= T('Hangende', 'Pending') ?></span>
+              <span class="admin-badge admin-badge-warning"><?= t('pending') ?></span>
             </td>
           </tr>
           <?php endforeach; ?>
@@ -142,8 +142,7 @@ try {
       </table>
     </div>
     <p class="admin-muted" style="margin-top:10px">
-      <?= T('Eggenoot versoeke word outomaties goedgekeur wanneer beide partye aanvaar.', 
-           'Spouse requests are automatically approved when both parties accept.') ?>
+      <?= t('spouse_auto_approve_note') ?>
     </p>
   <?php endif; ?>
 </div>

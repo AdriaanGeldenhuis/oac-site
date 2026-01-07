@@ -9,10 +9,10 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     $_SESSION['language'] = $lang;
 }
 
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T($af, $en) {
+// Translation helper using central 5-language system
+function t(string $key): string {
     global $lang;
-    return $lang === 'af' ? $af : $en;
+    return __t($key, $lang);
 }
 
 $userId = $_SESSION['user_id'] ?? null;
@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'from_name' => trim($currentUser['name'] . ' ' . $currentUser['surname'])
                 ])]);
                 
-                $notice = T('Eggenoot versoek gestuur. Wag vir goedkeuring.', 'Spouse request sent. Waiting for approval.');
+                $notice = t('spouse_request_sent');
             }
         }
         
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $surname = trim($_POST['surname'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
-        $language = in_array($_POST['language'] ?? 'af', ['af','en'], true) ? $_POST['language'] : 'af';
+        $language = in_array($_POST['language'] ?? 'af', SUPPORTED_LANGS, true) ? $_POST['language'] : 'af';
         $birthdate = trim($_POST['birthdate'] ?? '');
         $marital_status = $_POST['marital_status'] ?? null;
         $province_id = isset($_POST['province']) && is_numeric($_POST['province']) ? (int)$_POST['province'] : null;
@@ -201,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $_SESSION['language'] = $language;
         if (!$notice) {
-            $notice = T('Profiel suksesvol opgedateer', 'Profile updated successfully');
+            $notice = t('profile_updated');
         }
         
         $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $currentUser = $stmt->fetch(PDO::FETCH_ASSOC);
         
     } catch (Throwable $e) {
-        $error = T('Fout: ', 'Error: ') . $e->getMessage();
+        $error = t('error') . ': ' . $e->getMessage();
     }
 }
 
@@ -285,7 +285,7 @@ $VER = time();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= T('Wysig Profiel', 'Edit Profile') ?></title>
+  <title><?= t('edit_profile') ?></title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -307,8 +307,8 @@ $VER = time();
   <div class="account-hero">
     <div class="account-hero-glow"></div>
     <div class="account-hero-content">
-      <h1 class="account-hero-title"><?= T('Wysig Profiel', 'Edit Profile') ?></h1>
-      <p class="account-hero-subtitle"><?= T('Werk jou persoonlike inligting by', 'Update your personal information') ?></p>
+      <h1 class="account-hero-title"><?= t('edit_profile') ?></h1>
+      <p class="account-hero-subtitle"><?= t('update_personal_info') ?></p>
     </div>
   </div>
 
@@ -325,18 +325,18 @@ $VER = time();
       <?php if ($pendingSpouseRequest): ?>
         <div class="account-notice account-notice-info">
           <?php if ($pendingSpouseRequest['requester_id'] == $userId): ?>
-            <?= T('Jy het \'n eggenoot versoek gestuur na ', 'You sent a spouse request to ') ?>
+            <?= t('you_sent_spouse_request') ?>
             <strong><?= htmlspecialchars($pendingSpouseRequest['name'] . ' ' . $pendingSpouseRequest['surname']) ?></strong>.
-            <?= T('Wag vir goedkeuring.', 'Waiting for approval.') ?>
+            <?= t('waiting_approval') ?>
           <?php else: ?>
             <strong><?= htmlspecialchars($pendingSpouseRequest['name'] . ' ' . $pendingSpouseRequest['surname']) ?></strong>
-            <?= T(' wil met jou trou.', ' wants to marry you.') ?>
+            <?= t('wants_to_marry_you') ?>
             <div class="spouse-actions">
               <button class="account-btn account-btn-primary" onclick="handleSpouseRequest(<?= $pendingSpouseRequest['id'] ?>, 'accept')">
-                <?= T('Aanvaar', 'Accept') ?>
+                <?= t('accept') ?>
               </button>
               <button class="account-btn account-btn-secondary" onclick="handleSpouseRequest(<?= $pendingSpouseRequest['id'] ?>, 'reject')">
-                <?= T('Verwerp', 'Reject') ?>
+                <?= t('reject') ?>
               </button>
             </div>
           <?php endif; ?>
@@ -357,19 +357,19 @@ $VER = time();
             </div>
           </div>
           <div class="account-field">
-            <label for="photo" class="account-label"><?= T('Profiel Foto', 'Profile Photo') ?></label>
+            <label for="photo" class="account-label"><?= t('profile_photo') ?></label>
             <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" class="account-input-file">
-            <small class="account-hint"><?= T('Kies \'n foto om op te laai. Die foto sal outomaties 600x600px gewees word.', 'Choose a photo to upload. The photo will be automatically resized to 600x600px.') ?></small>
+            <small class="account-hint"><?= t('photo_hint') ?></small>
           </div>
         </div>
 
         <div class="account-form-grid">
           <div class="account-field">
-            <label for="name" class="account-label"><?= T('Naam', 'Name') ?> *</label>
+            <label for="name" class="account-label"><?= t('name') ?> *</label>
             <input type="text" id="name" name="name" value="<?= htmlspecialchars($currentUser['name'] ?? '') ?>" required class="account-input">
           </div>
           <div class="account-field">
-            <label for="surname" class="account-label"><?= T('Van', 'Surname') ?> *</label>
+            <label for="surname" class="account-label"><?= t('surname') ?> *</label>
             <input type="text" id="surname" name="surname" value="<?= htmlspecialchars($currentUser['surname'] ?? '') ?>" required class="account-input">
           </div>
         </div>
@@ -380,38 +380,39 @@ $VER = time();
             <input type="email" id="email" name="email" value="<?= htmlspecialchars($currentUser['email'] ?? '') ?>" required class="account-input">
           </div>
           <div class="account-field">
-            <label for="phone" class="account-label"><?= T('Selfoon', 'Phone') ?></label>
+            <label for="phone" class="account-label"><?= t('phone') ?></label>
             <input type="tel" id="phone" name="phone" value="<?= htmlspecialchars($currentUser['phone'] ?? '') ?>" class="account-input">
           </div>
         </div>
 
         <div class="account-form-grid">
           <div class="account-field">
-            <label for="language" class="account-label"><?= T('Taal', 'Language') ?></label>
+            <label for="language" class="account-label"><?= t('language') ?></label>
             <select id="language" name="language" class="account-select">
-              <option value="af" <?= ($currentUser['language'] ?? 'af') === 'af' ? 'selected' : '' ?>>Afrikaans</option>
-              <option value="en" <?= ($currentUser['language'] ?? 'af') === 'en' ? 'selected' : '' ?>>English</option>
+              <?php foreach (SUPPORTED_LANGS as $lc): ?>
+                <option value="<?= $lc ?>" <?= ($currentUser['language'] ?? 'af') === $lc ? 'selected' : '' ?>><?= LANG_NAMES[$lc] ?></option>
+              <?php endforeach; ?>
             </select>
           </div>
           <div class="account-field">
-            <label for="birthdate" class="account-label"><?= T('Geboortedatum', 'Birthdate') ?></label>
+            <label for="birthdate" class="account-label"><?= t('birthdate') ?></label>
             <input type="date" id="birthdate" name="birthdate" value="<?= htmlspecialchars($currentUser['birthdate'] ?? '') ?>" class="account-input">
           </div>
         </div>
 
         <div class="account-form-grid">
           <div class="account-field">
-            <label for="marital_status" class="account-label"><?= T('Huwelikstatus', 'Marital Status') ?></label>
+            <label for="marital_status" class="account-label"><?= t('marital_status') ?></label>
             <select id="marital_status" name="marital_status" class="account-select">
-              <option value=""><?= T('Kies', 'Select') ?></option>
-              <option value="getroud" <?= ($currentUser['marital_status'] ?? '') === 'getroud' ? 'selected' : '' ?>><?= T('Getroud', 'Married') ?></option>
-              <option value="ongetroud" <?= ($currentUser['marital_status'] ?? '') === 'ongetroud' ? 'selected' : '' ?>><?= T('Ongetroud', 'Unmarried') ?></option>
+              <option value=""><?= t('select') ?></option>
+              <option value="getroud" <?= ($currentUser['marital_status'] ?? '') === 'getroud' ? 'selected' : '' ?>><?= t('married') ?></option>
+              <option value="ongetroud" <?= ($currentUser['marital_status'] ?? '') === 'ongetroud' ? 'selected' : '' ?>><?= t('unmarried') ?></option>
             </select>
           </div>
           <div class="account-field">
-            <label for="province" class="account-label"><?= T('Provinsie', 'Province') ?></label>
+            <label for="province" class="account-label"><?= t('province') ?></label>
             <select id="province" name="province" class="account-select">
-              <option value=""><?= T('Kies', 'Select') ?></option>
+              <option value=""><?= t('select') ?></option>
               <?php foreach ($provinces as $prov): ?>
                 <option value="<?= (int)$prov['id'] ?>" <?= ((int)($currentUser['province_id'] ?? 0) === (int)$prov['id']) ? 'selected' : '' ?>><?= htmlspecialchars($prov['name']) ?></option>
               <?php endforeach; ?>
@@ -421,15 +422,15 @@ $VER = time();
 
         <div class="account-form-grid">
           <div class="account-field">
-            <label for="town" class="account-label"><?= T('Stad/Dorp', 'Town/City') ?></label>
+            <label for="town" class="account-label"><?= t('town_city') ?></label>
             <select id="town" name="town" <?= empty($currentUser['province_id']) ? 'disabled' : '' ?> class="account-select">
               <?php
               $pidSel = (string)($currentUser['province_id'] ?? '');
               $tidSelInt = (int)($currentUser['town_id'] ?? 0);
               if (!$pidSel) {
-                echo '<option value="">'.T('Kies provinsie eers','Select province first').'</option>';
+                echo '<option value="">'.t('select_province_first').'</option>';
               } else {
-                echo '<option value="">'.T('Kies','Select').'</option>';
+                echo '<option value="">'.t('select').'</option>';
                 if (isset($townsByProvince[$pidSel])) {
                   foreach ($townsByProvince[$pidSel] as $t) {
                     $sel = ($tidSelInt === (int)$t['id']) ? 'selected' : '';
@@ -441,15 +442,15 @@ $VER = time();
             </select>
           </div>
           <div class="account-field">
-            <label for="congregation" class="account-label"><?= T('Gemeente', 'Congregation') ?></label>
+            <label for="congregation" class="account-label"><?= t('congregation') ?></label>
             <select id="congregation" name="congregation" <?= empty($currentUser['town_id']) ? 'disabled' : '' ?> class="account-select">
               <?php
               $tidSel = (string)($currentUser['town_id'] ?? '');
               $cidSelInt = (int)($currentUser['congregation_id'] ?? 0);
               if (!$tidSel) {
-                echo '<option value="">'.T('Kies dorp eers','Select town first').'</option>';
+                echo '<option value="">'.t('select_town_first').'</option>';
               } else {
-                echo '<option value="">'.T('Kies','Select').'</option>';
+                echo '<option value="">'.t('select').'</option>';
                 if (isset($congsByTown[$tidSel])) {
                   foreach ($congsByTown[$tidSel] as $c) {
                     $sel = ($cidSelInt === (int)$c['id']) ? 'selected' : '';
@@ -464,14 +465,14 @@ $VER = time();
 
         <?php if (!empty($spouseOptions) && empty($currentUser['spouse_user_id'])): ?>
         <div class="account-field">
-          <label for="spouse_user_id" class="account-label"><?= T('Eggenoot/Eggenote', 'Spouse') ?></label>
+          <label for="spouse_user_id" class="account-label"><?= t('spouse') ?></label>
           <select id="spouse_user_id" name="spouse_user_id" class="account-select">
-            <option value=""><?= T('Kies...', 'Select...') ?></option>
+            <option value=""><?= t('select') ?>...</option>
             <?php foreach ($spouseOptions as $spouse): ?>
               <option value="<?= (int)$spouse['id'] ?>"><?= htmlspecialchars($spouse['name'] . ' ' . $spouse['surname']) ?></option>
             <?php endforeach; ?>
           </select>
-          <small class="account-hint"><?= T('Stuur \'n versoek om jou eggenoot te koppel. Die ander persoon moet goedkeur.', 'Send a request to link your spouse. The other person must approve.') ?></small>
+          <small class="account-hint"><?= t('spouse_hint') ?></small>
         </div>
         <?php elseif (!empty($currentUser['spouse_user_id'])): ?>
         <?php
@@ -480,19 +481,19 @@ $VER = time();
           $spouseData = $spouseStmt->fetch(PDO::FETCH_ASSOC);
         ?>
         <div class="account-notice account-notice-success">
-          <?= T('Jy is gekoppel aan ', 'You are linked to ') ?>
+          <?= t('you_are_linked_to') ?>
           <strong><?= htmlspecialchars(($spouseData['name'] ?? '') . ' ' . ($spouseData['surname'] ?? '')) ?></strong>
         </div>
         <?php endif; ?>
 
         <div class="account-field">
-          <label for="about" class="account-label"><?= T('Oor', 'About') ?></label>
-          <textarea id="about" name="about" rows="4" placeholder="<?= T('Vertel ons meer van jouself', 'Tell us more about yourself') ?>" class="account-textarea"><?= htmlspecialchars($currentUser['about'] ?? '') ?></textarea>
+          <label for="about" class="account-label"><?= t('about') ?></label>
+          <textarea id="about" name="about" rows="4" placeholder="<?= t('about_placeholder') ?>" class="account-textarea"><?= htmlspecialchars($currentUser['about'] ?? '') ?></textarea>
         </div>
 
         <div class="account-actions">
-          <a href="/admin/index.php" class="account-btn account-btn-secondary"><?= T('Kanselleer', 'Cancel') ?></a>
-          <button type="submit" class="account-btn account-btn-primary"><?= T('Stoor', 'Save') ?></button>
+          <a href="/admin/index.php" class="account-btn account-btn-secondary"><?= t('cancel') ?></a>
+          <button type="submit" class="account-btn account-btn-primary"><?= t('save') ?></button>
         </div>
       </form>
     </div>
@@ -502,9 +503,9 @@ $VER = time();
   <script>
   const townsByProvince = <?= json_encode($townsByProvince, JSON_UNESCAPED_UNICODE) ?>;
   const congsByTown = <?= json_encode($congsByTown, JSON_UNESCAPED_UNICODE) ?>;
-  const txtSelect = <?= json_encode(T('Kies','Select')) ?>;
-  const txtProvFirst = <?= json_encode(T('Kies provinsie eers','Select province first')) ?>;
-  const txtTownFirst = <?= json_encode(T('Kies dorp eers','Select town first')) ?>;
+  const txtSelect = <?= json_encode(t('select')) ?>;
+  const txtProvFirst = <?= json_encode(t('select_province_first')) ?>;
+  const txtTownFirst = <?= json_encode(t('select_town_first')) ?>;
 
   const provSel = document.getElementById('province');
   const townSel = document.getElementById('town');

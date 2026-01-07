@@ -1,7 +1,7 @@
 <?php
 $myAmpId = (int)($currentUser['amp_id'] ?? 0);
 if ($myAmpId < 1 || $myAmpId > 10) {
-  echo '<p>'.T('Jy het nie toegang tot hierdie blad nie.','You do not have access to this page.').'</p>';
+  echo '<p>'.t('no_access').'</p>';
   return;
 }
 
@@ -115,11 +115,11 @@ krsort($groupedAmptes);
         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= T('Ampte', 'Offices') ?></h2>
+    <h2 class="admin-section-title"><?= t('offices') ?></h2>
   </div>
 
   <div class="ampte-search-wrapper">
-    <input type="text" id="ampteSearch" class="ampte-search-input" placeholder="<?= T('Soek ampte...', 'Search offices...') ?>">
+    <input type="text" id="ampteSearch" class="ampte-search-input" placeholder="<?= t('search_offices') ?>">
     <svg class="ampte-search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
       <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
@@ -127,7 +127,7 @@ krsort($groupedAmptes);
   </div>
 
   <?php if (empty($groupedAmptes)): ?>
-  <p class="admin-muted"><?= T('Geen ampte gevind nie.', 'No office holders found.') ?></p>
+  <p class="admin-muted"><?= t('no_office_holders') ?></p>
   <?php else: ?>
   <div class="ampte-container" id="ampteContainer">
     <?php foreach ($groupedAmptes as $ampId => $ampList): ?>
@@ -150,24 +150,24 @@ krsort($groupedAmptes);
             <p class="ampte-congregation"><?= htmlspecialchars($amp['congregation'] ?? '') ?></p>
           </div>
           <div class="ampte-actions">
-            <a href="/profile/?u=<?= (int)$amp['id'] ?>" class="ampte-btn ampte-btn-view" title="<?= T('Profiel', 'Profile') ?>">
+            <a href="/profile/?u=<?= (int)$amp['id'] ?>" class="ampte-btn ampte-btn-view" title="<?= t('profile') ?>">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
               </svg>
             </a>
-            <a href="/calendar/view.php?u=<?= (int)$amp['id'] ?>" class="ampte-btn ampte-btn-calendar" title="<?= T('Kyk Kalender', 'View Calendar') ?>">
+            <a href="/calendar/view.php?u=<?= (int)$amp['id'] ?>" class="ampte-btn ampte-btn-calendar" title="<?= t('view_calendar') ?>">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                 <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
               </svg>
             </a>
             <?php if ($canEditThis): ?>
-            <button type="button" class="ampte-btn ampte-btn-edit btn-change-role" data-id="<?= (int)$amp['id'] ?>" data-name="<?= htmlspecialchars($amp['name'] . ' ' . $amp['surname']) ?>" data-current-amp="<?= $targetAmpId ?>" title="<?= T('Verander Amp', 'Change Role') ?>">
+            <button type="button" class="ampte-btn ampte-btn-edit btn-change-role" data-id="<?= (int)$amp['id'] ?>" data-name="<?= htmlspecialchars($amp['name'] . ' ' . $amp['surname']) ?>" data-current-amp="<?= $targetAmpId ?>" title="<?= t('change_role') ?>">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2"/>
               </svg>
             </button>
-            <button type="button" class="ampte-btn ampte-btn-delete btn-delete-user" data-id="<?= (int)$amp['id'] ?>" data-name="<?= htmlspecialchars($amp['name'] . ' ' . $amp['surname']) ?>" title="<?= T('Verwyder', 'Delete') ?>">
+            <button type="button" class="ampte-btn ampte-btn-delete btn-delete-user" data-id="<?= (int)$amp['id'] ?>" data-name="<?= htmlspecialchars($amp['name'] . ' ' . $amp['surname']) ?>" title="<?= t('delete') ?>">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
               </svg>
@@ -187,7 +187,7 @@ krsort($groupedAmptes);
   <div class="ampte-modal-overlay"></div>
   <div class="ampte-modal-content">
     <div class="ampte-modal-header">
-      <h3><?= T('Verander Amp', 'Change Role') ?></h3>
+      <h3><?= t('change_role') ?></h3>
       <button type="button" class="ampte-modal-close" onclick="closeRoleModal()">&times;</button>
     </div>
     <div class="ampte-modal-body">
@@ -195,14 +195,14 @@ krsort($groupedAmptes);
         <input type="hidden" id="roleTargetId" name="target_user_id">
         
         <div class="ampte-form-group">
-          <label><?= T('Gebruiker', 'User') ?>:</label>
+          <label><?= t('user') ?>:</label>
           <div id="roleTargetName" class="ampte-display-field"></div>
         </div>
         
         <div class="ampte-form-group">
-          <label for="newAmpId"><?= T('Nuwe Amp', 'New Role') ?></label>
+          <label for="newAmpId"><?= t('new_role') ?></label>
           <select id="newAmpId" name="new_amp_id" class="ampte-form-control" required>
-            <option value=""><?= T('Kies...', 'Select...') ?></option>
+            <option value=""><?= t('select_option') ?></option>
             <?php
             try {
                 $ampteStmt = $pdo->query("SELECT id, male_name, female_name FROM amptes ORDER BY id ASC");
@@ -220,8 +220,8 @@ krsort($groupedAmptes);
         </div>
         
         <div class="ampte-modal-actions">
-          <button type="button" class="ampte-btn ampte-btn-secondary" onclick="closeRoleModal()"><?= T('Kanselleer', 'Cancel') ?></button>
-          <button type="submit" class="ampte-btn ampte-btn-primary"><?= T('Stoor', 'Save') ?></button>
+          <button type="button" class="ampte-btn ampte-btn-secondary" onclick="closeRoleModal()"><?= t('cancel') ?></button>
+          <button type="submit" class="ampte-btn ampte-btn-primary"><?= t('save') ?></button>
         </div>
       </form>
     </div>

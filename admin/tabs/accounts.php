@@ -6,8 +6,8 @@
         <path d="M9 9h6M9 12h6M9 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= T('Rekeninge & Betalings', 'Accounts & Billing') ?></h2>
+    <h2 class="admin-section-title"><?= t('accounts_billing') ?></h2>
   </div>
 
-  <p class="admin-muted"><?= T('Geen betalingsgeskiedenis beskikbaar nie.', 'No billing history available.') ?></p>
+  <p class="admin-muted"><?= t('no_billing_history') ?></p>
 </div>

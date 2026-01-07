@@ -10,10 +10,10 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     $_SESSION['language'] = $lang;
 }
 
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T($af, $en) {
+// Translation helper using central 5-language system
+function t(string $key): string {
     global $lang;
-    return $lang === 'af' ? $af : $en;
+    return __t($key, $lang);
 }
 
 // Load songs
@@ -53,7 +53,7 @@ $VER = time();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= T('Sing Emmanuel - Getuienis van Geloof', 'Sing Emmanuel - Testimony of Faith') ?></title>
+  <title><?= t('sing_emmanuel_title') ?></title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,7 +77,7 @@ $VER = time();
     <div class="se-hero-glow"></div>
     <div class="se-hero-content">
       <h1 class="se-hero-title">Sing Emmanuel</h1>
-      <p class="se-hero-subtitle"><?= T('Loof die Here met sang en jubel', 'Praise the Lord with song and jubilation') ?></p>
+      <p class="se-hero-subtitle"><?= t('praise_lord_song') ?></p>
     </div>
     <div class="se-sparkles">
       <span class="se-sparkle" style="--delay: 0s; --x: 10%; --y: 20%;"></span>
@@ -97,7 +97,7 @@ $VER = time();
             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" stroke="currentColor" stroke-width="1.5" fill="none"/>
           </svg>
         </div>
-        <h2 class="se-section-title"><?= T('Kies \'n Lied', 'Choose a Song') ?></h2>
+        <h2 class="se-section-title"><?= t('choose_song') ?></h2>
       </div>
 
       <div class="se-controls-grid">
@@ -121,7 +121,7 @@ $VER = time();
             <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
             <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          <span class="se-btn-text"><?= T('Soek Lied', 'Search Song') ?></span>
+          <span class="se-btn-text"><?= t('search_song') ?></span>
         </button>
       </div>
     </section>
@@ -136,7 +136,7 @@ $VER = time();
           </svg>
         </div>
         <h2 class="se-section-title">
-          <?= T('Lied', 'Hymn') ?> 
+          <?= t('hymn') ?> 
           <?= htmlspecialchars($selectedSong ? (string)$selectedSong['number'] : '1') ?>
         </h2>
       </div>
@@ -153,7 +153,7 @@ $VER = time();
             <svg class="se-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" fill="currentColor" opacity="0.3"/>
             </svg>
-            <p><?= T('Lied nie gevind nie.', 'Song not found.') ?></p>
+            <p><?= t('song_not_found') ?></p>
           </div>
         <?php endif; ?>
       </div>
@@ -165,8 +165,8 @@ $VER = time();
     <div class="se-overlay-backdrop"></div>
     <div class="se-overlay-content">
       <div class="se-overlay-header">
-        <h3><?= T('Kies \'n Lied', 'Choose a Song') ?></h3>
-        <button class="se-overlay-close" id="closeSongPicker" aria-label="<?= T('Sluit', 'Close') ?>">
+        <h3><?= t('choose_song') ?></h3>
+        <button class="se-overlay-close" id="closeSongPicker" aria-label="<?= t('close') ?>">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>

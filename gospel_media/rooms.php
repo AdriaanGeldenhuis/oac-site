@@ -7,10 +7,10 @@ $pageLang = $_SESSION['language'] ?? 'af';
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     $_SESSION['language'] = $pageLang = $_GET['lang'];
 }
-// T() for backwards compat: AF gets Afrikaans, all others get English
-function T(string $af, string $en): string {
+// Translation helper using central 5-language system
+function t(string $key): string {
     global $pageLang;
-    return $pageLang === 'af' ? $af : $en;
+    return __t($key, $pageLang);
 }
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
@@ -45,7 +45,7 @@ if ($birthdate) {
 }
 
 if ($townId <= 0) {
-    die('Jou profiel het geen dorp nie. Kontak admin.');
+    die(t('profile_no_town'));
 }
 
 // Determine user capabilities
@@ -330,7 +330,7 @@ $VER = time();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title><?= T('Kamers - ', 'Rooms - ') . htmlspecialchars($townName) ?></title>
+    <title><?= t('rooms') ?> - <?= htmlspecialchars($townName) ?></title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <style>
@@ -351,26 +351,26 @@ $VER = time();
     
     <main class="rm-main">
         <div class="rm-header">
-            <h1 class="rm-title"><?= T('Jou Kamers', 'Your Rooms') ?></h1>
+            <h1 class="rm-title"><?= t('your_rooms') ?></h1>
             <p class="rm-subtitle"><?= htmlspecialchars($townName) ?></p>
         </div>
         
         <div class="rm-info">
-            <p><strong><?= T('Welkom', 'Welcome') ?>:</strong> <?= $userName ?></p>
-            <p><strong><?= T('Dorp', 'Town') ?>:</strong> <?= htmlspecialchars($townName) ?></p>
+            <p><strong><?= t('welcome') ?>:</strong> <?= $userName ?></p>
+            <p><strong><?= t('town') ?>:</strong> <?= htmlspecialchars($townName) ?></p>
             <?php if ($congName): ?>
-                <p><strong><?= T('Gemeente', 'Congregation') ?>:</strong> <?= htmlspecialchars($congName) ?></p>
+                <p><strong><?= t('congregation') ?>:</strong> <?= htmlspecialchars($congName) ?></p>
             <?php endif; ?>
             <?php if ($age > 0): ?>
-                <p><strong><?= T('Ouderdom', 'Age') ?>:</strong> <?= $age ?> <?= T('jaar', 'years') ?></p>
+                <p><strong><?= t('age') ?>:</strong> <?= $age ?> <?= t('years') ?></p>
             <?php endif; ?>
-            <p><strong><?= T('Amp Vlak', 'Amp Level') ?>:</strong> 
+            <p><strong><?= t('amp_level') ?>:</strong> 
                 <span class="highlight">
-                    <?php 
-                    if ($isApostel) echo T('Apostel (Kan slegs opsienerskappe kies)', 'Apostle (Can only choose oversights)');
-                    elseif ($isPrivileged) echo T('Amp 2-6 (Kan gemeentes & jeug in eie dorp kies)', 'Amp 2-6 (Can choose congregations & youth in own town)');
-                    elseif ($isRestricted) echo T('Amp 8+ (Kan slegs gemeente & opsienerskap sien, behalwe as bygevoeg)', 'Amp 8+ (Can only see congregation & oversight, unless added)');
-                    else echo T('Amp 7 (Kan jeug/sondagskool in eie dorp kies)', 'Amp 7 (Can choose youth/sunday school in own town)');
+                    <?php
+                    if ($isApostel) echo t('apostle_desc');
+                    elseif ($isPrivileged) echo t('amp_2_6_desc');
+                    elseif ($isRestricted) echo t('amp_8_desc');
+                    else echo t('amp_7_desc');
                     ?>
                 </span>
             </p>
@@ -380,7 +380,7 @@ $VER = time();
         <section class="rm-section">
             <div class="rm-section-header">
                 <h2>
-                    <span><?= T('Outomaties', 'Automatic') ?></span>
+                    <span><?= t('automatic') ?></span>
                     <span class="rm-count"><?= count($autoRooms) ?></span>
                 </h2>
             </div>
@@ -401,13 +401,13 @@ $VER = time();
                                     <?= htmlspecialchars($r['display_name']) ?>
                                 </a>
                                 <div class="rm-meta">
-                                    <?= T('Outomatiese lidmaatskap', 'Automatic membership') ?>
+                                    <?= t('automatic_membership') ?>
                                     <?php if ($canLeaveRoom): ?>
-                                        • <?= T('As offisier kan jy \'n ander gemeente kies', 'As officer you can choose another congregation') ?>
+                                        • <?= t('officer_can_choose') ?>
                                     <?php elseif ($roomType === 'sondagskool' && $age > 0 && $age < 16): ?>
-                                        • <?= T('Outomaties (onder 16 jaar)', 'Automatic (under 16 years)') ?>
+                                        • <?= t('auto_under_16') ?>
                                     <?php elseif ($roomType === 'jeug' && $age >= 16 && $age <= 25): ?>
-                                        • <?= T('Outomaties (16-25 jaar, ongetroud)', 'Automatic (16-25 years, unmarried)') ?>
+                                        • <?= t('auto_16_25') ?>
                                     <?php elseif ($r['description']): ?>
                                         • <?= htmlspecialchars(mb_substr($r['description'], 0, 50)) ?>
                                     <?php endif; ?>
@@ -415,18 +415,18 @@ $VER = time();
                             </div>
                             <div class="rm-actions">
                                 <span class="rm-badge auto">
-                                    <?= T('Outo', 'Auto') ?>
+                                    <?= t('auto_short') ?>
                                 </span>
                                 <?php if ($canLeaveRoom): ?>
                                     <button class="rm-btn rm-btn-leave" 
                                             data-action="leave" 
                                             data-room-id="<?= $roomId ?>"
                                             data-room-name="<?= htmlspecialchars($r['display_name']) ?>">
-                                        <?= T('Los', 'Leave') ?>
+                                        <?= t('leave') ?>
                                     </button>
                                 <?php else: ?>
                                     <button class="rm-btn rm-btn-view" onclick="location.href='/gospel_media/gospel.php?room_id=<?= $roomId ?>'">
-                                        <?= T('Bekyk', 'View') ?>
+                                        <?= t('view') ?>
                                     </button>
                                 <?php endif; ?>
                             </div>
@@ -441,7 +441,7 @@ $VER = time();
         <section class="rm-section">
             <div class="rm-section-header">
                 <h2>
-                    <span><?= T('Gekose', 'Joined') ?></span>
+                    <span><?= t('joined') ?></span>
                     <span class="rm-count"><?= count($joinedRooms) ?></span>
                 </h2>
             </div>
@@ -467,13 +467,13 @@ $VER = time();
                             </div>
                             <div class="rm-actions">
                                 <span class="rm-badge <?= $roomType ?>">
-                                    <?= T(ucfirst($roomType), ucfirst($roomType)) ?>
+                                    <?= ucfirst($roomType) ?>
                                 </span>
-                                <button class="rm-btn rm-btn-leave" 
-                                        data-action="leave" 
+                                <button class="rm-btn rm-btn-leave"
+                                        data-action="leave"
                                         data-room-id="<?= $roomId ?>"
                                         data-room-name="<?= htmlspecialchars($r['display_name']) ?>">
-                                    <?= T('Los', 'Leave') ?>
+                                    <?= t('leave') ?>
                                 </button>
                             </div>
                         </li>
@@ -482,12 +482,12 @@ $VER = time();
             </div>
         </section>
         <?php endif; ?>
-        
+
         <?php if ($availableRooms): ?>
         <section class="rm-section">
             <div class="rm-section-header">
                 <h2>
-                    <span><?= T('Beskikbaar', 'Available') ?></span>
+                    <span><?= t('available') ?></span>
                     <span class="rm-count"><?= count($availableRooms) ?></span>
                 </h2>
             </div>
@@ -513,13 +513,13 @@ $VER = time();
                             </div>
                             <div class="rm-actions">
                                 <span class="rm-badge <?= $roomType ?>">
-                                    <?= T(ucfirst($roomType), ucfirst($roomType)) ?>
+                                    <?= ucfirst($roomType) ?>
                                 </span>
-                                <button class="rm-btn rm-btn-join" 
-                                        data-action="join" 
+                                <button class="rm-btn rm-btn-join"
+                                        data-action="join"
                                         data-room-id="<?= $roomId ?>"
                                         data-room-name="<?= htmlspecialchars($r['display_name']) ?>">
-                                    <?= T('Sluit aan', 'Join') ?>
+                                    <?= t('join') ?>
                                 </button>
                             </div>
                         </li>
@@ -534,14 +534,14 @@ $VER = time();
             <div class="rm-empty">
                 <div class="rm-empty-icon">📭</div>
                 <p class="rm-empty-text">
-                    <?= T('Geen kamers beskikbaar nie.', 'No rooms available.') ?>
+                    <?= t('no_rooms') ?>
                 </p>
             </div>
         </section>
         <?php endif; ?>
         
         <p class="rm-back">
-            <a href="/gospel_media/gospel.php">← <?= T('Terug na Media', 'Back to Media') ?></a>
+            <a href="/gospel_media/gospel.php">← <?= t('back_to_media') ?></a>
         </p>
     </main>
     
@@ -564,10 +564,10 @@ $VER = time();
         const roomName = btn.dataset.roomName;
         
         if (action === 'leave') {
-            const confirmMsg = roomName.toLowerCase().includes('gemeente') 
-                ? `<?= T('Is jy seker jy wil hierdie gemeente los? Jy sal \'n ander moet kies.', 'Are you sure you want to leave this congregation? You will need to choose another.') ?>`
-                : `<?= T('Is jy seker jy wil los', 'Are you sure you want to leave') ?> "${roomName}"?`;
-            
+            const confirmMsg = roomName.toLowerCase().includes('gemeente')
+                ? `<?= t('confirm_leave_congregation') ?>`
+                : `<?= t('confirm_leave_room') ?> "${roomName}"?`;
+
             if (!confirm(confirmMsg)) {
                 return;
             }
@@ -587,9 +587,9 @@ $VER = time();
             const data = await res.json();
             
             if (data.ok || data.success) {
-                showToast(action === 'join' 
-                    ? '<?= T('Suksesvol aangesluit!', 'Successfully joined!') ?>' 
-                    : '<?= T('Suksesvol gelos!', 'Successfully left!') ?>');
+                showToast(action === 'join'
+                    ? '<?= t('successfully_joined') ?>'
+                    : '<?= t('successfully_left') ?>');
                 setTimeout(() => location.reload(), 1000);
             } else {
                 throw new Error(data.error || 'Unknown error');
@@ -599,12 +599,12 @@ $VER = time();
             let errorMsg = err.message || 'Unknown error';
             
             if (errorMsg.includes('cannot_leave_opsienerskap')) {
-                errorMsg = '<?= T('Jy kan nie jou opsienerskap los nie', 'You cannot leave your oversight') ?>';
+                errorMsg = '<?= t('cannot_leave_oversight') ?>';
             } else if (errorMsg.includes('cannot_leave_own_gemeente')) {
-                errorMsg = '<?= T('Jy kan nie jou gemeente los nie', 'You cannot leave your congregation') ?>';
+                errorMsg = '<?= t('cannot_leave_congregation') ?>';
             }
-            
-            showToast('<?= T('Fout', 'Error') ?>: ' + errorMsg, true);
+
+            showToast('<?= t('error') ?>: ' + errorMsg, true);
             btn.disabled = false;
             btn.textContent = originalText;
         }
