@@ -3,12 +3,15 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
 require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 3) . '/includes/languages.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
     echo json_encode(['error' => 'db_unavailable']);
     exit;
 }
+
+$pageLang = $_SESSION['language'] ?? 'af';
 
 // Helper: Fix photo path
 function fix_photo_path(?string $photo): ?string {
@@ -41,21 +44,17 @@ if (!$room || !user_has_access_to_room($pdo, $userId, $room)) {
 }
 
 try {
-    $sql = "SELECT p.*, 
-                   u.name AS user_name, 
-                   u.surname AS user_surname, 
+    $sql = "SELECT p.*,
+                   u.name AS user_name,
+                   u.surname AS user_surname,
                    u.gender AS user_gender,
-                   u.amp_id AS user_amp_id, 
+                   u.amp_id AS user_amp_id,
                    u.photo AS user_photo,
-                   IF(u.gender='vrou', COALESCE(a.female_name,'Suster'), COALESCE(a.male_name,'Broer')) AS amp_title,
-                   COALESCE(a.male_name, 'Broer') AS amp_male_name,
-                   COALESCE(a.female_name, 'Suster') AS amp_female_name,
                    p.heart_count,
                    p.pray_count,
                    p.comment_count
             FROM posts p
             JOIN users u ON u.id = p.user_id
-            LEFT JOIN amptes a ON a.id = u.amp_id
             WHERE p.room_id = :rid";
     
     if ($afterId !== null && $afterId > 0) {
@@ -124,13 +123,18 @@ try {
         $pid = (int)$p['id'];
         $p['attachments'] = $attachmentsByPost[$pid] ?? [];
         $p['my_reactions'] = $myReactions[$pid] ?? [];
-        
+
         // FIX PHOTO PATH
         $p['user_photo'] = fix_photo_path($p['user_photo']);
-        
+
+        // Translate office title
+        $ampId = (int)($p['user_amp_id'] ?? 10);
+        $gender = $p['user_gender'] ?? 'man';
+        $p['amp_title'] = get_translated_office($ampId, $gender, $pageLang);
+
         // Check if current user owns this post
         $p['is_owner'] = ((int)$p['user_id'] === $userId);
-        
+
         $p['heart_count'] = (int)($p['heart_count'] ?? 0);
         $p['pray_count'] = (int)($p['pray_count'] ?? 0);
         $p['comment_count'] = (int)($p['comment_count'] ?? 0);

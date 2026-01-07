@@ -68,18 +68,18 @@ if ($roomId <= 0) {
     }
 }
 
-// Get room info
-function gm_label($type, $name) {
+// Get room info with translation support
+function gm_label($type, $name, $lang) {
     $t = strtolower((string)$type);
     $n = (string)$name;
-    if ($t === 'gemeente') return stripos($n, 'gemeente') === 0 ? $n : 'Gemeente ' . $n;
-    if ($t === 'opsienerskap') return stripos($n, 'opsienerskap') === 0 ? $n : 'Opsienerskap ' . $n;
-    if ($t === 'jeug') return stripos($n, 'jeug') === 0 ? $n : 'Jeug ' . $n;
-    if ($t === 'sondagskool') return stripos($n, 'sondagskool') === 0 ? $n : 'Sondagskool ' . $n;
-    return $n ?: 'Kamer';
+    if ($t === 'gemeente') return __t('congregation', $lang) . ' ' . $n;
+    if ($t === 'opsienerskap') return __t('oversight', $lang) . ' ' . $n;
+    if ($t === 'jeug') return __t('youth', $lang) . ' ' . $n;
+    if ($t === 'sondagskool') return __t('sunday_school', $lang) . ' ' . $n;
+    return $n ?: __t('room', $lang);
 }
 
-$roomTitle = 'Kamer';
+$roomTitle = __t('room', $pageLang);
 $roomType = '';
 $roomObj = null;
 
@@ -88,7 +88,7 @@ if ($roomId > 0) {
     $rs->execute([$roomId]);
     $roomObj = $rs->fetch(PDO::FETCH_ASSOC);
     if ($roomObj) {
-        $roomTitle = gm_label($roomObj['type'] ?? '', $roomObj['name'] ?? '');
+        $roomTitle = gm_label($roomObj['type'] ?? '', $roomObj['name'] ?? '', $pageLang);
         $roomType = strtolower((string)($roomObj['type'] ?? ''));
     }
 }
@@ -131,6 +131,47 @@ $VER = time();
         window.CAN_POST = <?= $allowPost ? 'true' : 'false' ?>;
         window.USER_ID = <?= $userId ?>;
         window.USER_AMP_ID = <?= $ampId ?>;
+        window.JS_T = {
+            edit: <?= json_encode(__t('js_edit', $pageLang)) ?>,
+            delete: <?= json_encode(__t('js_delete', $pageLang)) ?>,
+            cancel: <?= json_encode(__t('js_cancel', $pageLang)) ?>,
+            save: <?= json_encode(__t('js_save', $pageLang)) ?>,
+            saving: <?= json_encode(__t('js_saving', $pageLang)) ?>,
+            back: <?= json_encode(__t('js_back', $pageLang)) ?>,
+            error: <?= json_encode(__t('js_error', $pageLang)) ?>,
+            loading: <?= json_encode(__t('js_loading', $pageLang)) ?>,
+            post_actions: <?= json_encode(__t('js_post_actions', $pageLang)) ?>,
+            edit_post: <?= json_encode(__t('js_edit_post', $pageLang)) ?>,
+            confirm_delete: <?= json_encode(__t('js_confirm_delete', $pageLang)) ?>,
+            cannot_undo: <?= json_encode(__t('js_cannot_undo', $pageLang)) ?>,
+            deleting: <?= json_encode(__t('js_deleting', $pageLang)) ?>,
+            post: <?= json_encode(__t('js_post', $pageLang)) ?>,
+            posting: <?= json_encode(__t('js_posting', $pageLang)) ?>,
+            type_message: <?= json_encode(__t('js_type_message', $pageLang)) ?>,
+            error_posting: <?= json_encode(__t('js_error_posting', $pageLang)) ?>,
+            loading_posts: <?= json_encode(__t('js_loading_posts', $pageLang)) ?>,
+            no_posts: <?= json_encode(__t('js_no_posts', $pageLang)) ?>,
+            comments: <?= json_encode(__t('js_comments', $pageLang)) ?>,
+            write_comment: <?= json_encode(__t('js_write_comment', $pageLang)) ?>,
+            no_comments: <?= json_encode(__t('js_no_comments', $pageLang)) ?>,
+            delete_comment: <?= json_encode(__t('js_delete_comment', $pageLang)) ?>,
+            edit_comment: <?= json_encode(__t('js_edit_comment', $pageLang)) ?>,
+            add_photo: <?= json_encode(__t('js_add_photo', $pageLang)) ?>,
+            remove_photo: <?= json_encode(__t('js_remove_photo', $pageLang)) ?>,
+            delete_photo: <?= json_encode(__t('js_delete_photo', $pageLang)) ?>,
+            datetime: <?= json_encode(__t('js_datetime', $pageLang)) ?>,
+            place: <?= json_encode(__t('js_place', $pageLang)) ?>,
+            remove: <?= json_encode(__t('js_remove', $pageLang)) ?>,
+            // Rooms menu translations
+            rooms: <?= json_encode(__t('js_rooms', $pageLang)) ?>,
+            manage_rooms: <?= json_encode(__t('js_manage_rooms', $pageLang)) ?>,
+            loading_rooms: <?= json_encode(__t('js_loading_rooms', $pageLang)) ?>,
+            no_rooms: <?= json_encode(__t('js_no_rooms', $pageLang)) ?>,
+            automatic: <?= json_encode(__t('js_automatic', $pageLang)) ?>,
+            auto: <?= json_encode(__t('js_auto', $pageLang)) ?>,
+            joined_section: <?= json_encode(__t('js_joined_section', $pageLang)) ?>,
+            joined_badge: <?= json_encode(__t('js_joined_badge', $pageLang)) ?>
+        };
     </script>
 </head>
 <body class="gospel-body">

@@ -33,7 +33,8 @@
     }
   }
 
-  const T = (af, en) => (window.PAGE_LANG === 'en' ? en : af);
+  // Use server-provided translations for all 5 languages
+  const T = (key) => (window.JS_T && window.JS_T[key]) ? window.JS_T[key] : key;
 
   // ===== STATE =====
   const ROOM_ID = window.CURRENT_ROOM_ID || 0;
@@ -173,7 +174,7 @@
     
     const text = ($('#composer-text')?.value || '').trim();
     if (!text) {
-      alert(T('Tik asseblief \'n boodskap', 'Please type a message'));
+      alert(T('type_message'));
       return;
     }
     
@@ -197,7 +198,7 @@
     const submit = $('#composer-submit');
     if (submit) {
       submit.disabled = true;
-      submit.textContent = T('Plaas...', 'Posting...');
+      submit.textContent = T('posting');
     }
     
     const j = await fetchJSON('/gospel_media/api/posts/create.php', { method: 'POST', body: fd });
@@ -208,11 +209,11 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span>${T('Plaas', 'Post')}</span>`;
+        <span>${T('post')}</span>`;
     }
     
     if (!(j && (j.ok || j.success))) {
-      alert(j && j.error ? j.error : T('Fout met plaas', 'Error posting'));
+      alert(j && j.error ? j.error : T('error_posting'));
       return;
     }
     
@@ -275,7 +276,7 @@
 
   // ===== COMMENTS =====
   async function deleteComment(commentId, postId, listEl) {
-    if (!confirm(T('Verwyder hierdie kommentaar?', 'Delete this comment?'))) return;
+    if (!confirm(T('delete_comment'))) return;
     
     const fd = new FormData();
     fd.append('comment_id', commentId);
@@ -283,7 +284,7 @@
     const j = await fetchJSON('/gospel_media/api/comments/delete.php', { method: 'POST', body: fd });
     
     if (!(j && (j.ok || j.success))) {
-      alert(j && j.error ? j.error : T('Fout', 'Error'));
+      alert(j && j.error ? j.error : T('error'));
       return;
     }
     
@@ -300,7 +301,7 @@
   }
 
   async function editComment(commentId, currentText, postId, listEl) {
-    const newText = prompt(T('Wysig kommentaar:', 'Edit comment:'), currentText);
+    const newText = prompt(T('edit_comment'), currentText);
     if (!newText || newText.trim() === '' || newText.trim() === currentText) return;
     
     const fd = new FormData();
@@ -310,7 +311,7 @@
     const j = await fetchJSON('/gospel_media/api/comments/update.php', { method: 'POST', body: fd });
     
     if (!(j && (j.ok || j.success))) {
-      alert(j && j.error ? j.error : T('Fout', 'Error'));
+      alert(j && j.error ? j.error : T('error'));
       return;
     }
     
@@ -333,12 +334,12 @@
     commentsSection = ce('div', { class: 'comments-section' });
     commentsSection.innerHTML = `
       <div class="comments-header">
-        <h3 class="comments-title">${T('Kommentare', 'Comments')}</h3>
+        <h3 class="comments-title">${T('comments')}</h3>
       </div>
       <div class="comments-list"></div>
       <div class="comment-composer">
-        <textarea class="comment-input" placeholder="${T('Skryf \'n kommentaar...', 'Write a comment...')}" rows="1"></textarea>
-        <button class="comment-submit" type="button">${T('Plaas', 'Post')}</button>
+        <textarea class="comment-input" placeholder="${T('write_comment')}" rows="1"></textarea>
+        <button class="comment-submit" type="button">${T('post')}</button>
       </div>
     `;
     
@@ -372,10 +373,10 @@
         const j = await fetchJSON('/gospel_media/api/comments/create.php', { method: 'POST', body: fd });
         
         submit.disabled = false;
-        submit.textContent = T('Plaas', 'Post');
+        submit.textContent = T('post');
         
         if (!(j && (j.ok || j.success))) {
-          alert(j && j.error ? j.error : T('Fout', 'Error'));
+          alert(j && j.error ? j.error : T('error'));
           return;
         }
         
@@ -396,7 +397,7 @@
   async function loadComments(postId, listEl) {
     if (!listEl) return;
     
-    listEl.innerHTML = '<p class="muted">' + T('Laai...', 'Loading...') + '</p>';
+    listEl.innerHTML = '<p class="muted">' + T('loading') + '</p>';
     
     const j = await fetchJSON('/gospel_media/api/comments/list.php?post_id=' + postId);
     const comments = Array.isArray(j) ? j : [];
@@ -404,7 +405,7 @@
     listEl.innerHTML = '';
     
     if (!comments.length) {
-      listEl.innerHTML = '<p class="muted">' + T('Geen kommentare nog nie', 'No comments yet') + '</p>';
+      listEl.innerHTML = '<p class="muted">' + T('no_comments') + '</p>';
       return;
     }
     
@@ -430,12 +431,12 @@
         
         const editBtn = ce('button', { class: 'comment-action-btn', type: 'button' });
         editBtn.textContent = '✎';
-        editBtn.title = T('Wysig', 'Edit');
+        editBtn.title = T('edit');
         editBtn.addEventListener('click', () => editComment(c.id, c.text, postId, listEl));
-        
+
         const delBtn = ce('button', { class: 'comment-action-btn', type: 'button' });
         delBtn.textContent = '×';
-        delBtn.title = T('Verwyder', 'Delete');
+        delBtn.title = T('delete');
         delBtn.addEventListener('click', () => deleteComment(c.id, postId, listEl));
         
         actions.append(editBtn, delBtn);
@@ -512,7 +513,7 @@
     const loading = $('#loadingIndicator');
     if (loading) loading.hidden = false;
     
-    feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('Laai plasings...', 'Loading posts...') + '</p></div>';
+    feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('loading_posts') + '</p></div>';
     POST_MAP.clear();
     
     const j = await fetchJSON('/gospel_media/api/posts/list.php?room_id=' + encodeURIComponent(roomId));
@@ -524,7 +525,7 @@
     feed.innerHTML = '';
     
     if (!rows.length) {
-      feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('Geen plasings in hierdie kamer nie', 'No posts in this room') + '</p></div>';
+      feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('no_posts') + '</p></div>';
       return;
     }
     
@@ -538,7 +539,7 @@
     
     const panel = ce('div', { class: 'modal-panel' });
     
-    const title = ce('h2', { text: T('Wysig plasing', 'Edit post') });
+    const title = ce('h2', { text: T('edit_post') });
     const who = ce('div', { class: 'muted', text: computeDisplayName(p) });
     const when = ce('div', { class: 'muted', text: p.created_at ? fmtDT(p.created_at) : '' });
     
@@ -548,12 +549,12 @@
     if (isEvent) {
       const toInputLocal = (s) => s ? (String(s).replace(' ', 'T').slice(0, 16)) : '';
       evtWrap = ce('div', { class: 'modal-event-fields' });
-      const lbl = ce('label', { text: T('Datum/tyd', 'Date/time'), class: 'modal-label' });
+      const lbl = ce('label', { text: T('datetime'), class: 'modal-label' });
       const inp = ce('input', { type: 'datetime-local', class: 'composer-input' });
       inp.value = toInputLocal(p.event_at || '');
       evtInput = inp;
       
-      const placeLbl = ce('label', { text: T('Plek', 'Place'), class: 'modal-label' });
+      const placeLbl = ce('label', { text: T('place'), class: 'modal-label' });
       const placeInp = ce('input', { type: 'text', class: 'composer-input' });
       placeInp.value = p.event_place || '';
       placeInput = placeInp;
@@ -579,10 +580,10 @@
         
         const x = ce('button', { type: 'button', class: 'modal-img-del' });
         x.textContent = '×';
-        x.title = T('Verwyder foto', 'Remove photo');
+        x.title = T('remove_photo');
         
         x.addEventListener('click', async () => {
-          if (!confirm(T('Verwyder hierdie foto?', 'Remove this photo?'))) return;
+          if (!confirm(T('delete_photo'))) return;
           
           x.disabled = true;
           x.textContent = '...';
@@ -596,7 +597,7 @@
           if (j && (j.ok || j.success)) {
             box.remove();
           } else {
-            alert(j && j.error ? j.error : T('Fout', 'Error'));
+            alert(j && j.error ? j.error : T('error'));
             x.disabled = false;
             x.textContent = '×';
           }
@@ -610,10 +611,10 @@
     const attachBtn = ce('button', { type: 'button', class: 'composer-attach' });
     attachBtn.innerHTML = `
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" 
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>${T('Voeg foto by', 'Add photo')}</span>
+      <span>${T('add_photo')}</span>
     `;
     
     attachBtn.addEventListener('click', () => file.click());
@@ -628,7 +629,7 @@
         
         const x = ce('button', { type: 'button', class: 'modal-img-del' });
         x.textContent = '×';
-        x.title = T('Verwyder', 'Remove');
+        x.title = T('remove');
         
         x.addEventListener('click', () => {
           const dt = new DataTransfer();
@@ -646,8 +647,8 @@
     
     const actions = ce('div', { class: 'modal-actions' });
     
-    const save = ce('button', { class: 'modal-btn', type: 'button', text: T('Stoor', 'Save') });
-    const close = ce('button', { class: 'modal-btn', type: 'button', text: T('Terug', 'Back') });
+    const save = ce('button', { class: 'modal-btn', type: 'button', text: T('save') });
+    const close = ce('button', { class: 'modal-btn', type: 'button', text: T('back') });
     
     save.addEventListener('click', async () => {
       const fd = new FormData();
@@ -667,14 +668,14 @@
       }
       
       save.disabled = true;
-      save.textContent = T('Stoor...', 'Saving...');
+      save.textContent = T('saving');
       
       const j = await fetchJSON('/gospel_media/api/posts/update.php', { method: 'POST', body: fd });
       
       if (!(j && (j.success || j.ok))) {
-        alert(j && j.error ? j.error : T('Fout', 'Error'));
+        alert(j && j.error ? j.error : T('error'));
         save.disabled = false;
-        save.textContent = T('Stoor', 'Save');
+        save.textContent = T('save');
         return;
       }
       
@@ -699,29 +700,29 @@
     
     const panel = ce('div', { class: 'modal-panel' });
     
-    const title = ce('h2', { text: T('Bevestig verwydering', 'Confirm deletion') });
-    const info = ce('p', { text: T('Hierdie aksie kan nie ontdoen word nie', 'This action cannot be undone'), class: 'modal-info' });
+    const title = ce('h2', { text: T('confirm_delete') });
+    const info = ce('p', { text: T('cannot_undo'), class: 'modal-info' });
     const who = ce('div', { class: 'muted', text: computeDisplayName(p) });
     const when = ce('div', { class: 'muted', text: p.created_at ? fmtDT(p.created_at) : '' });
     
     const actions = ce('div', { class: 'modal-actions' });
     
-    const confirm = ce('button', { class: 'modal-btn danger', type: 'button', text: T('Verwyder', 'Delete') });
-    const cancel = ce('button', { class: 'modal-btn', type: 'button', text: T('Kanselleer', 'Cancel') });
+    const confirm = ce('button', { class: 'modal-btn danger', type: 'button', text: T('delete') });
+    const cancel = ce('button', { class: 'modal-btn', type: 'button', text: T('cancel') });
     
     confirm.addEventListener('click', async () => {
       const fd = new FormData();
       fd.append('post_id', p.id);
       
       confirm.disabled = true;
-      confirm.textContent = T('Verwyder...', 'Deleting...');
+      confirm.textContent = T('deleting');
       
       const j = await fetchJSON('/gospel_media/api/posts/delete.php', { method: 'POST', body: fd });
       
       if (!(j && (j.success || j.ok))) {
-        alert(j && j.error ? j.error : T('Fout', 'Error'));
+        alert(j && j.error ? j.error : T('error'));
         confirm.disabled = false;
-        confirm.textContent = T('Verwyder', 'Delete');
+        confirm.textContent = T('delete');
         return;
       }
       document.body.removeChild(back);
@@ -742,16 +743,16 @@
     
     const panel = ce('div', { class: 'modal-panel' });
     
-    const title = ce('h2', { text: T('Post aksies', 'Post actions') });
+    const title = ce('h2', { text: T('post_actions') });
     const who = ce('div', { class: 'muted', text: computeDisplayName(p) });
     const when = ce('div', { class: 'muted', text: p.created_at ? fmtDT(p.created_at) : '' });
     const text = ce('p', { text: (p.text || '').substring(0, 100) + (p.text && p.text.length > 100 ? '...' : ''), class: 'modal-preview' });
     
     const actions = ce('div', { class: 'modal-actions' });
     
-    const bEdit = ce('button', { class: 'modal-btn', type: 'button', text: T('Wysig', 'Edit') });
-    const bDel = ce('button', { class: 'modal-btn danger', type: 'button', text: T('Verwyder', 'Delete') });
-    const bClose = ce('button', { class: 'modal-btn', type: 'button', text: T('Kanselleer', 'Cancel') });
+    const bEdit = ce('button', { class: 'modal-btn', type: 'button', text: T('edit') });
+    const bDel = ce('button', { class: 'modal-btn danger', type: 'button', text: T('delete') });
+    const bClose = ce('button', { class: 'modal-btn', type: 'button', text: T('cancel') });
     
     bEdit.addEventListener('click', () => { document.body.removeChild(back); openEditModal(p); });
     bDel.addEventListener('click', () => { document.body.removeChild(back); openDeleteModal(p); });

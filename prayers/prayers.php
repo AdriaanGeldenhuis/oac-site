@@ -182,6 +182,37 @@ $currentUser = [
     window.CURRENT_USER_ID = <?= (int)$currentUserId ?>;
     window.CURRENT_USER_NAME = <?= json_encode($currentUser['username']) ?>;
     window.CURRENT_USER_PIC = <?= json_encode($currentUser['profile_picture']) ?>;
+    window.JS_T = {
+      edit: <?= json_encode(__t('js_edit', $pageLang)) ?>,
+      delete: <?= json_encode(__t('js_delete', $pageLang)) ?>,
+      cancel: <?= json_encode(__t('js_cancel', $pageLang)) ?>,
+      error: <?= json_encode(__t('js_error', $pageLang)) ?>,
+      share: <?= json_encode(__t('js_share', $pageLang)) ?>,
+      update: <?= json_encode(__t('js_update', $pageLang)) ?>,
+      posting: <?= json_encode(__t('js_posting', $pageLang)) ?>,
+      choose_photo: <?= json_encode(__t('js_choose_photo', $pageLang)) ?>,
+      prayer_shared: <?= json_encode(__t('js_prayer_shared', $pageLang)) ?>,
+      could_not_post: <?= json_encode(__t('js_could_not_post', $pageLang)) ?>,
+      post_updated: <?= json_encode(__t('js_post_updated', $pageLang)) ?>,
+      could_not_update: <?= json_encode(__t('js_could_not_update', $pageLang)) ?>,
+      remove_photo: <?= json_encode(__t('js_remove_photo', $pageLang)) ?>,
+      delete_photo: <?= json_encode(__t('js_delete_photo', $pageLang)) ?>,
+      photo_removed: <?= json_encode(__t('js_photo_removed', $pageLang)) ?>,
+      could_not_remove: <?= json_encode(__t('js_could_not_remove', $pageLang)) ?>,
+      delete_post: <?= json_encode(__t('js_delete_post', $pageLang)) ?>,
+      post_deleted: <?= json_encode(__t('js_post_deleted', $pageLang)) ?>,
+      could_not_delete: <?= json_encode(__t('js_could_not_delete', $pageLang)) ?>,
+      loading_prayers: <?= json_encode(__t('js_loading_prayers', $pageLang)) ?>,
+      no_prayers: <?= json_encode(__t('js_no_prayers', $pageLang)) ?>,
+      could_not_load: <?= json_encode(__t('js_could_not_load', $pageLang)) ?>,
+      prayer: <?= json_encode(__t('js_prayer', $pageLang)) ?>,
+      testimony: <?= json_encode(__t('js_testimony', $pageLang)) ?>,
+      comment_posted: <?= json_encode(__t('js_comment_posted', $pageLang)) ?>,
+      comment_updated: <?= json_encode(__t('js_comment_updated', $pageLang)) ?>,
+      comment_deleted: <?= json_encode(__t('js_comment_deleted', $pageLang)) ?>,
+      delete_comment: <?= json_encode(__t('js_delete_comment', $pageLang)) ?>,
+      no_comments: <?= json_encode(__t('js_no_comments', $pageLang)) ?>
+    };
   </script>
   <script src="/prayers/js/prayers.js?v=<?= time() ?>"></script>
 

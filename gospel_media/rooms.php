@@ -13,6 +13,28 @@ function t(string $key): string {
     return __t($key, $pageLang);
 }
 
+// Helper to format room display name with translation
+function formatRoomDisplayName(string $type, string $name): string {
+    global $pageLang;
+    $t = strtolower($type);
+    if ($t === 'gemeente') return __t('congregation', $pageLang) . ' ' . $name;
+    if ($t === 'opsienerskap') return __t('oversight', $pageLang) . ' ' . $name;
+    if ($t === 'jeug') return __t('youth', $pageLang) . ' ' . $name;
+    if ($t === 'sondagskool') return __t('sunday_school', $pageLang) . ' ' . $name;
+    return $name ?: __t('room', $pageLang);
+}
+
+// Helper to translate room type for badge display
+function translateRoomType(string $type): string {
+    global $pageLang;
+    $t = strtolower($type);
+    if ($t === 'gemeente') return __t('congregation', $pageLang);
+    if ($t === 'opsienerskap') return __t('oversight', $pageLang);
+    if ($t === 'jeug') return __t('youth', $pageLang);
+    if ($t === 'sondagskool') return __t('sunday_school', $pageLang);
+    return __t('room', $pageLang);
+}
+
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
     die('Database connection failed');
@@ -320,6 +342,24 @@ try {
             }
         }
     }
+
+    // Post-process: apply translations to display_name
+    $allRoomArrays = [&$autoRooms, &$joinedRooms, &$availableRooms];
+    foreach ($allRoomArrays as &$roomArray) {
+        foreach ($roomArray as &$room) {
+            $type = strtolower($room['type'] ?? '');
+            // Use congregation_name for gemeente, town_name for others
+            if ($type === 'gemeente') {
+                $name = $room['congregation_name'] ?? $room['name'] ?? '';
+            } else {
+                $name = $room['town_name'] ?? $room['name'] ?? '';
+            }
+            $room['display_name'] = formatRoomDisplayName($room['type'] ?? '', $name);
+        }
+        unset($room);
+    }
+    unset($roomArray);
+
 } catch (Throwable $e) {
     error_log("Rooms query failed: " . $e->getMessage());
 }
@@ -467,7 +507,7 @@ $VER = time();
                             </div>
                             <div class="rm-actions">
                                 <span class="rm-badge <?= $roomType ?>">
-                                    <?= ucfirst($roomType) ?>
+                                    <?= translateRoomType($roomType) ?>
                                 </span>
                                 <button class="rm-btn rm-btn-leave"
                                         data-action="leave"
@@ -513,7 +553,7 @@ $VER = time();
                             </div>
                             <div class="rm-actions">
                                 <span class="rm-badge <?= $roomType ?>">
-                                    <?= ucfirst($roomType) ?>
+                                    <?= translateRoomType($roomType) ?>
                                 </span>
                                 <button class="rm-btn rm-btn-join"
                                         data-action="join"

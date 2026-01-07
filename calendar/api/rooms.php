@@ -4,6 +4,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../../security/auth_gate.php';
 require_once __DIR__ . '/../../gospel_media/lib/permissions.php';
+require_once __DIR__ . '/../../includes/languages.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
@@ -12,6 +13,7 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
 }
 
 $userId = (int)$_SESSION['user_id'];
+$pageLang = $_SESSION['language'] ?? 'af';
 
 try {
     // Get user info
@@ -67,13 +69,19 @@ try {
         $rooms = array_merge($rooms, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
     
-    // Format names
+    // Format names with translations
     foreach ($rooms as &$room) {
         $room['id'] = (int)$room['id'];
-        if ($room['type'] === 'jeug') {
-            $room['name'] = 'Jeug ' . $room['name'];
-        } elseif ($room['type'] === 'sondagskool') {
-            $room['name'] = 'Sondagskool ' . $room['name'];
+        $type = $room['type'] ?? '';
+        $originalName = $room['name'] ?? '';
+        if ($type === 'jeug') {
+            $room['name'] = __t('youth', $pageLang) . ' ' . $originalName;
+        } elseif ($type === 'sondagskool') {
+            $room['name'] = __t('sunday_school', $pageLang) . ' ' . $originalName;
+        } elseif ($type === 'opsienerskap') {
+            $room['name'] = __t('oversight', $pageLang) . ' ' . $originalName;
+        } elseif ($type === 'gemeente') {
+            $room['name'] = __t('congregation', $pageLang) . ' ' . $originalName;
         }
     }
     unset($room);

@@ -29,16 +29,16 @@ define('BIBLE_FILES', [
 // Office/Amp ID to translation key mapping
 // Maps amp_id to [male_key, female_key]
 define('AMP_TRANSLATION_KEYS', [
-    1  => ['apostle', 'apostle'],
-    2  => ['prophet', 'prophet'],
-    3  => ['evangelist', 'evangelist'],
-    4  => ['shepherd', 'shepherd'],
-    5  => ['elder', 'elder'],
-    6  => ['deacon', 'deaconess'],
-    7  => ['priest', 'priestess'],
-    8  => ['priest', 'priestess'],
-    9  => ['member', 'member'],
-    10 => ['member', 'member']
+    1  => ['apostle', 'apostle_sister'],
+    2  => ['overseer', 'overseer_sister'],
+    3  => ['evangelist', 'evangelist_sister'],
+    4  => ['prophet', 'prophet_sister'],
+    5  => ['elder', 'elder_sister'],
+    6  => ['priest', 'priest_sister'],
+    7  => ['subdeacon', 'subdeacon_sister'],
+    8  => ['choir_leader_brother', 'choir_leader_sister'],
+    9  => ['helper', 'helper_sister'],
+    10 => ['brother', 'sister']
 ]);
 
 /**
@@ -517,6 +517,34 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Ibandla',
         'pt' => 'Congregação'
     ],
+    'oversight' => [
+        'af' => 'Opsienerskap',
+        'en' => 'Oversight',
+        'zu' => 'Ukuqashwa',
+        'xh' => 'Ukongamela',
+        'pt' => 'Supervisão'
+    ],
+    'youth' => [
+        'af' => 'Jeug',
+        'en' => 'Youth',
+        'zu' => 'Intsha',
+        'xh' => 'Ulutsha',
+        'pt' => 'Juventude'
+    ],
+    'sunday_school' => [
+        'af' => 'Sondagskool',
+        'en' => 'Sunday School',
+        'zu' => 'Isikole SeSonto',
+        'xh' => 'Isikolo SeCawa',
+        'pt' => 'Escola Dominical'
+    ],
+    'room' => [
+        'af' => 'Kamer',
+        'en' => 'Room',
+        'zu' => 'Ikamelo',
+        'xh' => 'Igumbi',
+        'pt' => 'Sala'
+    ],
     'select_province_first' => [
         'af' => 'Kies provinsie eers',
         'en' => 'Select province first',
@@ -618,7 +646,7 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Professor'
     ],
     'elder' => [
-        'af' => 'Ouderling',
+        'af' => 'Oudste',
         'en' => 'Elder',
         'zu' => 'Umdala',
         'xh' => 'Umdala',
@@ -665,6 +693,104 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Ilunga',
         'xh' => 'Ilungu',
         'pt' => 'Membro'
+    ],
+    'apostle_sister' => [
+        'af' => 'Apostel Suster',
+        'en' => 'Apostle Sister',
+        'zu' => 'Udade woMphostoli',
+        'xh' => 'Udade woMpostile',
+        'pt' => 'Irmã Apóstola'
+    ],
+    'overseer_sister' => [
+        'af' => 'Opsiener Suster',
+        'en' => 'Overseer Sister',
+        'zu' => 'Udade woMbonisi',
+        'xh' => 'Udade woMbonisi',
+        'pt' => 'Irmã Supervisora'
+    ],
+    'evangelist_sister' => [
+        'af' => 'Evangelis Suster',
+        'en' => 'Evangelist Sister',
+        'zu' => 'Udade woMvangeli',
+        'xh' => 'Udade woMvangeli',
+        'pt' => 'Irmã Evangelista'
+    ],
+    'prophet_sister' => [
+        'af' => 'Profeet Suster',
+        'en' => 'Prophet Sister',
+        'zu' => 'Udade woMprofethi',
+        'xh' => 'Udade woMprofeti',
+        'pt' => 'Irmã Profetisa'
+    ],
+    'elder_sister' => [
+        'af' => 'Oudste Suster',
+        'en' => 'Elder Sister',
+        'zu' => 'Udade woMdala',
+        'xh' => 'Udade woMdala',
+        'pt' => 'Irmã Anciã'
+    ],
+    'priest_sister' => [
+        'af' => 'Priester Suster',
+        'en' => 'Priest Sister',
+        'zu' => 'Udade woMpristi',
+        'xh' => 'Udade woMbingeleli',
+        'pt' => 'Irmã Sacerdotisa'
+    ],
+    'subdeacon' => [
+        'af' => 'Onderdiaken',
+        'en' => 'Subdeacon',
+        'zu' => 'Umdiakoni omncane',
+        'xh' => 'Umdiakoni omncinane',
+        'pt' => 'Subdiácono'
+    ],
+    'subdeacon_sister' => [
+        'af' => 'Onderdiaken Suster',
+        'en' => 'Subdeacon Sister',
+        'zu' => 'Udade woMdiakoni omncane',
+        'xh' => 'Udade woMdiakoni omncinane',
+        'pt' => 'Irmã Subdiaconisa'
+    ],
+    'choir_leader_brother' => [
+        'af' => 'Koorleier Broer',
+        'en' => 'Choir Leader Brother',
+        'zu' => 'Umfowethu oHola iKwaya',
+        'xh' => 'Umzalwana oKhokela iKwayara',
+        'pt' => 'Irmão Regente do Coro'
+    ],
+    'choir_leader_sister' => [
+        'af' => 'Koorleier Suster',
+        'en' => 'Choir Leader Sister',
+        'zu' => 'Udade oHola iKwaya',
+        'xh' => 'Udade oKhokela iKwayara',
+        'pt' => 'Irmã Regente do Coro'
+    ],
+    'helper' => [
+        'af' => 'Hulpkrag',
+        'en' => 'Helper',
+        'zu' => 'Umsizi',
+        'xh' => 'Umncedisi',
+        'pt' => 'Ajudante'
+    ],
+    'helper_sister' => [
+        'af' => 'Hulpkrag Suster',
+        'en' => 'Helper Sister',
+        'zu' => 'Udade oSizayo',
+        'xh' => 'Udade oNcedisayo',
+        'pt' => 'Irmã Ajudante'
+    ],
+    'brother' => [
+        'af' => 'Broer',
+        'en' => 'Brother',
+        'zu' => 'Umfowethu',
+        'xh' => 'Umzalwana',
+        'pt' => 'Irmão'
+    ],
+    'sister' => [
+        'af' => 'Suster',
+        'en' => 'Sister',
+        'zu' => 'Udade',
+        'xh' => 'Udade',
+        'pt' => 'Irmã'
     ],
 
     // ==================== COMMON ACTIONS ====================
@@ -2799,6 +2925,658 @@ define('UI_TRANSLATIONS', [
         'zu' => 'UMbuso kaNkulunkulu',
         'xh' => 'UBukumkani bukaThixo',
         'pt' => 'Reino de Deus'
+    ],
+
+    // =====================================================================
+    // NOTIFICATION TRANSLATIONS
+    // =====================================================================
+
+    // Admin notifications
+    'notif_account_approved' => [
+        'af' => '✅ Account Goedgekeur',
+        'en' => '✅ Account Approved',
+        'zu' => '✅ I-akhawunti Yamukelwe',
+        'xh' => '✅ I-akhawunti Yamkelwe',
+        'pt' => '✅ Conta Aprovada'
+    ],
+    'notif_account_approved_msg' => [
+        'af' => 'Jou rekening is goedgekeur. Jy kan nou aanmeld.',
+        'en' => 'Your account has been approved. You can now log in.',
+        'zu' => 'I-akhawunti yakho yamukelwe. Ungangena manje.',
+        'xh' => 'I-akhawunti yakho yamkelwe. Ungangena ngoku.',
+        'pt' => 'Sua conta foi aprovada. Você pode entrar agora.'
+    ],
+    'notif_account_rejected' => [
+        'af' => '❌ Account Afgekeur',
+        'en' => '❌ Account Rejected',
+        'zu' => '❌ I-akhawunti Yenqatshiwe',
+        'xh' => '❌ I-akhawunti Yaliwe',
+        'pt' => '❌ Conta Rejeitada'
+    ],
+    'notif_account_rejected_msg' => [
+        'af' => 'Jou rekening is afgekeur. Kontak admin vir meer inligting.',
+        'en' => 'Your account has been rejected. Contact admin for more information.',
+        'zu' => 'I-akhawunti yakho yenqatshiwe. Xhumana nomphathi ukuze uthole ulwazi olwengeziwe.',
+        'xh' => 'I-akhawunti yakho yaliwe. Qhagamshelana nomlawuli ukufumana ulwazi oluthe kratya.',
+        'pt' => 'Sua conta foi rejeitada. Entre em contato com o administrador para mais informações.'
+    ],
+    'notif_spouse_request' => [
+        'af' => '💍 Eggenoot Versoek',
+        'en' => '💍 Spouse Request',
+        'zu' => '💍 Isicelo Somngani',
+        'xh' => '💍 Isicelo Somlingani',
+        'pt' => '💍 Solicitação de Cônjuge'
+    ],
+    'notif_spouse_request_msg' => [
+        'af' => '{name} wil met jou as eggenoot koppel.',
+        'en' => '{name} wants to link with you as spouse.',
+        'zu' => '{name} ufuna ukuxhumana nawe njengomngani.',
+        'xh' => '{name} ufuna ukudibanisa nawe njengomlingani.',
+        'pt' => '{name} quer se conectar com você como cônjuge.'
+    ],
+    'notif_spouse_accepted' => [
+        'af' => '💕 Eggenoot Gekoppel',
+        'en' => '💕 Spouse Linked',
+        'zu' => '💕 Umngani Uxhunyiwe',
+        'xh' => '💕 Umlingani Udibanisiwe',
+        'pt' => '💕 Cônjuge Vinculado'
+    ],
+    'notif_spouse_accepted_msg' => [
+        'af' => '{name} het jou versoek aanvaar!',
+        'en' => '{name} accepted your request!',
+        'zu' => '{name} wamukele isicelo sakho!',
+        'xh' => '{name} wamkele isicelo sakho!',
+        'pt' => '{name} aceitou seu pedido!'
+    ],
+    'notif_appointment_request' => [
+        'af' => '📅 Afspraak Versoek',
+        'en' => '📅 Appointment Request',
+        'zu' => '📅 Isicelo Sesikhathi',
+        'xh' => '📅 Isicelo Sokuhlangana',
+        'pt' => '📅 Solicitação de Compromisso'
+    ],
+    'notif_appointment_request_msg' => [
+        'af' => "{name} wil 'n afspraak maak op {date} om {time}.",
+        'en' => '{name} wants to make an appointment on {date} at {time}.',
+        'zu' => '{name} ufuna ukwenza isithembiso ngo-{date} ngo-{time}.',
+        'xh' => '{name} ufuna ukwenza isigqibo ngo-{date} ngo-{time}.',
+        'pt' => '{name} quer marcar um compromisso em {date} às {time}.'
+    ],
+    'notif_appointment_confirmed' => [
+        'af' => '✅ Afspraak Bevestig',
+        'en' => '✅ Appointment Confirmed',
+        'zu' => '✅ Isikhathi Siqinisekisiwe',
+        'xh' => '✅ Ukuhlangana Kuqinisekisiwe',
+        'pt' => '✅ Compromisso Confirmado'
+    ],
+    'notif_appointment_confirmed_msg' => [
+        'af' => 'Jou afspraak is bevestig!',
+        'en' => 'Your appointment has been confirmed!',
+        'zu' => 'Isithembiso sakho siqinisekisiwe!',
+        'xh' => 'Isigqibo sakho siqinisekisiwe!',
+        'pt' => 'Seu compromisso foi confirmado!'
+    ],
+    'notif_ampte_change' => [
+        'af' => '⭐ Amp Verander',
+        'en' => '⭐ Office Changed',
+        'zu' => '⭐ Isikhundla Sishintshiwe',
+        'xh' => '⭐ Isikhundla Sitshintshiwe',
+        'pt' => '⭐ Cargo Alterado'
+    ],
+    'notif_ampte_change_msg' => [
+        'af' => 'Jou amp is verander na: {amp}',
+        'en' => 'Your office has been changed to: {amp}',
+        'zu' => 'Isikhundla sakho sishintshwe saba: {amp}',
+        'xh' => 'Isikhundla sakho sitshintshwe saba: {amp}',
+        'pt' => 'Seu cargo foi alterado para: {amp}'
+    ],
+
+    // Gospel notifications
+    'notif_new_post' => [
+        'af' => '✍️ Nuwe Plasing',
+        'en' => '✍️ New Post',
+        'zu' => '✍️ Okutsha Okufakiwe',
+        'xh' => '✍️ Okutsha Okufakiweyo',
+        'pt' => '✍️ Nova Publicação'
+    ],
+    'notif_new_post_msg' => [
+        'af' => '{name} het in {room} geplaas.',
+        'en' => '{name} posted in {room}.',
+        'zu' => '{name} ufake ku-{room}.',
+        'xh' => '{name} ufake ku-{room}.',
+        'pt' => '{name} publicou em {room}.'
+    ],
+    'notif_new_comment' => [
+        'af' => '💬 Nuwe Kommentaar',
+        'en' => '💬 New Comment',
+        'zu' => '💬 Ukuphawula Okusha',
+        'xh' => '💬 Ukuphawula Okutsha',
+        'pt' => '💬 Novo Comentário'
+    ],
+    'notif_new_comment_msg' => [
+        'af' => '{name} het op jou plasing gereageer.',
+        'en' => '{name} commented on your post.',
+        'zu' => '{name} uphawule okutsha sakho.',
+        'xh' => '{name} uphawule okutsha sakho.',
+        'pt' => '{name} comentou na sua publicação.'
+    ],
+    'notif_reaction' => [
+        'af' => '{emoji} Reaksie',
+        'en' => '{emoji} Reaction',
+        'zu' => '{emoji} Ukusabela',
+        'xh' => '{emoji} Ukusabela',
+        'pt' => '{emoji} Reação'
+    ],
+    'notif_reaction_msg' => [
+        'af' => '{name} het {emoji} op jou plasing gegee.',
+        'en' => '{name} reacted with {emoji} to your post.',
+        'zu' => '{name} usabele ngo-{emoji} ekutsha kwakho.',
+        'xh' => '{name} usabele nge-{emoji} ekutsha kwakho.',
+        'pt' => '{name} reagiu com {emoji} à sua publicação.'
+    ],
+    'notif_tagged' => [
+        'af' => '🏷️ Ge-tag',
+        'en' => '🏷️ Tagged',
+        'zu' => '🏷️ Umakiwe',
+        'xh' => '🏷️ Umakiwe',
+        'pt' => '🏷️ Marcado'
+    ],
+    'notif_tagged_msg' => [
+        'af' => "{name} het jou in 'n plasing ge-tag.",
+        'en' => '{name} tagged you in a post.',
+        'zu' => '{name} ukumake okutsha.',
+        'xh' => '{name} ukumake okutsha.',
+        'pt' => '{name} marcou você em uma publicação.'
+    ],
+
+    // Calendar notifications
+    'notif_event_reminder' => [
+        'af' => '⏰ Herinnering',
+        'en' => '⏰ Reminder',
+        'zu' => '⏰ Isikhumbuzo',
+        'xh' => '⏰ Isikhumbuzo',
+        'pt' => '⏰ Lembrete'
+    ],
+    'notif_event_reminder_msg' => [
+        'af' => '{event} begin oor 30 minute om {time}',
+        'en' => '{event} starts in 30 minutes at {time}',
+        'zu' => '{event} iqala ngemizuzu engu-30 ngo-{time}',
+        'xh' => '{event} iqala ngemizuzu engama-30 ngo-{time}',
+        'pt' => '{event} começa em 30 minutos às {time}'
+    ],
+    'notif_event_shared' => [
+        'af' => '📅 Gebeurtenis Gedeel',
+        'en' => '📅 Event Shared',
+        'zu' => '📅 Umcimbi Wabelwe',
+        'xh' => '📅 Isiganeko Sabelwe',
+        'pt' => '📅 Evento Compartilhado'
+    ],
+    'notif_event_shared_msg' => [
+        'af' => "{name} het '{event}' met jou gedeel.",
+        'en' => "{name} shared '{event}' with you.",
+        'zu' => "{name} wabelane '{event}' nawe.",
+        'xh' => "{name} wabelane '{event}' nawe.",
+        'pt' => "{name} compartilhou '{event}' com você."
+    ],
+    'notif_diary_reminder' => [
+        'af' => '📓 Dagboek Herinnering',
+        'en' => '📓 Diary Reminder',
+        'zu' => '📓 Isikhumbuzo Sedayari',
+        'xh' => '📓 Isikhumbuzo Sedayari',
+        'pt' => '📓 Lembrete do Diário'
+    ],
+    'notif_diary_reminder_msg' => [
+        'af' => 'Onthou om jou dagboek vandag by te werk!',
+        'en' => 'Remember to update your diary today!',
+        'zu' => 'Khumbula ukuvuselela idayari yakho namhlanje!',
+        'xh' => 'Khumbula ukuhlaziya idayari yakho namhlanje!',
+        'pt' => 'Lembre-se de atualizar seu diário hoje!'
+    ],
+    'notif_visit_scheduled' => [
+        'af' => '🏠 Besoek Geskeduleer',
+        'en' => '🏠 Visit Scheduled',
+        'zu' => '🏠 Ukuvakasha Kuhleliwe',
+        'xh' => '🏠 Utyelelo Lucwangcisiwe',
+        'pt' => '🏠 Visita Agendada'
+    ],
+    'notif_visit_scheduled_msg' => [
+        'af' => 'Besoek by {name} op {date}',
+        'en' => 'Visit to {name} on {date}',
+        'zu' => 'Ukuvakasha ku-{name} ngo-{date}',
+        'xh' => 'Utyelelo ku-{name} ngo-{date}',
+        'pt' => 'Visita a {name} em {date}'
+    ],
+
+    // Generic notification placeholders
+    'notif_someone' => [
+        'af' => 'Iemand',
+        'en' => 'Someone',
+        'zu' => 'Othile',
+        'xh' => 'Omnye umntu',
+        'pt' => 'Alguém'
+    ],
+
+    // =====================================================================
+    // JAVASCRIPT UI TRANSLATIONS (for gospel_media and prayers)
+    // =====================================================================
+
+    // Common actions
+    'js_edit' => [
+        'af' => 'Wysig',
+        'en' => 'Edit',
+        'zu' => 'Hlela',
+        'xh' => 'Hlela',
+        'pt' => 'Editar'
+    ],
+    'js_delete' => [
+        'af' => 'Verwyder',
+        'en' => 'Delete',
+        'zu' => 'Susa',
+        'xh' => 'Cima',
+        'pt' => 'Excluir'
+    ],
+    'js_cancel' => [
+        'af' => 'Kanselleer',
+        'en' => 'Cancel',
+        'zu' => 'Khansela',
+        'xh' => 'Rhoxisa',
+        'pt' => 'Cancelar'
+    ],
+    'js_save' => [
+        'af' => 'Stoor',
+        'en' => 'Save',
+        'zu' => 'Londoloza',
+        'xh' => 'Gcina',
+        'pt' => 'Salvar'
+    ],
+    'js_saving' => [
+        'af' => 'Stoor...',
+        'en' => 'Saving...',
+        'zu' => 'Ilondoloza...',
+        'xh' => 'Igcina...',
+        'pt' => 'Salvando...'
+    ],
+    'js_back' => [
+        'af' => 'Terug',
+        'en' => 'Back',
+        'zu' => 'Emuva',
+        'xh' => 'Emva',
+        'pt' => 'Voltar'
+    ],
+    'js_error' => [
+        'af' => 'Fout',
+        'en' => 'Error',
+        'zu' => 'Iphutha',
+        'xh' => 'Impazamo',
+        'pt' => 'Erro'
+    ],
+    'js_loading' => [
+        'af' => 'Laai...',
+        'en' => 'Loading...',
+        'zu' => 'Iyalayisha...',
+        'xh' => 'Iyalayisha...',
+        'pt' => 'Carregando...'
+    ],
+
+    // Post actions
+    'js_post_actions' => [
+        'af' => 'Post aksies',
+        'en' => 'Post actions',
+        'zu' => 'Izenzo zokuthunyelwe',
+        'xh' => 'Izenzo zeposti',
+        'pt' => 'Ações da postagem'
+    ],
+    'js_edit_post' => [
+        'af' => 'Wysig plasing',
+        'en' => 'Edit post',
+        'zu' => 'Hlela okuthunyelwe',
+        'xh' => 'Hlela iposti',
+        'pt' => 'Editar postagem'
+    ],
+    'js_confirm_delete' => [
+        'af' => 'Bevestig verwydering',
+        'en' => 'Confirm deletion',
+        'zu' => 'Qinisekisa ukususa',
+        'xh' => 'Qinisekisa ukucima',
+        'pt' => 'Confirmar exclusão'
+    ],
+    'js_cannot_undo' => [
+        'af' => 'Hierdie aksie kan nie ontdoen word nie',
+        'en' => 'This action cannot be undone',
+        'zu' => 'Lesi senzo asikwazi ukuhlehliswa',
+        'xh' => 'Esi senzo asinakubuyiselwa',
+        'pt' => 'Esta ação não pode ser desfeita'
+    ],
+    'js_deleting' => [
+        'af' => 'Verwyder...',
+        'en' => 'Deleting...',
+        'zu' => 'Iyasusa...',
+        'xh' => 'Iyacima...',
+        'pt' => 'Excluindo...'
+    ],
+    'js_post' => [
+        'af' => 'Plaas',
+        'en' => 'Post',
+        'zu' => 'Thumela',
+        'xh' => 'Thumela',
+        'pt' => 'Postar'
+    ],
+    'js_posting' => [
+        'af' => 'Plaas...',
+        'en' => 'Posting...',
+        'zu' => 'Iyathumela...',
+        'xh' => 'Iyathumela...',
+        'pt' => 'Postando...'
+    ],
+    'js_type_message' => [
+        'af' => 'Tik asseblief \'n boodskap',
+        'en' => 'Please type a message',
+        'zu' => 'Sicela ubhale umyalezo',
+        'xh' => 'Nceda bhala umyalezo',
+        'pt' => 'Por favor, digite uma mensagem'
+    ],
+    'js_error_posting' => [
+        'af' => 'Fout met plaas',
+        'en' => 'Error posting',
+        'zu' => 'Iphutha lokuthumela',
+        'xh' => 'Impazamo yokuthumela',
+        'pt' => 'Erro ao postar'
+    ],
+    'js_loading_posts' => [
+        'af' => 'Laai plasings...',
+        'en' => 'Loading posts...',
+        'zu' => 'Ilayisha izithunyelwe...',
+        'xh' => 'Ilayisha iiposti...',
+        'pt' => 'Carregando postagens...'
+    ],
+    'js_no_posts' => [
+        'af' => 'Geen plasings in hierdie kamer nie',
+        'en' => 'No posts in this room',
+        'zu' => 'Akukho okuthunyelwe kuleli kamelo',
+        'xh' => 'Akukho ziposti kule ndawo',
+        'pt' => 'Nenhuma postagem nesta sala'
+    ],
+
+    // Comments
+    'js_comments' => [
+        'af' => 'Kommentare',
+        'en' => 'Comments',
+        'zu' => 'Izimphawulo',
+        'xh' => 'Izimvo',
+        'pt' => 'Comentários'
+    ],
+    'js_write_comment' => [
+        'af' => 'Skryf \'n kommentaar...',
+        'en' => 'Write a comment...',
+        'zu' => 'Bhala ukuphawula...',
+        'xh' => 'Bhala isimvo...',
+        'pt' => 'Escreva um comentário...'
+    ],
+    'js_no_comments' => [
+        'af' => 'Geen kommentare nog nie',
+        'en' => 'No comments yet',
+        'zu' => 'Akukho zimphawulo okwamanje',
+        'xh' => 'Akukho zimvo okwangoku',
+        'pt' => 'Nenhum comentário ainda'
+    ],
+    'js_delete_comment' => [
+        'af' => 'Verwyder hierdie kommentaar?',
+        'en' => 'Delete this comment?',
+        'zu' => 'Susa lesi simphawulo?',
+        'xh' => 'Cima le simvo?',
+        'pt' => 'Excluir este comentário?'
+    ],
+    'js_edit_comment' => [
+        'af' => 'Wysig kommentaar:',
+        'en' => 'Edit comment:',
+        'zu' => 'Hlela ukuphawula:',
+        'xh' => 'Hlela isimvo:',
+        'pt' => 'Editar comentário:'
+    ],
+
+    // Photos
+    'js_add_photo' => [
+        'af' => 'Voeg foto by',
+        'en' => 'Add photo',
+        'zu' => 'Engeza isithombe',
+        'xh' => 'Yongeza umfanekiso',
+        'pt' => 'Adicionar foto'
+    ],
+    'js_remove_photo' => [
+        'af' => 'Verwyder foto',
+        'en' => 'Remove photo',
+        'zu' => 'Susa isithombe',
+        'xh' => 'Susa umfanekiso',
+        'pt' => 'Remover foto'
+    ],
+    'js_delete_photo' => [
+        'af' => 'Verwyder hierdie foto?',
+        'en' => 'Remove this photo?',
+        'zu' => 'Susa lesi sithombe?',
+        'xh' => 'Susa lo mfanekiso?',
+        'pt' => 'Remover esta foto?'
+    ],
+
+    // Events
+    'js_datetime' => [
+        'af' => 'Datum/tyd',
+        'en' => 'Date/time',
+        'zu' => 'Usuku/isikhathi',
+        'xh' => 'Umhla/ixesha',
+        'pt' => 'Data/hora'
+    ],
+    'js_place' => [
+        'af' => 'Plek',
+        'en' => 'Place',
+        'zu' => 'Indawo',
+        'xh' => 'Indawo',
+        'pt' => 'Local'
+    ],
+
+    // Prayers specific
+    'js_share' => [
+        'af' => 'Deel',
+        'en' => 'Share',
+        'zu' => 'Yabelana',
+        'xh' => 'Yabelana',
+        'pt' => 'Compartilhar'
+    ],
+    'js_update' => [
+        'af' => 'Opdateer',
+        'en' => 'Update',
+        'zu' => 'Buyekeza',
+        'xh' => 'Hlaziya',
+        'pt' => 'Atualizar'
+    ],
+    'js_choose_photo' => [
+        'af' => 'Kies foto (opsioneel)',
+        'en' => 'Choose photo (optional)',
+        'zu' => 'Khetha isithombe (okungenasidingo)',
+        'xh' => 'Khetha umfanekiso (ayimfuneko)',
+        'pt' => 'Escolher foto (opcional)'
+    ],
+    'js_prayer_shared' => [
+        'af' => 'Gebedsnood/getuienis gedeel!',
+        'en' => 'Prayer/testimony shared!',
+        'zu' => 'Umthandazo/ubufakazi buhlelwe!',
+        'xh' => 'Umthandazo/ubungqina babelwe!',
+        'pt' => 'Oração/testemunho compartilhado!'
+    ],
+    'js_could_not_post' => [
+        'af' => 'Kon nie plaas nie',
+        'en' => 'Could not post',
+        'zu' => 'Ayikwazanga ukuthumela',
+        'xh' => 'Ayikwazanga ukuthumela',
+        'pt' => 'Não foi possível postar'
+    ],
+    'js_post_updated' => [
+        'af' => 'Post opgedateer!',
+        'en' => 'Post updated!',
+        'zu' => 'Okuthunyelwe kubuyekeziwe!',
+        'xh' => 'Iposti ihlaziyiwe!',
+        'pt' => 'Postagem atualizada!'
+    ],
+    'js_could_not_update' => [
+        'af' => 'Kon nie opdateer nie',
+        'en' => 'Could not update',
+        'zu' => 'Ayikwazanga ukubuyekeza',
+        'xh' => 'Ayikwazanga ukuhlaziya',
+        'pt' => 'Não foi possível atualizar'
+    ],
+    'js_photo_removed' => [
+        'af' => 'Foto verwyder!',
+        'en' => 'Photo removed!',
+        'zu' => 'Isithombe sisusiwe!',
+        'xh' => 'Umfanekiso ususwe!',
+        'pt' => 'Foto removida!'
+    ],
+    'js_could_not_remove' => [
+        'af' => 'Kon nie verwyder nie',
+        'en' => 'Could not remove',
+        'zu' => 'Ayikwazanga ukususa',
+        'xh' => 'Ayikwazanga ukususa',
+        'pt' => 'Não foi possível remover'
+    ],
+    'js_delete_post' => [
+        'af' => 'Wis hierdie post uit?',
+        'en' => 'Delete this post?',
+        'zu' => 'Susa le posti?',
+        'xh' => 'Cima le posti?',
+        'pt' => 'Excluir esta postagem?'
+    ],
+    'js_post_deleted' => [
+        'af' => 'Post uitgewis!',
+        'en' => 'Post deleted!',
+        'zu' => 'Okuthunyelwe kususiwe!',
+        'xh' => 'Iposti icinyiwe!',
+        'pt' => 'Postagem excluída!'
+    ],
+    'js_could_not_delete' => [
+        'af' => 'Kon nie uitwis nie',
+        'en' => 'Could not delete',
+        'zu' => 'Ayikwazanga ukususa',
+        'xh' => 'Ayikwazanga ukucima',
+        'pt' => 'Não foi possível excluir'
+    ],
+    'js_loading_prayers' => [
+        'af' => 'Laai gebede...',
+        'en' => 'Loading prayers...',
+        'zu' => 'Ilayisha imithandazo...',
+        'xh' => 'Ilayisha imithandazo...',
+        'pt' => 'Carregando orações...'
+    ],
+    'js_no_prayers' => [
+        'af' => 'Geen gebede/getuienisse gevind nie',
+        'en' => 'No prayers/testimonies found',
+        'zu' => 'Akukho mithandazo/ubufakazi okutholiwe',
+        'xh' => 'Akukho mithandazo/ubungqina bufunyenweyo',
+        'pt' => 'Nenhuma oração/testemunho encontrado'
+    ],
+    'js_could_not_load' => [
+        'af' => 'Kon nie laai nie',
+        'en' => 'Could not load',
+        'zu' => 'Ayikwazanga ukulayisha',
+        'xh' => 'Ayikwazanga ukulayisha',
+        'pt' => 'Não foi possível carregar'
+    ],
+    'js_prayer' => [
+        'af' => 'Gebed',
+        'en' => 'Prayer',
+        'zu' => 'Umthandazo',
+        'xh' => 'Umthandazo',
+        'pt' => 'Oração'
+    ],
+    'js_testimony' => [
+        'af' => 'Getuienis',
+        'en' => 'Testimony',
+        'zu' => 'Ubufakazi',
+        'xh' => 'Ubungqina',
+        'pt' => 'Testemunho'
+    ],
+    'js_comment_posted' => [
+        'af' => 'Kommentaar geplaas!',
+        'en' => 'Comment posted!',
+        'zu' => 'Ukuphawula kuthunyelwe!',
+        'xh' => 'Isimvo sithunyelelwe!',
+        'pt' => 'Comentário postado!'
+    ],
+    'js_comment_updated' => [
+        'af' => 'Kommentaar opgedateer!',
+        'en' => 'Comment updated!',
+        'zu' => 'Ukuphawula kubuyekeziwe!',
+        'xh' => 'Isimvo sihlaziyiwe!',
+        'pt' => 'Comentário atualizado!'
+    ],
+    'js_comment_deleted' => [
+        'af' => 'Kommentaar uitgewis!',
+        'en' => 'Comment deleted!',
+        'zu' => 'Ukuphawula kususiwe!',
+        'xh' => 'Isimvo sicinyiwe!',
+        'pt' => 'Comentário excluído!'
+    ],
+    'js_remove' => [
+        'af' => 'Verwyder',
+        'en' => 'Remove',
+        'zu' => 'Susa',
+        'xh' => 'Susa',
+        'pt' => 'Remover'
+    ],
+    // Rooms menu translations
+    'js_rooms' => [
+        'af' => 'Kamers',
+        'en' => 'Rooms',
+        'zu' => 'Amagumbi',
+        'xh' => 'Amagumbi',
+        'pt' => 'Salas'
+    ],
+    'js_manage_rooms' => [
+        'af' => 'Bestuur Kamers',
+        'en' => 'Manage Rooms',
+        'zu' => 'Phatha Amagumbi',
+        'xh' => 'Lawula Amagumbi',
+        'pt' => 'Gerenciar Salas'
+    ],
+    'js_loading_rooms' => [
+        'af' => 'Laai kamers…',
+        'en' => 'Loading rooms…',
+        'zu' => 'Iyalayisha amagumbi…',
+        'xh' => 'Ilayisha amagumbi…',
+        'pt' => 'Carregando salas…'
+    ],
+    'js_no_rooms' => [
+        'af' => 'Geen kamers nie',
+        'en' => 'No rooms',
+        'zu' => 'Awekho amagumbi',
+        'xh' => 'Akukho magumbi',
+        'pt' => 'Nenhuma sala'
+    ],
+    'js_automatic' => [
+        'af' => 'Outomaties',
+        'en' => 'Automatic',
+        'zu' => 'Okuzenzakalelayo',
+        'xh' => 'Ngokuzenzekelayo',
+        'pt' => 'Automático'
+    ],
+    'js_auto' => [
+        'af' => 'Outo',
+        'en' => 'Auto',
+        'zu' => 'Outo',
+        'xh' => 'Outo',
+        'pt' => 'Auto'
+    ],
+    'js_joined_section' => [
+        'af' => 'Gekose',
+        'en' => 'Joined',
+        'zu' => 'Kujoyinwe',
+        'xh' => 'Kujoyinwe',
+        'pt' => 'Inscritas'
+    ],
+    'js_joined_badge' => [
+        'af' => 'Gekies',
+        'en' => 'Joined',
+        'zu' => 'Kujoyinwe',
+        'xh' => 'Kujoyinwe',
+        'pt' => 'Inscrita'
     ]
 ]);
 

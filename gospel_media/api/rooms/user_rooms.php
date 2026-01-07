@@ -3,6 +3,7 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
 require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 3) . '/includes/languages.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
@@ -11,6 +12,17 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
 }
 
 $userId = (int)$_SESSION['user_id'];
+$pageLang = $_SESSION['language'] ?? 'af';
+
+// Helper to format room display name
+function formatRoomName(string $type, string $name, string $lang): string {
+    $t = strtolower($type);
+    if ($t === 'gemeente') return __t('congregation', $lang) . ' ' . $name;
+    if ($t === 'opsienerskap') return __t('oversight', $lang) . ' ' . $name;
+    if ($t === 'jeug') return __t('youth', $lang) . ' ' . $name;
+    if ($t === 'sondagskool') return __t('sunday_school', $lang) . ' ' . $name;
+    return $name ?: __t('room', $lang);
+}
 
 try {
     // Get user info with birthdate for age calculation
@@ -134,7 +146,32 @@ try {
         
         $joinedRooms = $st->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
+    // Apply translations to room display names
+    foreach ($autoRooms as &$room) {
+        $type = strtolower($room['type'] ?? '');
+        // Use congregation_name for gemeente, town_name for others
+        if ($type === 'gemeente') {
+            $name = $room['congregation_name'] ?? $room['name'] ?? '';
+        } else {
+            $name = $room['town_name'] ?? $room['name'] ?? '';
+        }
+        $room['display_name'] = formatRoomName($room['type'] ?? '', $name, $pageLang);
+    }
+    unset($room);
+
+    foreach ($joinedRooms as &$room) {
+        $type = strtolower($room['type'] ?? '');
+        // Use congregation_name for gemeente, town_name for others
+        if ($type === 'gemeente') {
+            $name = $room['congregation_name'] ?? $room['name'] ?? '';
+        } else {
+            $name = $room['town_name'] ?? $room['name'] ?? '';
+        }
+        $room['display_name'] = formatRoomName($room['type'] ?? '', $name, $pageLang);
+    }
+    unset($room);
+
     echo json_encode([
         'auto' => $autoRooms,
         'joined' => $joinedRooms
