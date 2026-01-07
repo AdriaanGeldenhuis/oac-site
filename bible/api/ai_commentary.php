@@ -179,53 +179,75 @@ function buildPrompt(string $verseRef, string $verseText, array $context, string
         $rules = file_get_contents(AI_RULES_FILE);
     }
 
-    // System prompt
+    // System prompt - STRICT: only events, NO meanings
     $systemPrompt = $lang === 'af'
-        ? "Jy is 'n Bybelse assistent wat die konteks en gebeure rondom Bybelverse verduidelik.
-           Jy mag SLEGS feite uit die Bybelteks self gebruik - NOOIT inligting fabriseer nie.
-           Antwoord in Afrikaans. Hou dit kort en bondig (3-4 paragrawe maksimum).
+        ? "Jy is 'n Bybel-verslaggewer. Jy beskryf NET wat GEBEUR in die teks - soos 'n nuusverslaggewer.
 
-           REËLS:
+           STRENG VERBODE:
+           - GEEN betekenis of interpretasie
+           - GEEN 'dit beteken...' of 'die les is...'
+           - GEEN geestelike toepassings
+           - GEEN teologiese verduidelikings
+
+           JY MAG SLEGS:
+           - Beskryf WIE daar is
+           - Beskryf WAT hulle doen/sê
+           - Beskryf WAAR dit gebeur
+           - Beskryf wat VOOR en NA gebeur
+
+           Gebruik die presiese formaat in die reëls.
+
            {$rules}"
-        : "You are a Bible assistant that explains the context and events around Bible verses.
-           You may ONLY use facts from the Bible text itself - NEVER fabricate information.
-           Answer in English. Keep it brief and concise (3-4 paragraphs maximum).
+        : "You are a Bible reporter. You describe ONLY what HAPPENS in the text - like a news reporter.
 
-           RULES:
+           STRICTLY FORBIDDEN:
+           - NO meanings or interpretations
+           - NO 'this means...' or 'the lesson is...'
+           - NO spiritual applications
+           - NO theological explanations
+
+           YOU MAY ONLY:
+           - Describe WHO is there
+           - Describe WHAT they do/say
+           - Describe WHERE it happens
+           - Describe what happens BEFORE and AFTER
+
+           Use the exact format in the rules.
+
            {$rules}";
 
     // Build context string
     $contextText = implode("\n", $context);
 
-    // User prompt
+    // User prompt - ask for events only
     $userPrompt = $lang === 'af'
         ? "GESELEKTEERDE VERS: {$verseRef}
 \"{$verseText}\"
 
-OMLIGGENDE VERSE VIR KONTEKS:
+OMLIGGENDE VERSE:
 {$contextText}
 
-Verduidelik asseblief kortliks wat hier gebeur:
-1. Waar en wanneer vind dit plaas?
-2. Wie is betrokke? Wie praat?
-3. Wat het voor hierdie vers gebeur?
-4. Wat beteken hierdie vers in eenvoudige terme?
+Beskryf NET wat hier GEBEUR (geen betekenis nie):
 
-Onthou: Gebruik SLEGS wat in die Bybelteks staan. Moenie inligting byvoeg nie."
+**PLEK:** Waar gebeur dit?
+**WIE:** Wie is daar? Wie praat?
+**WAT GEBEUR VOOR:** Wat het net voor dit gebeur?
+**WAT GEBEUR NOU:** Wat gebeur/word gesê in hierdie vers?
+**WAT GEBEUR DAARNA:** Wat gebeur daarna?"
 
         : "SELECTED VERSE: {$verseRef}
 \"{$verseText}\"
 
-SURROUNDING VERSES FOR CONTEXT:
+SURROUNDING VERSES:
 {$contextText}
 
-Please briefly explain what is happening here:
-1. Where and when does this take place?
-2. Who is involved? Who is speaking?
-3. What happened before this verse?
-4. What does this verse mean in simple terms?
+Describe ONLY what HAPPENS here (no meanings):
 
-Remember: Use ONLY what is written in the Bible text. Do not add information.";
+**PLACE:** Where does this happen?
+**WHO:** Who is there? Who is speaking?
+**BEFORE:** What happened just before this?
+**NOW:** What happens/is said in this verse?
+**AFTER:** What happens next?";
 
     return [$systemPrompt, $userPrompt];
 }
