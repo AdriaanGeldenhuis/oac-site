@@ -214,7 +214,12 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
  * @return array Result with success status
  */
 function sendPushToUser(int $userId, string $title, string $body, array $data = []): array {
-    global $pdo;
+    // Use db() function if available, otherwise fall back to global $pdo
+    if (function_exists('db')) {
+        $pdo = db();
+    } else {
+        global $pdo;
+    }
 
     try {
         // Get all tokens for this user

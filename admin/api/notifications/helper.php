@@ -3,8 +3,8 @@
 // /admin/api/notifications/helper.php - Helper functions
 // =====================================================================
 
-// Include database config for $pdo (needed by FCM functions)
-require_once __DIR__ . '/../../../security/config.php';
+// Include database for FCM functions
+require_once __DIR__ . '/../../../lib/db.php';
 
 // Include FCM functions
 require_once __DIR__ . '/../../config/fcm_config.php';
