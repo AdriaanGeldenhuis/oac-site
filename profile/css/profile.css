@@ -124,6 +124,25 @@
   box-shadow: var(--shadow-xl), var(--glow-rosegold);
 }
 
+/* ===== INITIALS AVATAR ===== */
+.profile-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(183, 110, 121, 0.2) 0%, rgba(183, 110, 121, 0.1) 100%);
+  font-family: 'Parisienne', cursive;
+  font-size: 3rem;
+  font-weight: 400;
+  color: var(--color-rosegold);
+  text-shadow: 0 0 20px rgba(183, 110, 121, 0.5);
+  letter-spacing: 2px;
+}
+
+.profile-avatar-initials-sm {
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+}
+
 .profile-hero-info {
   text-align: center;
   width: 100%;
