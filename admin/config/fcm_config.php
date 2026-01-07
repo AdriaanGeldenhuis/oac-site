@@ -214,12 +214,8 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
  * @return array Result with success status
  */
 function sendPushToUser(int $userId, string $title, string $body, array $data = []): array {
-    // Use db() function if available, otherwise fall back to global $pdo
-    if (function_exists('db')) {
-        $pdo = db();
-    } else {
-        global $pdo;
-    }
+    // Use global $pdo (from auth_gate.php / security/config.php)
+    global $pdo;
 
     try {
         // Get all tokens for this user

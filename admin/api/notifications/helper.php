@@ -3,10 +3,7 @@
 // /admin/api/notifications/helper.php - Helper functions
 // =====================================================================
 
-// Include database for FCM functions
-require_once __DIR__ . '/../../../lib/db.php';
-
-// Include FCM functions
+// Include FCM functions (uses global $pdo from auth_gate.php)
 require_once __DIR__ . '/../../config/fcm_config.php';
 
 function createAdminNotification($userId, $type, $data = []) {
