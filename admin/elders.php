@@ -276,6 +276,28 @@ function t(string $key): string {
             background: linear-gradient(135deg, #9c27b0, #7b1fa2);
             color: white;
             border: none;
+            position: relative;
+            min-width: 100px;
+        }
+
+        .btn-ai.loading {
+            color: transparent;
+            pointer-events: none;
+        }
+
+        .btn-ai.loading::after {
+            content: '⏳';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .editor-wrap {
@@ -598,6 +620,9 @@ function t(string $key): string {
             <button class="tool-btn btn-bible" id="btn-verse">
                 📖 <?= t('add_verse') ?>
             </button>
+            <button class="tool-btn btn-ai" id="btn-translate">
+                🌐 <?= t('translate') ?>
+            </button>
             <button class="tool-btn btn-ai" id="btn-improve">
                 ✨ <?= t('improve') ?>
             </button>
@@ -669,9 +694,12 @@ function t(string $key): string {
                     error: 'Fout',
                     improving: 'Besig om te verbeter...',
                     improved: 'Verbeter!',
+                    translating: 'Besig om te vertaal...',
+                    translated: 'Vertaal!',
                     selectVerse: 'Kies alle velde',
                     verseInserted: 'Vers ingevoeg!',
-                    noBible: 'Bybel nie beskikbaar vir hierdie taal nie'
+                    noBible: 'Bybel nie beskikbaar vir hierdie taal nie',
+                    selectTargetLang: 'Kies eers \'n teikentaal'
                 },
                 en: {
                     saving: 'Saving...',
@@ -679,9 +707,12 @@ function t(string $key): string {
                     error: 'Error',
                     improving: 'Improving...',
                     improved: 'Improved!',
+                    translating: 'Translating...',
+                    translated: 'Translated!',
                     selectVerse: 'Select all fields',
                     verseInserted: 'Verse inserted!',
-                    noBible: 'Bible not available for this language'
+                    noBible: 'Bible not available for this language',
+                    selectTargetLang: 'Select a target language first'
                 },
                 zu: {
                     saving: 'Ukulondoloza...',
@@ -689,9 +720,12 @@ function t(string $key): string {
                     error: 'Iphutha',
                     improving: 'Ukuthuthukisa...',
                     improved: 'Kuthuthukisiwe!',
+                    translating: 'Ukuhumusha...',
+                    translated: 'Kuhunyushiwe!',
                     selectVerse: 'Khetha zonke izindawo',
                     verseInserted: 'Ivesi lifakiwe!',
-                    noBible: 'IBhayibheli alitholakali ngalolu limi'
+                    noBible: 'IBhayibheli alitholakali ngalolu limi',
+                    selectTargetLang: 'Khetha ulimi oluqondwe kuqala'
                 },
                 xh: {
                     saving: 'Ukugcina...',
@@ -699,9 +733,12 @@ function t(string $key): string {
                     error: 'Impazamo',
                     improving: 'Ukuphucula...',
                     improved: 'Kuphuculiwe!',
+                    translating: 'Ukuguqulela...',
+                    translated: 'Kuguqulelwe!',
                     selectVerse: 'Khetha zonke iindawo',
                     verseInserted: 'Ivesi lifakiwe!',
-                    noBible: 'IBhayibhile ayifumaneki ngolu lwimi'
+                    noBible: 'IBhayibhile ayifumaneki ngolu lwimi',
+                    selectTargetLang: 'Khetha ulwimi ekujoliswe kulo kuqala'
                 },
                 pt: {
                     saving: 'Salvando...',
@@ -709,9 +746,12 @@ function t(string $key): string {
                     error: 'Erro',
                     improving: 'Melhorando...',
                     improved: 'Melhorado!',
+                    translating: 'Traduzindo...',
+                    translated: 'Traduzido!',
                     selectVerse: 'Selecione todos os campos',
                     verseInserted: 'Versículo inserido!',
-                    noBible: 'Bíblia não disponível para este idioma'
+                    noBible: 'Bíblia não disponível para este idioma',
+                    selectTargetLang: 'Selecione um idioma de destino primeiro'
                 }
             }
         };
@@ -839,6 +879,21 @@ function t(string $key): string {
                 }
             };
             
+            // Helper to get verses with numbers (filter out headers with 'h')
+            function getVersesWithNumbers(book, chapter) {
+                if (!bible || !bible[book] || !bible[book][chapter]) return [];
+                const raw = bible[book][chapter];
+                const verses = [];
+                let verseNum = 1;
+                for (const item of raw) {
+                    if (item.v) {
+                        verses.push({ n: verseNum, v: item.v });
+                        verseNum++;
+                    }
+                }
+                return verses;
+            }
+
             document.getElementById('v-chapter').onchange = function() {
                 const book = document.getElementById('v-book').value;
                 const chapter = this.value;
@@ -846,14 +901,15 @@ function t(string $key): string {
                 const toSel = document.getElementById('v-to');
                 fromSel.innerHTML = '<option value="">Kies...</option>';
                 toSel.innerHTML = '<option value="">Kies...</option>';
-                
-                if (book && chapter && bible[book][chapter]) {
-                    bible[book][chapter].filter(v => v.n).forEach(v => {
+
+                if (book && chapter) {
+                    const verses = getVersesWithNumbers(book, chapter);
+                    verses.forEach(v => {
                         const opt1 = document.createElement('option');
                         opt1.value = v.n;
                         opt1.textContent = v.n;
                         fromSel.appendChild(opt1);
-                        
+
                         const opt2 = document.createElement('option');
                         opt2.value = v.n;
                         opt2.textContent = v.n;
@@ -868,18 +924,17 @@ function t(string $key): string {
                 const from = parseInt(document.getElementById('v-from').value);
                 const to = parseInt(document.getElementById('v-to').value) || from;
                 const preview = document.getElementById('v-preview');
-                
+
                 if (!book || !chapter || !from) {
                     preview.innerHTML = '';
                     return;
                 }
-                
-                const verses = bible[book][chapter].filter(v => v.n);
+
+                const verses = getVersesWithNumbers(book, chapter);
                 let html = `<strong>${book} ${chapter}:${from}${to > from ? '-' + to : ''}</strong><br><br>`;
                 verses.forEach(v => {
-                    const num = parseInt(v.n);
-                    if (num >= from && num <= to) {
-                        html += `<sup>${num}</sup> ${v.v} `;
+                    if (v.n >= from && v.n <= to) {
+                        html += `<sup>${v.n}</sup> ${v.v} `;
                     }
                 });
                 preview.innerHTML = html;
@@ -893,42 +948,82 @@ function t(string $key): string {
                 const chapter = document.getElementById('v-chapter').value;
                 const from = parseInt(document.getElementById('v-from').value);
                 const to = parseInt(document.getElementById('v-to').value) || from;
-                
+
                 if (!book || !chapter || !from) {
                     alert(T('selectVerse'));
                     return;
                 }
-                
-                const verses = bible[book][chapter].filter(v => v.n);
+
+                const verses = getVersesWithNumbers(book, chapter);
                 let html = `<p class="vref">${book} ${chapter}:${from}${to > from ? '-' + to : ''}</p><p class="vtxt">`;
                 verses.forEach(v => {
-                    const num = parseInt(v.n);
-                    if (num >= from && num <= to) {
-                        html += `<sup>${num}</sup> ${v.v} `;
+                    if (v.n >= from && v.n <= to) {
+                        html += `<sup>${v.n}</sup> ${v.v} `;
                     }
                 });
                 html += '</p>';
-                
+
                 execCmd('insertHTML', html);
                 document.getElementById('verse-modal').classList.remove('show');
                 showStatus('saved', T('verseInserted'));
             };
             
+            // Translate to another language
+            document.getElementById('btn-translate').onclick = async () => {
+                const content = currentEditor.innerHTML;
+                if (!content.trim()) return;
+
+                // Only translate between AF and EN for now
+                const fromLang = CONFIG.lang;
+                const toLang = (fromLang === 'af') ? 'en' : 'af';
+                const targetEditor = editors[toLang];
+
+                if (!targetEditor) {
+                    alert(T('selectTargetLang'));
+                    return;
+                }
+
+                const btn = document.getElementById('btn-translate');
+                btn.classList.add('loading');
+
+                try {
+                    const fd = new URLSearchParams();
+                    fd.append('content', content);
+                    fd.append('from_lang', fromLang);
+
+                    const res = await fetch('/admin/api/ai/translate.php', { method: 'POST', body: fd });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        targetEditor.innerHTML = data.translated;
+                        showStatus('saved', T('translated'));
+                        hasChanges = true;
+                    } else {
+                        throw new Error(data.error);
+                    }
+                } catch(e) {
+                    showStatus('error', e.message);
+                } finally {
+                    btn.classList.remove('loading');
+                }
+            };
+
             // Improve with AI
             document.getElementById('btn-improve').onclick = async () => {
                 const content = currentEditor.innerHTML;
                 if (!content.trim()) return;
-                
-                showStatus('saving', T('improving'));
-                
+
+                const btn = document.getElementById('btn-improve');
+                btn.classList.add('loading');
+
                 try {
                     const fd = new URLSearchParams();
                     fd.append('content', content);
                     fd.append('lang', CONFIG.lang);
-                    
+
                     const res = await fetch('/admin/api/ai/improve.php', { method: 'POST', body: fd });
                     const data = await res.json();
-                    
+
                     if (data.success) {
                         currentEditor.innerHTML = data.improved;
                         showStatus('saved', T('improved'));
@@ -938,6 +1033,8 @@ function t(string $key): string {
                     }
                 } catch(e) {
                     showStatus('error', e.message);
+                } finally {
+                    btn.classList.remove('loading');
                 }
             };
             
