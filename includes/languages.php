@@ -1495,11 +1495,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Adicionar nota'
     ],
     'ask_ai' => [
-        'af' => 'Vra AI',
-        'en' => 'Ask AI',
-        'zu' => 'Buza i-AI',
-        'xh' => 'Buza i-AI',
-        'pt' => 'Perguntar à IA'
+        'af' => 'Vra AI oor gedeelte',
+        'en' => 'Ask AI about passage',
+        'zu' => 'Buza i-AI ngendima',
+        'xh' => 'Buza i-AI ngecandelo',
+        'pt' => 'Perguntar à IA sobre passagem'
     ],
     'cross_refs' => [
         'af' => 'Kruisverwysings',

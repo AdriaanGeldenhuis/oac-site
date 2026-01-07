@@ -1295,32 +1295,21 @@
       alert(state.lang === 'en' ? 'Select a verse first!' : 'Kies eers \'n vers!');
       return;
     }
-    
+
     const verse = document.querySelector(`[data-ref="${state.selectedVerse}"]`);
     const verseText = verse?.querySelector('.bible-verse-text')?.textContent || '';
     const parsed = parseRef(state.selectedVerse);
     const displayName = state.lang === 'af' ? (EN_TO_AF_BOOKS[parsed.bookEN] || parsed.bookEN) : parsed.bookEN;
     const verseRef = `${displayName} ${parsed.chapter}:${parsed.verse}`;
-    
-    const question = prompt(
-      state.lang === 'af' 
-        ? 'Vra AI \'n vraag oor hierdie vers (of los leeg vir algemene verduideliking):' 
-        : 'Ask AI a question about this verse (or leave empty for general explanation):'
-    );
-    
-    if (question === null) {
-      hideContextMenu();
-      return;
-    }
-    
+
     hideContextMenu();
-    
+
     if (!els.aiPanel || !els.aiOutput) return;
-    
-    const loadingMsg = state.lang === 'af' ? 'AI dink...' : 'AI thinking...';
+
+    const loadingMsg = state.lang === 'af' ? 'AI verduidelik gedeelte...' : 'AI explaining passage...';
     els.aiOutput.innerHTML = `<div class="bible-loading">${loadingMsg}</div>`;
     showPanel(els.aiPanel);
-    
+
     try {
       const res = await fetch('/bible/api/ai_commentary.php', {
         method: 'POST',
@@ -1329,18 +1318,22 @@
         body: JSON.stringify({
           verse_ref: verseRef,
           verse_text: verseText,
-          question: question,
+          book_en: parsed.bookEN,
+          chapter: parsed.chapter,
+          verse: parsed.verse,
           lang: state.lang
         })
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
+        // Format the answer with proper line breaks
+        const formattedAnswer = data.answer.replace(/\n/g, '<br>');
         els.aiOutput.innerHTML = `
           <div class="bible-ai-response">
             <div class="bible-ai-verse-ref">${esc(verseRef)}</div>
-            <div class="bible-ai-answer">${esc(data.answer)}</div>
+            <div class="bible-ai-answer">${formattedAnswer}</div>
           </div>
         `;
       } else {
