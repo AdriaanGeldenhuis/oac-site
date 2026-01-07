@@ -5,44 +5,45 @@
 
 /* ===== ROOT VARIABLES - DARK THEME (DEFAULT) ===== */
 :root {
-  --color-black: #000000;
+  /* Glossy charcoal - not pure black */
+  --color-black: #0a0a0a;
   --color-glossy-black: #0a0a0a;
-  --color-charcoal: #1a1a1a;
-  --color-charcoal-light: #2a2a2a;
-  --color-rosegold: #f3c3b1;
-  --color-rosegold-light: #d4939e;
-  --color-rosegold-dark: #9a5a64;
+  --color-charcoal: #111111;
+  --color-charcoal-light: #161616;
+  --color-rosegold: #e8b4a8;
+  --color-rosegold-light: #f0c9bf;
+  --color-rosegold-dark: #c99485;
   --color-peach: #f5d5c8;
-  --color-peach-light: #f8d8c9;
-  --color-silver: #c0c0c0;
-  --color-silver-dark: #8a8a8a;
+  --color-peach-light: #fae8e0;
+  --color-silver: #b8b8b8;
+  --color-silver-dark: #808080;
   --color-white: #ffffff;
-  
-  --bg-gradient-start: #000000;
-  --bg-gradient-mid: #0a0a0a;
-  --bg-gradient-end: #000000;
+
+  --bg-gradient-start: #0a0a0a;
+  --bg-gradient-mid: #111111;
+  --bg-gradient-end: #0a0a0a;
   --bg-glow-1: rgba(183, 110, 121, 0.05);
   --bg-glow-2: rgba(243, 195, 177, 0.03);
   
-  --card-bg-start: rgba(10, 10, 10, 0.85);
-  --card-bg-end: rgba(26, 26, 26, 0.75);
-  --card-border: rgba(183, 110, 121, 0.3);
-  --card-shadow: 0 12px 48px rgba(0, 0, 0, 0.9);
-  
-  --section-bg-start: rgba(26, 26, 26, 0.95);
-  --section-bg-end: rgba(42, 42, 42, 0.85);
-  --section-border: rgba(192, 192, 192, 0.2);
-  --section-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-  
-  --text-primary: #f5d5c8;
-  --text-secondary: #c0c0c0;
-  --text-accent: #f3c3b1;
-  --text-muted: #8a8a8a;
-  
-  --btn-bg-start: #2a2a2a;
-  --btn-bg-end: #1a1a1a;
-  --btn-border: #8a8a8a;
-  --btn-text: #c0c0c0;
+  --card-bg-start: rgba(17, 17, 17, 0.95);
+  --card-bg-end: rgba(22, 22, 22, 0.9);
+  --card-border: rgba(232, 180, 168, 0.15);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+
+  --section-bg-start: rgba(22, 22, 22, 0.95);
+  --section-bg-end: rgba(28, 28, 28, 0.9);
+  --section-border: rgba(255, 255, 255, 0.06);
+  --section-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+
+  --text-primary: #f5ebe6;
+  --text-secondary: #c8c0ba;
+  --text-accent: #e8b4a8;
+  --text-muted: #7a7570;
+
+  --btn-bg-start: #1c1c1c;
+  --btn-bg-end: #161616;
+  --btn-border: #7a7570;
+  --btn-text: #c8c0ba;
   
   --font-heading: 'Parisienne', cursive;
   --font-body: system-ui, -apple-system, sans-serif;
@@ -63,46 +64,47 @@
   --header-height: 60px;
 }
 
-/* ===== LIGHT THEME - COMPLETE INVERSION ===== */
+/* ===== LIGHT THEME ===== */
 [data-theme="light"] {
-  --color-black: #ffffff;
-  --color-glossy-black: #f8f8f8;
-  --color-charcoal: #f0f0f0;
-  --color-charcoal-light: #e0e0e0;
-  --color-rosegold: #c97d8a;
-  --color-rosegold-light: #d4939e;
-  --color-rosegold-dark: #9a5a64;
-  --color-peach: #000000;
-  --color-peach-light: #1a1a1a;
-  --color-silver: #2a2a2a;
-  --color-silver-dark: #4a4a4a;
-  --color-white: #000000;
-  
-  --bg-gradient-start: #ffffff;
-  --bg-gradient-mid: #f8f8f8;
-  --bg-gradient-end: #ffffff;
-  --bg-glow-1: rgba(183, 110, 121, 0.08);
-  --bg-glow-2: rgba(243, 195, 177, 0.05);
-  
-  --card-bg-start: rgba(255, 255, 255, 0.95);
-  --card-bg-end: rgba(248, 248, 248, 0.90);
-  --card-border: rgba(183, 110, 121, 0.4);
-  --card-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-  
-  --section-bg-start: rgba(255, 255, 255, 0.95);
-  --section-bg-end: rgba(248, 248, 248, 0.90);
-  --section-border: rgba(106, 106, 106, 0.3);
-  --section-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  
-  --text-primary: #000000;
-  --text-secondary: #1a1a1a;
-  --text-accent: #c97d8a;
-  --text-muted: #6a6a6a;
-  
-  --btn-bg-start: #f0f0f0;
-  --btn-bg-end: #e0e0e0;
-  --btn-border: #c0c0c0;
-  --btn-text: #2a2a2a;
+  /* Warm white backgrounds */
+  --color-black: #faf8f6;
+  --color-glossy-black: #faf8f6;
+  --color-charcoal: #f5f2ef;
+  --color-charcoal-light: #ffffff;
+  --color-rosegold: #c9847a;
+  --color-rosegold-light: #d99e95;
+  --color-rosegold-dark: #a86860;
+  --color-peach: #1a1816;
+  --color-peach-light: #2a2826;
+  --color-silver: #4a4a4a;
+  --color-silver-dark: #6a6a6a;
+  --color-white: #1a1816;
+
+  --bg-gradient-start: #faf8f6;
+  --bg-gradient-mid: #ffffff;
+  --bg-gradient-end: #faf8f6;
+  --bg-glow-1: rgba(169, 104, 96, 0.08);
+  --bg-glow-2: rgba(169, 104, 96, 0.05);
+
+  --card-bg-start: rgba(255, 255, 255, 0.98);
+  --card-bg-end: rgba(250, 248, 246, 0.95);
+  --card-border: rgba(169, 104, 96, 0.2);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  --section-bg-start: rgba(255, 255, 255, 0.98);
+  --section-bg-end: rgba(245, 242, 239, 0.95);
+  --section-border: rgba(0, 0, 0, 0.06);
+  --section-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+
+  --text-primary: #1a1816;
+  --text-secondary: #3d3835;
+  --text-accent: #c9847a;
+  --text-muted: #6a6560;
+
+  --btn-bg-start: #f5f2ef;
+  --btn-bg-end: #ffffff;
+  --btn-border: #d0ccc8;
+  --btn-text: #3d3835;
   
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
@@ -367,7 +369,7 @@ html {
 /* ===== VERSES ===== */
 .bible-verse {
   position: relative;
-  padding: 2px 15px;
+  padding: 8px 70px 8px 15px; /* Extra right padding for indicators */
   margin: 8px 0;
   border-radius: 8px;
   cursor: pointer;
@@ -415,6 +417,11 @@ html {
   font-weight: 300;
   letter-spacing: 0.3px;
   transition: var(--transition);
+}
+
+/* Light mode - darker verse text for readability */
+[data-theme="light"] .bible-verse-text {
+  color: #111111 !important;
 }
 
 /* ===== HIGHLIGHTS ===== */
