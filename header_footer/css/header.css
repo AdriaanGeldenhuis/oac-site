@@ -770,8 +770,8 @@ body.ghf-open .ghf-drawer {
   }
 
   .ghf-nav-link {
-    font-size: clamp(1rem, 2.2vh, 1.4rem);
-    padding: 10px 20px;
+    font-size: clamp(1.3rem, 3vh, 1.8rem);
+    padding: 14px 20px;
   }
 
   .ghf-drawer-title {
@@ -795,7 +795,9 @@ body.ghf-open .ghf-drawer {
   .ghf-nav-list {
     max-height: calc(100vh - 80px);
     max-height: calc(100dvh - 80px);
-    padding: 5px 0;
+    padding: 0;
+    gap: 0;
+    justify-content: center;
   }
 }
 
@@ -806,8 +808,8 @@ body.ghf-open .ghf-drawer {
   }
 
   .ghf-nav-link {
-    font-size: clamp(0.95rem, 2vh, 1.2rem);
-    padding: 8px 15px;
+    font-size: clamp(1.2rem, 2.8vh, 1.6rem);
+    padding: 12px 15px;
   }
 
   .ghf-drawer-title {
@@ -821,6 +823,8 @@ body.ghf-open .ghf-drawer {
   .ghf-nav-list {
     max-height: calc(100vh - 70px);
     max-height: calc(100dvh - 70px);
+    gap: 0;
+    justify-content: center;
   }
 }
 
