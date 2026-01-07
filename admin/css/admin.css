@@ -411,6 +411,23 @@ html {
   transition: var(--transition);
 }
 
+.admin-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(183, 110, 121, 0.2) 0%, rgba(183, 110, 121, 0.1) 100%);
+  font-family: 'Parisienne', cursive;
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: var(--color-rosegold);
+  text-shadow: 0 0 15px rgba(183, 110, 121, 0.5);
+  letter-spacing: 2px;
+}
+
+[data-theme="light"] .admin-avatar-initials {
+  background: linear-gradient(135deg, rgba(183, 110, 121, 0.15) 0%, rgba(183, 110, 121, 0.08) 100%);
+}
+
 .admin-profile-info h3 {
   font-size: 1.5rem;
   color: var(--color-rosegold);

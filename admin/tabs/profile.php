@@ -1,7 +1,16 @@
 <?php
 $fullName = trim(($currentUser['name'] ?? '') . ' ' . ($currentUser['surname'] ?? ''));
-$avatar = !empty($currentUser['photo']) ? $currentUser['photo'] : '/assets/img/avatar-default.png';
+$hasPhoto = !empty($currentUser['photo']);
 $ampName = $currentUser['amp_name'] ?? '';
+
+// Generate initials
+$nameParts = preg_split('/\s+/', $fullName);
+$profileInitials = '';
+if (count($nameParts) >= 2) {
+    $profileInitials = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
+} elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
+    $profileInitials = strtoupper(mb_substr($nameParts[0], 0, 2));
+}
 ?>
 <div class="admin-section admin-stack">
   <div class="admin-section-header">
@@ -15,7 +24,11 @@ $ampName = $currentUser['amp_name'] ?? '';
   </div>
 
   <div class="admin-profile-card">
-    <img class="admin-avatar" src="<?= htmlspecialchars($avatar) ?>" alt="<?= htmlspecialchars($fullName) ?>">
+    <?php if ($hasPhoto): ?>
+    <img class="admin-avatar" src="<?= htmlspecialchars($currentUser['photo']) ?>" alt="<?= htmlspecialchars($fullName) ?>">
+    <?php else: ?>
+    <div class="admin-avatar admin-avatar-initials"><?= htmlspecialchars($profileInitials) ?></div>
+    <?php endif; ?>
     <div class="admin-profile-info">
       <h3><?= htmlspecialchars($fullName) ?></h3>
       <p><?= htmlspecialchars($currentUser['email'] ?? '') ?></p>

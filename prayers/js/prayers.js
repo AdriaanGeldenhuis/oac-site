@@ -279,10 +279,10 @@ function renderPost(post) {
   const heartActive = post.user_hearted ? 'active' : '';
   const prayActive = post.user_prayed ? 'active' : '';
 
-  // Verander in die kode:
-const userPic = post.user_pic && post.user_pic !== '/assets/default-avatar.png' 
-  ? post.user_pic 
-  : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(post.username) + '&background=2a2a2a&color=c0c0c0&size=128';
+  // Avatar: use photo or initials
+  const avatarHTML = post.user_pic
+    ? `<img src="${post.user_pic}" alt="${post.username}" class="pr-post-avatar">`
+    : `<div class="pr-post-avatar pr-avatar-initials">${post.initials || '??'}</div>`;
 
   const actionsHTML = post.can_edit ? `
     <button class="pr-action-btn pr-edit-post-btn" data-id="${post.id}" data-text="${escapeHtml(post.text)}" data-photo="${post.photo_url || ''}">
@@ -305,7 +305,7 @@ const userPic = post.user_pic && post.user_pic !== '/assets/default-avatar.png'
   return `
     <article class="pr-post-card" data-id="${post.id}">
       <div class="pr-post-header">
-        <img src="${userPic}" alt="${post.username}" class="pr-post-avatar">
+        ${avatarHTML}
         <div class="pr-post-meta">
           <div class="pr-post-user">${post.username}</div>
           <div class="pr-post-date">${post.created_at}${post.town_name ? ' • ' + post.town_name : ''}</div>
@@ -565,10 +565,10 @@ function escapeHtml(text) {
   // In /prayers/js/prayers.js - UPDATE renderComment function
 
 function renderComment(c) {
-  // Use default avatar if no photo
-  const userPic = c.user_pic && c.user_pic !== '/assets/default-avatar.png' 
-    ? c.user_pic 
-    : '/assets/default-avatar.png';
+  // Avatar: use photo or initials
+  const avatarHTML = c.user_pic
+    ? `<img src="${c.user_pic}" alt="${c.username}" class="pr-comment-avatar">`
+    : `<div class="pr-comment-avatar pr-avatar-initials pr-avatar-initials-sm">${c.initials || '??'}</div>`;
 
   const actionsHTML = c.can_edit || c.can_delete ? `
     <div class="pr-comment-actions">
@@ -593,7 +593,7 @@ function renderComment(c) {
 
   return `
     <div class="pr-comment" data-id="${c.id}">
-      <img src="${userPic}" alt="${c.username}" class="pr-comment-avatar">
+      ${avatarHTML}
       <div class="pr-comment-content">
         <div class="pr-comment-header">
           <span class="pr-comment-user">${c.username}</span>

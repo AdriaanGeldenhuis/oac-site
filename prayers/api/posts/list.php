@@ -55,7 +55,7 @@ try {
   
   foreach ($posts as &$post) {
     $post['created_at'] = date('Y-m-d H:i', strtotime($post['created_at']));
-    $post['user_pic'] = $post['user_pic'] ?: '/assets/default-avatar.png';
+    $post['user_pic'] = $post['user_pic'] ?: null;
 
     // Build username with office title
     $ampId = (int)($post['amp_id'] ?? 10);
@@ -63,6 +63,16 @@ try {
     $officeTitle = get_translated_office($ampId, $gender, $pageLang);
     $fullName = trim($post['user_name'] . ' ' . $post['user_surname']);
     $post['username'] = $officeTitle . ' ' . $fullName;
+
+    // Generate initials
+    $nameParts = preg_split('/\s+/', $fullName);
+    if (count($nameParts) >= 2) {
+        $post['initials'] = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
+    } elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
+        $post['initials'] = strtoupper(mb_substr($nameParts[0], 0, 2));
+    } else {
+        $post['initials'] = '??';
+    }
 
     // Clean up fields not needed in response
     unset($post['user_name'], $post['user_surname'], $post['amp_id'], $post['gender']);

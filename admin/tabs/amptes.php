@@ -134,15 +134,26 @@ krsort($groupedAmptes);
     <div class="ampte-group">
       <h4 class="ampte-group-title"><?= htmlspecialchars($ampList[0]['amp_name'] ?? '') ?></h4>
       <div class="ampte-grid">
-        <?php foreach ($ampList as $amp): ?>
-        <?php
-        $targetAmpId = (int)$amp['amp_id'];
-        $canEditThis = in_array($targetAmpId, $canEdit, true);
-        $avatar = !empty($amp['photo']) ? htmlspecialchars($amp['photo']) : '/assets/img/avatar-default.png';
+        <?php foreach ($ampList as $amp):
+          $targetAmpId = (int)$amp['amp_id'];
+          $canEditThis = in_array($targetAmpId, $canEdit, true);
+          $hasPhoto = !empty($amp['photo']);
+          $personName = trim(($amp['name'] ?? '') . ' ' . ($amp['surname'] ?? ''));
+          $nameParts = preg_split('/\s+/', $personName);
+          $personInitials = '';
+          if (count($nameParts) >= 2) {
+              $personInitials = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
+          } elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
+              $personInitials = strtoupper(mb_substr($nameParts[0], 0, 2));
+          }
         ?>
         <div class="ampte-card" data-id="<?= (int)$amp['id'] ?>" data-name="<?= htmlspecialchars(strtolower($amp['name'] . ' ' . $amp['surname'])) ?>">
           <div class="ampte-avatar">
-            <img src="<?= $avatar ?>" alt="<?= htmlspecialchars($amp['name']) ?>">
+            <?php if ($hasPhoto): ?>
+            <img src="<?= htmlspecialchars($amp['photo']) ?>" alt="<?= htmlspecialchars($amp['name']) ?>">
+            <?php else: ?>
+            <div class="ampte-avatar-initials"><?= htmlspecialchars($personInitials) ?></div>
+            <?php endif; ?>
           </div>
           <div class="ampte-info">
             <h4><?= htmlspecialchars($amp['name'] . ' ' . $amp['surname']) ?></h4>
