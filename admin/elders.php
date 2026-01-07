@@ -278,6 +278,12 @@ function t(string $key): string {
             border: none;
         }
 
+        .btn-translate {
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+            color: white;
+            border: none;
+        }
+
         .editor-wrap {
             background: black;
             border: 2px solid var(--border);
@@ -601,6 +607,9 @@ function t(string $key): string {
             <button class="tool-btn btn-ai" id="btn-improve">
                 ✨ <?= t('improve') ?>
             </button>
+            <button class="tool-btn btn-translate" id="btn-translate-all">
+                🌍 <?= t('translate_all') ?>
+            </button>
         </div>
         
         <div class="editor-wrap">
@@ -669,6 +678,8 @@ function t(string $key): string {
                     error: 'Fout',
                     improving: 'Besig om te verbeter...',
                     improved: 'Verbeter!',
+                    translating: 'Besig om te vertaal...',
+                    translated: 'Vertaal na alle tale!',
                     selectVerse: 'Kies alle velde',
                     verseInserted: 'Vers ingevoeg!',
                     noBible: 'Bybel nie beskikbaar vir hierdie taal nie'
@@ -679,6 +690,8 @@ function t(string $key): string {
                     error: 'Error',
                     improving: 'Improving...',
                     improved: 'Improved!',
+                    translating: 'Translating...',
+                    translated: 'Translated to all languages!',
                     selectVerse: 'Select all fields',
                     verseInserted: 'Verse inserted!',
                     noBible: 'Bible not available for this language'
@@ -689,6 +702,8 @@ function t(string $key): string {
                     error: 'Iphutha',
                     improving: 'Ukuthuthukisa...',
                     improved: 'Kuthuthukisiwe!',
+                    translating: 'Ukuhumusha...',
+                    translated: 'Kuhunyushiwe kuzo zonke izilimi!',
                     selectVerse: 'Khetha zonke izindawo',
                     verseInserted: 'Ivesi lifakiwe!',
                     noBible: 'IBhayibheli alitholakali ngalolu limi'
@@ -699,6 +714,8 @@ function t(string $key): string {
                     error: 'Impazamo',
                     improving: 'Ukuphucula...',
                     improved: 'Kuphuculiwe!',
+                    translating: 'Ukuguqulela...',
+                    translated: 'Kuguqulelwe kuzo zonke iilwimi!',
                     selectVerse: 'Khetha zonke iindawo',
                     verseInserted: 'Ivesi lifakiwe!',
                     noBible: 'IBhayibhile ayifumaneki ngolu lwimi'
@@ -709,6 +726,8 @@ function t(string $key): string {
                     error: 'Erro',
                     improving: 'Melhorando...',
                     improved: 'Melhorado!',
+                    translating: 'Traduzindo...',
+                    translated: 'Traduzido para todos os idiomas!',
                     selectVerse: 'Selecione todos os campos',
                     verseInserted: 'Versículo inserido!',
                     noBible: 'Bíblia não disponível para este idioma'
@@ -945,7 +964,39 @@ function t(string $key): string {
                     showStatus('error', e.message);
                 }
             };
-            
+
+            // Translate to all languages
+            document.getElementById('btn-translate-all').onclick = async () => {
+                const content = currentEditor.innerHTML;
+                if (!content.trim()) return;
+
+                showStatus('saving', T('translating'));
+
+                try {
+                    const fd = new URLSearchParams();
+                    fd.append('content', content);
+                    fd.append('source_lang', CONFIG.lang);
+
+                    const res = await fetch('/admin/api/ai/translate_all.php', { method: 'POST', body: fd });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        // Update all editors with translated content
+                        Object.keys(data.translations).forEach(lang => {
+                            if (editors[lang] && lang !== CONFIG.lang) {
+                                editors[lang].innerHTML = data.translations[lang];
+                            }
+                        });
+                        showStatus('saved', T('translated'));
+                        hasChanges = true;
+                    } else {
+                        throw new Error(data.error);
+                    }
+                } catch(e) {
+                    showStatus('error', e.message);
+                }
+            };
+
             // Save all languages
             document.getElementById('btn-save').onclick = async () => {
                 const sourceContent = currentEditor.innerHTML;
