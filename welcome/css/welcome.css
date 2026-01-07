@@ -410,11 +410,14 @@ html {
   color: var(--text-primary);
 }
 
-/* Light mode - much darker text for teaching content */
+/* Light mode - much darker text for teaching content (override inline styles) */
 [data-theme="light"] .wc-teaching-content,
 [data-theme="light"] .wc-teaching-content p,
-[data-theme="light"] .wc-teaching-content li {
-  color: #111111;
+[data-theme="light"] .wc-teaching-content li,
+[data-theme="light"] .wc-teaching-content h1,
+[data-theme="light"] .wc-teaching-content h2,
+[data-theme="light"] .wc-teaching-content h3 {
+  color: #111111 !important;
 }
 
 /* No content */
