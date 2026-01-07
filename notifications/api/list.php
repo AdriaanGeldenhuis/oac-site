@@ -36,6 +36,117 @@ function translateNotification(string $text, ?string $key, ?string $paramsJson, 
     return $text;
 }
 
+/**
+ * Fallback translation for legacy notifications without translation keys
+ * Detects known Afrikaans patterns and translates them
+ */
+function translateLegacyTitle(string $title, string $lang): string {
+    // If already in target language or Afrikaans, return as-is for Afrikaans
+    if ($lang === 'af') return $title;
+
+    // Known title patterns (Afrikaans -> translation key)
+    $titlePatterns = [
+        '/^💬\s*Nuwe Kommentaar$/u' => 'notif_new_comment',
+        '/^(❤️|🙏)\s*Reaksie$/u' => 'notif_reaction',
+        '/^✍️\s*Nuwe Plasing$/u' => 'notif_new_post',
+        '/^🏷️\s*Ge-tag$/u' => 'notif_tagged',
+        '/^⏰\s*Herinnering$/u' => 'notif_event_reminder',
+        '/^📅\s*Gebeurtenis Gedeel$/u' => 'notif_event_shared',
+        '/^📓\s*Dagboek Herinnering$/u' => 'notif_diary_reminder',
+        '/^🏠\s*Besoek Geskeduleer$/u' => 'notif_visit_scheduled',
+        '/^✅\s*Account Goedgekeur$/u' => 'notif_account_approved',
+        '/^❌\s*Account Afgekeur$/u' => 'notif_account_rejected',
+        '/^💍\s*Eggenoot Versoek$/u' => 'notif_spouse_request',
+        '/^💕\s*Eggenoot Gekoppel$/u' => 'notif_spouse_accepted',
+        '/^📅\s*Afspraak Versoek$/u' => 'notif_appointment_request',
+        '/^✅\s*Afspraak Bevestig$/u' => 'notif_appointment_confirmed',
+        '/^⭐\s*Amp Verander$/u' => 'notif_ampte_change',
+    ];
+
+    foreach ($titlePatterns as $pattern => $key) {
+        if (preg_match($pattern, $title, $matches)) {
+            $translated = __t($key, $lang);
+            if ($translated !== $key) {
+                // For reaction, preserve the emoji
+                if ($key === 'notif_reaction' && isset($matches[1])) {
+                    $translated = str_replace('{emoji}', $matches[1], $translated);
+                }
+                return $translated;
+            }
+        }
+    }
+
+    return $title;
+}
+
+/**
+ * Fallback translation for legacy notification messages
+ */
+function translateLegacyMessage(string $message, string $lang): string {
+    if ($lang === 'af' || empty($message)) return $message;
+
+    // Pattern: "{name} het op jou plasing gereageer."
+    if (preg_match('/^(.+?) het op jou plasing gereageer\.$/u', $message, $m)) {
+        $translated = __t('notif_new_comment_msg', $lang);
+        return str_replace('{name}', $m[1], $translated);
+    }
+
+    // Pattern: "{name} het {emoji} op jou plasing gegee."
+    if (preg_match('/^(.+?) het (❤️|🙏) op jou plasing gegee\.$/u', $message, $m)) {
+        $translated = __t('notif_reaction_msg', $lang);
+        $translated = str_replace('{name}', $m[1], $translated);
+        return str_replace('{emoji}', $m[2], $translated);
+    }
+
+    // Pattern: "{name} het in {room} geplaas."
+    if (preg_match('/^(.+?) het in (.+?) geplaas\.$/u', $message, $m)) {
+        $translated = __t('notif_new_post_msg', $lang);
+        $translated = str_replace('{name}', $m[1], $translated);
+        return str_replace('{room}', $m[2], $translated);
+    }
+
+    // Pattern: "{name} het jou in 'n plasing ge-tag."
+    if (preg_match("/^(.+?) het jou in 'n plasing ge-tag\.$/u", $message, $m)) {
+        $translated = __t('notif_tagged_msg', $lang);
+        return str_replace('{name}', $m[1], $translated);
+    }
+
+    // Pattern: "{name} wil met jou as eggenoot koppel."
+    if (preg_match('/^(.+?) wil met jou as eggenoot koppel\.$/u', $message, $m)) {
+        $translated = __t('notif_spouse_request_msg', $lang);
+        return str_replace('{name}', $m[1], $translated);
+    }
+
+    // Pattern: "{name} het jou versoek aanvaar!"
+    if (preg_match('/^(.+?) het jou versoek aanvaar!$/u', $message, $m)) {
+        $translated = __t('notif_spouse_accepted_msg', $lang);
+        return str_replace('{name}', $m[1], $translated);
+    }
+
+    // Pattern: "Jou rekening is goedgekeur..."
+    if (strpos($message, 'Jou rekening is goedgekeur') !== false) {
+        return __t('notif_account_approved_msg', $lang);
+    }
+
+    // Pattern: "Jou rekening is afgekeur..."
+    if (strpos($message, 'Jou rekening is afgekeur') !== false) {
+        return __t('notif_account_rejected_msg', $lang);
+    }
+
+    // Pattern: "Jou afspraak is bevestig!"
+    if (strpos($message, 'Jou afspraak is bevestig') !== false) {
+        return __t('notif_appointment_confirmed_msg', $lang);
+    }
+
+    // Pattern: "Jou amp is verander na: {amp}"
+    if (preg_match('/^Jou amp is verander na: (.+)$/u', $message, $m)) {
+        $translated = __t('notif_ampte_change_msg', $lang);
+        return str_replace('{amp}', $m[1], $translated);
+    }
+
+    return $message;
+}
+
 try {
     // Ensure data directory exists
     $dataDir = __DIR__ . '/../../data';
@@ -99,18 +210,35 @@ try {
 
     // Translate notifications based on user's language
     foreach ($notifications as &$notif) {
+        $titleKey = $notif['title_key'] ?? null;
+        $messageKey = $notif['message_key'] ?? null;
+        $params = $notif['params'] ?? null;
+
+        // Try translation key first
         $notif['title'] = translateNotification(
             $notif['title'],
-            $notif['title_key'] ?? null,
-            $notif['params'] ?? null,
+            $titleKey,
+            $params,
             $pageLang
         );
+
+        // If no translation key, try legacy pattern matching
+        if (!$titleKey) {
+            $notif['title'] = translateLegacyTitle($notif['title'], $pageLang);
+        }
+
         $notif['message'] = translateNotification(
             $notif['message'] ?? '',
-            $notif['message_key'] ?? null,
-            $notif['params'] ?? null,
+            $messageKey,
+            $params,
             $pageLang
         );
+
+        // If no translation key, try legacy pattern matching
+        if (!$messageKey) {
+            $notif['message'] = translateLegacyMessage($notif['message'] ?? '', $pageLang);
+        }
+
         // Remove internal keys from response
         unset($notif['title_key'], $notif['message_key'], $notif['params']);
     }
