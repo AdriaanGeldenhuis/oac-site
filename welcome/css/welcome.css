@@ -252,18 +252,9 @@ html {
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
-  opacity: 0;
-  transform: translateY(20px);
   transition:
-    opacity 0.6s ease,
-    transform 0.6s ease,
     background 0.5s ease,
     border-color 0.5s ease;
-}
-
-.wc-section.wc-visible {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* Shine sweep effect */
@@ -419,14 +410,11 @@ html {
   color: var(--text-primary);
 }
 
-/* Light mode - darker text for teaching content */
-[data-theme="light"] .wc-teaching-content {
-  color: #2a2825;
-}
-
+/* Light mode - much darker text for teaching content */
+[data-theme="light"] .wc-teaching-content,
 [data-theme="light"] .wc-teaching-content p,
 [data-theme="light"] .wc-teaching-content li {
-  color: #1a1816;
+  color: #111111;
 }
 
 /* No content */
@@ -550,11 +538,6 @@ html {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
-  }
-
-  .wc-section {
-    opacity: 1;
-    transform: none;
   }
 }
 

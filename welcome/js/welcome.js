@@ -2,26 +2,6 @@
 (function() {
   'use strict';
 
-  // Add entrance animations when elements come into view
-  var observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-  };
-
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('wc-visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, observerOptions);
-
-  // Observe all sections
-  document.querySelectorAll('.wc-section').forEach(function(section) {
-    observer.observe(section);
-  });
-
   // Parallax scroll effect for hero glow
   var ticking = false;
 
@@ -43,10 +23,5 @@
       ticking = true;
     }
   });
-
-  // Add loaded class for initial animations
-  setTimeout(function() {
-    document.body.classList.add('wc-loaded');
-  }, 100);
 
 })();
