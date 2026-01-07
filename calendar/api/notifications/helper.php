@@ -7,7 +7,7 @@ function createCalendarNotification($userId, $type, $data = []) {
     try {
         $db = new PDO('sqlite:' . __DIR__ . '/../../../data/notifications.db');
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
+
         // Create table if not exists
         $db->exec("
             CREATE TABLE IF NOT EXISTS notifications (
@@ -19,74 +19,106 @@ function createCalendarNotification($userId, $type, $data = []) {
                 is_read INTEGER DEFAULT 0,
                 created_at TEXT DEFAULT (datetime('now')),
                 link TEXT,
-                icon TEXT
+                icon TEXT,
+                title_key TEXT,
+                message_key TEXT,
+                params TEXT
             )
         ");
-        
+
+        // Check if we need to add the new columns
+        $cols = $db->query("PRAGMA table_info(notifications)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if (!in_array('title_key', $cols)) {
+            $db->exec("ALTER TABLE notifications ADD COLUMN title_key TEXT");
+        }
+        if (!in_array('message_key', $cols)) {
+            $db->exec("ALTER TABLE notifications ADD COLUMN message_key TEXT");
+        }
+        if (!in_array('params', $cols)) {
+            $db->exec("ALTER TABLE notifications ADD COLUMN params TEXT");
+        }
+
         $title = '';
         $message = '';
         $link = '';
         $icon = '';
         $notifType = 'calendar';
-        
+        $titleKey = '';
+        $messageKey = '';
+        $params = [];
+
         switch ($type) {
             case 'event_reminder':
                 $eventTitle = $data['event_title'] ?? 'Event';
                 $time = $data['time'] ?? '';
+                $titleKey = 'notif_event_reminder';
+                $messageKey = 'notif_event_reminder_msg';
+                $params = ['event' => $eventTitle, 'time' => $time];
                 $title = '⏰ Herinnering';
                 $message = "{$eventTitle} begin oor 30 minute om {$time}";
                 $link = '/calendar/calendar.php';
                 $icon = '⏰';
                 break;
-                
+
             case 'event_shared':
                 $fromName = $data['from_name'] ?? 'Iemand';
                 $eventTitle = $data['event_title'] ?? 'Event';
+                $titleKey = 'notif_event_shared';
+                $messageKey = 'notif_event_shared_msg';
+                $params = ['name' => $fromName, 'event' => $eventTitle];
                 $title = '📅 Gebeurtenis Gedeel';
                 $message = "{$fromName} het '{$eventTitle}' met jou gedeel.";
                 $link = '/calendar/calendar.php';
                 $icon = '📅';
                 break;
-                
+
             case 'diary_reminder':
+                $titleKey = 'notif_diary_reminder';
+                $messageKey = 'notif_diary_reminder_msg';
                 $title = '📓 Dagboek Herinnering';
                 $message = 'Onthou om jou dagboek vandag by te werk!';
                 $link = '/diary/diary.php';
                 $icon = '📓';
                 break;
-                
+
             case 'visit_scheduled':
                 $personName = $data['person_name'] ?? 'Iemand';
                 $date = $data['date'] ?? '';
+                $titleKey = 'notif_visit_scheduled';
+                $messageKey = 'notif_visit_scheduled_msg';
+                $params = ['name' => $personName, 'date' => $date];
                 $title = '🏠 Besoek Geskeduleer';
                 $message = "Besoek by {$personName} op {$date}";
                 $link = '/calendar/calendar.php';
                 $icon = '🏠';
                 break;
-                
+
             default:
                 $title = $data['title'] ?? 'Calendar Notification';
                 $message = $data['message'] ?? '';
                 $link = $data['link'] ?? '/calendar/calendar.php';
                 $icon = $data['icon'] ?? '📅';
         }
-        
+
         $stmt = $db->prepare("
-            INSERT INTO notifications (user_id, title, message, type, link, icon)
-            VALUES (:user_id, :title, :message, :type, :link, :icon)
+            INSERT INTO notifications (user_id, title, message, type, link, icon, title_key, message_key, params)
+            VALUES (:user_id, :title, :message, :type, :link, :icon, :title_key, :message_key, :params)
         ");
-        
+
         $stmt->execute([
             'user_id' => $userId,
             'title' => $title,
             'message' => $message,
             'type' => $notifType,
             'link' => $link,
-            'icon' => $icon
+            'icon' => $icon,
+            'title_key' => $titleKey,
+            'message_key' => $messageKey,
+            'params' => !empty($params) ? json_encode($params) : null
         ]);
-        
+
         return true;
-        
+
     } catch (Exception $e) {
         error_log('Create calendar notification error: ' . $e->getMessage());
         return false;

@@ -149,16 +149,26 @@ try {
 
     // Apply translations to room display names
     foreach ($autoRooms as &$room) {
-        $type = $room['type'] ?? '';
-        $name = $room['town_name'] ?? $room['congregation_name'] ?? $room['name'] ?? '';
-        $room['display_name'] = formatRoomName($type, $name, $pageLang);
+        $type = strtolower($room['type'] ?? '');
+        // Use congregation_name for gemeente, town_name for others
+        if ($type === 'gemeente') {
+            $name = $room['congregation_name'] ?? $room['name'] ?? '';
+        } else {
+            $name = $room['town_name'] ?? $room['name'] ?? '';
+        }
+        $room['display_name'] = formatRoomName($room['type'] ?? '', $name, $pageLang);
     }
     unset($room);
 
     foreach ($joinedRooms as &$room) {
-        $type = $room['type'] ?? '';
-        $name = $room['town_name'] ?? $room['congregation_name'] ?? $room['name'] ?? '';
-        $room['display_name'] = formatRoomName($type, $name, $pageLang);
+        $type = strtolower($room['type'] ?? '');
+        // Use congregation_name for gemeente, town_name for others
+        if ($type === 'gemeente') {
+            $name = $room['congregation_name'] ?? $room['name'] ?? '';
+        } else {
+            $name = $room['town_name'] ?? $room['name'] ?? '';
+        }
+        $room['display_name'] = formatRoomName($room['type'] ?? '', $name, $pageLang);
     }
     unset($room);
 

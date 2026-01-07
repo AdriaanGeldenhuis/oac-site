@@ -24,6 +24,17 @@ function formatRoomDisplayName(string $type, string $name): string {
     return $name ?: __t('room', $pageLang);
 }
 
+// Helper to translate room type for badge display
+function translateRoomType(string $type): string {
+    global $pageLang;
+    $t = strtolower($type);
+    if ($t === 'gemeente') return __t('congregation', $pageLang);
+    if ($t === 'opsienerskap') return __t('oversight', $pageLang);
+    if ($t === 'jeug') return __t('youth', $pageLang);
+    if ($t === 'sondagskool') return __t('sunday_school', $pageLang);
+    return __t('room', $pageLang);
+}
+
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
     die('Database connection failed');
@@ -336,9 +347,14 @@ try {
     $allRoomArrays = [&$autoRooms, &$joinedRooms, &$availableRooms];
     foreach ($allRoomArrays as &$roomArray) {
         foreach ($roomArray as &$room) {
-            $type = $room['type'] ?? '';
-            $name = $room['town_name'] ?? $room['congregation_name'] ?? $room['name'] ?? '';
-            $room['display_name'] = formatRoomDisplayName($type, $name);
+            $type = strtolower($room['type'] ?? '');
+            // Use congregation_name for gemeente, town_name for others
+            if ($type === 'gemeente') {
+                $name = $room['congregation_name'] ?? $room['name'] ?? '';
+            } else {
+                $name = $room['town_name'] ?? $room['name'] ?? '';
+            }
+            $room['display_name'] = formatRoomDisplayName($room['type'] ?? '', $name);
         }
         unset($room);
     }
@@ -491,7 +507,7 @@ $VER = time();
                             </div>
                             <div class="rm-actions">
                                 <span class="rm-badge <?= $roomType ?>">
-                                    <?= ucfirst($roomType) ?>
+                                    <?= translateRoomType($roomType) ?>
                                 </span>
                                 <button class="rm-btn rm-btn-leave"
                                         data-action="leave"
@@ -537,7 +553,7 @@ $VER = time();
                             </div>
                             <div class="rm-actions">
                                 <span class="rm-badge <?= $roomType ?>">
-                                    <?= ucfirst($roomType) ?>
+                                    <?= translateRoomType($roomType) ?>
                                 </span>
                                 <button class="rm-btn rm-btn-join"
                                         data-action="join"

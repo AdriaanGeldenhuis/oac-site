@@ -2925,6 +2925,235 @@ define('UI_TRANSLATIONS', [
         'zu' => 'UMbuso kaNkulunkulu',
         'xh' => 'UBukumkani bukaThixo',
         'pt' => 'Reino de Deus'
+    ],
+
+    // =====================================================================
+    // NOTIFICATION TRANSLATIONS
+    // =====================================================================
+
+    // Admin notifications
+    'notif_account_approved' => [
+        'af' => 'Account Goedgekeur',
+        'en' => 'Account Approved',
+        'zu' => 'I-akhawunti Yamukelwe',
+        'xh' => 'I-akhawunti Yamkelwe',
+        'pt' => 'Conta Aprovada'
+    ],
+    'notif_account_approved_msg' => [
+        'af' => 'Jou rekening is goedgekeur. Jy kan nou aanmeld.',
+        'en' => 'Your account has been approved. You can now log in.',
+        'zu' => 'I-akhawunti yakho yamukelwe. Ungangena manje.',
+        'xh' => 'I-akhawunti yakho yamkelwe. Ungangena ngoku.',
+        'pt' => 'Sua conta foi aprovada. Você pode entrar agora.'
+    ],
+    'notif_account_rejected' => [
+        'af' => 'Account Afgekeur',
+        'en' => 'Account Rejected',
+        'zu' => 'I-akhawunti Yenqatshiwe',
+        'xh' => 'I-akhawunti Yaliwe',
+        'pt' => 'Conta Rejeitada'
+    ],
+    'notif_account_rejected_msg' => [
+        'af' => 'Jou rekening is afgekeur. Kontak admin vir meer inligting.',
+        'en' => 'Your account has been rejected. Contact admin for more information.',
+        'zu' => 'I-akhawunti yakho yenqatshiwe. Xhumana nomphathi ukuze uthole ulwazi olwengeziwe.',
+        'xh' => 'I-akhawunti yakho yaliwe. Qhagamshelana nomlawuli ukufumana ulwazi oluthe kratya.',
+        'pt' => 'Sua conta foi rejeitada. Entre em contato com o administrador para mais informações.'
+    ],
+    'notif_spouse_request' => [
+        'af' => 'Eggenoot Versoek',
+        'en' => 'Spouse Request',
+        'zu' => 'Isicelo Somngani',
+        'xh' => 'Isicelo Somlingani',
+        'pt' => 'Solicitação de Cônjuge'
+    ],
+    'notif_spouse_request_msg' => [
+        'af' => '{name} wil met jou as eggenoot koppel.',
+        'en' => '{name} wants to link with you as spouse.',
+        'zu' => '{name} ufuna ukuxhumana nawe njengomngani.',
+        'xh' => '{name} ufuna ukudibanisa nawe njengomlingani.',
+        'pt' => '{name} quer se conectar com você como cônjuge.'
+    ],
+    'notif_spouse_accepted' => [
+        'af' => 'Eggenoot Gekoppel',
+        'en' => 'Spouse Linked',
+        'zu' => 'Umngani Uxhunyiwe',
+        'xh' => 'Umlingani Udibanisiwe',
+        'pt' => 'Cônjuge Vinculado'
+    ],
+    'notif_spouse_accepted_msg' => [
+        'af' => '{name} het jou versoek aanvaar!',
+        'en' => '{name} accepted your request!',
+        'zu' => '{name} wamukele isicelo sakho!',
+        'xh' => '{name} wamkele isicelo sakho!',
+        'pt' => '{name} aceitou seu pedido!'
+    ],
+    'notif_appointment_request' => [
+        'af' => 'Afspraak Versoek',
+        'en' => 'Appointment Request',
+        'zu' => 'Isicelo Sesikhathi',
+        'xh' => 'Isicelo Sokuhlangana',
+        'pt' => 'Solicitação de Compromisso'
+    ],
+    'notif_appointment_request_msg' => [
+        'af' => "{name} wil 'n afspraak maak op {date} om {time}.",
+        'en' => '{name} wants to make an appointment on {date} at {time}.',
+        'zu' => '{name} ufuna ukwenza isithembiso ngo-{date} ngo-{time}.',
+        'xh' => '{name} ufuna ukwenza isigqibo ngo-{date} ngo-{time}.',
+        'pt' => '{name} quer marcar um compromisso em {date} às {time}.'
+    ],
+    'notif_appointment_confirmed' => [
+        'af' => 'Afspraak Bevestig',
+        'en' => 'Appointment Confirmed',
+        'zu' => 'Isikhathi Siqinisekisiwe',
+        'xh' => 'Ukuhlangana Kuqinisekisiwe',
+        'pt' => 'Compromisso Confirmado'
+    ],
+    'notif_appointment_confirmed_msg' => [
+        'af' => 'Jou afspraak is bevestig!',
+        'en' => 'Your appointment has been confirmed!',
+        'zu' => 'Isithembiso sakho siqinisekisiwe!',
+        'xh' => 'Isigqibo sakho siqinisekisiwe!',
+        'pt' => 'Seu compromisso foi confirmado!'
+    ],
+    'notif_ampte_change' => [
+        'af' => 'Amp Verander',
+        'en' => 'Office Changed',
+        'zu' => 'Isikhundla Sishintshiwe',
+        'xh' => 'Isikhundla Sitshintshiwe',
+        'pt' => 'Cargo Alterado'
+    ],
+    'notif_ampte_change_msg' => [
+        'af' => 'Jou amp is verander na: {amp}',
+        'en' => 'Your office has been changed to: {amp}',
+        'zu' => 'Isikhundla sakho sishintshwe saba: {amp}',
+        'xh' => 'Isikhundla sakho sitshintshwe saba: {amp}',
+        'pt' => 'Seu cargo foi alterado para: {amp}'
+    ],
+
+    // Gospel notifications
+    'notif_new_post' => [
+        'af' => 'Nuwe Plasing',
+        'en' => 'New Post',
+        'zu' => 'Okutsha Okufakiwe',
+        'xh' => 'Okutsha Okufakiweyo',
+        'pt' => 'Nova Publicação'
+    ],
+    'notif_new_post_msg' => [
+        'af' => '{name} het in {room} geplaas.',
+        'en' => '{name} posted in {room}.',
+        'zu' => '{name} ufake ku-{room}.',
+        'xh' => '{name} ufake ku-{room}.',
+        'pt' => '{name} publicou em {room}.'
+    ],
+    'notif_new_comment' => [
+        'af' => 'Nuwe Kommentaar',
+        'en' => 'New Comment',
+        'zu' => 'Ukuphawula Okusha',
+        'xh' => 'Ukuphawula Okutsha',
+        'pt' => 'Novo Comentário'
+    ],
+    'notif_new_comment_msg' => [
+        'af' => '{name} het op jou plasing gereageer.',
+        'en' => '{name} commented on your post.',
+        'zu' => '{name} uphawule okutsha sakho.',
+        'xh' => '{name} uphawule okutsha sakho.',
+        'pt' => '{name} comentou na sua publicação.'
+    ],
+    'notif_reaction' => [
+        'af' => 'Reaksie',
+        'en' => 'Reaction',
+        'zu' => 'Ukusabela',
+        'xh' => 'Ukusabela',
+        'pt' => 'Reação'
+    ],
+    'notif_reaction_msg' => [
+        'af' => '{name} het {emoji} op jou plasing gegee.',
+        'en' => '{name} reacted with {emoji} to your post.',
+        'zu' => '{name} usabele ngo-{emoji} ekutsha kwakho.',
+        'xh' => '{name} usabele nge-{emoji} ekutsha kwakho.',
+        'pt' => '{name} reagiu com {emoji} à sua publicação.'
+    ],
+    'notif_tagged' => [
+        'af' => 'Ge-tag',
+        'en' => 'Tagged',
+        'zu' => 'Umakiwe',
+        'xh' => 'Umakiwe',
+        'pt' => 'Marcado'
+    ],
+    'notif_tagged_msg' => [
+        'af' => "{name} het jou in 'n plasing ge-tag.",
+        'en' => '{name} tagged you in a post.',
+        'zu' => '{name} ukumake okutsha.',
+        'xh' => '{name} ukumake okutsha.',
+        'pt' => '{name} marcou você em uma publicação.'
+    ],
+
+    // Calendar notifications
+    'notif_event_reminder' => [
+        'af' => 'Herinnering',
+        'en' => 'Reminder',
+        'zu' => 'Isikhumbuzo',
+        'xh' => 'Isikhumbuzo',
+        'pt' => 'Lembrete'
+    ],
+    'notif_event_reminder_msg' => [
+        'af' => '{event} begin oor 30 minute om {time}',
+        'en' => '{event} starts in 30 minutes at {time}',
+        'zu' => '{event} iqala ngemizuzu engu-30 ngo-{time}',
+        'xh' => '{event} iqala ngemizuzu engama-30 ngo-{time}',
+        'pt' => '{event} começa em 30 minutos às {time}'
+    ],
+    'notif_event_shared' => [
+        'af' => 'Gebeurtenis Gedeel',
+        'en' => 'Event Shared',
+        'zu' => 'Umcimbi Wabelwe',
+        'xh' => 'Isiganeko Sabelwe',
+        'pt' => 'Evento Compartilhado'
+    ],
+    'notif_event_shared_msg' => [
+        'af' => "{name} het '{event}' met jou gedeel.",
+        'en' => "{name} shared '{event}' with you.",
+        'zu' => "{name} wabelane '{event}' nawe.",
+        'xh' => "{name} wabelane '{event}' nawe.",
+        'pt' => "{name} compartilhou '{event}' com você."
+    ],
+    'notif_diary_reminder' => [
+        'af' => 'Dagboek Herinnering',
+        'en' => 'Diary Reminder',
+        'zu' => 'Isikhumbuzo Sedayari',
+        'xh' => 'Isikhumbuzo Sedayari',
+        'pt' => 'Lembrete do Diário'
+    ],
+    'notif_diary_reminder_msg' => [
+        'af' => 'Onthou om jou dagboek vandag by te werk!',
+        'en' => 'Remember to update your diary today!',
+        'zu' => 'Khumbula ukuvuselela idayari yakho namhlanje!',
+        'xh' => 'Khumbula ukuhlaziya idayari yakho namhlanje!',
+        'pt' => 'Lembre-se de atualizar seu diário hoje!'
+    ],
+    'notif_visit_scheduled' => [
+        'af' => 'Besoek Geskeduleer',
+        'en' => 'Visit Scheduled',
+        'zu' => 'Ukuvakasha Kuhleliwe',
+        'xh' => 'Utyelelo Lucwangcisiwe',
+        'pt' => 'Visita Agendada'
+    ],
+    'notif_visit_scheduled_msg' => [
+        'af' => 'Besoek by {name} op {date}',
+        'en' => 'Visit to {name} on {date}',
+        'zu' => 'Ukuvakasha ku-{name} ngo-{date}',
+        'xh' => 'Utyelelo ku-{name} ngo-{date}',
+        'pt' => 'Visita a {name} em {date}'
+    ],
+
+    // Generic notification placeholders
+    'notif_someone' => [
+        'af' => 'Iemand',
+        'en' => 'Someone',
+        'zu' => 'Othile',
+        'xh' => 'Omnye umntu',
+        'pt' => 'Alguém'
     ]
 ]);
 
