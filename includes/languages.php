@@ -517,6 +517,34 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Ibandla',
         'pt' => 'Congregação'
     ],
+    'oversight' => [
+        'af' => 'Opsienerskap',
+        'en' => 'Oversight',
+        'zu' => 'Ukuqashwa',
+        'xh' => 'Ukongamela',
+        'pt' => 'Supervisão'
+    ],
+    'youth' => [
+        'af' => 'Jeug',
+        'en' => 'Youth',
+        'zu' => 'Intsha',
+        'xh' => 'Ulutsha',
+        'pt' => 'Juventude'
+    ],
+    'sunday_school' => [
+        'af' => 'Sondagskool',
+        'en' => 'Sunday School',
+        'zu' => 'Isikole SeSonto',
+        'xh' => 'Isikolo SeCawa',
+        'pt' => 'Escola Dominical'
+    ],
+    'room' => [
+        'af' => 'Kamer',
+        'en' => 'Room',
+        'zu' => 'Ikamelo',
+        'xh' => 'Igumbi',
+        'pt' => 'Sala'
+    ],
     'select_province_first' => [
         'af' => 'Kies provinsie eers',
         'en' => 'Select province first',
@@ -618,7 +646,7 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Professor'
     ],
     'elder' => [
-        'af' => 'Ouderling',
+        'af' => 'Oudste',
         'en' => 'Elder',
         'zu' => 'Umdala',
         'xh' => 'Umdala',

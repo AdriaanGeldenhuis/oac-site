@@ -13,6 +13,17 @@ function t(string $key): string {
     return __t($key, $pageLang);
 }
 
+// Helper to format room display name with translation
+function formatRoomDisplayName(string $type, string $name): string {
+    global $pageLang;
+    $t = strtolower($type);
+    if ($t === 'gemeente') return __t('congregation', $pageLang) . ' ' . $name;
+    if ($t === 'opsienerskap') return __t('oversight', $pageLang) . ' ' . $name;
+    if ($t === 'jeug') return __t('youth', $pageLang) . ' ' . $name;
+    if ($t === 'sondagskool') return __t('sunday_school', $pageLang) . ' ' . $name;
+    return $name ?: __t('room', $pageLang);
+}
+
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
     die('Database connection failed');
@@ -320,6 +331,19 @@ try {
             }
         }
     }
+
+    // Post-process: apply translations to display_name
+    $allRoomArrays = [&$autoRooms, &$joinedRooms, &$availableRooms];
+    foreach ($allRoomArrays as &$roomArray) {
+        foreach ($roomArray as &$room) {
+            $type = $room['type'] ?? '';
+            $name = $room['town_name'] ?? $room['congregation_name'] ?? $room['name'] ?? '';
+            $room['display_name'] = formatRoomDisplayName($type, $name);
+        }
+        unset($room);
+    }
+    unset($roomArray);
+
 } catch (Throwable $e) {
     error_log("Rooms query failed: " . $e->getMessage());
 }

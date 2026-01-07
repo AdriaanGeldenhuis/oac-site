@@ -68,18 +68,18 @@ if ($roomId <= 0) {
     }
 }
 
-// Get room info
-function gm_label($type, $name) {
+// Get room info with translation support
+function gm_label($type, $name, $lang) {
     $t = strtolower((string)$type);
     $n = (string)$name;
-    if ($t === 'gemeente') return stripos($n, 'gemeente') === 0 ? $n : 'Gemeente ' . $n;
-    if ($t === 'opsienerskap') return stripos($n, 'opsienerskap') === 0 ? $n : 'Opsienerskap ' . $n;
-    if ($t === 'jeug') return stripos($n, 'jeug') === 0 ? $n : 'Jeug ' . $n;
-    if ($t === 'sondagskool') return stripos($n, 'sondagskool') === 0 ? $n : 'Sondagskool ' . $n;
-    return $n ?: 'Kamer';
+    if ($t === 'gemeente') return __t('congregation', $lang) . ' ' . $n;
+    if ($t === 'opsienerskap') return __t('oversight', $lang) . ' ' . $n;
+    if ($t === 'jeug') return __t('youth', $lang) . ' ' . $n;
+    if ($t === 'sondagskool') return __t('sunday_school', $lang) . ' ' . $n;
+    return $n ?: __t('room', $lang);
 }
 
-$roomTitle = 'Kamer';
+$roomTitle = __t('room', $pageLang);
 $roomType = '';
 $roomObj = null;
 
@@ -88,7 +88,7 @@ if ($roomId > 0) {
     $rs->execute([$roomId]);
     $roomObj = $rs->fetch(PDO::FETCH_ASSOC);
     if ($roomObj) {
-        $roomTitle = gm_label($roomObj['type'] ?? '', $roomObj['name'] ?? '');
+        $roomTitle = gm_label($roomObj['type'] ?? '', $roomObj['name'] ?? '', $pageLang);
         $roomType = strtolower((string)($roomObj['type'] ?? ''));
     }
 }
