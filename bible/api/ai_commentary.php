@@ -271,7 +271,7 @@ try {
 
     // Save to database for history
     try {
-        $stmt = $pdo->prepare('
+        $stmt = db()->prepare('
             INSERT INTO bible_ai_commentary (user_id, verse_ref, question, answer)
             VALUES (?, ?, ?, ?)
         ');

@@ -9,7 +9,7 @@
 declare(strict_types=1);
 
 // Database connection (uses main app database)
-require_once __DIR__ . '/../db/pdo.php';
+require_once __DIR__ . '/../lib/db.php';
 
 // =============================================================================
 // OPENAI API CONFIGURATION
