@@ -3,6 +3,9 @@
 // /admin/api/notifications/helper.php - Helper functions
 // =====================================================================
 
+// Include FCM functions
+require_once __DIR__ . '/../../config/fcm_config.php';
+
 function createAdminNotification($userId, $type, $data = []) {
     try {
         $db = new PDO('sqlite:' . __DIR__ . '/../../../data/notifications.db');
@@ -150,6 +153,22 @@ function createAdminNotification($userId, $type, $data = []) {
             'message_key' => $messageKey,
             'params' => !empty($params) ? json_encode($params) : null
         ]);
+
+        // Also send FCM push notification
+        try {
+            // Remove emoji from title for cleaner push notification
+            $pushTitle = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $title);
+            $pushTitle = trim($pushTitle);
+
+            sendPushToUser((int)$userId, $pushTitle, $message, [
+                'type' => $notifType,
+                'link' => $link,
+                'notification_id' => $db->lastInsertId()
+            ]);
+        } catch (Exception $pushError) {
+            // Log but don't fail - push is optional
+            error_log('FCM push error: ' . $pushError->getMessage());
+        }
 
         return true;
 
