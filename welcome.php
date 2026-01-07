@@ -152,7 +152,7 @@ $VER = time();
       <span class="wc-sparkle" style="--delay: 1.5s; --x: 25%; --y: 75%;"></span>
       <span class="wc-sparkle" style="--delay: 2s; --x: 85%; --y: 65%;"></span>
     </div>
-    <div class="wc-hero-scroll" onclick="document.querySelector('.wc-teaching-section').scrollIntoView({behavior:'smooth'})">
+    <div class="wc-hero-scroll">
       <div class="wc-scroll-arrow"></div>
     </div>
   </div>
