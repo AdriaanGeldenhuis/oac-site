@@ -53,7 +53,7 @@ try {
 
     $accessToken = getFcmAccessToken();
     if (!$accessToken) {
-        $accessTokenError = 'Could not get access token';
+        $accessTokenError = $GLOBALS['fcm_last_error'] ?? 'Could not get access token';
     }
 } catch (Exception $e) {
     $accessTokenError = $e->getMessage();

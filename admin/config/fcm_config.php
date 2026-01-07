@@ -88,17 +88,20 @@ function getFcmAccessToken(): ?string {
 
     $response = curl_exec($ch);
     $error = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     if ($error) {
-        error_log('FCM: Token request error: ' . $error);
+        error_log('FCM: Token request curl error: ' . $error);
+        $GLOBALS['fcm_last_error'] = 'Curl error: ' . $error;
         return null;
     }
 
     $data = json_decode($response, true);
 
     if (!isset($data['access_token'])) {
-        error_log('FCM: Failed to get access token: ' . $response);
+        error_log('FCM: Failed to get access token (HTTP ' . $httpCode . '): ' . $response);
+        $GLOBALS['fcm_last_error'] = 'HTTP ' . $httpCode . ': ' . ($data['error_description'] ?? $data['error'] ?? $response);
         return null;
     }
 
