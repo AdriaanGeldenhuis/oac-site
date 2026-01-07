@@ -1,7 +1,8 @@
 (() => {
   'use strict';
 
-  const T = (af, en) => (window.PRAYERS_LANG === 'en' ? en : af);
+  // Use server-provided translations for all 5 languages
+  const T = (key) => (window.JS_T && window.JS_T[key]) ? window.JS_T[key] : key;
   const userId = window.CURRENT_USER_ID || 0;
   const userName = window.CURRENT_USER_NAME || 'User';
   const userPic = window.CURRENT_USER_PIC || '/assets/default-avatar.png';
@@ -39,7 +40,7 @@
       if (file) {
         fileLabel.textContent = file.name;
       } else {
-        fileLabel.textContent = T('Kies foto (opsioneel)', 'Choose photo (optional)');
+        fileLabel.textContent = T('choose_photo');
       }
     });
 
@@ -62,7 +63,7 @@
     formData.append('kind', currentKind);
     
     submitBtn.disabled = true;
-    submitBtn.querySelector('.pr-btn-text').textContent = T('Besig...', 'Posting...');
+    submitBtn.querySelector('.pr-btn-text').textContent = T('posting');
 
     try {
       const res = await fetch('/prayers/api/posts/create.php', {
@@ -74,18 +75,18 @@
       
       if (data.success) {
         form.reset();
-        fileLabel.textContent = T('Kies foto (opsioneel)', 'Choose photo (optional)');
-        showToast(T('Gebedsnood/getuienis gedeel!', 'Prayer/testimony shared!'), 'success');
+        fileLabel.textContent = T('choose_photo');
+        showToast(T('prayer_shared'), 'success');
         loadPosts();
       } else {
-        showToast(data.error || T('Fout', 'Error'), 'error');
+        showToast(data.error || T('error'), 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast(T('Kon nie plaas nie', 'Could not post'), 'error');
+      showToast(T('could_not_post'), 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.querySelector('.pr-btn-text').textContent = T('Deel', 'Share');
+      submitBtn.querySelector('.pr-btn-text').textContent = T('share');
     }
   }
 
@@ -96,7 +97,7 @@
     formData.append('text', text);
     
     submitBtn.disabled = true;
-    submitBtn.querySelector('.pr-btn-text').textContent = T('Besig...', 'Updating...');
+    submitBtn.querySelector('.pr-btn-text').textContent = T('posting');
 
     try {
       const res = await fetch('/prayers/api/posts/update.php', {
@@ -107,23 +108,23 @@
       const data = await res.json();
       
       if (data.success) {
-        showToast(T('Post opgedateer!', 'Post updated!'), 'success');
+        showToast(T('post_updated'), 'success');
         cancelEdit();
         loadPosts();
       } else {
-        showToast(data.error || T('Fout', 'Error'), 'error');
+        showToast(data.error || T('error'), 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast(T('Kon nie opdateer nie', 'Could not update'), 'error');
+      showToast(T('could_not_update'), 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.querySelector('.pr-btn-text').textContent = T('Deel', 'Share');
+      submitBtn.querySelector('.pr-btn-text').textContent = T('share');
     }
   }
 
   async function removePostPhoto(postId) {
-    if (!confirm(T('Verwyder foto?', 'Remove photo?'))) return;
+    if (!confirm(T('delete_photo'))) return;
 
     try {
       const res = await fetch('/prayers/api/posts/update.php', {
@@ -139,20 +140,20 @@
       const data = await res.json();
       
       if (data.success) {
-        showToast(T('Foto verwyder!', 'Photo removed!'), 'success');
+        showToast(T('photo_removed'), 'success');
         editingPostPhotoUrl = null;
         updatePhotoPreview();
       } else {
-        showToast(data.error || T('Fout', 'Error'), 'error');
+        showToast(data.error || T('error'), 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast(T('Kon nie verwyder nie', 'Could not remove'), 'error');
+      showToast(T('could_not_remove'), 'error');
     }
   }
 
   async function deletePost(postId) {
-    if (!confirm(T('Wis hierdie post uit?', 'Delete this post?'))) return;
+    if (!confirm(T('delete_post'))) return;
 
     try {
       const res = await fetch('/prayers/api/posts/delete.php', {
@@ -164,14 +165,14 @@
       const data = await res.json();
       
       if (data.success) {
-        showToast(T('Post uitgewis!', 'Post deleted!'), 'success');
+        showToast(T('post_deleted'), 'success');
         loadPosts();
       } else {
-        showToast(data.error || T('Fout', 'Error'), 'error');
+        showToast(data.error || T('error'), 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast(T('Kon nie uitwis nie', 'Could not delete'), 'error');
+      showToast(T('could_not_delete'), 'error');
     }
   }
 
@@ -184,7 +185,7 @@
     
     textarea.value = text;
     textarea.focus();
-    submitBtn.querySelector('.pr-btn-text').textContent = T('Opdateer', 'Update');
+    submitBtn.querySelector('.pr-btn-text').textContent = T('update');
     
     updatePhotoPreview();
     
@@ -206,7 +207,7 @@
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/>
           </svg>
-          ${T('Verwyder foto', 'Remove photo')}
+          ${T('remove_photo')}
         </button>
       `;
       
@@ -222,7 +223,7 @@
     editingPostId = null;
     editingPostPhotoUrl = null;
     document.getElementById('createPostForm').reset();
-    document.getElementById('submitBtn').querySelector('.pr-btn-text').textContent = T('Deel', 'Share');
+    document.getElementById('submitBtn').querySelector('.pr-btn-text').textContent = T('share');
     
     const preview = document.querySelector('.pr-photo-preview');
     if (preview) preview.remove();
@@ -234,7 +235,7 @@
     container.innerHTML = `
       <div class="pr-loading">
         <div class="pr-spinner"></div>
-        <p>${T('Laai gebede...', 'Loading prayers...')}</p>
+        <p>${T('loading_prayers')}</p>
       </div>
     `;
 
@@ -248,7 +249,7 @@
       } else {
         container.innerHTML = `
           <div class="pr-loading">
-            <p>${T('Geen gebede/getuienisse gevind nie', 'No prayers/testimonies found')}</p>
+            <p>${T('no_prayers')}</p>
           </div>
         `;
       }
@@ -256,7 +257,7 @@
       console.error(err);
       container.innerHTML = `
         <div class="pr-loading">
-          <p>${T('Kon nie laai nie', 'Could not load')}</p>
+          <p>${T('could_not_load')}</p>
         </div>
       `;
     }
@@ -268,8 +269,8 @@
 
 function renderPost(post) {
   const kindLabel = post.kind === 'prayer' 
-    ? T('Gebed', 'Prayer') 
-    : T('Getuienis', 'Testimony');
+    ? T('prayer') 
+    : T('testimony');
   
   const photoHTML = post.photo_url 
     ? `<img src="${post.photo_url}" alt="Post photo" class="pr-post-photo">` 
@@ -288,7 +289,7 @@ const userPic = post.user_pic && post.user_pic !== '/assets/default-avatar.png'
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>${T('Wysig', 'Edit')}</span>
+      <span>${T('edit')}</span>
     </button>
   ` : '';
 
@@ -297,7 +298,7 @@ const userPic = post.user_pic && post.user_pic !== '/assets/default-avatar.png'
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>${T('Vee uit', 'Delete')}</span>
+      <span>${T('delete')}</span>
     </button>
   ` : '';
 
@@ -474,13 +475,13 @@ function escapeHtml(text) {
         document.getElementById('addCommentForm').reset();
         loadComments(postId);
         loadPosts();
-        showToast(T('Kommentaar geplaas!', 'Comment posted!'), 'success');
+        showToast(T('comment_posted'), 'success');
       } else {
-        showToast(data.error || T('Fout', 'Error'), 'error');
+        showToast(data.error || T('error'), 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast(T('Kon nie plaas nie', 'Could not post'), 'error');
+      showToast(T('could_not_post'), 'error');
     }
   }
 
@@ -501,18 +502,18 @@ function escapeHtml(text) {
         document.getElementById('addCommentForm').reset();
         const postId = document.getElementById('commentPostId').value;
         loadComments(postId);
-        showToast(T('Kommentaar opgedateer!', 'Comment updated!'), 'success');
+        showToast(T('comment_updated'), 'success');
       } else {
-        showToast(data.error || T('Fout', 'Error'), 'error');
+        showToast(data.error || T('error'), 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast(T('Kon nie opdateer nie', 'Could not update'), 'error');
+      showToast(T('could_not_update'), 'error');
     }
   }
 
   async function deleteComment(commentId) {
-    if (!confirm(T('Wis hierdie kommentaar uit?', 'Delete this comment?'))) return;
+    if (!confirm(T('delete_comment'))) return;
 
     try {
       const res = await fetch('/prayers/api/comments/delete.php', {
@@ -527,13 +528,13 @@ function escapeHtml(text) {
         const postId = document.getElementById('commentPostId').value;
         loadComments(postId);
         loadPosts();
-        showToast(T('Kommentaar uitgewis!', 'Comment deleted!'), 'success');
+        showToast(T('comment_deleted'), 'success');
       } else {
-        showToast(data.error || T('Fout', 'Error'), 'error');
+        showToast(data.error || T('error'), 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast(T('Kon nie uitwis nie', 'Could not delete'), 'error');
+      showToast(T('could_not_delete'), 'error');
     }
   }
 
@@ -553,11 +554,11 @@ function escapeHtml(text) {
         container.innerHTML = data.comments.map(c => renderComment(c)).join('');
         attachCommentListeners();
       } else {
-        container.innerHTML = `<p style="text-align:center;color:var(--color-silver-dark);">${T('Geen kommentaar nog nie', 'No comments yet')}</p>`;
+        container.innerHTML = `<p style="text-align:center;color:var(--color-silver-dark);">${T('no_comments')}</p>`;
       }
     } catch (err) {
       console.error(err);
-      container.innerHTML = `<p style="text-align:center;color:var(--color-silver-dark);">${T('Kon nie laai nie', 'Could not load')}</p>`;
+      container.innerHTML = `<p style="text-align:center;color:var(--color-silver-dark);">${T('could_not_load')}</p>`;
     }
   }
 
@@ -576,7 +577,7 @@ function renderComment(c) {
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>${T('Wysig', 'Edit')}</span>
+          <span>${T('edit')}</span>
         </button>
       ` : ''}
       ${c.can_delete ? `
@@ -584,7 +585,7 @@ function renderComment(c) {
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>${T('Vee uit', 'Delete')}</span>
+          <span>${T('delete')}</span>
         </button>
       ` : ''}
     </div>

@@ -3154,6 +3154,372 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Othile',
         'xh' => 'Omnye umntu',
         'pt' => 'Alguém'
+    ],
+
+    // =====================================================================
+    // JAVASCRIPT UI TRANSLATIONS (for gospel_media and prayers)
+    // =====================================================================
+
+    // Common actions
+    'js_edit' => [
+        'af' => 'Wysig',
+        'en' => 'Edit',
+        'zu' => 'Hlela',
+        'xh' => 'Hlela',
+        'pt' => 'Editar'
+    ],
+    'js_delete' => [
+        'af' => 'Verwyder',
+        'en' => 'Delete',
+        'zu' => 'Susa',
+        'xh' => 'Cima',
+        'pt' => 'Excluir'
+    ],
+    'js_cancel' => [
+        'af' => 'Kanselleer',
+        'en' => 'Cancel',
+        'zu' => 'Khansela',
+        'xh' => 'Rhoxisa',
+        'pt' => 'Cancelar'
+    ],
+    'js_save' => [
+        'af' => 'Stoor',
+        'en' => 'Save',
+        'zu' => 'Londoloza',
+        'xh' => 'Gcina',
+        'pt' => 'Salvar'
+    ],
+    'js_saving' => [
+        'af' => 'Stoor...',
+        'en' => 'Saving...',
+        'zu' => 'Ilondoloza...',
+        'xh' => 'Igcina...',
+        'pt' => 'Salvando...'
+    ],
+    'js_back' => [
+        'af' => 'Terug',
+        'en' => 'Back',
+        'zu' => 'Emuva',
+        'xh' => 'Emva',
+        'pt' => 'Voltar'
+    ],
+    'js_error' => [
+        'af' => 'Fout',
+        'en' => 'Error',
+        'zu' => 'Iphutha',
+        'xh' => 'Impazamo',
+        'pt' => 'Erro'
+    ],
+    'js_loading' => [
+        'af' => 'Laai...',
+        'en' => 'Loading...',
+        'zu' => 'Iyalayisha...',
+        'xh' => 'Iyalayisha...',
+        'pt' => 'Carregando...'
+    ],
+
+    // Post actions
+    'js_post_actions' => [
+        'af' => 'Post aksies',
+        'en' => 'Post actions',
+        'zu' => 'Izenzo zokuthunyelwe',
+        'xh' => 'Izenzo zeposti',
+        'pt' => 'Ações da postagem'
+    ],
+    'js_edit_post' => [
+        'af' => 'Wysig plasing',
+        'en' => 'Edit post',
+        'zu' => 'Hlela okuthunyelwe',
+        'xh' => 'Hlela iposti',
+        'pt' => 'Editar postagem'
+    ],
+    'js_confirm_delete' => [
+        'af' => 'Bevestig verwydering',
+        'en' => 'Confirm deletion',
+        'zu' => 'Qinisekisa ukususa',
+        'xh' => 'Qinisekisa ukucima',
+        'pt' => 'Confirmar exclusão'
+    ],
+    'js_cannot_undo' => [
+        'af' => 'Hierdie aksie kan nie ontdoen word nie',
+        'en' => 'This action cannot be undone',
+        'zu' => 'Lesi senzo asikwazi ukuhlehliswa',
+        'xh' => 'Esi senzo asinakubuyiselwa',
+        'pt' => 'Esta ação não pode ser desfeita'
+    ],
+    'js_deleting' => [
+        'af' => 'Verwyder...',
+        'en' => 'Deleting...',
+        'zu' => 'Iyasusa...',
+        'xh' => 'Iyacima...',
+        'pt' => 'Excluindo...'
+    ],
+    'js_post' => [
+        'af' => 'Plaas',
+        'en' => 'Post',
+        'zu' => 'Thumela',
+        'xh' => 'Thumela',
+        'pt' => 'Postar'
+    ],
+    'js_posting' => [
+        'af' => 'Plaas...',
+        'en' => 'Posting...',
+        'zu' => 'Iyathumela...',
+        'xh' => 'Iyathumela...',
+        'pt' => 'Postando...'
+    ],
+    'js_type_message' => [
+        'af' => 'Tik asseblief \'n boodskap',
+        'en' => 'Please type a message',
+        'zu' => 'Sicela ubhale umyalezo',
+        'xh' => 'Nceda bhala umyalezo',
+        'pt' => 'Por favor, digite uma mensagem'
+    ],
+    'js_error_posting' => [
+        'af' => 'Fout met plaas',
+        'en' => 'Error posting',
+        'zu' => 'Iphutha lokuthumela',
+        'xh' => 'Impazamo yokuthumela',
+        'pt' => 'Erro ao postar'
+    ],
+    'js_loading_posts' => [
+        'af' => 'Laai plasings...',
+        'en' => 'Loading posts...',
+        'zu' => 'Ilayisha izithunyelwe...',
+        'xh' => 'Ilayisha iiposti...',
+        'pt' => 'Carregando postagens...'
+    ],
+    'js_no_posts' => [
+        'af' => 'Geen plasings in hierdie kamer nie',
+        'en' => 'No posts in this room',
+        'zu' => 'Akukho okuthunyelwe kuleli kamelo',
+        'xh' => 'Akukho ziposti kule ndawo',
+        'pt' => 'Nenhuma postagem nesta sala'
+    ],
+
+    // Comments
+    'js_comments' => [
+        'af' => 'Kommentare',
+        'en' => 'Comments',
+        'zu' => 'Izimphawulo',
+        'xh' => 'Izimvo',
+        'pt' => 'Comentários'
+    ],
+    'js_write_comment' => [
+        'af' => 'Skryf \'n kommentaar...',
+        'en' => 'Write a comment...',
+        'zu' => 'Bhala ukuphawula...',
+        'xh' => 'Bhala isimvo...',
+        'pt' => 'Escreva um comentário...'
+    ],
+    'js_no_comments' => [
+        'af' => 'Geen kommentare nog nie',
+        'en' => 'No comments yet',
+        'zu' => 'Akukho zimphawulo okwamanje',
+        'xh' => 'Akukho zimvo okwangoku',
+        'pt' => 'Nenhum comentário ainda'
+    ],
+    'js_delete_comment' => [
+        'af' => 'Verwyder hierdie kommentaar?',
+        'en' => 'Delete this comment?',
+        'zu' => 'Susa lesi simphawulo?',
+        'xh' => 'Cima le simvo?',
+        'pt' => 'Excluir este comentário?'
+    ],
+    'js_edit_comment' => [
+        'af' => 'Wysig kommentaar:',
+        'en' => 'Edit comment:',
+        'zu' => 'Hlela ukuphawula:',
+        'xh' => 'Hlela isimvo:',
+        'pt' => 'Editar comentário:'
+    ],
+
+    // Photos
+    'js_add_photo' => [
+        'af' => 'Voeg foto by',
+        'en' => 'Add photo',
+        'zu' => 'Engeza isithombe',
+        'xh' => 'Yongeza umfanekiso',
+        'pt' => 'Adicionar foto'
+    ],
+    'js_remove_photo' => [
+        'af' => 'Verwyder foto',
+        'en' => 'Remove photo',
+        'zu' => 'Susa isithombe',
+        'xh' => 'Susa umfanekiso',
+        'pt' => 'Remover foto'
+    ],
+    'js_delete_photo' => [
+        'af' => 'Verwyder hierdie foto?',
+        'en' => 'Remove this photo?',
+        'zu' => 'Susa lesi sithombe?',
+        'xh' => 'Susa lo mfanekiso?',
+        'pt' => 'Remover esta foto?'
+    ],
+
+    // Events
+    'js_datetime' => [
+        'af' => 'Datum/tyd',
+        'en' => 'Date/time',
+        'zu' => 'Usuku/isikhathi',
+        'xh' => 'Umhla/ixesha',
+        'pt' => 'Data/hora'
+    ],
+    'js_place' => [
+        'af' => 'Plek',
+        'en' => 'Place',
+        'zu' => 'Indawo',
+        'xh' => 'Indawo',
+        'pt' => 'Local'
+    ],
+
+    // Prayers specific
+    'js_share' => [
+        'af' => 'Deel',
+        'en' => 'Share',
+        'zu' => 'Yabelana',
+        'xh' => 'Yabelana',
+        'pt' => 'Compartilhar'
+    ],
+    'js_update' => [
+        'af' => 'Opdateer',
+        'en' => 'Update',
+        'zu' => 'Buyekeza',
+        'xh' => 'Hlaziya',
+        'pt' => 'Atualizar'
+    ],
+    'js_choose_photo' => [
+        'af' => 'Kies foto (opsioneel)',
+        'en' => 'Choose photo (optional)',
+        'zu' => 'Khetha isithombe (okungenasidingo)',
+        'xh' => 'Khetha umfanekiso (ayimfuneko)',
+        'pt' => 'Escolher foto (opcional)'
+    ],
+    'js_prayer_shared' => [
+        'af' => 'Gebedsnood/getuienis gedeel!',
+        'en' => 'Prayer/testimony shared!',
+        'zu' => 'Umthandazo/ubufakazi buhlelwe!',
+        'xh' => 'Umthandazo/ubungqina babelwe!',
+        'pt' => 'Oração/testemunho compartilhado!'
+    ],
+    'js_could_not_post' => [
+        'af' => 'Kon nie plaas nie',
+        'en' => 'Could not post',
+        'zu' => 'Ayikwazanga ukuthumela',
+        'xh' => 'Ayikwazanga ukuthumela',
+        'pt' => 'Não foi possível postar'
+    ],
+    'js_post_updated' => [
+        'af' => 'Post opgedateer!',
+        'en' => 'Post updated!',
+        'zu' => 'Okuthunyelwe kubuyekeziwe!',
+        'xh' => 'Iposti ihlaziyiwe!',
+        'pt' => 'Postagem atualizada!'
+    ],
+    'js_could_not_update' => [
+        'af' => 'Kon nie opdateer nie',
+        'en' => 'Could not update',
+        'zu' => 'Ayikwazanga ukubuyekeza',
+        'xh' => 'Ayikwazanga ukuhlaziya',
+        'pt' => 'Não foi possível atualizar'
+    ],
+    'js_photo_removed' => [
+        'af' => 'Foto verwyder!',
+        'en' => 'Photo removed!',
+        'zu' => 'Isithombe sisusiwe!',
+        'xh' => 'Umfanekiso ususwe!',
+        'pt' => 'Foto removida!'
+    ],
+    'js_could_not_remove' => [
+        'af' => 'Kon nie verwyder nie',
+        'en' => 'Could not remove',
+        'zu' => 'Ayikwazanga ukususa',
+        'xh' => 'Ayikwazanga ukususa',
+        'pt' => 'Não foi possível remover'
+    ],
+    'js_delete_post' => [
+        'af' => 'Wis hierdie post uit?',
+        'en' => 'Delete this post?',
+        'zu' => 'Susa le posti?',
+        'xh' => 'Cima le posti?',
+        'pt' => 'Excluir esta postagem?'
+    ],
+    'js_post_deleted' => [
+        'af' => 'Post uitgewis!',
+        'en' => 'Post deleted!',
+        'zu' => 'Okuthunyelwe kususiwe!',
+        'xh' => 'Iposti icinyiwe!',
+        'pt' => 'Postagem excluída!'
+    ],
+    'js_could_not_delete' => [
+        'af' => 'Kon nie uitwis nie',
+        'en' => 'Could not delete',
+        'zu' => 'Ayikwazanga ukususa',
+        'xh' => 'Ayikwazanga ukucima',
+        'pt' => 'Não foi possível excluir'
+    ],
+    'js_loading_prayers' => [
+        'af' => 'Laai gebede...',
+        'en' => 'Loading prayers...',
+        'zu' => 'Ilayisha imithandazo...',
+        'xh' => 'Ilayisha imithandazo...',
+        'pt' => 'Carregando orações...'
+    ],
+    'js_no_prayers' => [
+        'af' => 'Geen gebede/getuienisse gevind nie',
+        'en' => 'No prayers/testimonies found',
+        'zu' => 'Akukho mithandazo/ubufakazi okutholiwe',
+        'xh' => 'Akukho mithandazo/ubungqina bufunyenweyo',
+        'pt' => 'Nenhuma oração/testemunho encontrado'
+    ],
+    'js_could_not_load' => [
+        'af' => 'Kon nie laai nie',
+        'en' => 'Could not load',
+        'zu' => 'Ayikwazanga ukulayisha',
+        'xh' => 'Ayikwazanga ukulayisha',
+        'pt' => 'Não foi possível carregar'
+    ],
+    'js_prayer' => [
+        'af' => 'Gebed',
+        'en' => 'Prayer',
+        'zu' => 'Umthandazo',
+        'xh' => 'Umthandazo',
+        'pt' => 'Oração'
+    ],
+    'js_testimony' => [
+        'af' => 'Getuienis',
+        'en' => 'Testimony',
+        'zu' => 'Ubufakazi',
+        'xh' => 'Ubungqina',
+        'pt' => 'Testemunho'
+    ],
+    'js_comment_posted' => [
+        'af' => 'Kommentaar geplaas!',
+        'en' => 'Comment posted!',
+        'zu' => 'Ukuphawula kuthunyelwe!',
+        'xh' => 'Isimvo sithunyelelwe!',
+        'pt' => 'Comentário postado!'
+    ],
+    'js_comment_updated' => [
+        'af' => 'Kommentaar opgedateer!',
+        'en' => 'Comment updated!',
+        'zu' => 'Ukuphawula kubuyekeziwe!',
+        'xh' => 'Isimvo sihlaziyiwe!',
+        'pt' => 'Comentário atualizado!'
+    ],
+    'js_comment_deleted' => [
+        'af' => 'Kommentaar uitgewis!',
+        'en' => 'Comment deleted!',
+        'zu' => 'Ukuphawula kususiwe!',
+        'xh' => 'Isimvo sicinyiwe!',
+        'pt' => 'Comentário excluído!'
+    ],
+    'js_remove' => [
+        'af' => 'Verwyder',
+        'en' => 'Remove',
+        'zu' => 'Susa',
+        'xh' => 'Susa',
+        'pt' => 'Remover'
     ]
 ]);
 

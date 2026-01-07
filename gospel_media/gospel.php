@@ -131,6 +131,38 @@ $VER = time();
         window.CAN_POST = <?= $allowPost ? 'true' : 'false' ?>;
         window.USER_ID = <?= $userId ?>;
         window.USER_AMP_ID = <?= $ampId ?>;
+        window.JS_T = {
+            edit: <?= json_encode(__t('js_edit', $pageLang)) ?>,
+            delete: <?= json_encode(__t('js_delete', $pageLang)) ?>,
+            cancel: <?= json_encode(__t('js_cancel', $pageLang)) ?>,
+            save: <?= json_encode(__t('js_save', $pageLang)) ?>,
+            saving: <?= json_encode(__t('js_saving', $pageLang)) ?>,
+            back: <?= json_encode(__t('js_back', $pageLang)) ?>,
+            error: <?= json_encode(__t('js_error', $pageLang)) ?>,
+            loading: <?= json_encode(__t('js_loading', $pageLang)) ?>,
+            post_actions: <?= json_encode(__t('js_post_actions', $pageLang)) ?>,
+            edit_post: <?= json_encode(__t('js_edit_post', $pageLang)) ?>,
+            confirm_delete: <?= json_encode(__t('js_confirm_delete', $pageLang)) ?>,
+            cannot_undo: <?= json_encode(__t('js_cannot_undo', $pageLang)) ?>,
+            deleting: <?= json_encode(__t('js_deleting', $pageLang)) ?>,
+            post: <?= json_encode(__t('js_post', $pageLang)) ?>,
+            posting: <?= json_encode(__t('js_posting', $pageLang)) ?>,
+            type_message: <?= json_encode(__t('js_type_message', $pageLang)) ?>,
+            error_posting: <?= json_encode(__t('js_error_posting', $pageLang)) ?>,
+            loading_posts: <?= json_encode(__t('js_loading_posts', $pageLang)) ?>,
+            no_posts: <?= json_encode(__t('js_no_posts', $pageLang)) ?>,
+            comments: <?= json_encode(__t('js_comments', $pageLang)) ?>,
+            write_comment: <?= json_encode(__t('js_write_comment', $pageLang)) ?>,
+            no_comments: <?= json_encode(__t('js_no_comments', $pageLang)) ?>,
+            delete_comment: <?= json_encode(__t('js_delete_comment', $pageLang)) ?>,
+            edit_comment: <?= json_encode(__t('js_edit_comment', $pageLang)) ?>,
+            add_photo: <?= json_encode(__t('js_add_photo', $pageLang)) ?>,
+            remove_photo: <?= json_encode(__t('js_remove_photo', $pageLang)) ?>,
+            delete_photo: <?= json_encode(__t('js_delete_photo', $pageLang)) ?>,
+            datetime: <?= json_encode(__t('js_datetime', $pageLang)) ?>,
+            place: <?= json_encode(__t('js_place', $pageLang)) ?>,
+            remove: <?= json_encode(__t('js_remove', $pageLang)) ?>
+        };
     </script>
 </head>
 <body class="gospel-body">
