@@ -154,24 +154,24 @@ function createAdminNotification($userId, $type, $data = []) {
             'params' => !empty($params) ? json_encode($params) : null
         ]);
 
-        // Also send FCM push notification
+        // Also send FCM push notification (translated to user's language)
         try {
             // Remove emoji from title for cleaner push notification
             $pushTitle = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $title);
             $pushTitle = trim($pushTitle);
 
-            error_log("FCM: Attempting push to user $userId - Title: $pushTitle");
-
             $pushResult = sendPushToUser((int)$userId, $pushTitle, $message, [
                 'type' => $notifType,
                 'link' => $link,
-                'notification_id' => $db->lastInsertId()
+                'notification_id' => $db->lastInsertId(),
+                'titleKey' => $titleKey,
+                'messageKey' => $messageKey,
+                'params' => $params
             ]);
 
-            error_log("FCM: Push result: " . json_encode($pushResult));
+            error_log("FCM Admin: Push to user $userId result: " . json_encode($pushResult));
         } catch (Exception $pushError) {
-            // Log but don't fail - push is optional
-            error_log('FCM push error: ' . $pushError->getMessage());
+            error_log('FCM Admin push error: ' . $pushError->getMessage());
         }
 
         return true;

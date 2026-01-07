@@ -205,12 +205,12 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
 }
 
 /**
- * Send push notification to a specific user
+ * Send push notification to a specific user (in their preferred language)
  *
  * @param int $userId User ID to send to
- * @param string $title Notification title
- * @param string $body Notification body
- * @param array $data Additional data payload
+ * @param string $title Notification title (or fallback if no titleKey)
+ * @param string $body Notification body (or fallback if no messageKey)
+ * @param array $data Additional data payload (can include titleKey, messageKey, params for translation)
  * @return array Result with success status
  */
 function sendPushToUser(int $userId, string $title, string $body, array $data = []): array {
@@ -218,7 +218,44 @@ function sendPushToUser(int $userId, string $title, string $body, array $data = 
     global $pdo;
 
     try {
-        // Get all tokens for this user
+        // Get user's language and FCM tokens
+        $stmt = $pdo->prepare("SELECT language FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $userLang = $stmt->fetchColumn() ?: 'af';
+
+        // Translate title and body if translation keys are provided
+        if (!empty($data['titleKey']) || !empty($data['messageKey'])) {
+            // Include languages file for translation
+            require_once __DIR__ . '/../../includes/languages.php';
+
+            if (!empty($data['titleKey']) && function_exists('__t')) {
+                $translatedTitle = __t($data['titleKey'], $userLang);
+                // Replace placeholders like {name}, {emoji} etc.
+                if (!empty($data['params']) && is_array($data['params'])) {
+                    foreach ($data['params'] as $key => $value) {
+                        $translatedTitle = str_replace('{' . $key . '}', $value, $translatedTitle);
+                    }
+                }
+                if ($translatedTitle !== $data['titleKey']) {
+                    $title = $translatedTitle;
+                }
+            }
+
+            if (!empty($data['messageKey']) && function_exists('__t')) {
+                $translatedBody = __t($data['messageKey'], $userLang);
+                // Replace placeholders
+                if (!empty($data['params']) && is_array($data['params'])) {
+                    foreach ($data['params'] as $key => $value) {
+                        $translatedBody = str_replace('{' . $key . '}', $value, $translatedBody);
+                    }
+                }
+                if ($translatedBody !== $data['messageKey']) {
+                    $body = $translatedBody;
+                }
+            }
+        }
+
+        // Get all FCM tokens for this user
         $stmt = $pdo->prepare("SELECT token FROM fcm_tokens WHERE user_id = ?");
         $stmt->execute([$userId]);
         $tokens = $stmt->fetchAll(PDO::FETCH_COLUMN);
