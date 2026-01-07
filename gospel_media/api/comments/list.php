@@ -3,6 +3,7 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
 require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 3) . '/includes/languages.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
@@ -10,6 +11,7 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
     exit;
 }
 
+$pageLang = $_SESSION['language'] ?? 'af';
 $postId = isset($_GET['post_id']) ? (int)$_GET['post_id'] : 0;
 
 if ($postId <= 0) {
@@ -18,19 +20,17 @@ if ($postId <= 0) {
 }
 
 try {
-    $sql = "SELECT c.*, u.name, u.surname, u.photo, u.gender, u.amp_id,
-                   IF(u.gender='vrou', COALESCE(a.female_name,'Suster'), COALESCE(a.male_name,'Broer')) AS amp_title
+    $sql = "SELECT c.*, u.name, u.surname, u.photo, u.gender, u.amp_id
             FROM comments c
             JOIN users u ON u.id = c.user_id
-            LEFT JOIN amptes a ON a.id = u.amp_id
             WHERE c.post_id = ?
             ORDER BY c.created_at ASC";
-    
+
     $st = $pdo->prepare($sql);
     $st->execute([$postId]);
     $comments = $st->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Fix photo paths
+
+    // Fix photo paths and translate office titles
     foreach ($comments as &$c) {
         if (isset($c['photo']) && $c['photo']) {
             $photo = $c['photo'];
@@ -38,6 +38,11 @@ try {
                 $c['photo'] = '/assets/uploads/' . $photo;
             }
         }
+
+        // Translate office title
+        $ampId = (int)($c['amp_id'] ?? 10);
+        $gender = $c['gender'] ?? 'man';
+        $c['amp_title'] = get_translated_office($ampId, $gender, $pageLang);
     }
     unset($c);
     

@@ -355,27 +355,14 @@
     document.head.appendChild(css);
   }
 
-  function labelForRoom(r, lang) {
-    const t = (r.type || '').toLowerCase();
-    const n = r.name || '';
-    
-    if (t === 'gemeente') {
-      const prefix = lang === 'en' ? 'Congregation' : 'Gemeente';
-      return /^gemeente|^congregation/i.test(n) ? n : prefix + ' ' + n;
+  // Use display_name from API (already translated server-side)
+  function labelForRoom(r) {
+    // API now provides translated display_name
+    if (r.display_name) {
+      return r.display_name;
     }
-    if (t === 'opsienerskap') {
-      const prefix = lang === 'en' ? 'Oversight' : 'Opsienerskap';
-      return /^opsienerskap|^oversight/i.test(n) ? n : prefix + ' ' + n;
-    }
-    if (t === 'jeug') {
-      const prefix = lang === 'en' ? 'Youth' : 'Jeug';
-      return /^jeug|^youth/i.test(n) ? n : prefix + ' ' + n;
-    }
-    if (t === 'sondagskool') {
-      const prefix = lang === 'en' ? 'Sunday School' : 'Sondagskool';
-      return /^sondagskool|^sunday/i.test(n) ? n : prefix + ' ' + n;
-    }
-    return n || (lang === 'en' ? 'Room' : 'Kamer');
+    // Fallback for legacy data
+    return r.name || 'Room';
   }
 
   async function fetchUserRooms() {
@@ -442,10 +429,9 @@
     
     const list = $('#roommenu-list', wrap);
     list.innerHTML = '<div class="rmx-empty">' + T('Laai kamers…', 'Loading rooms…') + '</div>';
-    
+
     const currentRoomId = window.CURRENT_ROOM_ID || 0;
-    const lang = window.PAGE_LANG || 'af';
-    
+
     fetchUserRooms().then(function (data) {
       list.innerHTML = '';
       
@@ -469,9 +455,9 @@
             row.classList.add('active');
           }
           
-          const a = ce('a', 'rmx-link', labelForRoom(r, lang));
+          const a = ce('a', 'rmx-link', labelForRoom(r));
           a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
-          
+
           const badge = ce('span', 'rmx-badge auto', T('Outo', 'Auto'));
           
           row.appendChild(a);
@@ -494,9 +480,9 @@
             row.classList.add('active');
           }
           
-          const a = ce('a', 'rmx-link', labelForRoom(r, lang));
+          const a = ce('a', 'rmx-link', labelForRoom(r));
           a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
-          
+
           const badge = ce('span', 'rmx-badge joined', T('Gekies', 'Joined'));
           
           row.appendChild(a);
