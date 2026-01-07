@@ -68,9 +68,10 @@
   }
 
   // ===== BOOK NAME MAPPINGS =====
+  // Names MUST match exactly what's in af_1933_53.json (including special characters)
   const AF_TO_EN_BOOKS = {
     'Genesis': 'Genesis',
-    'Exodus': 'Exodus',
+    'Eksodus': 'Exodus',
     'Levitikus': 'Leviticus',
     'Numeri': 'Numbers',
     'Deuteronomium': 'Deuteronomy',
@@ -95,7 +96,7 @@
     'Jeremia': 'Jeremiah',
     'Klaagliedere': 'Lamentations',
     'Esegiel': 'Ezekiel',
-    'Daniel': 'Daniel',
+    'Daniël': 'Daniel',
     'Hosea': 'Hosea',
     'Joel': 'Joel',
     'Amos': 'Amos',
@@ -114,7 +115,7 @@
     'Johannes': 'John',
     'Handelinge': 'Acts',
     'Romeine': 'Romans',
-    '1 Korinthiers': '1 Corinthians',
+    '1 Korinthiërs': '1 Corinthians',
     '2 Korinthiers': '2 Corinthians',
     'Galasiers': 'Galatians',
     'Efesiers': 'Ephesians',
@@ -670,67 +671,67 @@
   // ===== DUAL SCROLL SYNC =====
   function setupDualScrollSync() {
     if (!els.leftColumn || !els.rightColumn) return;
-    
+
     let syncTimeout = null;
-    
-    function syncByChapter(sourceColumn, targetColumn) {
+
+    function syncByVerse(sourceColumn, targetColumn) {
       if (state.syncingScroll) return;
-      
+
       state.syncingScroll = true;
-      
-      const sourceChapters = sourceColumn.querySelectorAll('.bible-chapter-block');
-      if (!sourceChapters.length) {
+
+      // Find the verse closest to the top of the visible area
+      const sourceVerses = sourceColumn.querySelectorAll('.bible-verse');
+      if (!sourceVerses.length) {
         state.syncingScroll = false;
         return;
       }
-      
-      let closestChapter = null;
+
+      const columnTop = sourceColumn.getBoundingClientRect().top + 100;
+      let closestVerse = null;
       let minDistance = Infinity;
-      
-      sourceChapters.forEach(chapter => {
-        const rect = chapter.getBoundingClientRect();
-        const distance = Math.abs(rect.top - 100);
-        
+
+      sourceVerses.forEach(verse => {
+        const rect = verse.getBoundingClientRect();
+        const distance = Math.abs(rect.top - columnTop);
+
         if (distance < minDistance) {
           minDistance = distance;
-          closestChapter = chapter;
+          closestVerse = verse;
         }
       });
-      
-      if (closestChapter) {
-        const bookEN = closestChapter.dataset.booken;
-        const chapterNum = closestChapter.dataset.chapter;
-        
-        const targetChapter = targetColumn.querySelector(
-          `.bible-chapter-block[data-booken="${bookEN}"][data-chapter="${chapterNum}"]`
-        );
-        
-        if (targetChapter) {
-          const sourceRect = closestChapter.getBoundingClientRect();
+
+      if (closestVerse) {
+        const ref = closestVerse.dataset.ref;
+
+        // Find matching verse in target column
+        const targetVerse = targetColumn.querySelector(`.bible-verse[data-ref="${ref}"]`);
+
+        if (targetVerse) {
+          const sourceRect = closestVerse.getBoundingClientRect();
           const sourceOffset = sourceRect.top - sourceColumn.getBoundingClientRect().top;
-          
-          const targetRect = targetChapter.getBoundingClientRect();
+
+          const targetRect = targetVerse.getBoundingClientRect();
           const currentTargetOffset = targetRect.top - targetColumn.getBoundingClientRect().top;
-          
+
           targetColumn.scrollTop += (currentTargetOffset - sourceOffset);
         }
       }
-      
+
       if (syncTimeout) clearTimeout(syncTimeout);
       syncTimeout = setTimeout(() => {
         state.syncingScroll = false;
-      }, 100);
+      }, 50);
     }
-    
+
     els.leftColumn.addEventListener('scroll', () => {
       if (state.dualViewEnabled && !state.syncingScroll) {
-        syncByChapter(els.leftColumn, els.rightColumn);
+        syncByVerse(els.leftColumn, els.rightColumn);
       }
     }, { passive: true });
-    
+
     els.rightColumn.addEventListener('scroll', () => {
       if (state.dualViewEnabled && !state.syncingScroll) {
-        syncByChapter(els.rightColumn, els.leftColumn);
+        syncByVerse(els.rightColumn, els.leftColumn);
       }
     }, { passive: true });
   }
@@ -1295,32 +1296,21 @@
       alert(state.lang === 'en' ? 'Select a verse first!' : 'Kies eers \'n vers!');
       return;
     }
-    
+
     const verse = document.querySelector(`[data-ref="${state.selectedVerse}"]`);
     const verseText = verse?.querySelector('.bible-verse-text')?.textContent || '';
     const parsed = parseRef(state.selectedVerse);
     const displayName = state.lang === 'af' ? (EN_TO_AF_BOOKS[parsed.bookEN] || parsed.bookEN) : parsed.bookEN;
     const verseRef = `${displayName} ${parsed.chapter}:${parsed.verse}`;
-    
-    const question = prompt(
-      state.lang === 'af' 
-        ? 'Vra AI \'n vraag oor hierdie vers (of los leeg vir algemene verduideliking):' 
-        : 'Ask AI a question about this verse (or leave empty for general explanation):'
-    );
-    
-    if (question === null) {
-      hideContextMenu();
-      return;
-    }
-    
+
     hideContextMenu();
-    
+
     if (!els.aiPanel || !els.aiOutput) return;
-    
-    const loadingMsg = state.lang === 'af' ? 'AI dink...' : 'AI thinking...';
+
+    const loadingMsg = state.lang === 'af' ? 'AI verduidelik gedeelte...' : 'AI explaining passage...';
     els.aiOutput.innerHTML = `<div class="bible-loading">${loadingMsg}</div>`;
     showPanel(els.aiPanel);
-    
+
     try {
       const res = await fetch('/bible/api/ai_commentary.php', {
         method: 'POST',
@@ -1329,18 +1319,22 @@
         body: JSON.stringify({
           verse_ref: verseRef,
           verse_text: verseText,
-          question: question,
+          book_en: parsed.bookEN,
+          chapter: parsed.chapter,
+          verse: parsed.verse,
           lang: state.lang
         })
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
+        // Format the answer with proper line breaks
+        const formattedAnswer = data.answer.replace(/\n/g, '<br>');
         els.aiOutput.innerHTML = `
           <div class="bible-ai-response">
             <div class="bible-ai-verse-ref">${esc(verseRef)}</div>
-            <div class="bible-ai-answer">${esc(data.answer)}</div>
+            <div class="bible-ai-answer">${formattedAnswer}</div>
           </div>
         `;
       } else {
@@ -1746,6 +1740,10 @@
       setupInfiniteScroll();
       
       updateLoadingProgress(100, '100%', state.lang === 'af' ? 'Gereed!' : 'Ready!');
+
+      // Read initial dual view state from localStorage BEFORE binding events
+      const savedDualView = localStorage.getItem('bible_dual_view');
+      state.dualViewEnabled = savedDualView === '1';
 
       bindEvents();
       updateHeaderRef();

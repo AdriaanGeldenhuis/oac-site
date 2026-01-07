@@ -23,15 +23,9 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= esc(t('bible_reader')) ?></title>
   
-  <style>
-    @font-face {
-      font-family: 'Parisienne';
-      src: url('/assets/fonts/Parisienne-Regular.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="/bible/css/bible.css?v=<?= time() ?>">
 </head>

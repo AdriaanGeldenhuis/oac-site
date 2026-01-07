@@ -117,15 +117,7 @@ $VER = time();
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <style>
-    @font-face {
-      font-family: 'Parisienne';
-      src: url('/assets/fonts/Parisienne-Regular.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="/welcome/css/welcome.css?v=<?= $VER ?>">
 </head>
@@ -151,9 +143,6 @@ $VER = time();
       <span class="wc-sparkle" style="--delay: 1s; --x: 45%; --y: 65%;"></span>
       <span class="wc-sparkle" style="--delay: 1.5s; --x: 25%; --y: 75%;"></span>
       <span class="wc-sparkle" style="--delay: 2s; --x: 85%; --y: 65%;"></span>
-    </div>
-    <div class="wc-hero-scroll" onclick="document.querySelector('.wc-teaching-section').scrollIntoView({behavior:'smooth'})">
-      <div class="wc-scroll-arrow"></div>
     </div>
   </div>
 

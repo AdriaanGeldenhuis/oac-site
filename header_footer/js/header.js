@@ -92,22 +92,34 @@
 
   // Bible View Toggle
   if (viewToggle) {
+    // Initialize state if not set (default to single view)
+    if (localStorage.getItem('bible_dual_view') === null) {
+      localStorage.setItem('bible_dual_view', '0');
+    }
+
     viewToggle.addEventListener('click', function() {
-      const currentState = localStorage.getItem('bible_dual_view');
-      const newState = currentState === '0' ? '1' : '0';
+      const currentState = localStorage.getItem('bible_dual_view') || '0';
+      const newState = currentState === '1' ? '0' : '1';
       localStorage.setItem('bible_dual_view', newState);
-      
-      viewToggle.classList.toggle('active');
-      
+
+      viewToggle.classList.toggle('active', newState === '1');
+
       // Trigger event for Bible reader to listen to
       window.dispatchEvent(new CustomEvent('bibleViewToggle', { detail: { enabled: newState === '1' } }));
     });
-    
-    // Set initial state
+
+    // Set initial state - active when dual view is ON ('1')
     const savedState = localStorage.getItem('bible_dual_view');
-    if (savedState === '0') {
+    if (savedState === '1') {
       viewToggle.classList.add('active');
     }
+
+    // Dispatch initial state to Bible reader on page load
+    setTimeout(function() {
+      window.dispatchEvent(new CustomEvent('bibleViewToggle', {
+        detail: { enabled: savedState === '1' }
+      }));
+    }, 100);
   }
 
   // Event listeners
