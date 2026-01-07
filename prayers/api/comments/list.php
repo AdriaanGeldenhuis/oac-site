@@ -43,7 +43,7 @@ try {
 
   foreach ($comments as &$comment) {
     $comment['created_at'] = date('Y-m-d H:i', strtotime($comment['created_at']));
-    $comment['user_pic'] = $comment['user_pic'] ?: '/assets/default-avatar.png';
+    $comment['user_pic'] = $comment['user_pic'] ?: null;
 
     // Build username with office title
     $ampId = (int)($comment['amp_id'] ?? 10);
@@ -51,6 +51,16 @@ try {
     $officeTitle = get_translated_office($ampId, $gender, $pageLang);
     $fullName = trim($comment['user_name'] . ' ' . $comment['user_surname']);
     $comment['username'] = $officeTitle . ' ' . $fullName;
+
+    // Generate initials
+    $nameParts = preg_split('/\s+/', $fullName);
+    if (count($nameParts) >= 2) {
+        $comment['initials'] = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
+    } elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
+        $comment['initials'] = strtoupper(mb_substr($nameParts[0], 0, 2));
+    } else {
+        $comment['initials'] = '??';
+    }
 
     // Clean up fields not needed in response
     unset($comment['user_name'], $comment['user_surname'], $comment['amp_id'], $comment['gender']);

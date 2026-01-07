@@ -43,6 +43,17 @@ try {
         $ampId = (int)($c['amp_id'] ?? 10);
         $gender = $c['gender'] ?? 'man';
         $c['amp_title'] = get_translated_office($ampId, $gender, $pageLang);
+
+        // Generate initials
+        $fullName = trim(($c['name'] ?? '') . ' ' . ($c['surname'] ?? ''));
+        $nameParts = preg_split('/\s+/', $fullName);
+        if (count($nameParts) >= 2) {
+            $c['initials'] = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
+        } elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
+            $c['initials'] = strtoupper(mb_substr($nameParts[0], 0, 2));
+        } else {
+            $c['initials'] = '??';
+        }
     }
     unset($c);
     

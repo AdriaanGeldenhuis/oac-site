@@ -187,11 +187,24 @@ try {
     <div class="afsprake-group">
       <h4 class="afsprake-group-title"><?= esc($ampList[0]['amp_name'] ?? '') ?></h4>
       <div class="afsprake-grid">
-        <?php foreach ($ampList as $amp): ?>
-        <?php $avatar = !empty($amp['photo']) ? esc($amp['photo']) : '/assets/img/avatar-default.png'; ?>
+        <?php foreach ($ampList as $amp):
+          $hasPhoto = !empty($amp['photo']);
+          $personName = trim(($amp['name'] ?? '') . ' ' . ($amp['surname'] ?? ''));
+          $nameParts = preg_split('/\s+/', $personName);
+          $personInitials = '';
+          if (count($nameParts) >= 2) {
+              $personInitials = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
+          } elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
+              $personInitials = strtoupper(mb_substr($nameParts[0], 0, 2));
+          }
+        ?>
         <div class="afsprake-card-person" data-id="<?= (int)$amp['id'] ?>" data-name="<?= esc(strtolower($amp['name'] . ' ' . $amp['surname'])) ?>">
           <div class="afsprake-avatar">
-            <img src="<?= $avatar ?>" alt="<?= esc($amp['name']) ?>">
+            <?php if ($hasPhoto): ?>
+            <img src="<?= esc($amp['photo']) ?>" alt="<?= esc($amp['name']) ?>">
+            <?php else: ?>
+            <div class="afsprake-avatar-initials"><?= esc($personInitials) ?></div>
+            <?php endif; ?>
           </div>
           <div class="afsprake-info">
             <h4><?= esc($amp['name'] . ' ' . $amp['surname']) ?></h4>

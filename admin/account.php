@@ -35,68 +35,127 @@ $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+        $photoSaved = false;
+
+        // Handle cropped photo data (base64 from cropper)
+        if (!empty($_POST['cropped_photo_data']) && strpos($_POST['cropped_photo_data'], 'data:image/') === 0) {
             $uploadDir = __DIR__ . '/../assets/uploads/' . $userId . '/profile';
             if (!is_dir($uploadDir)) {
                 @mkdir($uploadDir, 0775, true);
             }
-            
+
+            // Clear old files
             foreach (glob($uploadDir . '/*') as $f) {
                 if (is_file($f)) @unlink($f);
             }
-            
+
+            // Decode base64 image
+            $base64Data = $_POST['cropped_photo_data'];
+            $base64Data = preg_replace('#^data:image/\w+;base64,#i', '', $base64Data);
+            $imageData = base64_decode($base64Data);
+
+            if ($imageData !== false && function_exists('imagecreatefromstring')) {
+                $src = @imagecreatefromstring($imageData);
+                if ($src) {
+                    $webpTarget = $uploadDir . '/profile_' . $userId . '.webp';
+                    $jpgTarget = $uploadDir . '/profile_' . $userId . '.jpg';
+
+                    // Try to save as WebP first
+                    if (function_exists('imagewebp')) {
+                        $photoSaved = @imagewebp($src, $webpTarget, 82);
+                        if ($photoSaved && is_file($jpgTarget)) @unlink($jpgTarget);
+                    }
+
+                    // Fallback to JPEG
+                    if (!$photoSaved && function_exists('imagejpeg')) {
+                        $photoSaved = @imagejpeg($src, $jpgTarget, 85);
+                        if ($photoSaved && is_file($webpTarget)) @unlink($webpTarget);
+                    }
+
+                    @imagedestroy($src);
+                }
+            }
+
+            if ($photoSaved) {
+                $webpPath = '/assets/uploads/' . $userId . '/profile/profile_' . $userId . '.webp';
+                $jpgPath = '/assets/uploads/' . $userId . '/profile/profile_' . $userId . '.jpg';
+
+                $relative = null;
+                if (file_exists(__DIR__ . '/..' . $webpPath)) {
+                    $relative = $webpPath;
+                } elseif (file_exists(__DIR__ . '/..' . $jpgPath)) {
+                    $relative = $jpgPath;
+                }
+
+                if ($relative) {
+                    $pdo->prepare('UPDATE users SET photo = ? WHERE id = ?')->execute([$relative, $userId]);
+                    $currentUser['photo'] = $relative;
+                }
+            }
+        }
+        // Fallback: handle regular file upload (without cropper)
+        elseif (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../assets/uploads/' . $userId . '/profile';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0775, true);
+            }
+
+            foreach (glob($uploadDir . '/*') as $f) {
+                if (is_file($f)) @unlink($f);
+            }
+
             $tmpFile = $_FILES['photo']['tmp_name'];
             $blob = @file_get_contents($tmpFile);
             $saved = false;
-            
+
             if ($blob !== false && function_exists('imagecreatefromstring')) {
                 $src = @imagecreatefromstring($blob);
                 if ($src) {
                     $w = @imagesx($src);
                     $h = @imagesy($src);
-                    
+
                     if ($w && $h) {
                         $size = min($w, $h);
                         $xOff = (int)(($w - $size) / 2);
                         $yOff = (int)(($h - $size) / 2);
-                        
+
                         $canvas = @imagecreatetruecolor(600, 600);
                         if ($canvas) {
                             @imagealphablending($canvas, false);
                             @imagesavealpha($canvas, true);
                             @imagecopyresampled($canvas, $src, 0, 0, $xOff, $yOff, 600, 600, $size, $size);
-                            
+
                             $webpTarget = $uploadDir . '/profile_' . $userId . '.webp';
                             $jpgTarget = $uploadDir . '/profile_' . $userId . '.jpg';
-                            
+
                             if (function_exists('imagewebp')) {
                                 $saved = @imagewebp($canvas, $webpTarget, 82);
                                 if ($saved && is_file($jpgTarget)) @unlink($jpgTarget);
                             }
-                            
+
                             if (!$saved && function_exists('imagejpeg')) {
                                 $saved = @imagejpeg($canvas, $jpgTarget, 85);
                                 if ($saved && is_file($webpTarget)) @unlink($webpTarget);
                             }
-                            
+
                             @imagedestroy($canvas);
                         }
                     }
                     @imagedestroy($src);
                 }
             }
-            
+
             if ($saved) {
                 $relative = null;
                 $webpPath = '/assets/uploads/' . $userId . '/profile/profile_' . $userId . '.webp';
                 $jpgPath = '/assets/uploads/' . $userId . '/profile/profile_' . $userId . '.jpg';
-                
+
                 if (file_exists(__DIR__ . '/..' . $webpPath)) {
                     $relative = $webpPath;
                 } elseif (file_exists(__DIR__ . '/..' . $jpgPath)) {
                     $relative = $jpgPath;
                 }
-                
+
                 if ($relative) {
                     $pdo->prepare('UPDATE users SET photo = ? WHERE id = ?')->execute([$relative, $userId]);
                     $currentUser['photo'] = $relative;

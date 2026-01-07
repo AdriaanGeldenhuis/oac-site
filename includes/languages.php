@@ -922,6 +922,13 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Phucula',
         'pt' => 'Melhorar'
     ],
+    'translate_all' => [
+        'af' => 'Vertaal Alles',
+        'en' => 'Translate All',
+        'zu' => 'Humusha Konke',
+        'xh' => 'Guqulela Konke',
+        'pt' => 'Traduzir Tudo'
+    ],
     'ready_to_save' => [
         'af' => 'Gereed om te stoor',
         'en' => 'Ready to save',

@@ -414,9 +414,15 @@
       
       const header = ce('div', { class: 'comment-header' });
       
-      const avatar = ce('img', { class: 'comment-avatar' });
-      avatar.src = c.photo || '/assets/avatar.svg';
-      avatar.alt = 'avatar';
+      let avatar;
+      if (c.photo) {
+        avatar = ce('img', { class: 'comment-avatar' });
+        avatar.src = c.photo;
+        avatar.alt = 'avatar';
+      } else {
+        avatar = ce('div', { class: 'comment-avatar gm-avatar-initials gm-avatar-initials-sm' });
+        avatar.textContent = c.initials || '??';
+      }
       
       const author = ce('div', { class: 'comment-author' });
       author.textContent = computeDisplayName(c);
@@ -457,8 +463,14 @@
     const card = ce('article', { class: 'post-card', 'data-post-id': String(p.id) });
     const header = ce('div', { class: 'post-header' });
     
-    const avatar = ce('img', { class: 'avatar' });
-    avatar.src = p.user_photo || p.photo || '/assets/avatar.svg';
+    let avatar;
+    if (p.user_photo) {
+      avatar = ce('img', { class: 'avatar' });
+      avatar.src = p.user_photo;
+    } else {
+      avatar = ce('div', { class: 'avatar gm-avatar-initials' });
+      avatar.textContent = p.initials || '??';
+    }
     header.appendChild(avatar);
     
     const info = ce('div');
