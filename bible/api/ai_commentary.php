@@ -271,11 +271,14 @@ try {
 
     // Save to database for history
     try {
-        $stmt = db()->prepare('
-            INSERT INTO bible_ai_commentary (user_id, verse_ref, question, answer)
-            VALUES (?, ?, ?, ?)
-        ');
-        $stmt->execute([$userId, $verseRef, 'context_explanation', $answer]);
+        global $pdo;
+        if ($pdo) {
+            $stmt = $pdo->prepare('
+                INSERT INTO bible_ai_commentary (user_id, verse_ref, question, answer)
+                VALUES (?, ?, ?, ?)
+            ');
+            $stmt->execute([$userId, $verseRef, 'context_explanation', $answer]);
+        }
     } catch (Exception $dbError) {
         // Don't fail if database save fails
         error_log('Failed to save AI commentary: ' . $dbError->getMessage());

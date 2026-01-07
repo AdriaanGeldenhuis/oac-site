@@ -8,8 +8,8 @@
  */
 declare(strict_types=1);
 
-// Database connection (uses main app database)
-require_once __DIR__ . '/../lib/db.php';
+// NOTE: Database connection ($pdo) is provided by security/auth_gate.php
+// which is required by ai_commentary.php before this file
 
 // =============================================================================
 // OPENAI API CONFIGURATION
