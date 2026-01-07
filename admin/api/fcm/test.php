@@ -8,14 +8,7 @@ require_once __DIR__ . '/../../config/fcm_config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Only allow admins to test
-$userRole = $_SESSION['role'] ?? '';
-if (!in_array($userRole, ['admin', 'super_admin'])) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Admin access required']);
-    exit;
-}
-
+// Any logged-in user can test their own notifications
 $userId = $_SESSION['user_id'] ?? null;
 
 if (!$userId) {
