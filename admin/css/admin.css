@@ -589,53 +589,57 @@ html {
   .admin-body {
     padding-top: 60px !important;
   }
-  
+
   .admin-hero {
     padding: 40px 20px;
   }
-  
+
   .admin-hero-content {
     padding: 30px 20px;
   }
-  
+
   .admin-tabs {
-    gap: 6px;
+    flex-direction: column;
+    gap: 8px;
+    overflow-x: visible;
   }
-  
+
   .admin-tab {
-    padding: 12px 16px;
-    font-size: 14px;
+    padding: 14px 20px;
+    font-size: 15px;
+    width: 100%;
+    justify-content: flex-start;
   }
-  
+
   .admin-tab span {
-    display: none;
+    display: inline;
   }
-  
+
   .admin-tab svg {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
   }
-  
+
   .admin-tabpanels {
     padding: 30px 20px;
   }
-  
+
   .admin-section-header {
     flex-direction: column;
     text-align: center;
     gap: 15px;
   }
-  
+
   .admin-profile-card {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .admin-right {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .admin-btn {
     width: 100%;
   }
