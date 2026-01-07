@@ -50,6 +50,16 @@ if ($roleFilter) {
 
 $spouseRequests = [];
 try {
+    // Clean up stale pending requests where users are already connected
+    $cleanupStmt = $pdo->prepare("UPDATE spouse_requests sr
+        JOIN users u1 ON u1.id = sr.requester_id
+        JOIN users u2 ON u2.id = sr.receiver_id
+        SET sr.status = 'accepted', sr.updated_at = CURRENT_TIMESTAMP
+        WHERE sr.status = 'pending'
+        AND (u1.spouse_user_id = u2.id OR u2.spouse_user_id = u1.id)");
+    $cleanupStmt->execute();
+
+    // Only show pending requests where users are NOT already connected as spouses
     $spouseStmt = $pdo->prepare("SELECT sr.id, sr.requester_id, sr.receiver_id,
         u1.name AS req_name, u1.surname AS req_surname,
         u2.name AS rec_name, u2.surname AS rec_surname
@@ -58,6 +68,8 @@ try {
         JOIN users u2 ON u2.id = sr.receiver_id
         WHERE sr.status = 'pending'
         AND (u1.congregation_id = :cong_id OR u2.congregation_id = :cong_id2)
+        AND u1.spouse_user_id IS NULL
+        AND u2.spouse_user_id IS NULL
         ORDER BY sr.created_at DESC");
     $spouseStmt->execute([':cong_id' => $congId, ':cong_id2' => $congId]);
     $spouseRequests = $spouseStmt->fetchAll(PDO::FETCH_ASSOC);
