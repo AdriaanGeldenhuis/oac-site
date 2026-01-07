@@ -670,67 +670,67 @@
   // ===== DUAL SCROLL SYNC =====
   function setupDualScrollSync() {
     if (!els.leftColumn || !els.rightColumn) return;
-    
+
     let syncTimeout = null;
-    
-    function syncByChapter(sourceColumn, targetColumn) {
+
+    function syncByVerse(sourceColumn, targetColumn) {
       if (state.syncingScroll) return;
-      
+
       state.syncingScroll = true;
-      
-      const sourceChapters = sourceColumn.querySelectorAll('.bible-chapter-block');
-      if (!sourceChapters.length) {
+
+      // Find the verse closest to the top of the visible area
+      const sourceVerses = sourceColumn.querySelectorAll('.bible-verse');
+      if (!sourceVerses.length) {
         state.syncingScroll = false;
         return;
       }
-      
-      let closestChapter = null;
+
+      const columnTop = sourceColumn.getBoundingClientRect().top + 100;
+      let closestVerse = null;
       let minDistance = Infinity;
-      
-      sourceChapters.forEach(chapter => {
-        const rect = chapter.getBoundingClientRect();
-        const distance = Math.abs(rect.top - 100);
-        
+
+      sourceVerses.forEach(verse => {
+        const rect = verse.getBoundingClientRect();
+        const distance = Math.abs(rect.top - columnTop);
+
         if (distance < minDistance) {
           minDistance = distance;
-          closestChapter = chapter;
+          closestVerse = verse;
         }
       });
-      
-      if (closestChapter) {
-        const bookEN = closestChapter.dataset.booken;
-        const chapterNum = closestChapter.dataset.chapter;
-        
-        const targetChapter = targetColumn.querySelector(
-          `.bible-chapter-block[data-booken="${bookEN}"][data-chapter="${chapterNum}"]`
-        );
-        
-        if (targetChapter) {
-          const sourceRect = closestChapter.getBoundingClientRect();
+
+      if (closestVerse) {
+        const ref = closestVerse.dataset.ref;
+
+        // Find matching verse in target column
+        const targetVerse = targetColumn.querySelector(`.bible-verse[data-ref="${ref}"]`);
+
+        if (targetVerse) {
+          const sourceRect = closestVerse.getBoundingClientRect();
           const sourceOffset = sourceRect.top - sourceColumn.getBoundingClientRect().top;
-          
-          const targetRect = targetChapter.getBoundingClientRect();
+
+          const targetRect = targetVerse.getBoundingClientRect();
           const currentTargetOffset = targetRect.top - targetColumn.getBoundingClientRect().top;
-          
+
           targetColumn.scrollTop += (currentTargetOffset - sourceOffset);
         }
       }
-      
+
       if (syncTimeout) clearTimeout(syncTimeout);
       syncTimeout = setTimeout(() => {
         state.syncingScroll = false;
-      }, 100);
+      }, 50);
     }
-    
+
     els.leftColumn.addEventListener('scroll', () => {
       if (state.dualViewEnabled && !state.syncingScroll) {
-        syncByChapter(els.leftColumn, els.rightColumn);
+        syncByVerse(els.leftColumn, els.rightColumn);
       }
     }, { passive: true });
-    
+
     els.rightColumn.addEventListener('scroll', () => {
       if (state.dualViewEnabled && !state.syncingScroll) {
-        syncByChapter(els.rightColumn, els.leftColumn);
+        syncByVerse(els.rightColumn, els.leftColumn);
       }
     }, { passive: true });
   }
@@ -1746,6 +1746,10 @@
       setupInfiniteScroll();
       
       updateLoadingProgress(100, '100%', state.lang === 'af' ? 'Gereed!' : 'Ready!');
+
+      // Read initial dual view state from localStorage BEFORE binding events
+      const savedDualView = localStorage.getItem('bible_dual_view');
+      state.dualViewEnabled = savedDualView === '1';
 
       bindEvents();
       updateHeaderRef();

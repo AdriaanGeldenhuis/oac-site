@@ -190,23 +190,21 @@ html {
 
 /* ===== CHAPTER BLOCKS ===== */
 .bible-chapter-block {
-  margin-bottom: 60px;
-  padding-bottom: 40px;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
   border-bottom: 1px solid var(--border);
 }
 
 .bible-chapter-title {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 4vw, 1.8rem);
+  font-weight: 400;
   color: var(--rose-gold);
   text-align: center;
-  margin-bottom: 30px;
-  padding: 15px;
-  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface) 100%);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  text-shadow: 0 0 20px var(--glow-rose);
+  margin-bottom: 15px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  text-shadow: 0 0 15px var(--glow-rose);
 }
 
 [data-theme="light"] .bible-chapter-title {
@@ -228,12 +226,12 @@ html {
 /* ===== VERSES ===== */
 .bible-verse {
   position: relative;
-  padding: 8px 70px 8px 15px;
-  margin: 8px 0;
-  border-radius: 8px;
+  padding: 4px 70px 4px 12px;
+  margin: 2px 0;
+  border-radius: 6px;
   cursor: pointer;
   background: transparent;
-  line-height: 1.8;
+  line-height: 1.6;
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -1035,7 +1033,7 @@ html {
   }
 
   .bible-verse {
-    padding: 8px 50px 8px 12px;
+    padding: 4px 50px 4px 10px;
   }
 
   .bible-verse-text {
@@ -1053,11 +1051,11 @@ html {
 
 @media (max-width: 480px) {
   .bible-column-content {
-    padding: 15px;
+    padding: 12px;
   }
 
   .bible-verse {
-    padding: 8px 45px 8px 10px;
+    padding: 3px 40px 3px 8px;
   }
 
   .bible-verse-text {
