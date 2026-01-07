@@ -257,6 +257,7 @@ body {
   width: 22px;
   height: 22px;
   stroke: #ffffff;
+  color: #ffffff;
   filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.5));
   position: absolute;
   transition: var(--ghf-transition);
@@ -265,6 +266,7 @@ body {
 
 [data-theme="light"] .ghf-theme-icon {
   stroke: #2a2a2a;
+  color: #2a2a2a;
 }
 
 .ghf-theme-sun {
@@ -317,6 +319,7 @@ body {
 
 .ghf-theme-toggle:hover .ghf-theme-icon {
   stroke: var(--ghf-text-rose);
+  color: var(--ghf-text-rose);
 }
 
 .ghf-theme-toggle:active {
@@ -350,6 +353,7 @@ body {
   width: 22px;
   height: 22px;
   stroke: #ffffff;
+  color: #ffffff;
   filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.5));
   position: relative;
   z-index: 2;
@@ -358,6 +362,7 @@ body {
 
 [data-theme="light"] .ghf-view-icon {
   stroke: #2a2a2a;
+  color: #2a2a2a;
 }
 
 .ghf-view-shine {
@@ -390,6 +395,7 @@ body {
 
 .ghf-view-toggle:hover .ghf-view-icon {
   stroke: var(--ghf-text-rose);
+  color: var(--ghf-text-rose);
 }
 
 .ghf-view-toggle:active {
@@ -398,6 +404,7 @@ body {
 
 .ghf-view-toggle.active .ghf-view-icon {
   stroke: var(--ghf-text-rose);
+  color: var(--ghf-text-rose);
 }
 
 /* ===== LANGUAGE ===== */
@@ -619,10 +626,12 @@ body.ghf-open .ghf-drawer {
   width: 26px;
   height: 26px;
   stroke: #ffffff;
+  color: #ffffff;
 }
 
 [data-theme="light"] .ghf-drawer-close svg {
   stroke: #2a2a2a;
+  color: #2a2a2a;
 }
 
 .ghf-drawer-close:hover {
@@ -632,6 +641,7 @@ body.ghf-open .ghf-drawer {
 
 .ghf-drawer-close:hover svg {
   stroke: var(--ghf-text-rose);
+  color: var(--ghf-text-rose);
 }
 
 /* ===== NAV LIST ===== */
