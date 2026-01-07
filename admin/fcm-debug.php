@@ -178,18 +178,26 @@ include __DIR__ . '/../header_footer/header.php';
 
     <!-- Test Push -->
     <div class="debug-section">
-        <h3>4. Send Test Push</h3>
+        <h3>4. Send Test Push (Direct FCM)</h3>
         <?php if (empty($userTokens)): ?>
             <p class="status-warning">⚠️ Cannot test - no tokens registered</p>
         <?php else: ?>
-            <button class="btn-test" onclick="sendTestPush()">📤 Send Test Push to My Phone</button>
+            <button class="btn-test" onclick="sendTestPush()">📤 Direct FCM Test</button>
             <p id="push-result" style="margin-top:10px;"></p>
         <?php endif; ?>
     </div>
 
+    <!-- Test via createAdminNotification -->
+    <div class="debug-section">
+        <h3>5. Test via Notification Helper</h3>
+        <p>This tests the full notification flow (createAdminNotification → FCM)</p>
+        <button class="btn-test" onclick="testNotificationFlow()">📨 Test Notification Flow</button>
+        <p id="notif-result" style="margin-top:10px;"></p>
+    </div>
+
     <!-- Console Log -->
     <div class="debug-section">
-        <h3>5. Console Log</h3>
+        <h3>6. Console Log</h3>
         <div id="log-output" class="code-block">Logs will appear here...\n</div>
     </div>
 </div>
@@ -335,6 +343,32 @@ async function sendTestPush() {
         }
     } catch (e) {
         console.error('Test push error:', e);
+        resultEl.innerHTML = '<span class="status-error">✗ Error: ' + e.message + '</span>';
+    }
+}
+
+// Test notification flow (via createAdminNotification)
+async function testNotificationFlow() {
+    const resultEl = document.getElementById('notif-result');
+    resultEl.innerHTML = 'Testing notification flow...';
+
+    try {
+        const response = await fetch('/admin/api/fcm/test_notification.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+
+        const data = await response.json();
+        console.log('Notification flow test result:', data);
+
+        if (data.success) {
+            resultEl.innerHTML = '<span class="status-ok">✓ ' + data.message + '</span>';
+        } else {
+            resultEl.innerHTML = '<span class="status-error">✗ Failed: ' + (data.error || 'Unknown error') + '</span>';
+        }
+    } catch (e) {
+        console.error('Notification flow test error:', e);
         resultEl.innerHTML = '<span class="status-error">✗ Error: ' + e.message + '</span>';
     }
 }
