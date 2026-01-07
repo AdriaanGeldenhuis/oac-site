@@ -419,6 +419,16 @@ html {
   color: var(--text-primary);
 }
 
+/* Light mode - darker text for teaching content */
+[data-theme="light"] .wc-teaching-content {
+  color: #2a2825;
+}
+
+[data-theme="light"] .wc-teaching-content p,
+[data-theme="light"] .wc-teaching-content li {
+  color: #1a1816;
+}
+
 /* No content */
 .wc-no-content {
   text-align: center;
