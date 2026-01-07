@@ -126,36 +126,34 @@ try {
     </div>
   <?php endif; ?>
 
+  <?php if (!empty($spouseRequests)): ?>
   <h3 class="approval-subtitle" style="margin-top:40px"><?= t('spouse_requests') ?></h3>
-  
-  <?php if (empty($spouseRequests)): ?>
-    <p class="admin-muted"><?= t('no_pending_spouse') ?></p>
-  <?php else: ?>
-    <div class="admin-table-wrap">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th><?= t('requester') ?></th>
-            <th><?= t('receiver') ?></th>
-            <th><?= t('status') ?></th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($spouseRequests as $req): ?>
-          <tr>
-            <td><?= htmlspecialchars($req['req_name'] . ' ' . $req['req_surname']) ?></td>
-            <td><?= htmlspecialchars($req['rec_name'] . ' ' . $req['rec_surname']) ?></td>
-            <td>
-              <span class="admin-badge admin-badge-warning"><?= t('pending') ?></span>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-    <p class="admin-muted" style="margin-top:10px">
-      <?= t('spouse_auto_approve_note') ?>
-    </p>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th><?= t('requester') ?></th>
+          <th><?= t('receiver') ?></th>
+          <th><?= t('status') ?></th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($spouseRequests as $req): ?>
+        <tr>
+          <td><?= htmlspecialchars($req['req_name'] . ' ' . $req['req_surname']) ?></td>
+          <td><?= htmlspecialchars($req['rec_name'] . ' ' . $req['rec_surname']) ?></td>
+          <td>
+            <span class="admin-badge admin-badge-warning"><?= t('pending') ?></span>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <p class="admin-muted" style="margin-top:10px">
+    <?= t('spouse_auto_approve_note') ?>
+  </p>
   <?php endif; ?>
 </div>
 
