@@ -117,7 +117,7 @@ $VER = time();
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="/welcome/css/welcome.css?v=<?= $VER ?>">
 </head>
@@ -143,9 +143,6 @@ $VER = time();
       <span class="wc-sparkle" style="--delay: 1s; --x: 45%; --y: 65%;"></span>
       <span class="wc-sparkle" style="--delay: 1.5s; --x: 25%; --y: 75%;"></span>
       <span class="wc-sparkle" style="--delay: 2s; --x: 85%; --y: 65%;"></span>
-    </div>
-    <div class="wc-hero-scroll">
-      <div class="wc-scroll-arrow"></div>
     </div>
   </div>
 

@@ -2,17 +2,6 @@
 (function() {
   'use strict';
 
-  // Smooth scroll for hero scroll indicator
-  var scrollIndicator = document.querySelector('.wc-hero-scroll');
-  if (scrollIndicator) {
-    scrollIndicator.addEventListener('click', function() {
-      var teachingSection = document.querySelector('.wc-teaching-section');
-      if (teachingSection) {
-        teachingSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-  }
-
   // Add entrance animations when elements come into view
   var observerOptions = {
     threshold: 0.1,
