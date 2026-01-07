@@ -29,16 +29,16 @@ define('BIBLE_FILES', [
 // Office/Amp ID to translation key mapping
 // Maps amp_id to [male_key, female_key]
 define('AMP_TRANSLATION_KEYS', [
-    1  => ['apostle', 'apostle'],
-    2  => ['prophet', 'prophet'],
-    3  => ['evangelist', 'evangelist'],
-    4  => ['shepherd', 'shepherd'],
-    5  => ['elder', 'elder'],
-    6  => ['deacon', 'deaconess'],
-    7  => ['priest', 'priestess'],
-    8  => ['priest', 'priestess'],
-    9  => ['member', 'member'],
-    10 => ['member', 'member']
+    1  => ['apostle', 'apostle_sister'],
+    2  => ['overseer', 'overseer_sister'],
+    3  => ['evangelist', 'evangelist_sister'],
+    4  => ['prophet', 'prophet_sister'],
+    5  => ['elder', 'elder_sister'],
+    6  => ['priest', 'priest_sister'],
+    7  => ['subdeacon', 'subdeacon_sister'],
+    8  => ['choir_leader_brother', 'choir_leader_sister'],
+    9  => ['helper', 'helper_sister'],
+    10 => ['brother', 'sister']
 ]);
 
 /**
@@ -665,6 +665,104 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Ilunga',
         'xh' => 'Ilungu',
         'pt' => 'Membro'
+    ],
+    'apostle_sister' => [
+        'af' => 'Apostel Suster',
+        'en' => 'Apostle Sister',
+        'zu' => 'Udade woMphostoli',
+        'xh' => 'Udade woMpostile',
+        'pt' => 'Irmã Apóstola'
+    ],
+    'overseer_sister' => [
+        'af' => 'Opsiener Suster',
+        'en' => 'Overseer Sister',
+        'zu' => 'Udade woMbonisi',
+        'xh' => 'Udade woMbonisi',
+        'pt' => 'Irmã Supervisora'
+    ],
+    'evangelist_sister' => [
+        'af' => 'Evangelis Suster',
+        'en' => 'Evangelist Sister',
+        'zu' => 'Udade woMvangeli',
+        'xh' => 'Udade woMvangeli',
+        'pt' => 'Irmã Evangelista'
+    ],
+    'prophet_sister' => [
+        'af' => 'Profeet Suster',
+        'en' => 'Prophet Sister',
+        'zu' => 'Udade woMprofethi',
+        'xh' => 'Udade woMprofeti',
+        'pt' => 'Irmã Profetisa'
+    ],
+    'elder_sister' => [
+        'af' => 'Oudste Suster',
+        'en' => 'Elder Sister',
+        'zu' => 'Udade woMdala',
+        'xh' => 'Udade woMdala',
+        'pt' => 'Irmã Anciã'
+    ],
+    'priest_sister' => [
+        'af' => 'Priester Suster',
+        'en' => 'Priest Sister',
+        'zu' => 'Udade woMpristi',
+        'xh' => 'Udade woMbingeleli',
+        'pt' => 'Irmã Sacerdotisa'
+    ],
+    'subdeacon' => [
+        'af' => 'Onderdiaken',
+        'en' => 'Subdeacon',
+        'zu' => 'Umdiakoni omncane',
+        'xh' => 'Umdiakoni omncinane',
+        'pt' => 'Subdiácono'
+    ],
+    'subdeacon_sister' => [
+        'af' => 'Onderdiaken Suster',
+        'en' => 'Subdeacon Sister',
+        'zu' => 'Udade woMdiakoni omncane',
+        'xh' => 'Udade woMdiakoni omncinane',
+        'pt' => 'Irmã Subdiaconisa'
+    ],
+    'choir_leader_brother' => [
+        'af' => 'Koorleier Broer',
+        'en' => 'Choir Leader Brother',
+        'zu' => 'Umfowethu oHola iKwaya',
+        'xh' => 'Umzalwana oKhokela iKwayara',
+        'pt' => 'Irmão Regente do Coro'
+    ],
+    'choir_leader_sister' => [
+        'af' => 'Koorleier Suster',
+        'en' => 'Choir Leader Sister',
+        'zu' => 'Udade oHola iKwaya',
+        'xh' => 'Udade oKhokela iKwayara',
+        'pt' => 'Irmã Regente do Coro'
+    ],
+    'helper' => [
+        'af' => 'Hulpkrag',
+        'en' => 'Helper',
+        'zu' => 'Umsizi',
+        'xh' => 'Umncedisi',
+        'pt' => 'Ajudante'
+    ],
+    'helper_sister' => [
+        'af' => 'Hulpkrag Suster',
+        'en' => 'Helper Sister',
+        'zu' => 'Udade oSizayo',
+        'xh' => 'Udade oNcedisayo',
+        'pt' => 'Irmã Ajudante'
+    ],
+    'brother' => [
+        'af' => 'Broer',
+        'en' => 'Brother',
+        'zu' => 'Umfowethu',
+        'xh' => 'Umzalwana',
+        'pt' => 'Irmão'
+    ],
+    'sister' => [
+        'af' => 'Suster',
+        'en' => 'Sister',
+        'zu' => 'Udade',
+        'xh' => 'Udade',
+        'pt' => 'Irmã'
     ],
 
     // ==================== COMMON ACTIONS ====================
