@@ -557,15 +557,16 @@ body.ghf-open {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(20px);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.4s ease, visibility 0.4s ease;
   z-index: calc(var(--ghf-z) + 10);
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -637,17 +638,21 @@ body.ghf-open .ghf-drawer {
 .ghf-nav-list {
   list-style: none;
   margin: 0;
-  padding: 30px 0;
+  padding: 10px 0;
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 8px;
+  justify-content: space-evenly;
+  gap: 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
+  max-height: calc(100dvh - 100px);
 }
 
 .ghf-nav-list li {
   margin: 0;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .ghf-nav-link {
@@ -655,11 +660,11 @@ body.ghf-open .ghf-drawer {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 30px;
+  padding: 12px 30px;
   color: var(--ghf-text);
   text-decoration: none;
   font-family: 'Parisienne', cursive;
-  font-size: 1.6rem;
+  font-size: clamp(1.1rem, 2.5vh, 1.6rem);
   font-weight: 400;
   letter-spacing: 1px;
   border-top: 1px solid rgba(183, 110, 121, 0.2);
@@ -765,22 +770,32 @@ body.ghf-open .ghf-drawer {
   }
 
   .ghf-nav-link {
-    font-size: 1.4rem;
-    padding: 18px 20px;
+    font-size: clamp(1rem, 2.2vh, 1.4rem);
+    padding: 10px 20px;
   }
 
   .ghf-drawer-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
+  }
+
+  .ghf-drawer-header {
+    padding: 15px 20px;
   }
 
   .ghf-drawer-close {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
 
   .ghf-drawer-close svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .ghf-nav-list {
+    max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
+    padding: 5px 0;
   }
 }
 
@@ -791,12 +806,21 @@ body.ghf-open .ghf-drawer {
   }
 
   .ghf-nav-link {
-    font-size: 1.2rem;
-    padding: 16px 15px;
+    font-size: clamp(0.95rem, 2vh, 1.2rem);
+    padding: 8px 15px;
   }
 
   .ghf-drawer-title {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
+  }
+
+  .ghf-drawer-header {
+    padding: 12px 15px;
+  }
+
+  .ghf-nav-list {
+    max-height: calc(100vh - 70px);
+    max-height: calc(100dvh - 70px);
   }
 }
 
