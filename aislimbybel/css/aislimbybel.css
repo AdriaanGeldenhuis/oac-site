@@ -707,13 +707,17 @@ html {
 }
 
 .sb-answer-content {
-  color: var(--text-primary);
+  color: var(--color-silver);
   font-size: 16px;
   font-weight: 300;
   line-height: 1.8;
   letter-spacing: 0.3px;
   animation: fade-in 0.5s ease-out;
   transition: var(--transition);
+}
+
+[data-theme="light"] .sb-answer-content {
+  color: var(--text-primary);
 }
 
 @keyframes fade-in {
@@ -724,40 +728,53 @@ html {
 /* ===== ANSWER CONTENT FORMATTING ===== */
 .sb-answer-content .sb-paragraph {
   margin-bottom: 1.5rem;
-  color: var(--text-primary);
+  color: var(--color-silver);
   opacity: 0.9;
   transition: var(--transition);
+}
+
+[data-theme="light"] .sb-answer-content .sb-paragraph {
+  color: var(--text-primary);
 }
 
 .sb-answer-content .sb-verse {
   margin: 2rem 0;
   padding: 1.5rem;
   background: rgba(183, 110, 121, 0.1);
-  border-left: 4px solid var(--color-rosegold);
+  border-left: 4px solid var(--color-peach);
   border-radius: 0.5rem;
   font-style: italic;
-  color: var(--text-primary);
+  color: var(--color-peach-light);
   opacity: 0.95;
   transition: var(--transition);
 }
 
 [data-theme="light"] .sb-answer-content .sb-verse {
   background: rgba(183, 110, 121, 0.08);
+  border-left-color: var(--color-rosegold);
+  color: var(--text-primary);
 }
 
 .sb-answer-content .sb-heading {
   margin: 2rem 0 1rem 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--color-rosegold);
-  text-transform: uppercase;
+  color: var(--color-peach);
   letter-spacing: 0.05em;
   transition: var(--transition);
 }
 
-.sb-answer-content strong {
+[data-theme="light"] .sb-answer-content .sb-heading {
   color: var(--color-rosegold);
+}
+
+.sb-answer-content strong {
+  color: var(--color-peach);
   font-weight: 600;
+}
+
+[data-theme="light"] .sb-answer-content strong {
+  color: var(--color-rosegold);
 }
 
 .sb-answer-content em {
