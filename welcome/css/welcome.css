@@ -410,6 +410,47 @@ html {
   color: var(--text-primary);
 }
 
+/* Bible Verse Styling */
+.wc-teaching-content .vref {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--rose-gold);
+  margin: 24px 0 8px;
+  display: block;
+}
+
+.wc-teaching-content .vtxt {
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.9;
+  margin: 0 0 20px;
+  padding-left: 16px;
+  border-left: 2px solid var(--rose-gold-dark);
+}
+
+.wc-teaching-content .vtxt sup {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: var(--rose-gold);
+  margin-right: 2px;
+  vertical-align: super;
+  font-style: normal;
+}
+
+[data-theme="light"] .wc-teaching-content .vref {
+  color: #a86860;
+}
+
+[data-theme="light"] .wc-teaching-content .vtxt {
+  color: #3d3835;
+  border-left-color: #a86860;
+}
+
+[data-theme="light"] .wc-teaching-content .vtxt sup {
+  color: #a86860;
+}
+
 /* Light mode - much darker text for teaching content (override inline styles) */
 [data-theme="light"] .wc-teaching-content,
 [data-theme="light"] .wc-teaching-content p,

@@ -132,6 +132,17 @@ try {
         $gender = $p['user_gender'] ?? 'man';
         $p['amp_title'] = get_translated_office($ampId, $gender, $pageLang);
 
+        // Generate initials
+        $fullName = trim(($p['user_name'] ?? '') . ' ' . ($p['user_surname'] ?? ''));
+        $nameParts = preg_split('/\s+/', $fullName);
+        if (count($nameParts) >= 2) {
+            $p['initials'] = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
+        } elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
+            $p['initials'] = strtoupper(mb_substr($nameParts[0], 0, 2));
+        } else {
+            $p['initials'] = '??';
+        }
+
         // Check if current user owns this post
         $p['is_owner'] = ((int)$p['user_id'] === $userId);
 

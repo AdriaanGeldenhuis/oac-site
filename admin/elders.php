@@ -133,7 +133,7 @@ function t(string $key): string {
         .container {
             max-width: 1400px;
             margin: 20px auto 40px;
-            padding: 0 20px;
+            padding: 0 20px 100px;
         }
 
         .header {
@@ -298,6 +298,12 @@ function t(string $key): string {
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        .btn-translate {
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+            color: white;
+            border: none;
         }
 
         .editor-wrap {
@@ -625,6 +631,9 @@ function t(string $key): string {
             </button>
             <button class="tool-btn btn-ai" id="btn-improve">
                 ✨ <?= t('improve') ?>
+            </button>
+            <button class="tool-btn btn-translate" id="btn-translate-all">
+                🌍 <?= t('translate_all') ?>
             </button>
         </div>
         
@@ -1037,7 +1046,39 @@ function t(string $key): string {
                     btn.classList.remove('loading');
                 }
             };
-            
+
+            // Translate to all languages
+            document.getElementById('btn-translate-all').onclick = async () => {
+                const content = currentEditor.innerHTML;
+                if (!content.trim()) return;
+
+                showStatus('saving', T('translating'));
+
+                try {
+                    const fd = new URLSearchParams();
+                    fd.append('content', content);
+                    fd.append('source_lang', CONFIG.lang);
+
+                    const res = await fetch('/admin/api/ai/translate_all.php', { method: 'POST', body: fd });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        // Update all editors with translated content
+                        Object.keys(data.translations).forEach(lang => {
+                            if (editors[lang] && lang !== CONFIG.lang) {
+                                editors[lang].innerHTML = data.translations[lang];
+                            }
+                        });
+                        showStatus('saved', T('translated'));
+                        hasChanges = true;
+                    } else {
+                        throw new Error(data.error);
+                    }
+                } catch(e) {
+                    showStatus('error', e.message);
+                }
+            };
+
             // Save all languages
             document.getElementById('btn-save').onclick = async () => {
                 const sourceContent = currentEditor.innerHTML;

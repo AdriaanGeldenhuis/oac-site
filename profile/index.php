@@ -89,7 +89,17 @@ if ($myAmpId >= 1 && $myAmpId <= 9) {
 }
 
 $fullName = trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-$avatar = !empty($user['photo']) ? $user['photo'] : '/assets/img/avatar-default.png';
+$hasPhoto = !empty($user['photo']);
+$avatar = $hasPhoto ? $user['photo'] : '/assets/img/avatar-default.png';
+
+// Generate initials from name
+$initials = '';
+$nameParts = preg_split('/\s+/', $fullName);
+if (count($nameParts) >= 2) {
+    $initials = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
+} elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
+    $initials = strtoupper(mb_substr($nameParts[0], 0, 2));
+}
 
 // Get spouse if exists
 $spouse = null;
@@ -129,7 +139,11 @@ $VER = time();
       <div class="profile-hero-glow"></div>
       <div class="profile-hero-content">
         <div class="profile-avatar-wrapper">
+          <?php if ($hasPhoto): ?>
           <img src="<?= esc($avatar) ?>" alt="<?= esc($fullName) ?>" class="profile-avatar-large">
+          <?php else: ?>
+          <div class="profile-avatar-large profile-avatar-initials"><?= esc($initials) ?></div>
+          <?php endif; ?>
         </div>
         <div class="profile-hero-info">
           <h1 class="profile-hero-name"><?= esc($fullName) ?></h1>
@@ -308,14 +322,28 @@ $VER = time();
         </div>
       </div>
 
-      <?php if ($spouse): ?>
+      <?php if ($spouse):
+        $spouseHasPhoto = !empty($spouse['photo']);
+        $spouseFullName = trim(($spouse['name'] ?? '') . ' ' . ($spouse['surname'] ?? ''));
+        $spouseNameParts = preg_split('/\s+/', $spouseFullName);
+        $spouseInitials = '';
+        if (count($spouseNameParts) >= 2) {
+            $spouseInitials = strtoupper(mb_substr($spouseNameParts[0], 0, 1) . mb_substr($spouseNameParts[count($spouseNameParts) - 1], 0, 1));
+        } elseif (count($spouseNameParts) === 1 && !empty($spouseNameParts[0])) {
+            $spouseInitials = strtoupper(mb_substr($spouseNameParts[0], 0, 2));
+        }
+      ?>
       <div class="profile-card">
         <h2 class="profile-card-title"><?= esc(t('spouse')) ?></h2>
         <div class="profile-spouse-card">
           <a href="/profile/?u=<?= (int)$spouse['id'] ?>" class="profile-spouse-link">
-            <img src="<?= esc($spouse['photo'] ?: '/assets/img/avatar-default.png') ?>" alt="<?= esc($spouse['name']) ?>" class="profile-spouse-avatar">
+            <?php if ($spouseHasPhoto): ?>
+            <img src="<?= esc($spouse['photo']) ?>" alt="<?= esc($spouse['name']) ?>" class="profile-spouse-avatar">
+            <?php else: ?>
+            <div class="profile-spouse-avatar profile-avatar-initials profile-avatar-initials-sm"><?= esc($spouseInitials) ?></div>
+            <?php endif; ?>
             <div class="profile-spouse-info">
-              <p class="profile-spouse-name"><?= esc($spouse['name'] . ' ' . $spouse['surname']) ?></p>
+              <p class="profile-spouse-name"><?= esc($spouseFullName) ?></p>
               <p class="profile-spouse-label"><?= esc(t('view_profile')) ?> →</p>
             </div>
           </a>

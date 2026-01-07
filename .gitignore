@@ -2,6 +2,7 @@
 config.php
 **/config.php
 bible/config.php
+**/secrets.php
 node_modules/
 .DS_Store
 *.log
