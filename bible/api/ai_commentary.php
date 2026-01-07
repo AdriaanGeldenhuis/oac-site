@@ -5,6 +5,27 @@
  * Provides contextual explanations of Bible passages using AI.
  * Only uses actual Bible text - no fabrication allowed.
  */
+
+// Error handling - catch all errors and return as JSON
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+set_exception_handler(function($e) {
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine()
+    ]);
+    exit;
+});
+
 require_once __DIR__ . '/../../security/auth_gate.php';
 require_once __DIR__ . '/../config.php';
 
