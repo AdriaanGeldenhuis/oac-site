@@ -102,12 +102,16 @@ body {
   right: 0;
   width: 100%;
   height: var(--ghf-height);
-  background: linear-gradient(135deg, var(--ghf-bg) 0%, var(--ghf-bg-light) 100%);
+  background: rgba(0, 0, 0, 0.3);
   border-bottom: 1px solid var(--ghf-border);
   box-shadow: var(--ghf-shadow);
   z-index: var(--ghf-z);
   backdrop-filter: blur(10px);
   transition: var(--ghf-transition);
+}
+
+[data-theme="light"] .ghf-header {
+  background: rgba(248, 248, 248, 0.3);
 }
 
 .ghf-container {
@@ -252,11 +256,15 @@ body {
 .ghf-theme-icon {
   width: 22px;
   height: 22px;
-  stroke: var(--ghf-silver);
+  stroke: #ffffff;
   filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.5));
   position: absolute;
   transition: var(--ghf-transition);
   z-index: 2;
+}
+
+[data-theme="light"] .ghf-theme-icon {
+  stroke: #2a2a2a;
 }
 
 .ghf-theme-sun {
@@ -341,11 +349,15 @@ body {
 .ghf-view-icon {
   width: 22px;
   height: 22px;
-  stroke: var(--ghf-silver);
+  stroke: #ffffff;
   filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.5));
   position: relative;
   z-index: 2;
   transition: var(--ghf-transition);
+}
+
+[data-theme="light"] .ghf-view-icon {
+  stroke: #2a2a2a;
 }
 
 .ghf-view-shine {
@@ -540,67 +552,76 @@ body.ghf-open {
   overflow: hidden;
 }
 
-/* ===== DRAWER ===== */
+/* ===== DRAWER (FULLSCREEN OVERLAY MENU) ===== */
 .ghf-drawer {
   position: fixed;
   top: 0;
   left: 0;
-  width: 320px;
-  max-width: 85vw;
+  width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--ghf-bg-light) 0%, var(--ghf-bg) 100%);
-  border-right: 1px solid var(--ghf-border);
-  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5);
-  transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: var(--ghf-z);
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  z-index: calc(var(--ghf-z) + 10);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
+[data-theme="light"] .ghf-drawer {
+  background: rgba(255, 255, 255, 0.95);
+}
+
 body.ghf-open .ghf-drawer {
-  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
 }
 
 .ghf-drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: 25px 30px;
   border-bottom: 1px solid var(--ghf-border);
-  background: var(--ghf-bg-card);
+  background: transparent;
   flex-shrink: 0;
 }
 
 .ghf-drawer-title {
   font-family: 'Parisienne', cursive;
-  font-size: 1.8rem;
+  font-size: 2.5rem;
   font-weight: 200;
   color: var(--ghf-text-rose);
-  text-shadow: 0 0 10px rgba(183, 110, 121, 0.5);
+  text-shadow: 0 0 20px rgba(183, 110, 121, 0.5);
   margin: 0;
+  animation: ghf-glow 3s ease-in-out infinite;
 }
 
 .ghf-drawer-close {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--ghf-bg-card) 0%, var(--ghf-bg) 100%);
-  border: 2px solid var(--ghf-silver-dark);
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, rgba(183, 110, 121, 0.2) 0%, rgba(183, 110, 121, 0.1) 100%);
+  border: 2px solid rgba(183, 110, 121, 0.5);
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 20px rgba(183, 110, 121, 0.3);
   transition: var(--ghf-transition);
 }
 
 .ghf-drawer-close svg {
-  width: 20px;
-  height: 20px;
-  stroke: var(--ghf-silver);
+  width: 26px;
+  height: 26px;
+  stroke: #ffffff;
+}
+
+[data-theme="light"] .ghf-drawer-close svg {
+  stroke: #2a2a2a;
 }
 
 .ghf-drawer-close:hover {
@@ -616,28 +637,37 @@ body.ghf-open .ghf-drawer {
 .ghf-nav-list {
   list-style: none;
   margin: 0;
-  padding: 20px 0;
+  padding: 30px 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
 }
 
 .ghf-nav-list li {
-  margin-bottom: 4px;
+  margin: 0;
+  width: 100%;
 }
 
 .ghf-nav-link {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 10px 20px;
+  justify-content: center;
+  padding: 20px 30px;
   color: var(--ghf-text);
   text-decoration: none;
-  font-family: system-ui;
-  font-size: 20px;
-  font-weight: 200;
-  letter-spacing: 0.5px;
-  border-left: 3px solid transparent;
+  font-family: 'Parisienne', cursive;
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+  border-top: 1px solid rgba(183, 110, 121, 0.2);
+  border-bottom: 1px solid rgba(183, 110, 121, 0.2);
+  background: linear-gradient(90deg, transparent 0%, rgba(183, 110, 121, 0.05) 50%, transparent 100%);
   transition: var(--ghf-transition);
   overflow: hidden;
+  width: 100%;
 }
 
 .ghf-nav-shine {
@@ -662,18 +692,21 @@ body.ghf-open .ghf-drawer {
 
 .ghf-nav-link:hover,
 .ghf-nav-link.active {
-  background: linear-gradient(90deg, rgba(26, 26, 26, 0.3) 0%, transparent 100%);
-  border-left-color: var(--ghf-text-rose);
+  background: linear-gradient(90deg, transparent 0%, rgba(183, 110, 121, 0.2) 50%, transparent 100%);
+  border-top-color: rgba(183, 110, 121, 0.5);
+  border-bottom-color: rgba(183, 110, 121, 0.5);
   color: var(--ghf-text-rose);
+  text-shadow: 0 0 20px rgba(183, 110, 121, 0.5);
+  transform: scale(1.02);
 }
 
 [data-theme="light"] .ghf-nav-link:hover,
 [data-theme="light"] .ghf-nav-link.active {
-  background: linear-gradient(90deg, rgba(240, 240, 240, 0.8) 0%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(183, 110, 121, 0.15) 50%, transparent 100%);
 }
 
 .ghf-nav-link:active {
-  transform: translateX(8px);
+  transform: scale(0.98);
 }
 
 /* ===== SCROLLBAR ===== */
@@ -699,36 +732,55 @@ body.ghf-open .ghf-drawer {
   :root {
     --ghf-height: 60px;
   }
-  
+
   body {
     padding-top: 60px !important;
   }
-  
+
   .ghf-hamburger,
   .ghf-theme-toggle,
   .ghf-view-toggle {
     width: 40px;
     height: 40px;
   }
-  
+
   .ghf-bar {
     width: 18px;
   }
-  
+
   .ghf-title {
     font-size: 1.2rem;
     max-width: 150px;
   }
-  
+
   .ghf-lang-btn {
     padding: 8px 12px;
     font-size: 12px;
   }
-  
+
   .ghf-theme-icon,
   .ghf-view-icon {
     width: 20px;
     height: 20px;
+  }
+
+  .ghf-nav-link {
+    font-size: 1.4rem;
+    padding: 18px 20px;
+  }
+
+  .ghf-drawer-title {
+    font-size: 2rem;
+  }
+
+  .ghf-drawer-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .ghf-drawer-close svg {
+    width: 22px;
+    height: 22px;
   }
 }
 
@@ -736,6 +788,15 @@ body.ghf-open .ghf-drawer {
   .ghf-title {
     font-size: 1.1rem;
     max-width: 120px;
+  }
+
+  .ghf-nav-link {
+    font-size: 1.2rem;
+    padding: 16px 15px;
+  }
+
+  .ghf-drawer-title {
+    font-size: 1.6rem;
   }
 }
 
