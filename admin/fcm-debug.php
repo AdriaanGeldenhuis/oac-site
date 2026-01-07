@@ -21,10 +21,36 @@ try {
     $tokenError = $e->getMessage();
 }
 
-// Test access token
+// Test access token with detailed debugging
 $accessToken = null;
 $accessTokenError = null;
+$debugInfo = [];
+
 try {
+    // Check JSON validity
+    $jsonContent = file_get_contents(FCM_SERVICE_ACCOUNT_FILE);
+    $serviceAccount = json_decode($jsonContent, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        $debugInfo['json_error'] = json_last_error_msg();
+    } else {
+        $debugInfo['json_valid'] = true;
+        $debugInfo['has_private_key'] = isset($serviceAccount['private_key']);
+        $debugInfo['has_client_email'] = isset($serviceAccount['client_email']);
+        $debugInfo['client_email'] = $serviceAccount['client_email'] ?? 'N/A';
+
+        // Test private key parsing
+        if (isset($serviceAccount['private_key'])) {
+            $privateKey = openssl_pkey_get_private($serviceAccount['private_key']);
+            if ($privateKey) {
+                $debugInfo['private_key_valid'] = true;
+            } else {
+                $debugInfo['private_key_valid'] = false;
+                $debugInfo['openssl_error'] = openssl_error_string();
+            }
+        }
+    }
+
     $accessToken = getFcmAccessToken();
     if (!$accessToken) {
         $accessTokenError = 'Could not get access token';
@@ -107,6 +133,17 @@ include __DIR__ . '/../header_footer/header.php';
                 <span class="status-error">✗ Failed: <?= htmlspecialchars($accessTokenError ?? 'Unknown error') ?></span>
             <?php endif; ?>
         </p>
+
+        <?php if (!empty($debugInfo)): ?>
+        <div style="background:#f5f5f5; padding:15px; margin-top:15px; border-radius:8px; font-size:13px;">
+            <strong>Debug Details:</strong><br>
+            <?php foreach ($debugInfo as $key => $value): ?>
+                <span style="color:<?= $value === true ? 'green' : ($value === false ? 'red' : '#333') ?>;">
+                    <?= htmlspecialchars($key) ?>: <?= is_bool($value) ? ($value ? '✓ Yes' : '✗ No') : htmlspecialchars((string)$value) ?>
+                </span><br>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- User Tokens -->
