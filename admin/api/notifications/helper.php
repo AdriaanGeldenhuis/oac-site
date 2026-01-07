@@ -163,11 +163,15 @@ function createAdminNotification($userId, $type, $data = []) {
             $pushTitle = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $title);
             $pushTitle = trim($pushTitle);
 
-            sendPushToUser((int)$userId, $pushTitle, $message, [
+            error_log("FCM: Attempting push to user $userId - Title: $pushTitle");
+
+            $pushResult = sendPushToUser((int)$userId, $pushTitle, $message, [
                 'type' => $notifType,
                 'link' => $link,
                 'notification_id' => $db->lastInsertId()
             ]);
+
+            error_log("FCM: Push result: " . json_encode($pushResult));
         } catch (Exception $pushError) {
             // Log but don't fail - push is optional
             error_log('FCM push error: ' . $pushError->getMessage());
