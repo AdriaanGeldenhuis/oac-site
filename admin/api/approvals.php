@@ -6,7 +6,11 @@
 // Apostel(1):   net apostels landwyd
 
 if (!isset($pdo)) require_once $_SERVER['DOCUMENT_ROOT'].'/app/db_connect.php';
+require_once __DIR__ . '/../../includes/languages.php';
+
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+
+$pageLang = $_SESSION['language'] ?? 'af';
 
 // Huidige gebruiker
 $meAmpId = 0; $meCongId = null; $meTownId = null;
@@ -56,11 +60,9 @@ $pending = [];
 try {
   $sql = "
     SELECT
-      u.id, u.name, u.surname, u.email, u.gender,
-      CASE WHEN u.gender='vrou' THEN a.female_name ELSE a.male_name END AS amp,
+      u.id, u.name, u.surname, u.email, u.gender, u.amp_id,
       c.name AS congregation
     FROM users u
-    LEFT JOIN amptes a        ON a.id = u.amp_id
     LEFT JOIN congregations c ON c.id = u.congregation_id
     WHERE u.status = 'pending'
       {$roleFilterSql}
@@ -70,6 +72,14 @@ try {
   $st = $pdo->prepare($sql);
   $st->execute($scopeParams);
   $pending = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+  // Translate office names
+  foreach ($pending as &$p) {
+    $ampId = (int)($p['amp_id'] ?? 10);
+    $gender = $p['gender'] ?? 'man';
+    $p['amp'] = get_translated_office($ampId, $gender, $pageLang);
+  }
+  unset($p);
 } catch (Throwable $e) { $pending = []; }
 ?>
 <div class="panel stack">
