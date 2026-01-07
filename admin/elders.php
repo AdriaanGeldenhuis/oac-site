@@ -304,6 +304,51 @@ function t(string $key): string {
             background: linear-gradient(135deg, #4caf50, #388e3c);
             color: white;
             border: none;
+            position: relative;
+            min-width: 140px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-translate.loading {
+            pointer-events: none;
+            background: linear-gradient(135deg, #388e3c, #2e7d32);
+        }
+
+        .btn-translate .btn-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-translate.loading .btn-text {
+            opacity: 0;
+        }
+
+        .btn-translate .btn-loading {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-translate.loading .btn-loading {
+            opacity: 1;
+        }
+
+        .btn-translate .btn-loading .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .editor-wrap {
@@ -633,7 +678,8 @@ function t(string $key): string {
                 ✨ <?= t('improve') ?>
             </button>
             <button class="tool-btn btn-translate" id="btn-translate-all">
-                🌍 <?= t('translate_all') ?>
+                <span class="btn-text">🌍 <?= t('translate_all') ?></span>
+                <span class="btn-loading"><span class="spinner"></span><span class="loading-text"><?= t('translating') ?>...</span></span>
             </button>
         </div>
         
@@ -1052,6 +1098,12 @@ function t(string $key): string {
                 const content = currentEditor.innerHTML;
                 if (!content.trim()) return;
 
+                const btn = document.getElementById('btn-translate-all');
+                const loadingText = btn.querySelector('.loading-text');
+
+                // Update loading text based on current language
+                loadingText.textContent = T('translating') + '...';
+                btn.classList.add('loading');
                 showStatus('saving', T('translating'));
 
                 try {
@@ -1076,6 +1128,8 @@ function t(string $key): string {
                     }
                 } catch(e) {
                     showStatus('error', e.message);
+                } finally {
+                    btn.classList.remove('loading');
                 }
             };
 
