@@ -3,6 +3,9 @@
 // /calendar/api/notifications/helper.php
 // =====================================================================
 
+// Include FCM functions for push notifications
+require_once __DIR__ . '/../../../admin/config/fcm_config.php';
+
 function createCalendarNotification($userId, $type, $data = []) {
     try {
         $db = new PDO('sqlite:' . __DIR__ . '/../../../data/notifications.db');
@@ -116,6 +119,23 @@ function createCalendarNotification($userId, $type, $data = []) {
             'message_key' => $messageKey,
             'params' => !empty($params) ? json_encode($params) : null
         ]);
+
+        // Send FCM push notification
+        try {
+            global $pdo;
+            $pushTitle = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $title);
+            $pushTitle = trim($pushTitle);
+            if (empty($pushTitle)) $pushTitle = 'Calendar';
+
+            $pushResult = sendPushToUser((int)$userId, $pushTitle, $message, [
+                'type' => $notifType,
+                'link' => $link,
+                'notification_id' => $db->lastInsertId()
+            ]);
+            error_log("FCM Calendar: Push result: " . json_encode($pushResult));
+        } catch (Exception $pushError) {
+            error_log('FCM Calendar push error: ' . $pushError->getMessage());
+        }
 
         return true;
 

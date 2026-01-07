@@ -3,6 +3,9 @@
 // /gospel_media/api/notifications/helper.php
 // =====================================================================
 
+// Include FCM functions for push notifications
+require_once __DIR__ . '/../../../admin/config/fcm_config.php';
+
 function createGospelNotification($pdo, $userId, $type, $data = []) {
     try {
         $db = new PDO('sqlite:' . __DIR__ . '/../../../data/notifications.db');
@@ -119,6 +122,26 @@ function createGospelNotification($pdo, $userId, $type, $data = []) {
             'message_key' => $messageKey,
             'params' => !empty($params) ? json_encode($params) : null
         ]);
+
+        // Send FCM push notification
+        try {
+            // Remove emoji from title for cleaner push notification
+            $pushTitle = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $title);
+            $pushTitle = trim($pushTitle);
+            if (empty($pushTitle)) $pushTitle = 'Gospel Media';
+
+            error_log("FCM Gospel: Attempting push to user $userId - Title: $pushTitle");
+
+            $pushResult = sendPushToUser((int)$userId, $pushTitle, $message, [
+                'type' => $notifType,
+                'link' => $link,
+                'notification_id' => $db->lastInsertId()
+            ]);
+
+            error_log("FCM Gospel: Push result: " . json_encode($pushResult));
+        } catch (Exception $pushError) {
+            error_log('FCM Gospel push error: ' . $pushError->getMessage());
+        }
 
         return true;
 
