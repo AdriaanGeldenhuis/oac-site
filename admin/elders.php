@@ -133,7 +133,7 @@ function t(string $key): string {
         .container {
             max-width: 1400px;
             margin: 20px auto 40px;
-            padding: 0 20px;
+            padding: 0 20px 100px;
         }
 
         .header {
@@ -846,17 +846,20 @@ function t(string $key): string {
                 const toSel = document.getElementById('v-to');
                 fromSel.innerHTML = '<option value="">Kies...</option>';
                 toSel.innerHTML = '<option value="">Kies...</option>';
-                
+
                 if (book && chapter && bible[book][chapter]) {
-                    bible[book][chapter].filter(v => v.n).forEach(v => {
+                    // Filter out headers (h property) and get only verses (v property)
+                    const verses = bible[book][chapter].filter(item => item.v && !item.h);
+                    verses.forEach((v, idx) => {
+                        const verseNum = idx + 1;
                         const opt1 = document.createElement('option');
-                        opt1.value = v.n;
-                        opt1.textContent = v.n;
+                        opt1.value = verseNum;
+                        opt1.textContent = verseNum;
                         fromSel.appendChild(opt1);
-                        
+
                         const opt2 = document.createElement('option');
-                        opt2.value = v.n;
-                        opt2.textContent = v.n;
+                        opt2.value = verseNum;
+                        opt2.textContent = verseNum;
                         toSel.appendChild(opt2);
                     });
                 }
@@ -868,18 +871,19 @@ function t(string $key): string {
                 const from = parseInt(document.getElementById('v-from').value);
                 const to = parseInt(document.getElementById('v-to').value) || from;
                 const preview = document.getElementById('v-preview');
-                
+
                 if (!book || !chapter || !from) {
                     preview.innerHTML = '';
                     return;
                 }
-                
-                const verses = bible[book][chapter].filter(v => v.n);
+
+                // Get verses (filter out headers)
+                const verses = bible[book][chapter].filter(item => item.v && !item.h);
                 let html = `<strong>${book} ${chapter}:${from}${to > from ? '-' + to : ''}</strong><br><br>`;
-                verses.forEach(v => {
-                    const num = parseInt(v.n);
-                    if (num >= from && num <= to) {
-                        html += `<sup>${num}</sup> ${v.v} `;
+                verses.forEach((v, idx) => {
+                    const verseNum = idx + 1;
+                    if (verseNum >= from && verseNum <= to) {
+                        html += `<sup>${verseNum}</sup> ${v.v} `;
                     }
                 });
                 preview.innerHTML = html;
@@ -893,22 +897,23 @@ function t(string $key): string {
                 const chapter = document.getElementById('v-chapter').value;
                 const from = parseInt(document.getElementById('v-from').value);
                 const to = parseInt(document.getElementById('v-to').value) || from;
-                
+
                 if (!book || !chapter || !from) {
                     alert(T('selectVerse'));
                     return;
                 }
-                
-                const verses = bible[book][chapter].filter(v => v.n);
+
+                // Get verses (filter out headers)
+                const verses = bible[book][chapter].filter(item => item.v && !item.h);
                 let html = `<p class="vref">${book} ${chapter}:${from}${to > from ? '-' + to : ''}</p><p class="vtxt">`;
-                verses.forEach(v => {
-                    const num = parseInt(v.n);
-                    if (num >= from && num <= to) {
-                        html += `<sup>${num}</sup> ${v.v} `;
+                verses.forEach((v, idx) => {
+                    const verseNum = idx + 1;
+                    if (verseNum >= from && verseNum <= to) {
+                        html += `<sup>${verseNum}</sup> ${v.v} `;
                     }
                 });
                 html += '</p>';
-                
+
                 execCmd('insertHTML', html);
                 document.getElementById('verse-modal').classList.remove('show');
                 showStatus('saved', T('verseInserted'));
