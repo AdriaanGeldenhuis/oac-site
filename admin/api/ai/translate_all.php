@@ -6,6 +6,23 @@ declare(strict_types=1);
  * Uses AI for text translation but preserves Bible verses from actual Bible files
  */
 
+// Global error handler to catch all PHP errors and return JSON
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+set_exception_handler(function($e) {
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Server Error',
+        'detail' => $e->getMessage(),
+        'file' => basename($e->getFile()) . ':' . $e->getLine()
+    ]);
+    exit;
+});
+
 // Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
@@ -23,18 +40,45 @@ error_log('=== TRANSLATE_ALL START: ' . date('Y-m-d H:i:s') . ' ===');
 set_time_limit(600); // 10 minutes
 ini_set('max_execution_time', '600');
 
-// Load dependencies
+// Load dependencies - check files exist first (require_once fatal errors can't be caught)
+$baseDir = dirname(__DIR__, 3);
+$requiredFiles = [
+    'security/config.php',
+    'security/session.php',
+    'security/auth.php',
+    'includes/languages.php'
+];
+
+// Check all required files exist
+foreach ($requiredFiles as $file) {
+    $fullPath = $baseDir . '/' . $file;
+    if (!file_exists($fullPath)) {
+        error_log('MISSING FILE: ' . $fullPath);
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Missing file: ' . $file]);
+        exit;
+    }
+}
+
+// Also check ai_config
+$aiConfigPath = dirname(__DIR__, 2) . '/config/ai_config.php';
+if (!file_exists($aiConfigPath)) {
+    error_log('MISSING FILE: ' . $aiConfigPath);
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Missing file: ai_config.php']);
+    exit;
+}
+
+// Now load them
 try {
-    error_log('Loading config.php...');
-    require_once dirname(__DIR__, 3) . '/security/config.php';
-    error_log('Loading session.php...');
-    require_once dirname(__DIR__, 3) . '/security/session.php';
-    error_log('Loading auth.php...');
-    require_once dirname(__DIR__, 3) . '/security/auth.php';
-    error_log('Loading languages.php...');
-    require_once dirname(__DIR__, 3) . '/includes/languages.php';
-    error_log('Loading ai_config.php...');
-    require_once dirname(__DIR__, 2) . '/config/ai_config.php';
+    error_log('Loading dependencies...');
+    require_once $baseDir . '/security/config.php';
+    require_once $baseDir . '/security/session.php';
+    require_once $baseDir . '/security/auth.php';
+    require_once $baseDir . '/includes/languages.php';
+    require_once $aiConfigPath;
     error_log('All dependencies loaded successfully');
 } catch (Throwable $e) {
     error_log('FAILED to load dependencies: ' . $e->getMessage());
