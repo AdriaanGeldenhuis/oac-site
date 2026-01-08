@@ -305,14 +305,14 @@
   // Export to PDF
   window.exportToPDF = async function() {
     try {
-      showToast('Generating PDF...', 'info');
-      
+      showToast(window.T.generatingPdf, 'info');
+
       const response = await fetch('/calendar/api/export_pdf.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `user_id=${window.TARGET_USER_ID}&view=${currentView}&date=${formatDate(currentDate)}`
       });
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -323,19 +323,19 @@
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        showToast('PDF exported!', 'success');
+        showToast(window.T.pdfExported, 'success');
       } else {
-        showToast('Export failed', 'error');
+        showToast(window.T.exportFailed, 'error');
       }
     } catch (error) {
-      showToast('Network error', 'error');
+      showToast(window.T.networkError, 'error');
     }
   };
 
   // Export to Excel
   window.exportToExcel = async function() {
     try {
-      showToast('Generating Excel...', 'info');
+      showToast(window.T.generatingExcel, 'info');
 
       const response = await fetch('/calendar/api/export_excel.php', {
         method: 'POST',
@@ -353,12 +353,12 @@
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        showToast('Excel exported!', 'success');
+        showToast(window.T.excelExported, 'success');
       } else {
-        showToast('Export failed', 'error');
+        showToast(window.T.exportFailed, 'error');
       }
     } catch (error) {
-      showToast('Network error', 'error');
+      showToast(window.T.networkError, 'error');
     }
   };
 

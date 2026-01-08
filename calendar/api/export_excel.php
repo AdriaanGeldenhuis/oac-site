@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../security/auth_gate.php';
+require_once __DIR__ . '/../../includes/languages.php';
 
+$userLang = $_SESSION['language'] ?? 'af';
 $meId = (int)($_SESSION['user_id'] ?? 0);
 $targetId = isset($_POST['user_id']) && is_numeric($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
 $view = trim($_POST['view'] ?? 'month');
@@ -70,18 +72,32 @@ $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 header('Content-Type: application/vnd.ms-excel');
 header('Content-Disposition: attachment; filename="calendar_' . $targetId . '_' . time() . '.csv"');
 
+// Translation labels
+$dateLabel = __t('date', $userLang);
+$timeLabel = __t('time', $userLang);
+$titleLabel = __t('title', $userLang);
+$typeLabel = __t('type', $userLang);
+$notesLabel = __t('notes', $userLang);
+
+// Type translations
+$typeMap = [
+    'event' => __t('event', $userLang),
+    'diary' => __t('diary', $userLang),
+    'visit' => __t('appointment', $userLang)
+];
+
 // UTF-8 BOM for Excel
 echo "\xEF\xBB\xBF";
 
 // Headers
-echo "Date/Time,Title,Type,Notes\n";
+echo "$dateLabel/$timeLabel,$titleLabel,$typeLabel,$notesLabel\n";
 
 // Data
 foreach ($events as $event) {
     $datetime = date('Y-m-d H:i', strtotime($event['datetime']));
     $title = str_replace('"', '""', $event['title']);
-    $type = ucfirst($event['type']);
+    $type = $typeMap[$event['type']] ?? ucfirst($event['type']);
     $notes = str_replace('"', '""', $event['notes'] ?? '');
-    
+
     echo "\"$datetime\",\"$title\",\"$type\",\"$notes\"\n";
 }

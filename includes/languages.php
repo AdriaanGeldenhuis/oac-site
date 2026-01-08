@@ -260,7 +260,7 @@ define('UI_TRANSLATIONS', [
     ],
     'offices' => [
         'af' => 'Ampte',
-        'en' => 'Offices',
+        'en' => 'Officers',
         'zu' => 'Izihamba',
         'xh' => 'Iiofisi',
         'pt' => 'Cargos'
@@ -738,14 +738,14 @@ define('UI_TRANSLATIONS', [
     ],
     'subdeacon' => [
         'af' => 'Onderdiaken',
-        'en' => 'Subdeacon',
+        'en' => 'Underdeacon',
         'zu' => 'Umdiakoni omncane',
         'xh' => 'Umdiakoni omncinane',
         'pt' => 'Subdiácono'
     ],
     'subdeacon_sister' => [
         'af' => 'Onderdiaken Suster',
-        'en' => 'Subdeacon Sister',
+        'en' => 'Underdeacon Sister',
         'zu' => 'Udade woMdiakoni omncane',
         'xh' => 'Udade woMdiakoni omncinane',
         'pt' => 'Irmã Subdiaconisa'
@@ -1184,14 +1184,14 @@ define('UI_TRANSLATIONS', [
     ],
     'search_offices' => [
         'af' => 'Soek ampte...',
-        'en' => 'Search offices...',
+        'en' => 'Search officers...',
         'zu' => 'Sesha izikhundla...',
         'xh' => 'Khangela izikhundla...',
         'pt' => 'Pesquisar cargos...'
     ],
     'no_office_holders' => [
         'af' => 'Geen ampte gevind nie.',
-        'en' => 'No office holders found.',
+        'en' => 'No officers found.',
         'zu' => 'Akukho zikhundla ezitholiwe.',
         'xh' => 'Akukho zikhundla zifunyenweyo.',
         'pt' => 'Nenhum titular de cargo encontrado.'
@@ -1801,11 +1801,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Criar Novo'
     ],
     'event' => [
-        'af' => 'Gebeurtenis',
-        'en' => 'Event',
-        'zu' => 'Isenzakalo',
-        'xh' => 'Isiganeko',
-        'pt' => 'Evento'
+        'af' => 'Aktiwiteit',
+        'en' => 'Activity',
+        'zu' => 'Umsebenzi',
+        'xh' => 'Umsebenzi',
+        'pt' => 'Atividade'
     ],
     'title' => [
         'af' => 'Titel',
@@ -1857,11 +1857,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Compartilhar com cônjuge'
     ],
     'no_events' => [
-        'af' => 'Geen gebeure',
-        'en' => 'No events',
-        'zu' => 'Akukho zenzakalo',
-        'xh' => 'Akukho ziganeko',
-        'pt' => 'Sem eventos'
+        'af' => 'Geen aktiwiteite',
+        'en' => 'No activities',
+        'zu' => 'Akukho misebenzi',
+        'xh' => 'Akukho misebenzi',
+        'pt' => 'Sem atividades'
     ],
     'confirm_delete' => [
         'af' => 'Is jy seker jy wil hierdie inskrywing verwyder?',
@@ -1883,6 +1883,20 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Kususiwe ngempumelelo!',
         'xh' => 'Icinyiwe ngempumelelo!',
         'pt' => 'Excluído com sucesso!'
+    ],
+    'see_you_at' => [
+        'af' => 'Sien julle',
+        'en' => 'See you',
+        'zu' => 'Sizobonana',
+        'xh' => 'Sobonana',
+        'pt' => 'Vejo vocês'
+    ],
+    'type' => [
+        'af' => 'Tipe',
+        'en' => 'Type',
+        'zu' => 'Uhlobo',
+        'xh' => 'Uhlobo',
+        'pt' => 'Tipo'
     ],
 
     // ==================== DIARY ====================
@@ -2612,7 +2626,7 @@ define('UI_TRANSLATIONS', [
     ],
     'office' => [
         'af' => 'Amp',
-        'en' => 'Office',
+        'en' => 'Officer',
         'zu' => 'Isikhundla',
         'xh' => 'Isikhundla',
         'pt' => 'Cargo'
@@ -2653,6 +2667,41 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Excel',
         'xh' => 'Excel',
         'pt' => 'Excel'
+    ],
+    'generating_pdf' => [
+        'af' => 'Genereer PDF...',
+        'en' => 'Generating PDF...',
+        'zu' => 'Kukhiqizwa i-PDF...',
+        'xh' => 'Kuveliswa i-PDF...',
+        'pt' => 'Gerando PDF...'
+    ],
+    'generating_excel' => [
+        'af' => 'Genereer Excel...',
+        'en' => 'Generating Excel...',
+        'zu' => 'Kukhiqizwa i-Excel...',
+        'xh' => 'Kuveliswa i-Excel...',
+        'pt' => 'Gerando Excel...'
+    ],
+    'pdf_exported' => [
+        'af' => 'PDF uitgevoer!',
+        'en' => 'PDF exported!',
+        'zu' => 'I-PDF ithunyelwe!',
+        'xh' => 'I-PDF ithunyelwe!',
+        'pt' => 'PDF exportado!'
+    ],
+    'excel_exported' => [
+        'af' => 'Excel uitgevoer!',
+        'en' => 'Excel exported!',
+        'zu' => 'I-Excel ithunyelwe!',
+        'xh' => 'I-Excel ithunyelwe!',
+        'pt' => 'Excel exportado!'
+    ],
+    'export_failed' => [
+        'af' => 'Uitvoer het misluk',
+        'en' => 'Export failed',
+        'zu' => 'Ukuthumela kwehlulekile',
+        'xh' => 'Ukuthumela akuphumelelanga',
+        'pt' => 'Exportação falhou'
     ],
 
     // ==================== NOTIFICATIONS PAGE ====================
@@ -3119,11 +3168,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{event} começa em 30 minutos às {time}'
     ],
     'notif_event_shared' => [
-        'af' => '📅 Gebeurtenis Gedeel',
-        'en' => '📅 Event Shared',
-        'zu' => '📅 Umcimbi Wabelwe',
-        'xh' => '📅 Isiganeko Sabelwe',
-        'pt' => '📅 Evento Compartilhado'
+        'af' => '📅 Aktiwiteit Gedeel',
+        'en' => '📅 Activity Shared',
+        'zu' => '📅 Umsebenzi Wabelwe',
+        'xh' => '📅 Umsebenzi Wabelwe',
+        'pt' => '📅 Atividade Compartilhada'
     ],
     'notif_event_shared_msg' => [
         'af' => "{name} het '{event}' met jou gedeel.",
@@ -3168,6 +3217,36 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Othile',
         'xh' => 'Omnye umntu',
         'pt' => 'Alguém'
+    ],
+
+    // ==================== BIRTHDAY NOTIFICATIONS ====================
+    'happy_birthday' => [
+        'af' => 'Gelukkige Verjaarsdag!',
+        'en' => 'Happy Birthday!',
+        'zu' => 'Usuku lokuzalwa oluhle!',
+        'xh' => 'Usuku lokuzalwa olumnandi!',
+        'pt' => 'Feliz Aniversário!'
+    ],
+    'birthday_self_msg' => [
+        'af' => 'Baie geluk met jou verjaarsdag! Mag die Here jou seën.',
+        'en' => 'Congratulations on your birthday! May God bless you.',
+        'zu' => 'Siyakuhalalisela ngosuku lwakho lokuzalwa! Sengathi uNkulunkulu angakubusisa.',
+        'xh' => 'Sivuyisana nawe ngosuku lwakho lokuzalwa! Ngamana uThixo akusikelele.',
+        'pt' => 'Parabéns pelo seu aniversário! Que Deus te abençoe.'
+    ],
+    'birthday_notification' => [
+        'af' => 'Verjaarsdag Vandag',
+        'en' => 'Birthday Today',
+        'zu' => 'Usuku Lokuzalwa Namhlanje',
+        'xh' => 'Usuku Lokuzalwa Namhlanje',
+        'pt' => 'Aniversário Hoje'
+    ],
+    'birthday_notification_msg' => [
+        'af' => '{name} vier vandag verjaarsdag!',
+        'en' => '{name} is celebrating their birthday today!',
+        'zu' => '{name} ugubha usuku lwakhe lokuzalwa namhlanje!',
+        'xh' => '{name} ubhiyozela usuku lwakhe lokuzalwa namhlanje!',
+        'pt' => '{name} está comemorando seu aniversário hoje!'
     ],
 
     // =====================================================================

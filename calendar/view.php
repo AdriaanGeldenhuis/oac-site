@@ -479,18 +479,15 @@ $VER = time();
             month: '<?= esc(t('month')) ?>',
             today: '<?= esc(t('today')) ?>',
             noEvents: '<?= esc(t('no_events')) ?>',
-            dayNames: <?= $pageLang === 'af' 
-                ? '["Sondag","Maandag","Dinsdag","Woensdag","Donderdag","Vrydag","Saterdag"]'
-                : '["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]'
-            ?>,
-            dayNamesShort: <?= $pageLang === 'af' 
-                ? '["So","Ma","Di","Wo","Do","Vr","Sa"]'
-                : '["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]'
-            ?>,
-            monthNames: <?= $pageLang === 'af' 
-                ? '["Januarie","Februarie","Maart","April","Mei","Junie","Julie","Augustus","September","Oktober","November","Desember"]'
-                : '["January","February","March","April","May","June","July","August","September","October","November","December"]'
-            ?>
+            generatingPdf: '<?= esc(t('generating_pdf')) ?>',
+            generatingExcel: '<?= esc(t('generating_excel')) ?>',
+            pdfExported: '<?= esc(t('pdf_exported')) ?>',
+            excelExported: '<?= esc(t('excel_exported')) ?>',
+            exportFailed: '<?= esc(t('export_failed')) ?>',
+            networkError: '<?= esc(t('network_error')) ?>',
+            dayNames: ["<?= esc(t('sunday')) ?>","<?= esc(t('monday')) ?>","<?= esc(t('tuesday')) ?>","<?= esc(t('wednesday')) ?>","<?= esc(t('thursday')) ?>","<?= esc(t('friday')) ?>","<?= esc(t('saturday')) ?>"],
+            dayNamesShort: ["<?= esc(t('sun')) ?>","<?= esc(t('mon')) ?>","<?= esc(t('tue')) ?>","<?= esc(t('wed')) ?>","<?= esc(t('thu')) ?>","<?= esc(t('fri')) ?>","<?= esc(t('sat')) ?>"],
+            monthNames: ["<?= esc(t('january')) ?>","<?= esc(t('february')) ?>","<?= esc(t('march')) ?>","<?= esc(t('april')) ?>","<?= esc(t('may')) ?>","<?= esc(t('june')) ?>","<?= esc(t('july')) ?>","<?= esc(t('august')) ?>","<?= esc(t('september')) ?>","<?= esc(t('october')) ?>","<?= esc(t('november')) ?>","<?= esc(t('december')) ?>"]
         };
     </script>
     <script src="/calendar/js/view.js?v=<?= $VER ?>"></script>

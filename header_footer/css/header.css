@@ -844,3 +844,95 @@ body.ghf-open .ghf-drawer {
   transition-duration: 0.3s;
   transition-timing-function: ease;
 }
+
+/* ===== DATE PICKER DARK MODE FIX ===== */
+/* Force dark color scheme for date inputs in dark mode */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"] {
+  color-scheme: dark;
+}
+
+[data-theme="light"] input[type="date"],
+[data-theme="light"] input[type="datetime-local"],
+[data-theme="light"] input[type="time"],
+[data-theme="light"] input[type="month"],
+[data-theme="light"] input[type="week"] {
+  color-scheme: light;
+}
+
+/* Style the calendar picker icon */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover,
+input[type="week"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="month"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+/* Force light text in date input fields for dark mode */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="datetime-local"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper,
+input[type="datetime-local"]::-webkit-datetime-edit-text,
+input[type="datetime-local"]::-webkit-datetime-edit-month-field,
+input[type="datetime-local"]::-webkit-datetime-edit-day-field,
+input[type="datetime-local"]::-webkit-datetime-edit-year-field,
+input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
+input[type="datetime-local"]::-webkit-datetime-edit-minute-field,
+input[type="datetime-local"]::-webkit-datetime-edit-ampm-field,
+input[type="time"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+input[type="time"]::-webkit-datetime-edit-hour-field,
+input[type="time"]::-webkit-datetime-edit-minute-field,
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+  color: #f5d5c8;
+}
+
+[data-theme="light"] input[type="date"]::-webkit-datetime-edit,
+[data-theme="light"] input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+[data-theme="light"] input[type="date"]::-webkit-datetime-edit-text,
+[data-theme="light"] input[type="date"]::-webkit-datetime-edit-month-field,
+[data-theme="light"] input[type="date"]::-webkit-datetime-edit-day-field,
+[data-theme="light"] input[type="date"]::-webkit-datetime-edit-year-field,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit-text,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit-month-field,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit-day-field,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit-year-field,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit-minute-field,
+[data-theme="light"] input[type="datetime-local"]::-webkit-datetime-edit-ampm-field,
+[data-theme="light"] input[type="time"]::-webkit-datetime-edit,
+[data-theme="light"] input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+[data-theme="light"] input[type="time"]::-webkit-datetime-edit-hour-field,
+[data-theme="light"] input[type="time"]::-webkit-datetime-edit-minute-field,
+[data-theme="light"] input[type="time"]::-webkit-datetime-edit-ampm-field {
+  color: #000000;
+}

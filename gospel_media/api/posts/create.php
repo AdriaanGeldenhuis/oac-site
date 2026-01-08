@@ -3,10 +3,12 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
 require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
-if (!isset($pdo) || !($pdo instanceof PDO)) { 
-    http_response_code(500); 
-    echo json_encode(['error'=>'db_unavailable']); 
-    exit; 
+require_once __DIR__ . '/../notifications/helper.php';
+
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    http_response_code(500);
+    echo json_encode(['error'=>'db_unavailable']);
+    exit;
 }
 
 ini_set('display_errors', '0');
@@ -139,7 +141,79 @@ try {
     }
 
     $pdo->commit();
+
+    // Send response IMMEDIATELY so UI updates fast
     echo json_encode(['ok'=>1, 'success'=>true, 'post_id'=>$postId]);
+
+    // Flush output to browser immediately, then continue with notifications
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } else {
+        if (ob_get_level() > 0) ob_end_flush();
+        flush();
+    }
+
+    // Notify all room members about the new post (runs in background after response sent)
+    try {
+        // Get room info
+        $roomStmt = $pdo->prepare("SELECT name, type, town_id, gemeente_id FROM rooms WHERE id = ?");
+        $roomStmt->execute([$roomId]);
+        $room = $roomStmt->fetch(PDO::FETCH_ASSOC);
+        $roomName = $room['name'] ?? 'Room';
+        $roomType = strtolower($room['type'] ?? '');
+        $roomTownId = (int)($room['town_id'] ?? 0);
+        $roomGemeenteId = (int)($room['gemeente_id'] ?? 0);
+
+        // Get author name
+        $authorStmt = $pdo->prepare("SELECT CONCAT(name, ' ', surname) AS full_name FROM users WHERE id = ?");
+        $authorStmt->execute([$userId]);
+        $authorName = $authorStmt->fetchColumn() ?: 'Someone';
+
+        // Get room members based on room type (implicit membership)
+        $members = [];
+
+        if ($roomType === 'gemeente' && $roomGemeenteId > 0) {
+            // Gemeente: all users in that congregation
+            $membersStmt = $pdo->prepare("
+                SELECT id FROM users
+                WHERE congregation_id = ? AND id != ? AND status = 'approved'
+            ");
+            $membersStmt->execute([$roomGemeenteId, $userId]);
+            $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        } elseif ($roomType === 'opsienerskap' && $roomTownId > 0) {
+            // Opsienerskap: users in town with amp_id 1-5
+            $membersStmt = $pdo->prepare("
+                SELECT id FROM users
+                WHERE town_id = ? AND amp_id <= 5 AND id != ? AND status = 'approved'
+            ");
+            $membersStmt->execute([$roomTownId, $userId]);
+            $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        } elseif (in_array($roomType, ['jeug', 'sondagskool']) && $roomTownId > 0) {
+            // Jeug/Sondagskool: users in town (simplified - could add age check)
+            $membersStmt = $pdo->prepare("
+                SELECT id FROM users
+                WHERE town_id = ? AND id != ? AND status = 'approved'
+            ");
+            $membersStmt->execute([$roomTownId, $userId]);
+            $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+        }
+
+        // Send notification to each member
+        foreach ($members as $memberId) {
+            createGospelNotification($pdo, (int)$memberId, 'new_post', [
+                'room_id' => $roomId,
+                'room_name' => $roomName,
+                'author_name' => $authorName,
+                'post_id' => $postId
+            ]);
+        }
+
+        error_log("Gospel notification: Sent to " . count($members) . " members for room $roomId ($roomType)");
+    } catch (Throwable $notifError) {
+        error_log('Gospel post notification error: ' . $notifError->getMessage());
+    }
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log('Gospel create post error: '.$e->getMessage());

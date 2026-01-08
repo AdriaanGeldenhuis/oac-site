@@ -46,11 +46,14 @@ body {
   font-weight: 200;
   background: linear-gradient(180deg, #000 0%, var(--color-dark) 50%, #000 100%);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
   position: relative;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Elegant Background Effects */
@@ -375,24 +378,25 @@ a:hover::after {
   width: 100%;
 }
 
-@media (max-width: 600px) {
-  .logo-container img {
-    max-width: 280px !important;
-  }
-}
-
 /* Responsive Design */
 @media (max-width: 600px) {
   .login-container {
-    padding: 40px 28px;
+    padding: 30px 24px;
     border-width: 1.5px;
+    width: 100%;
+    max-width: none;
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
   }
 
   .logo-container img {
-    max-width: 140px;
+    max-width: 260px;
+  }
+
+  .logo-container {
+    margin-bottom: 10px;
   }
 }
