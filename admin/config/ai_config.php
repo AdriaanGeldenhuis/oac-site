@@ -83,8 +83,8 @@ function openai_chat(array $messages): array {
             'Content-Type: application/json',
             'Authorization: Bearer ' . OPENAI_API_KEY
         ],
-        CURLOPT_TIMEOUT => 60,
-        CURLOPT_CONNECTTIMEOUT => 10
+        CURLOPT_TIMEOUT => 180,  // 3 minutes for long translations
+        CURLOPT_CONNECTTIMEOUT => 30
     ]);
 
     $response = curl_exec($ch);

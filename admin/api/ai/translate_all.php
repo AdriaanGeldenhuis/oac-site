@@ -11,6 +11,10 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
+// Increase PHP timeout for long translations (4 languages)
+set_time_limit(600); // 10 minutes
+ini_set('max_execution_time', '600');
+
 // Load dependencies
 try {
     require_once dirname(__DIR__, 3) . '/security/config.php';
