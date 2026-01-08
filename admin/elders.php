@@ -961,7 +961,7 @@ function t(string $key): string {
                 if (ed) ed.addEventListener('input', () => hasChanges = true);
             });
 
-            // Paste handler - clean Word junk, keep formatting, FIX SPACING
+            // Paste handler - KEEP ALL FORMATTING, only fix spacing
             Object.values(editors).forEach(ed => {
                 if (!ed) return;
 
@@ -969,106 +969,87 @@ function t(string $key): string {
                     hasChanges = true;
 
                     setTimeout(() => {
-                        // Remove Word XML junk
-                        ed.querySelectorAll('o\\:p, w\\:sdt, xml, meta, link, style, script, title').forEach(el => el.remove());
+                        // Remove ONLY Word XML namespace junk (not content)
+                        ed.querySelectorAll('o\\:p, w\\:sdt, xml').forEach(el => el.remove());
 
-                        // Remove ALL Word classes - they cause spacing issues
-                        ed.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'));
+                        // Remove meta/link/style tags but keep everything else
+                        ed.querySelectorAll('meta, link, style, script, title').forEach(el => el.remove());
 
-                        // Process ALL elements with styles - KEEP useful formatting
-                        ed.querySelectorAll('[style]').forEach(el => {
-                            const cs = el.style;
-                            const keep = {};
-
-                            // KEEP font size (convert pt to px if needed)
-                            if (cs.fontSize) {
-                                let size = cs.fontSize;
-                                // Convert pt to px (roughly 1pt = 1.33px)
-                                if (size.includes('pt')) {
-                                    const pt = parseFloat(size);
-                                    size = Math.round(pt * 1.33) + 'px';
-                                }
-                                keep.fontSize = size;
+                        // Remove Word classes that cause issues, but KEEP MsoNormal etc for now
+                        ed.querySelectorAll('[class]').forEach(el => {
+                            const cls = el.className;
+                            // Only remove mso classes that cause spacing problems
+                            if (cls.includes('Mso') && !cls.includes('List')) {
+                                el.removeAttribute('class');
                             }
-
-                            // KEEP font family
-                            if (cs.fontFamily) {
-                                // Clean up Word font names
-                                let font = cs.fontFamily.replace(/['"]/g, '');
-                                // Map common Word fonts
-                                if (font.includes('Calibri')) font = 'Arial, sans-serif';
-                                else if (font.includes('Times')) font = '"Times New Roman", serif';
-                                else if (font.includes('Arial')) font = 'Arial, sans-serif';
-                                keep.fontFamily = font;
-                            }
-
-                            // KEEP text formatting
-                            if (cs.fontWeight === 'bold' || parseInt(cs.fontWeight) >= 600) keep.fontWeight = 'bold';
-                            if (cs.fontStyle === 'italic') keep.fontStyle = 'italic';
-                            if (cs.textDecoration && cs.textDecoration !== 'none') keep.textDecoration = cs.textDecoration;
-
-                            // Keep color (not black/default)
-                            if (cs.color) {
-                                const c = cs.color.toLowerCase();
-                                if (c !== 'black' && c !== 'rgb(0, 0, 0)' && c !== 'windowtext' && c !== '#000000' && c !== '#000') {
-                                    keep.color = cs.color;
-                                }
-                            }
-
-                            // Keep background color (not white/default)
-                            if (cs.backgroundColor) {
-                                const bg = cs.backgroundColor.toLowerCase();
-                                if (bg !== 'white' && bg !== 'rgb(255, 255, 255)' && bg !== '#ffffff' && bg !== '#fff' && bg !== 'transparent') {
-                                    keep.backgroundColor = cs.backgroundColor;
-                                }
-                            }
-
-                            // Keep alignment
-                            if (cs.textAlign === 'center' || cs.textAlign === 'right' || cs.textAlign === 'justify') {
-                                keep.textAlign = cs.textAlign;
-                            }
-
-                            // Clear and reapply only good stuff
-                            el.removeAttribute('style');
-                            Object.keys(keep).forEach(k => el.style[k] = keep[k]);
                         });
 
-                        // Remove empty elements (but keep images, br, sup, sub)
+                        // Process elements - KEEP almost everything, only fix bad stuff
+                        ed.querySelectorAll('[style]').forEach(el => {
+                            const cs = el.style;
+
+                            // Convert pt to px for font-size
+                            if (cs.fontSize && cs.fontSize.includes('pt')) {
+                                const pt = parseFloat(cs.fontSize);
+                                cs.fontSize = Math.round(pt * 1.33) + 'px';
+                            }
+
+                            // Remove ONLY problematic margin/line-height values
+                            // Keep everything else!
+                            const badProps = ['mso-', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right', 'line-height'];
+
+                            // Save ALL the good formatting first
+                            const saved = {
+                                fontSize: cs.fontSize,
+                                fontFamily: cs.fontFamily,
+                                fontWeight: cs.fontWeight,
+                                fontStyle: cs.fontStyle,
+                                textDecoration: cs.textDecoration,
+                                textAlign: cs.textAlign,
+                                color: cs.color,
+                                backgroundColor: cs.backgroundColor,
+                                textIndent: cs.textIndent
+                            };
+
+                            // Only mess with block elements' margins
+                            if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'UL', 'OL'].includes(el.tagName)) {
+                                cs.margin = '0';
+                                cs.marginBottom = '0.5em';
+                                cs.padding = '0';
+                                cs.lineHeight = '1.6';
+                            }
+
+                            // Restore all saved formatting
+                            Object.keys(saved).forEach(k => {
+                                if (saved[k]) cs[k] = saved[k];
+                            });
+                        });
+
+                        // Remove truly empty elements only
                         ed.querySelectorAll('p, span, div').forEach(el => {
-                            if (!el.textContent.trim() && !el.querySelector('img, br, sup, sub')) {
+                            if (!el.textContent.trim() && !el.innerHTML.trim() && !el.querySelector('img, br')) {
                                 el.remove();
                             }
                         });
 
-                        // Fix paragraph spacing - remove Word's crazy margins
-                        ed.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, ul, ol, li').forEach(el => {
-                            // Don't override existing font-size
-                            const existingFontSize = el.style.fontSize;
-                            const existingTextAlign = el.style.textAlign;
-                            const existingColor = el.style.color;
-                            const existingBg = el.style.backgroundColor;
-
-                            el.style.margin = '0';
-                            el.style.marginTop = '0';
-                            el.style.marginBottom = '0.5em';
-                            el.style.padding = '0';
-
-                            // Restore preserved styles
-                            if (existingFontSize) el.style.fontSize = existingFontSize;
-                            if (existingTextAlign) el.style.textAlign = existingTextAlign;
-                            if (existingColor) el.style.color = existingColor;
-                            if (existingBg) el.style.backgroundColor = existingBg;
+                        // Remove excessive br tags
+                        let brCount = 0;
+                        ed.querySelectorAll('br').forEach(br => {
+                            const next = br.nextSibling;
+                            if (next && next.nodeName === 'BR') {
+                                brCount++;
+                                if (brCount > 1) br.remove();
+                            } else {
+                                brCount = 0;
+                            }
                         });
 
-                        // Remove consecutive br tags (leave single ones)
-                        ed.querySelectorAll('br + br').forEach(br => br.remove());
-
-                        console.log('✅ Word paste cleaned - formatting preserved');
+                        console.log('✅ Word paste - ALL formatting kept!');
                     }, 10);
                 });
             });
 
-            console.log('✅ Paste handler ready');
+            console.log('✅ Paste handler ready (keeps all formatting)');
 
             // Lang switch
             document.querySelectorAll('.lang-btn').forEach(btn => {
