@@ -254,10 +254,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $sql = 'UPDATE users SET ' . implode(', ', $setParts) . ' WHERE id = ?';
         $vals[] = $userId;
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute($vals);
-        
+
+        // If town changed, remove old room memberships (chosen rooms from old town)
+        $oldTownId = (int)($currentUser['town_id'] ?? 0);
+        $newTownId = $town_id ?? 0;
+
+        if ($oldTownId > 0 && $newTownId > 0 && $oldTownId !== $newTownId) {
+            // Delete memberships for rooms that belong to the OLD town
+            // This includes: opsienerskap, sondagskool, jeug rooms from the old town
+            $deleteStmt = $pdo->prepare("
+                DELETE rm FROM room_memberships rm
+                INNER JOIN rooms r ON rm.room_id = r.id
+                WHERE rm.user_id = ?
+                AND r.town_id = ?
+                AND r.type IN ('opsienerskap', 'sondagskool', 'jeug')
+            ");
+            $deleteStmt->execute([$userId, $oldTownId]);
+
+            error_log("User {$userId} moved from town {$oldTownId} to {$newTownId} - removed old room memberships");
+        }
+
+        // If congregation changed, also remove gemeente room memberships from old congregation
+        $oldCongId = (int)($currentUser['congregation_id'] ?? 0);
+        $newCongId = $congregation_id ?? 0;
+
+        if ($oldCongId > 0 && $newCongId > 0 && $oldCongId !== $newCongId) {
+            // Delete memberships for gemeente rooms from old congregation
+            $deleteStmt = $pdo->prepare("
+                DELETE rm FROM room_memberships rm
+                INNER JOIN rooms r ON rm.room_id = r.id
+                WHERE rm.user_id = ?
+                AND r.gemeente_id = ?
+                AND r.type = 'gemeente'
+            ");
+            $deleteStmt->execute([$userId, $oldCongId]);
+
+            error_log("User {$userId} moved from congregation {$oldCongId} to {$newCongId} - removed old gemeente room memberships");
+        }
+
         $_SESSION['language'] = $language;
         if (!$notice) {
             $notice = t('profile_updated');
