@@ -617,57 +617,187 @@ function t(string $key): string {
             </div>
         </div>
         
+        <!-- TOOLBAR ROW 1: Fonts, Size, Basic Formatting -->
         <div class="toolbar">
             <div class="tool-group">
                 <label><?= t('font') ?></label>
                 <select id="font-family">
-                    <option value="Georgia, serif">Georgia</option>
-                    <option value="'Parisienne', cursive">Parisienne</option>
-                    <option value="'Dancing Script', cursive">Dancing Script</option>
-                    <option value="'Great Vibes', cursive">Great Vibes</option>
-                    <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">System UI</option>
+                    <optgroup label="Sans Serif">
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+                        <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                        <option value="Tahoma, sans-serif">Tahoma</option>
+                        <option value="'Open Sans', sans-serif">Open Sans</option>
+                        <option value="Roboto, sans-serif">Roboto</option>
+                        <option value="Lato, sans-serif">Lato</option>
+                        <option value="'Source Sans Pro', sans-serif">Source Sans</option>
+                        <option value="Ubuntu, sans-serif">Ubuntu</option>
+                        <option value="'Nunito', sans-serif">Nunito</option>
+                        <option value="'Poppins', sans-serif">Poppins</option>
+                        <option value="Montserrat, sans-serif">Montserrat</option>
+                        <option value="Raleway, sans-serif">Raleway</option>
+                    </optgroup>
+                    <optgroup label="Serif">
+                        <option value="Georgia, serif" selected>Georgia</option>
+                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option value="'Palatino Linotype', Palatino, serif">Palatino</option>
+                        <option value="'Book Antiqua', serif">Book Antiqua</option>
+                        <option value="Garamond, serif">Garamond</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="Merriweather, serif">Merriweather</option>
+                        <option value="'Libre Baskerville', serif">Libre Baskerville</option>
+                        <option value="'Crimson Text', serif">Crimson Text</option>
+                        <option value="'EB Garamond', serif">EB Garamond</option>
+                    </optgroup>
+                    <optgroup label="Script / Fancy">
+                        <option value="'Parisienne', cursive">Parisienne</option>
+                        <option value="'Dancing Script', cursive">Dancing Script</option>
+                        <option value="'Great Vibes', cursive">Great Vibes</option>
+                        <option value="'Allura', cursive">Allura</option>
+                        <option value="'Alex Brush', cursive">Alex Brush</option>
+                        <option value="'Sacramento', cursive">Sacramento</option>
+                        <option value="'Tangerine', cursive">Tangerine</option>
+                        <option value="'Pinyon Script', cursive">Pinyon Script</option>
+                        <option value="'Satisfy', cursive">Satisfy</option>
+                        <option value="'Cookie', cursive">Cookie</option>
+                        <option value="'Kaushan Script', cursive">Kaushan Script</option>
+                        <option value="'Lobster', cursive">Lobster</option>
+                        <option value="'Pacifico', cursive">Pacifico</option>
+                        <option value="'Caveat', cursive">Caveat</option>
+                        <option value="'Indie Flower', cursive">Indie Flower</option>
+                    </optgroup>
+                    <optgroup label="Monospace">
+                        <option value="'Courier New', Courier, monospace">Courier New</option>
+                        <option value="Consolas, monospace">Consolas</option>
+                        <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                        <option value="Monaco, monospace">Monaco</option>
+                    </optgroup>
                 </select>
             </div>
 
             <div class="tool-group">
                 <label><?= t('size') ?></label>
                 <select id="font-size">
+                    <option value="10px">10</option>
+                    <option value="11px">11</option>
                     <option value="12px">12</option>
+                    <option value="13px">13</option>
                     <option value="14px">14</option>
+                    <option value="15px">15</option>
                     <option value="16px" selected>16</option>
                     <option value="18px">18</option>
                     <option value="20px">20</option>
+                    <option value="22px">22</option>
                     <option value="24px">24</option>
+                    <option value="26px">26</option>
+                    <option value="28px">28</option>
                     <option value="32px">32</option>
+                    <option value="36px">36</option>
+                    <option value="40px">40</option>
+                    <option value="48px">48</option>
+                    <option value="56px">56</option>
+                    <option value="64px">64</option>
+                    <option value="72px">72</option>
                 </select>
             </div>
-            
-            <div class="sep"></div>
-            
+
             <div class="tool-group">
-                <button class="tool-btn" id="btn-bold"><b>B</b></button>
-                <button class="tool-btn" id="btn-italic"><i>I</i></button>
-                <button class="tool-btn" id="btn-underline"><u>U</u></button>
+                <label>Line</label>
+                <select id="line-spacing">
+                    <option value="1">1.0</option>
+                    <option value="1.15">1.15</option>
+                    <option value="1.5" selected>1.5</option>
+                    <option value="1.75">1.75</option>
+                    <option value="2">2.0</option>
+                    <option value="2.5">2.5</option>
+                    <option value="3">3.0</option>
+                </select>
             </div>
-            
+
             <div class="sep"></div>
-            
+
+            <!-- Basic formatting -->
             <div class="tool-group">
-                <button class="tool-btn" id="btn-h1">H1</button>
-                <button class="tool-btn" id="btn-h2">H2</button>
-                <button class="tool-btn" id="btn-h3">H3</button>
-                <button class="tool-btn" id="btn-p">P</button>
+                <button class="tool-btn" id="btn-bold" title="Bold (Ctrl+B)"><b>B</b></button>
+                <button class="tool-btn" id="btn-italic" title="Italic (Ctrl+I)"><i>I</i></button>
+                <button class="tool-btn" id="btn-underline" title="Underline (Ctrl+U)"><u>U</u></button>
+                <button class="tool-btn" id="btn-strike" title="Strikethrough"><s>S</s></button>
             </div>
-            
+
             <div class="sep"></div>
-            
+
+            <!-- Superscript/Subscript -->
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-super" title="Superscript">X<sup>2</sup></button>
+                <button class="tool-btn" id="btn-sub" title="Subscript">X<sub>2</sub></button>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Headings -->
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-h1" title="Heading 1">H1</button>
+                <button class="tool-btn" id="btn-h2" title="Heading 2">H2</button>
+                <button class="tool-btn" id="btn-h3" title="Heading 3">H3</button>
+                <button class="tool-btn" id="btn-p" title="Paragraph">P</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Colors -->
             <div class="tool-group">
                 <label><?= t('color') ?></label>
-                <input type="color" id="text-color" value="#333333">
+                <input type="color" id="text-color" value="#333333" title="Text Color">
+                <input type="color" id="bg-color" value="#ffffff" title="Background Color">
+            </div>
+        </div>
+
+        <!-- TOOLBAR ROW 2: Lists, Align, Indent, Actions -->
+        <div class="toolbar">
+            <!-- Lists -->
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-ul" title="Bullet List">• List</button>
+                <button class="tool-btn" id="btn-ol" title="Numbered List">1. List</button>
             </div>
 
             <div class="sep"></div>
 
+            <!-- Alignment -->
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-left" title="Align Left">⫷</button>
+                <button class="tool-btn" id="btn-center" title="Align Center">☰</button>
+                <button class="tool-btn" id="btn-right" title="Align Right">⫸</button>
+                <button class="tool-btn" id="btn-justify" title="Justify">☰☰</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Indent -->
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-outdent" title="Decrease Indent">←</button>
+                <button class="tool-btn" id="btn-indent" title="Increase Indent">→</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Undo/Redo -->
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-undo" title="Undo (Ctrl+Z)">↶</button>
+                <button class="tool-btn" id="btn-redo" title="Redo (Ctrl+Y)">↷</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Clear formatting -->
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-clear" title="Clear Formatting">✕ Clear</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Special buttons -->
             <button class="tool-btn btn-bible" id="btn-verse">
                 📖 <?= t('add_verse') ?>
             </button>
@@ -840,59 +970,100 @@ function t(string $key): string {
 
                     setTimeout(() => {
                         // Remove Word XML junk
-                        ed.querySelectorAll('o\\:p, w\\:sdt, xml, meta, link, style').forEach(el => el.remove());
+                        ed.querySelectorAll('o\\:p, w\\:sdt, xml, meta, link, style, script, title').forEach(el => el.remove());
 
-                        // Remove ALL classes - Word classes cause spacing issues
+                        // Remove ALL Word classes - they cause spacing issues
                         ed.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'));
 
-                        // Process ALL elements with styles
+                        // Process ALL elements with styles - KEEP useful formatting
                         ed.querySelectorAll('[style]').forEach(el => {
                             const cs = el.style;
                             const keep = {};
 
-                            // KEEP text formatting only
+                            // KEEP font size (convert pt to px if needed)
+                            if (cs.fontSize) {
+                                let size = cs.fontSize;
+                                // Convert pt to px (roughly 1pt = 1.33px)
+                                if (size.includes('pt')) {
+                                    const pt = parseFloat(size);
+                                    size = Math.round(pt * 1.33) + 'px';
+                                }
+                                keep.fontSize = size;
+                            }
+
+                            // KEEP font family
+                            if (cs.fontFamily) {
+                                // Clean up Word font names
+                                let font = cs.fontFamily.replace(/['"]/g, '');
+                                // Map common Word fonts
+                                if (font.includes('Calibri')) font = 'Arial, sans-serif';
+                                else if (font.includes('Times')) font = '"Times New Roman", serif';
+                                else if (font.includes('Arial')) font = 'Arial, sans-serif';
+                                keep.fontFamily = font;
+                            }
+
+                            // KEEP text formatting
                             if (cs.fontWeight === 'bold' || parseInt(cs.fontWeight) >= 600) keep.fontWeight = 'bold';
                             if (cs.fontStyle === 'italic') keep.fontStyle = 'italic';
                             if (cs.textDecoration && cs.textDecoration !== 'none') keep.textDecoration = cs.textDecoration;
 
-                            // Keep color (not black)
+                            // Keep color (not black/default)
                             if (cs.color) {
                                 const c = cs.color.toLowerCase();
-                                if (c !== 'black' && c !== 'rgb(0, 0, 0)' && c !== 'windowtext' && c !== '#000000') {
+                                if (c !== 'black' && c !== 'rgb(0, 0, 0)' && c !== 'windowtext' && c !== '#000000' && c !== '#000') {
                                     keep.color = cs.color;
                                 }
                             }
 
-                            // Keep center/right alignment
+                            // Keep background color (not white/default)
+                            if (cs.backgroundColor) {
+                                const bg = cs.backgroundColor.toLowerCase();
+                                if (bg !== 'white' && bg !== 'rgb(255, 255, 255)' && bg !== '#ffffff' && bg !== '#fff' && bg !== 'transparent') {
+                                    keep.backgroundColor = cs.backgroundColor;
+                                }
+                            }
+
+                            // Keep alignment
                             if (cs.textAlign === 'center' || cs.textAlign === 'right' || cs.textAlign === 'justify') {
                                 keep.textAlign = cs.textAlign;
                             }
 
-                            // Clear and reapply
+                            // Clear and reapply only good stuff
                             el.removeAttribute('style');
                             Object.keys(keep).forEach(k => el.style[k] = keep[k]);
                         });
 
-                        // Remove empty elements
+                        // Remove empty elements (but keep images, br, sup, sub)
                         ed.querySelectorAll('p, span, div').forEach(el => {
                             if (!el.textContent.trim() && !el.querySelector('img, br, sup, sub')) {
                                 el.remove();
                             }
                         });
 
-                        // FORCE remove ALL spacing from paragraphs
+                        // Fix paragraph spacing - remove Word's crazy margins
                         ed.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, ul, ol, li').forEach(el => {
+                            // Don't override existing font-size
+                            const existingFontSize = el.style.fontSize;
+                            const existingTextAlign = el.style.textAlign;
+                            const existingColor = el.style.color;
+                            const existingBg = el.style.backgroundColor;
+
                             el.style.margin = '0';
                             el.style.marginTop = '0';
                             el.style.marginBottom = '0.5em';
                             el.style.padding = '0';
-                            el.style.lineHeight = '1.6';
+
+                            // Restore preserved styles
+                            if (existingFontSize) el.style.fontSize = existingFontSize;
+                            if (existingTextAlign) el.style.textAlign = existingTextAlign;
+                            if (existingColor) el.style.color = existingColor;
+                            if (existingBg) el.style.backgroundColor = existingBg;
                         });
 
-                        // Remove br tags that cause extra spacing
+                        // Remove consecutive br tags (leave single ones)
                         ed.querySelectorAll('br + br').forEach(br => br.remove());
 
-                        console.log('✅ Word paste cleaned - spacing fixed');
+                        console.log('✅ Word paste cleaned - formatting preserved');
                     }, 10);
                 });
             });
@@ -924,31 +1095,111 @@ function t(string $key): string {
                 currentEditor.focus();
             }
             
+            // Basic formatting
             document.getElementById('btn-bold').onclick = () => execCmd('bold');
             document.getElementById('btn-italic').onclick = () => execCmd('italic');
             document.getElementById('btn-underline').onclick = () => execCmd('underline');
+            document.getElementById('btn-strike').onclick = () => execCmd('strikeThrough');
+
+            // Superscript/Subscript
+            document.getElementById('btn-super').onclick = () => execCmd('superscript');
+            document.getElementById('btn-sub').onclick = () => execCmd('subscript');
+
+            // Headings
             document.getElementById('btn-h1').onclick = () => execCmd('formatBlock', 'h1');
             document.getElementById('btn-h2').onclick = () => execCmd('formatBlock', 'h2');
             document.getElementById('btn-h3').onclick = () => execCmd('formatBlock', 'h3');
             document.getElementById('btn-p').onclick = () => execCmd('formatBlock', 'p');
-            
+
+            // Lists
+            document.getElementById('btn-ul').onclick = () => execCmd('insertUnorderedList');
+            document.getElementById('btn-ol').onclick = () => execCmd('insertOrderedList');
+
+            // Alignment
+            document.getElementById('btn-left').onclick = () => execCmd('justifyLeft');
+            document.getElementById('btn-center').onclick = () => execCmd('justifyCenter');
+            document.getElementById('btn-right').onclick = () => execCmd('justifyRight');
+            document.getElementById('btn-justify').onclick = () => execCmd('justifyFull');
+
+            // Indent
+            document.getElementById('btn-outdent').onclick = () => execCmd('outdent');
+            document.getElementById('btn-indent').onclick = () => execCmd('indent');
+
+            // Undo/Redo
+            document.getElementById('btn-undo').onclick = () => execCmd('undo');
+            document.getElementById('btn-redo').onclick = () => execCmd('redo');
+
+            // Clear formatting
+            document.getElementById('btn-clear').onclick = () => execCmd('removeFormat');
+
+            // Font family
             document.getElementById('font-family').onchange = function() {
                 execCmd('fontName', this.value);
             };
-            
+
+            // Font size - use span with inline style for pixel sizes
             document.getElementById('font-size').onchange = function() {
-                execCmd('fontSize', '7');
+                const size = this.value;
                 const sel = window.getSelection();
-                if (sel.rangeCount) {
-                    const range = sel.getRangeAt(0);
-                    const span = document.createElement('span');
-                    span.style.fontSize = this.value;
-                    range.surroundContents(span);
+                if (!sel.rangeCount) return;
+
+                const range = sel.getRangeAt(0);
+                if (range.collapsed) {
+                    currentEditor.focus();
+                    return;
                 }
+
+                // Extract contents and wrap in span
+                const contents = range.extractContents();
+                const span = document.createElement('span');
+                span.style.fontSize = size;
+                span.appendChild(contents);
+                range.insertNode(span);
+
+                // Re-select the content
+                sel.removeAllRanges();
+                const newRange = document.createRange();
+                newRange.selectNodeContents(span);
+                sel.addRange(newRange);
+
+                currentEditor.focus();
+                hasChanges = true;
             };
-            
-            document.getElementById('text-color').onchange = function() {
+
+            // Line spacing
+            document.getElementById('line-spacing').onchange = function() {
+                const lineHeight = this.value;
+                const sel = window.getSelection();
+
+                if (sel.rangeCount) {
+                    // Find the parent block element
+                    let node = sel.anchorNode;
+                    while (node && node !== currentEditor) {
+                        if (node.nodeType === 1 && ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI'].includes(node.tagName)) {
+                            node.style.lineHeight = lineHeight;
+                            break;
+                        }
+                        node = node.parentNode;
+                    }
+
+                    // If no block found, apply to editor
+                    if (node === currentEditor || !node) {
+                        currentEditor.style.lineHeight = lineHeight;
+                    }
+                }
+
+                currentEditor.focus();
+                hasChanges = true;
+            };
+
+            // Text color
+            document.getElementById('text-color').oninput = function() {
                 execCmd('foreColor', this.value);
+            };
+
+            // Background/Highlight color
+            document.getElementById('bg-color').oninput = function() {
+                execCmd('hiliteColor', this.value);
             };
             
             // Load Bible for current language
