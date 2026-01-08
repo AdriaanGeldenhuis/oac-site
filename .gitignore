@@ -4,6 +4,8 @@ config.php
 bible/config.php
 **/secrets.php
 **/firebase-service-account.json
+**/email_config.php
 node_modules/
+vendor/
 .DS_Store
 *.log
