@@ -8,7 +8,7 @@ declare(strict_types=1);
 // Firebase Project Config
 define('FCM_PROJECT_ID', 'oac-app-5728d');
 define('FCM_SERVICE_ACCOUNT_FILE', __DIR__ . '/firebase-service-account.json');
-define('FCM_SITE_URL', 'https://oac.org.za'); // Base URL for notification deep links
+define('FCM_SITE_URL', 'https://oacapp.co.za'); // Base URL for notification deep links
 
 /**
  * Get OAuth2 access token for FCM V1 API
