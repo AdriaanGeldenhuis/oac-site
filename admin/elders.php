@@ -973,6 +973,51 @@ function t(string $key): string {
                         const temp = document.createElement('div');
                         temp.innerHTML = html;
 
+                        // Convert Word heading classes to actual heading tags
+                        temp.querySelectorAll('[class]').forEach(el => {
+                            const cls = (el.className || '').toLowerCase();
+                            let newTag = null;
+
+                            if (cls.includes('msoheading1') || cls.includes('msotitle') || cls.includes('heading 1') || cls.includes('title')) {
+                                newTag = 'h1';
+                            } else if (cls.includes('msoheading2') || cls.includes('msosubtitle') || cls.includes('heading 2') || cls.includes('subtitle')) {
+                                newTag = 'h2';
+                            } else if (cls.includes('msoheading3') || cls.includes('heading 3')) {
+                                newTag = 'h3';
+                            }
+
+                            if (newTag && el.tagName !== newTag.toUpperCase()) {
+                                const heading = document.createElement(newTag);
+                                heading.innerHTML = el.innerHTML;
+                                // Copy inline styles
+                                if (el.getAttribute('style')) {
+                                    heading.setAttribute('style', el.getAttribute('style'));
+                                }
+                                el.parentNode.replaceChild(heading, el);
+                            }
+                        });
+
+                        // Also detect headings by font-size (larger = heading)
+                        temp.querySelectorAll('p, span').forEach(el => {
+                            const style = el.getAttribute('style') || '';
+                            const sizeMatch = style.match(/font-size:\s*(\d+)/i);
+                            if (sizeMatch) {
+                                const size = parseInt(sizeMatch[1]);
+                                // If font size is large, treat as heading
+                                if (size >= 24 && el.tagName === 'P') {
+                                    const h1 = document.createElement('h1');
+                                    h1.innerHTML = el.innerHTML;
+                                    h1.setAttribute('style', style);
+                                    el.parentNode.replaceChild(h1, el);
+                                } else if (size >= 18 && size < 24 && el.tagName === 'P') {
+                                    const h2 = document.createElement('h2');
+                                    h2.innerHTML = el.innerHTML;
+                                    h2.setAttribute('style', style);
+                                    el.parentNode.replaceChild(h2, el);
+                                }
+                            }
+                        });
+
                         // Process Word HTML to extract and preserve formatting
                         temp.querySelectorAll('[style]').forEach(el => {
                             const style = el.getAttribute('style');
@@ -1013,10 +1058,19 @@ function t(string $key): string {
                                 }
                             }
 
-                            // Extract color (avoid matching background-color)
-                            const colorMatch = style.match(/(?:^|[^-])color:\s*([^;]+)/i);
-                            if (colorMatch) {
-                                el.style.color = colorMatch[1].trim();
+                            // Extract color - be more careful to get all colors
+                            // First try to get color that's NOT background-color
+                            let colorValue = null;
+                            const colorParts = style.split(';');
+                            for (const part of colorParts) {
+                                const trimmed = part.trim().toLowerCase();
+                                if (trimmed.startsWith('color:') && !trimmed.startsWith('background-color')) {
+                                    colorValue = part.split(':')[1]?.trim();
+                                    break;
+                                }
+                            }
+                            if (colorValue) {
+                                el.style.color = colorValue;
                             }
 
                             // Extract background-color
