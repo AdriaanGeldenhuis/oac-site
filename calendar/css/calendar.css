@@ -478,7 +478,7 @@ html {
   background: linear-gradient(135deg, var(--section-bg-start) 0%, var(--section-bg-end) 100%);
   border: 1px solid var(--section-border);
   border-radius: 16px;
-  padding: 30px 20px;
+  padding: 30px 4px;
   box-shadow: var(--section-shadow);
   backdrop-filter: blur(10px);
   position: relative;
@@ -669,14 +669,16 @@ html {
 .cal-month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 4px;
+  overflow: hidden;
 }
 
 .cal-day {
   background: var(--card-bg-start);
   border: 1px solid var(--section-border);
   border-radius: 8px;
-  padding: 8px;
+  padding: 2px;
+  margin: 0;
   min-height: 100px;
   cursor: pointer;
   transition: var(--transition);
@@ -1399,11 +1401,13 @@ html {
   }
   
   .cal-month-grid {
-    gap: 4px;
+    gap: 2px;
+    overflow: hidden;
   }
-  
+
   .cal-day {
-    padding: 6px;
+    padding: 1px;
+    margin: 0;
     min-height: 80px;
   }
   
