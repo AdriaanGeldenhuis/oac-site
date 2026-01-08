@@ -845,30 +845,43 @@ function t(string $key): string {
                         // Remove Word-specific elements
                         ed.querySelectorAll('o\\:p, w\\:sdt, style, meta, link, xml').forEach(el => el.remove());
 
-                        // Remove mso- styles and Word classes
-                        ed.querySelectorAll('[class]').forEach(el => {
-                            const cls = el.className;
-                            if (cls && (cls.includes('Mso') || cls.includes('mso'))) {
-                                el.removeAttribute('class');
-                            }
-                        });
+                        // Remove ALL classes (Word adds junk classes)
+                        ed.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'));
 
-                        // Clean inline styles - keep useful ones
+                        // Clean inline styles - keep only text formatting, remove spacing
                         ed.querySelectorAll('[style]').forEach(el => {
                             const style = el.style;
                             const keep = {};
 
-                            // Preserve useful styles
+                            // Keep ONLY text formatting styles
                             if (style.fontWeight === 'bold' || parseInt(style.fontWeight) >= 600) keep.fontWeight = 'bold';
                             if (style.fontStyle === 'italic') keep.fontStyle = 'italic';
                             if (style.textDecoration && style.textDecoration.includes('underline')) keep.textDecoration = 'underline';
-                            if (style.fontSize) keep.fontSize = style.fontSize;
                             if (style.color && style.color !== 'black' && style.color !== 'rgb(0, 0, 0)') keep.color = style.color;
-                            if (style.textAlign && style.textAlign !== 'left') keep.textAlign = style.textAlign;
+                            if (style.textAlign && style.textAlign !== 'left' && style.textAlign !== 'start') keep.textAlign = style.textAlign;
+
+                            // REMOVE all spacing - margin, padding, line-height, etc
+                            // We don't keep fontSize because Word uses weird sizes
 
                             // Apply only kept styles
                             el.removeAttribute('style');
                             Object.keys(keep).forEach(k => el.style[k] = keep[k]);
+                        });
+
+                        // Remove empty paragraphs and spans
+                        ed.querySelectorAll('p, span, div').forEach(el => {
+                            if (!el.textContent.trim() && !el.querySelector('img, br')) {
+                                el.remove();
+                            }
+                        });
+
+                        // Normalize paragraphs - remove Word's crazy spacing
+                        ed.querySelectorAll('p').forEach(p => {
+                            p.style.margin = '';
+                            p.style.marginTop = '';
+                            p.style.marginBottom = '';
+                            p.style.padding = '';
+                            p.style.lineHeight = '';
                         });
 
                         console.log('✅ Content cleaned after paste');
