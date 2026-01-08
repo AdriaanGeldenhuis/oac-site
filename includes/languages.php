@@ -738,14 +738,14 @@ define('UI_TRANSLATIONS', [
     ],
     'subdeacon' => [
         'af' => 'Onderdiaken',
-        'en' => 'Subdeacon',
+        'en' => 'Underdeacon',
         'zu' => 'Umdiakoni omncane',
         'xh' => 'Umdiakoni omncinane',
         'pt' => 'Subdiácono'
     ],
     'subdeacon_sister' => [
         'af' => 'Onderdiaken Suster',
-        'en' => 'Subdeacon Sister',
+        'en' => 'Underdeacon Sister',
         'zu' => 'Udade woMdiakoni omncane',
         'xh' => 'Udade woMdiakoni omncinane',
         'pt' => 'Irmã Subdiaconisa'
