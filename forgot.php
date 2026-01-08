@@ -8,7 +8,6 @@ require_once __DIR__ . '/security/rate_limit.php';
 
 $errors = [];
 $success = false;
-$resetLink = null;
 
 // Create password_resets table if not exists
 try {
@@ -24,6 +23,79 @@ try {
     )");
 } catch (PDOException $e) {
     // Table might already exist, ignore
+}
+
+/**
+ * Send password reset email
+ */
+function sendResetEmail(string $toEmail, string $userName, string $resetLink): bool {
+    $subject = "OAC - Password Reset Request";
+
+    $htmlBody = "
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; }
+            .header h1 { color: #b76e79; margin: 0; font-family: Georgia, serif; }
+            .content { color: #333; line-height: 1.6; }
+            .button { display: inline-block; background: #b76e79; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888; text-align: center; }
+            .warning { color: #e67e22; font-size: 13px; }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <div class='header'>
+                <h1>OAC App</h1>
+            </div>
+            <div class='content'>
+                <p>Dear {$userName},</p>
+                <p>We received a request to reset your password. Click the button below to create a new password:</p>
+                <p style='text-align: center;'>
+                    <a href='{$resetLink}' class='button'>Reset Password</a>
+                </p>
+                <p>Or copy and paste this link into your browser:</p>
+                <p style='word-break: break-all; font-size: 13px; color: #666;'>{$resetLink}</p>
+                <p class='warning'>This link will expire in 1 hour.</p>
+                <p>If you did not request a password reset, please ignore this email. Your password will remain unchanged.</p>
+            </div>
+            <div class='footer'>
+                <p>This is an automated message from OAC App. Please do not reply to this email.</p>
+            </div>
+        </div>
+    </body>
+    </html>";
+
+    $plainBody = "Dear {$userName},\n\n";
+    $plainBody .= "We received a request to reset your password.\n\n";
+    $plainBody .= "Click the link below to reset your password:\n";
+    $plainBody .= "{$resetLink}\n\n";
+    $plainBody .= "This link will expire in 1 hour.\n\n";
+    $plainBody .= "If you did not request a password reset, please ignore this email.\n\n";
+    $plainBody .= "- OAC App";
+
+    // Email headers
+    $headers = [
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8',
+        'From: OAC App <noreply@oacapp.co.za>',
+        'Reply-To: noreply@oacapp.co.za',
+        'X-Mailer: PHP/' . phpversion()
+    ];
+
+    // Try to send email
+    $sent = @mail($toEmail, $subject, $htmlBody, implode("\r\n", $headers));
+
+    // Log for debugging
+    if (!$sent) {
+        error_log("Failed to send password reset email to: {$toEmail}");
+    } else {
+        error_log("Password reset email sent to: {$toEmail}");
+    }
+
+    return $sent;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -63,16 +135,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$user['id'], $token, $expiresAt]);
 
             // Build reset link
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $resetLink = "{$protocol}://{$host}/reset.php?token={$token}";
+            $resetLink = "https://oacapp.co.za/reset.php?token={$token}";
 
-            $success = true;
+            // Send email
+            sendResetEmail($user['email'], $user['name'], $resetLink);
+
             rate_limit_reset('forgot:' . $ip);
-        } else {
-            // Don't reveal if email exists or not for security
-            $success = true;
         }
+
+        // Always show success message (don't reveal if email exists)
+        $success = true;
     }
 }
 
@@ -96,14 +168,9 @@ $csrf = csrf_token();
 
   <?php if ($success): ?>
     <div class="success">
-      <p>If an account exists with that email, a password reset link has been generated.</p>
-      <?php if ($resetLink): ?>
-        <p style="margin-top: 15px; word-break: break-all;">
-          <strong>Reset Link:</strong><br>
-          <a href="<?= htmlspecialchars($resetLink) ?>" style="font-size: 0.9rem;"><?= htmlspecialchars($resetLink) ?></a>
-        </p>
-        <p style="margin-top: 10px; font-size: 0.85rem; color: #ffc107;">This link expires in 1 hour.</p>
-      <?php endif; ?>
+      <p>If an account exists with that email address, a password reset link has been sent.</p>
+      <p style="margin-top: 15px; font-size: 0.9rem; color: #c0c0c0;">Please check your email inbox (and spam folder) for the reset link.</p>
+      <p style="margin-top: 10px; font-size: 0.85rem; color: #ffc107;">The link will expire in 1 hour.</p>
     </div>
     <p><a href="/login.php">Back to Login</a></p>
   <?php else: ?>
