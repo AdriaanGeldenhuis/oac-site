@@ -33,8 +33,8 @@ define('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions');
 // Model to use
 define('OPENAI_MODEL', 'gpt-4o-mini');
 
-// Maximum tokens for AI responses
-define('OPENAI_MAX_TOKENS', 2000);
+// Maximum tokens for AI responses (increased for long translations)
+define('OPENAI_MAX_TOKENS', 8000);
 
 // Temperature (0.0-2.0, lower = more focused)
 define('OPENAI_TEMPERATURE', 0.3);
