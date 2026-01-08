@@ -957,205 +957,48 @@ function t(string $key): string {
                 if (ed) ed.addEventListener('input', () => hasChanges = true);
             });
 
-            // Paste handler - intercept and preserve Word formatting
+            // Simple paste handler - keep Word formatting, just fix colors for dark bg
             Object.values(editors).forEach(ed => {
                 if (!ed) return;
                 ed.addEventListener('paste', function(e) {
                     e.preventDefault();
                     hasChanges = true;
 
-                    // Get HTML from clipboard
                     const html = e.clipboardData.getData('text/html');
                     const text = e.clipboardData.getData('text/plain');
 
                     if (html) {
-                        // Create temp container to parse Word HTML
                         const temp = document.createElement('div');
                         temp.innerHTML = html;
 
-                        // Convert Word heading classes to actual heading tags
-                        temp.querySelectorAll('[class]').forEach(el => {
-                            const cls = (el.className || '').toLowerCase();
-                            let newTag = null;
+                        // Remove only actual junk
+                        temp.querySelectorAll('meta, link, style, script, xml, o\\:p').forEach(el => el.remove());
 
-                            if (cls.includes('msoheading1') || cls.includes('msotitle') || cls.includes('heading 1') || cls.includes('title')) {
-                                newTag = 'h1';
-                            } else if (cls.includes('msoheading2') || cls.includes('msosubtitle') || cls.includes('heading 2') || cls.includes('subtitle')) {
-                                newTag = 'h2';
-                            } else if (cls.includes('msoheading3') || cls.includes('heading 3')) {
-                                newTag = 'h3';
+                        // Fix ALL elements - convert black to white for dark bg
+                        temp.querySelectorAll('*').forEach(el => {
+                            const style = el.style;
+
+                            // Fix text color - black becomes white
+                            const color = style.color?.toLowerCase() || '';
+                            if (!color || color === 'black' || color === 'windowtext' || color === '#000000' || color === '#000' || color.includes('rgb(0')) {
+                                style.color = '#ffffff';
                             }
 
-                            if (newTag && el.tagName !== newTag.toUpperCase()) {
-                                const heading = document.createElement(newTag);
-                                heading.innerHTML = el.innerHTML;
-                                // Copy inline styles
-                                if (el.getAttribute('style')) {
-                                    heading.setAttribute('style', el.getAttribute('style'));
-                                }
-                                el.parentNode.replaceChild(heading, el);
+                            // Remove problematic margins but keep other styles
+                            if (el.tagName === 'P' || el.tagName === 'DIV') {
+                                style.marginTop = '0';
+                                style.marginBottom = '0.5em';
                             }
                         });
 
-                        // Detect headings by font-size (Word uses pt - convert and check)
-                        temp.querySelectorAll('p').forEach(el => {
-                            const style = el.getAttribute('style') || '';
-                            // Match both pt and px sizes
-                            const sizeMatch = style.match(/font-size:\s*([\d.]+)\s*(pt|px)?/i);
-                            if (sizeMatch) {
-                                let size = parseFloat(sizeMatch[1]);
-                                const unit = (sizeMatch[2] || 'pt').toLowerCase();
-                                // Convert pt to px for comparison
-                                if (unit === 'pt') {
-                                    size = size * 1.33;
-                                }
-                                // If font size is large, treat as heading
-                                if (size >= 20) {
-                                    const h1 = document.createElement('h1');
-                                    h1.innerHTML = el.innerHTML;
-                                    h1.setAttribute('style', style);
-                                    if (el.parentNode) el.parentNode.replaceChild(h1, el);
-                                } else if (size >= 16) {
-                                    const h2 = document.createElement('h2');
-                                    h2.innerHTML = el.innerHTML;
-                                    h2.setAttribute('style', style);
-                                    if (el.parentNode) el.parentNode.replaceChild(h2, el);
-                                } else if (size >= 14) {
-                                    const h3 = document.createElement('h3');
-                                    h3.innerHTML = el.innerHTML;
-                                    h3.setAttribute('style', style);
-                                    if (el.parentNode) el.parentNode.replaceChild(h3, el);
-                                }
-                            }
-                        });
-
-                        // Process Word HTML to extract and preserve formatting
-                        temp.querySelectorAll('[style]').forEach(el => {
-                            const style = el.getAttribute('style');
-
-                            // Extract font-size (Word uses pt)
-                            const sizeMatch = style.match(/font-size:\s*([^;]+)/i);
-                            if (sizeMatch) {
-                                let size = sizeMatch[1].trim();
-                                if (size.includes('pt')) {
-                                    const pt = parseFloat(size);
-                                    size = Math.round(pt * 1.33) + 'px';
-                                }
-                                el.style.fontSize = size;
-                            }
-
-                            // Extract font-family - keep script/cursive fonts!
-                            const fontMatch = style.match(/font-family:\s*([^;]+)/i);
-                            if (fontMatch) {
-                                let font = fontMatch[1].trim().toLowerCase();
-                                // Map common Word script fonts to web equivalents
-                                if (font.includes('monotype corsiva') ||
-                                    font.includes('edwardian') ||
-                                    font.includes('script') ||
-                                    font.includes('cursive') ||
-                                    font.includes('brush') ||
-                                    font.includes('lucida handwriting') ||
-                                    font.includes('palace') ||
-                                    font.includes('vivaldi') ||
-                                    font.includes('vladimir') ||
-                                    font.includes('freestyle') ||
-                                    font.includes('segoe script') ||
-                                    font.includes('lucida calligraphy') ||
-                                    font.includes('kunstler') ||
-                                    font.includes('mistral')) {
-                                    el.style.fontFamily = "'Dancing Script', 'Parisienne', cursive";
-                                } else {
-                                    el.style.fontFamily = fontMatch[1].trim();
-                                }
-                            }
-
-                            // Extract color - preserve Word colors properly
-                            let colorValue = null;
-                            const colorParts = style.split(';');
-                            for (const part of colorParts) {
-                                const trimmed = part.trim().toLowerCase();
-                                if (trimmed.startsWith('color:') && !trimmed.includes('background')) {
-                                    colorValue = part.split(':')[1]?.trim();
-                                    break;
-                                }
-                            }
-                            // Set color - if windowtext or black, make it actual black for dark bg
-                            if (colorValue) {
-                                const cv = colorValue.toLowerCase();
-                                if (cv === 'windowtext' || cv === 'black' || cv === '#000000' || cv === '#000' || cv === 'rgb(0,0,0)' || cv === 'rgb(0, 0, 0)') {
-                                    el.style.color = '#ffffff'; // White text on dark background
-                                } else {
-                                    el.style.color = colorValue;
-                                }
-                            } else {
-                                // No color specified - default to white for dark bg
-                                el.style.color = '#ffffff';
-                            }
-
-                            // Extract background-color
-                            const bgMatch = style.match(/background-color:\s*([^;]+)/i);
-                            if (bgMatch) {
-                                el.style.backgroundColor = bgMatch[1].trim();
-                            }
-
-                            // Extract text-align
-                            const alignMatch = style.match(/text-align:\s*([^;]+)/i);
-                            if (alignMatch) {
-                                el.style.textAlign = alignMatch[1].trim();
-                            }
-
-                            // Extract text-decoration (underline)
-                            const decoMatch = style.match(/text-decoration:\s*([^;]+)/i);
-                            if (decoMatch) {
-                                el.style.textDecoration = decoMatch[1].trim();
-                            }
-
-                            // Extract font-weight
-                            const weightMatch = style.match(/font-weight:\s*([^;]+)/i);
-                            if (weightMatch) {
-                                el.style.fontWeight = weightMatch[1].trim();
-                            }
-
-                            // Extract font-style (italic)
-                            const styleMatch = style.match(/font-style:\s*([^;]+)/i);
-                            if (styleMatch) {
-                                el.style.fontStyle = styleMatch[1].trim();
-                            }
-                        });
-
-                        // Fix spacing on paragraphs
-                        temp.querySelectorAll('p, div').forEach(el => {
-                            // Preserve existing styles but fix margins
-                            el.style.marginTop = '0';
-                            el.style.marginBottom = '0.5em';
-                            el.style.lineHeight = '1.5';
-                        });
-
-                        // Remove Word junk elements but keep content
-                        temp.querySelectorAll('o\\:p, xml, meta, link, style, script').forEach(el => el.remove());
-
-                        // Remove mso classes but keep formatting
-                        temp.querySelectorAll('[class*="Mso"]').forEach(el => {
-                            el.removeAttribute('class');
-                        });
-
-                        // Remove empty paragraphs
-                        temp.querySelectorAll('p, span').forEach(el => {
-                            if (!el.textContent.trim() && !el.querySelector('img')) {
-                                el.remove();
-                            }
-                        });
-
-                        // Insert the cleaned HTML
                         document.execCommand('insertHTML', false, temp.innerHTML);
                     } else if (text) {
-                        // Fallback to plain text
                         document.execCommand('insertText', false, text);
                     }
                 });
             });
 
-            console.log('✅ Word paste handler with full formatting');
+            console.log('✅ Simple paste handler');
 
             // Lang switch
             document.querySelectorAll('.lang-btn').forEach(btn => {
