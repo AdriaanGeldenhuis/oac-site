@@ -961,95 +961,14 @@ function t(string $key): string {
                 if (ed) ed.addEventListener('input', () => hasChanges = true);
             });
 
-            // Paste handler - KEEP ALL FORMATTING, only fix spacing
+            // NO paste processing - let browser handle Word paste naturally
+            // User can use toolbar to fix any issues
             Object.values(editors).forEach(ed => {
                 if (!ed) return;
-
-                ed.addEventListener('paste', function(e) {
-                    hasChanges = true;
-
-                    setTimeout(() => {
-                        // Remove ONLY Word XML namespace junk (not content)
-                        ed.querySelectorAll('o\\:p, w\\:sdt, xml').forEach(el => el.remove());
-
-                        // Remove meta/link/style tags but keep everything else
-                        ed.querySelectorAll('meta, link, style, script, title').forEach(el => el.remove());
-
-                        // Remove Word classes that cause issues, but KEEP MsoNormal etc for now
-                        ed.querySelectorAll('[class]').forEach(el => {
-                            const cls = el.className;
-                            // Only remove mso classes that cause spacing problems
-                            if (cls.includes('Mso') && !cls.includes('List')) {
-                                el.removeAttribute('class');
-                            }
-                        });
-
-                        // Process elements - KEEP almost everything, only fix bad stuff
-                        ed.querySelectorAll('[style]').forEach(el => {
-                            const cs = el.style;
-
-                            // Convert pt to px for font-size
-                            if (cs.fontSize && cs.fontSize.includes('pt')) {
-                                const pt = parseFloat(cs.fontSize);
-                                cs.fontSize = Math.round(pt * 1.33) + 'px';
-                            }
-
-                            // Remove ONLY problematic margin/line-height values
-                            // Keep everything else!
-                            const badProps = ['mso-', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right', 'line-height'];
-
-                            // Save ALL the good formatting first
-                            const saved = {
-                                fontSize: cs.fontSize,
-                                fontFamily: cs.fontFamily,
-                                fontWeight: cs.fontWeight,
-                                fontStyle: cs.fontStyle,
-                                textDecoration: cs.textDecoration,
-                                textAlign: cs.textAlign,
-                                color: cs.color,
-                                backgroundColor: cs.backgroundColor,
-                                textIndent: cs.textIndent
-                            };
-
-                            // Only mess with block elements' margins
-                            if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'UL', 'OL'].includes(el.tagName)) {
-                                cs.margin = '0';
-                                cs.marginBottom = '0.5em';
-                                cs.padding = '0';
-                                cs.lineHeight = '1.6';
-                            }
-
-                            // Restore all saved formatting
-                            Object.keys(saved).forEach(k => {
-                                if (saved[k]) cs[k] = saved[k];
-                            });
-                        });
-
-                        // Remove truly empty elements only
-                        ed.querySelectorAll('p, span, div').forEach(el => {
-                            if (!el.textContent.trim() && !el.innerHTML.trim() && !el.querySelector('img, br')) {
-                                el.remove();
-                            }
-                        });
-
-                        // Remove excessive br tags
-                        let brCount = 0;
-                        ed.querySelectorAll('br').forEach(br => {
-                            const next = br.nextSibling;
-                            if (next && next.nodeName === 'BR') {
-                                brCount++;
-                                if (brCount > 1) br.remove();
-                            } else {
-                                brCount = 0;
-                            }
-                        });
-
-                        console.log('✅ Word paste - ALL formatting kept!');
-                    }, 10);
-                });
+                ed.addEventListener('paste', () => { hasChanges = true; });
             });
 
-            console.log('✅ Paste handler ready (keeps all formatting)');
+            console.log('✅ Native paste enabled - full Word formatting preserved');
 
             // Lang switch
             document.querySelectorAll('.lang-btn').forEach(btn => {
