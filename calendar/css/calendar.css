@@ -240,7 +240,7 @@ html {
   z-index: 1;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px 80px;
+  padding: 0 20px 100px;
 }
 
 /* ===== USER HEADER ===== */
@@ -1313,7 +1313,7 @@ html {
   }
   
   .cal-main {
-    padding: 0 10px 60px;
+    padding: 0 10px 90px;
   }
   
   .cal-user-header {
