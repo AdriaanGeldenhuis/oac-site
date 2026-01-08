@@ -34,7 +34,8 @@ define('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions');
 define('OPENAI_MODEL', 'gpt-4o-mini');
 
 // Maximum tokens for AI responses (increased for long translations)
-define('OPENAI_MAX_TOKENS', 8000);
+// gpt-4o-mini supports up to 16k output tokens
+define('OPENAI_MAX_TOKENS', 16000);
 
 // Temperature (0.0-2.0, lower = more focused)
 define('OPENAI_TEMPERATURE', 0.3);
@@ -66,6 +67,7 @@ define('BIBLE_VERSIONS', [
  * @throws Exception on failure
  */
 function openai_chat(array $messages): array {
+    error_log('openai_chat: Starting API call');
     $ch = curl_init(OPENAI_API_URL);
 
     $payload = json_encode([
@@ -74,6 +76,8 @@ function openai_chat(array $messages): array {
         'max_tokens' => OPENAI_MAX_TOKENS,
         'temperature' => OPENAI_TEMPERATURE
     ], JSON_UNESCAPED_UNICODE);
+
+    error_log('openai_chat: Payload size: ' . strlen($payload) . ' bytes');
 
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -92,7 +96,10 @@ function openai_chat(array $messages): array {
     $curlError = curl_error($ch);
     curl_close($ch);
 
+    error_log('openai_chat: HTTP code: ' . $httpCode);
+
     if ($curlError) {
+        error_log('openai_chat: cURL ERROR: ' . $curlError);
         throw new Exception('cURL error: ' . $curlError);
     }
 
@@ -100,13 +107,22 @@ function openai_chat(array $messages): array {
 
     if ($httpCode !== 200) {
         $errorMsg = $data['error']['message'] ?? 'Unknown API error';
+        error_log('openai_chat: API ERROR: ' . $errorMsg);
+        error_log('openai_chat: Full response: ' . substr($response, 0, 500));
         throw new Exception('API error (' . $httpCode . '): ' . $errorMsg);
     }
 
     if (!isset($data['choices'][0]['message']['content'])) {
+        error_log('openai_chat: Invalid response structure: ' . substr($response, 0, 500));
         throw new Exception('Invalid API response structure');
     }
 
+    // Check if response was truncated
+    $finishReason = $data['choices'][0]['finish_reason'] ?? 'unknown';
+    if ($finishReason === 'length') {
+        error_log('openai_chat: WARNING - Response was truncated due to max_tokens limit!');
+    }
+    error_log('openai_chat: Success, response length: ' . strlen($data['choices'][0]['message']['content']) . ', finish_reason: ' . $finishReason);
     return $data;
 }
 

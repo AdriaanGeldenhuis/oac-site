@@ -11,18 +11,33 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
+// Custom error log for this file
+$errorLogFile = dirname(__DIR__, 3) . '/logs/translate_all.log';
+if (!is_dir(dirname($errorLogFile))) {
+    @mkdir(dirname($errorLogFile), 0755, true);
+}
+ini_set('error_log', $errorLogFile);
+error_log('=== TRANSLATE_ALL START: ' . date('Y-m-d H:i:s') . ' ===');
+
 // Increase PHP timeout for long translations (4 languages)
 set_time_limit(600); // 10 minutes
 ini_set('max_execution_time', '600');
 
 // Load dependencies
 try {
+    error_log('Loading config.php...');
     require_once dirname(__DIR__, 3) . '/security/config.php';
+    error_log('Loading session.php...');
     require_once dirname(__DIR__, 3) . '/security/session.php';
+    error_log('Loading auth.php...');
     require_once dirname(__DIR__, 3) . '/security/auth.php';
+    error_log('Loading languages.php...');
     require_once dirname(__DIR__, 3) . '/includes/languages.php';
+    error_log('Loading ai_config.php...');
     require_once dirname(__DIR__, 2) . '/config/ai_config.php';
+    error_log('All dependencies loaded successfully');
 } catch (Throwable $e) {
+    error_log('FAILED to load dependencies: ' . $e->getMessage());
     header('Content-Type: application/json');
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Failed to load dependencies', 'detail' => $e->getMessage()]);
@@ -89,7 +104,11 @@ $translations = [];
 $translations[$sourceLang] = $content; // Source stays the same
 
 try {
+    error_log('Starting translation loop. Source: ' . $sourceLang . ', Targets: ' . implode(', ', $targetLangs));
+    error_log('Content length: ' . strlen($content) . ' chars');
+
     foreach ($targetLangs as $targetLang) {
+        error_log('--- Translating to: ' . $targetLang . ' ---');
         $sourceName = $langNames[$sourceLang];
         $targetName = $langNames[$targetLang];
 
@@ -105,12 +124,16 @@ try {
             ['role' => 'user', 'content' => $content]
         ];
 
+        error_log('Calling OpenAI API for ' . $targetLang . '...');
         $data = openai_chat($messages);
+        error_log('OpenAI response received for ' . $targetLang);
         $translated = $data['choices'][0]['message']['content'] ?? '';
 
         if ($translated === '') {
+            error_log('ERROR: Empty translation for ' . $targetLang);
             throw new Exception("Empty translation for {$targetLang}");
         }
+        error_log('Translation for ' . $targetLang . ' length: ' . strlen($translated) . ' chars');
 
         // Now replace verse text with actual Bible verses
         $bible = loadBibleData($targetLang);
@@ -180,7 +203,10 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
-    error_log('Translation error: ' . $e->getMessage());
+    error_log('=== TRANSLATION ERROR ===');
+    error_log('Message: ' . $e->getMessage());
+    error_log('File: ' . $e->getFile() . ':' . $e->getLine());
+    error_log('Trace: ' . $e->getTraceAsString());
     ob_end_clean();
     http_response_code(500);
     echo json_encode([
