@@ -831,7 +831,7 @@ function t(string $key): string {
                 if (ed) ed.addEventListener('input', () => hasChanges = true);
             });
 
-            // Paste handler - clean up Word junk but KEEP formatting
+            // Paste handler - clean Word junk, keep formatting, FIX SPACING
             Object.values(editors).forEach(ed => {
                 if (!ed) return;
 
@@ -839,53 +839,36 @@ function t(string $key): string {
                     hasChanges = true;
 
                     setTimeout(() => {
-                        // Remove Word XML elements only
-                        ed.querySelectorAll('o\\:p, w\\:sdt, xml, meta, link').forEach(el => el.remove());
+                        // Remove Word XML junk
+                        ed.querySelectorAll('o\\:p, w\\:sdt, xml, meta, link, style').forEach(el => el.remove());
 
-                        // Remove style tags (Word embeds huge CSS)
-                        ed.querySelectorAll('style').forEach(el => el.remove());
+                        // Remove ALL classes - Word classes cause spacing issues
+                        ed.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'));
 
-                        // Remove Word classes but keep element
-                        ed.querySelectorAll('[class]').forEach(el => {
-                            const cls = el.className;
-                            if (cls && (cls.includes('Mso') || cls.includes('mso'))) {
-                                el.removeAttribute('class');
-                            }
-                        });
-
-                        // Clean styles - keep useful ones, remove Word junk
+                        // Process ALL elements with styles
                         ed.querySelectorAll('[style]').forEach(el => {
                             const cs = el.style;
                             const keep = {};
 
-                            // KEEP text formatting
+                            // KEEP text formatting only
                             if (cs.fontWeight === 'bold' || parseInt(cs.fontWeight) >= 600) keep.fontWeight = 'bold';
                             if (cs.fontStyle === 'italic') keep.fontStyle = 'italic';
-                            if (cs.textDecoration) keep.textDecoration = cs.textDecoration;
-                            if (cs.color && cs.color !== 'black' && cs.color !== 'rgb(0, 0, 0)' && cs.color !== 'windowtext') {
-                                keep.color = cs.color;
+                            if (cs.textDecoration && cs.textDecoration !== 'none') keep.textDecoration = cs.textDecoration;
+
+                            // Keep color (not black)
+                            if (cs.color) {
+                                const c = cs.color.toLowerCase();
+                                if (c !== 'black' && c !== 'rgb(0, 0, 0)' && c !== 'windowtext' && c !== '#000000') {
+                                    keep.color = cs.color;
+                                }
                             }
 
-                            // KEEP alignment
-                            if (cs.textAlign && cs.textAlign !== 'left' && cs.textAlign !== 'start') {
+                            // Keep center/right alignment
+                            if (cs.textAlign === 'center' || cs.textAlign === 'right' || cs.textAlign === 'justify') {
                                 keep.textAlign = cs.textAlign;
                             }
 
-                            // KEEP font size (convert pt to reasonable px)
-                            if (cs.fontSize) {
-                                let size = cs.fontSize;
-                                // Convert common Word pt sizes to px
-                                if (size.includes('pt')) {
-                                    const pt = parseFloat(size);
-                                    if (pt >= 20) size = '24px';      // Large heading
-                                    else if (pt >= 14) size = '18px'; // Medium heading
-                                    else if (pt >= 12) size = '16px'; // Normal
-                                    else size = '14px';               // Small
-                                }
-                                keep.fontSize = size;
-                            }
-
-                            // Apply kept styles
+                            // Clear and reapply
                             el.removeAttribute('style');
                             Object.keys(keep).forEach(k => el.style[k] = keep[k]);
                         });
@@ -897,22 +880,19 @@ function t(string $key): string {
                             }
                         });
 
-                        // Fix margins - use sensible defaults instead of Word's crazy values
-                        ed.querySelectorAll('p').forEach(p => {
-                            // Remove Word's giant margins but keep the element
-                            const m = p.style.margin || p.style.marginBottom || p.style.marginTop;
-                            if (m) {
-                                const val = parseFloat(m);
-                                // If margin is huge (>30px), reduce it
-                                if (val > 30) {
-                                    p.style.marginTop = '';
-                                    p.style.marginBottom = '1em';
-                                }
-                            }
-                            p.style.lineHeight = '';
+                        // FORCE remove ALL spacing from paragraphs
+                        ed.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, ul, ol, li').forEach(el => {
+                            el.style.margin = '0';
+                            el.style.marginTop = '0';
+                            el.style.marginBottom = '0.5em';
+                            el.style.padding = '0';
+                            el.style.lineHeight = '1.6';
                         });
 
-                        console.log('✅ Word paste cleaned');
+                        // Remove br tags that cause extra spacing
+                        ed.querySelectorAll('br + br').forEach(br => br.remove());
+
+                        console.log('✅ Word paste cleaned - spacing fixed');
                     }, 10);
                 });
             });
