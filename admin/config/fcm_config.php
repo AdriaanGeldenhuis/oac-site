@@ -8,6 +8,7 @@ declare(strict_types=1);
 // Firebase Project Config
 define('FCM_PROJECT_ID', 'oac-app-5728d');
 define('FCM_SERVICE_ACCOUNT_FILE', __DIR__ . '/firebase-service-account.json');
+define('FCM_SITE_URL', 'https://oac.org.za'); // Base URL for notification deep links
 
 /**
  * Get OAuth2 access token for FCM V1 API
@@ -140,6 +141,12 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
     $successCount = 0;
     $failureCount = 0;
 
+    // Build deep link URL if link is provided in data
+    $clickUrl = FCM_SITE_URL;
+    if (!empty($data['link'])) {
+        $clickUrl = FCM_SITE_URL . $data['link'];
+    }
+
     // V1 API requires sending one message at a time
     foreach ($tokens as $token) {
         $message = [
@@ -153,10 +160,11 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
                     'priority' => 'high',
                     'notification' => [
                         'sound' => 'default',
-                        'click_action' => 'OPEN_APP'
+                        'click_action' => $clickUrl,
+                        'channel_id' => 'oac_notifications'
                     ]
                 ],
-                'data' => array_map('strval', $data) // V1 API requires string values
+                'data' => array_map('strval', array_merge($data, ['click_url' => $clickUrl])) // V1 API requires string values
             ]
         ];
 
