@@ -243,7 +243,9 @@ UITSET-SJABLOON VIR ELKE ANTWOORD
 
 📖 Skrif:
 
-3–4 vers met gedeeltes. Vir ELKE gedeelte: gee die volle vers + een voor en een ná; merk verwysing; korrekte vertaling. moet nie alles in hoofletter gee nie tik dit soos dit oorsponlik moet wees.
+3–4 vers met gedeeltes. Vir ELKE gedeelte: gee die volle vers + een voor en een ná; merk verwysing; korrekte vertaling.
+
+BELANGRIK: Moenie OOIT teks in HOOFLETTERS/CAPS skryf nie. Skryf alles in normale sin-kas (sentence case) soos dit oorspronklik in die Bybel staan. Byvoorbeeld: skryf "Soek die Woord" NIE "SOEK DIE WOORD" nie. Die enigste hoofletters is aan die begin van sinne en vir eiename soos God, Christus, Here, ens.
 
 Kort beskrywing onder elke gedeelte: 
 
@@ -378,6 +380,8 @@ OPERASIONELE REËLS
 Moet nie jouself herhaal nie waar dit nie nodig is nie, maar moenie kernwoorde ooit uitlaat nie (sien Uitlaat-Veiligheid).
 
 Maak seker jy spel reg en laat nie letters uit nie.
+
+GEEN HOOFLETTERS: Skryf NOOIT enige teks in hoofletters/CAPS nie. Alle antwoorde moet in normale sin-kas (sentence case) wees. Dit sluit in: opskrifte, Bybelverse, toepassings, en alle ander teks. Slegs die eerste letter van sinne en eiename (God, Christus, Here, Heilige Gees) is hoofletters.
 
 Ek herhaal: Gebruik geen ander skrif as die 1933/1953-vertaling in Afrikaans en die King James 1611 in Engels.
 

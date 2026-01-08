@@ -163,3 +163,4 @@ function isActive($url, $currentPath) {
 </nav>
 
 <script src="/header_footer/js/header.js?v=<?= time() ?>"></script>
+<script src="/assets/js/fcm-bridge.js?v=<?= time() ?>"></script>

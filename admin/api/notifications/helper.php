@@ -3,6 +3,9 @@
 // /admin/api/notifications/helper.php - Helper functions
 // =====================================================================
 
+// Include FCM functions (uses global $pdo from auth_gate.php)
+require_once __DIR__ . '/../../config/fcm_config.php';
+
 function createAdminNotification($userId, $type, $data = []) {
     try {
         $db = new PDO('sqlite:' . __DIR__ . '/../../../data/notifications.db');
@@ -150,6 +153,26 @@ function createAdminNotification($userId, $type, $data = []) {
             'message_key' => $messageKey,
             'params' => !empty($params) ? json_encode($params) : null
         ]);
+
+        // Also send FCM push notification (translated to user's language)
+        try {
+            // Remove emoji from title for cleaner push notification
+            $pushTitle = preg_replace('/[\x{1F300}-\x{1F9FF}]/u', '', $title);
+            $pushTitle = trim($pushTitle);
+
+            $pushResult = sendPushToUser((int)$userId, $pushTitle, $message, [
+                'type' => $notifType,
+                'link' => $link,
+                'notification_id' => $db->lastInsertId(),
+                'titleKey' => $titleKey,
+                'messageKey' => $messageKey,
+                'params' => $params
+            ]);
+
+            error_log("FCM Admin: Push to user $userId result: " . json_encode($pushResult));
+        } catch (Exception $pushError) {
+            error_log('FCM Admin push error: ' . $pushError->getMessage());
+        }
 
         return true;
 
