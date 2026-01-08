@@ -997,20 +997,14 @@ function t(string $key): string {
                             const isHeading = (fontSize >= 14 && isShort) || (isCentered && isShort && hasUnderline);
 
                             if (isHeading) {
-                                // Convert to H1 or H2
+                                // Convert to H1 or H2 with BIG sizes
                                 const level = fontSize >= 16 ? 'h1' : 'h2';
                                 const heading = document.createElement(level);
                                 heading.innerHTML = el.innerHTML;
-                                heading.style.fontFamily = "'Parisienne', 'Dancing Script', cursive";
-                                heading.style.color = '#f3c3b1';
-                                heading.style.textAlign = 'center';
-                                heading.style.marginBottom = '0.5em';
-                                if (level === 'h1') {
-                                    heading.style.fontSize = '2.5rem';
-                                } else {
-                                    heading.style.fontSize = '1.8rem';
-                                }
-                                el.parentNode.replaceChild(heading, el);
+                                heading.style.cssText = level === 'h1'
+                                    ? "font-family: 'Parisienne', 'Dancing Script', cursive; color: #f3c3b1; text-align: center; margin: 0.5em 0; font-size: 3rem; font-weight: normal;"
+                                    : "font-family: 'Parisienne', 'Dancing Script', cursive; color: #f3c3b1; text-align: center; margin: 0.5em 0; font-size: 2rem; font-weight: normal;";
+                                if (el.parentNode) el.parentNode.replaceChild(heading, el);
                             } else {
                                 // Body text - regular font, white
                                 el.style.fontFamily = 'Georgia, serif';
