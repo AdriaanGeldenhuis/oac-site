@@ -52,7 +52,7 @@ function createCalendarNotification($userId, $type, $data = []) {
 
         switch ($type) {
             case 'event_reminder':
-                $eventTitle = $data['event_title'] ?? 'Event';
+                $eventTitle = $data['event_title'] ?? 'Aktiwiteit';
                 $time = $data['time'] ?? '';
                 $titleKey = 'notif_event_reminder';
                 $messageKey = 'notif_event_reminder_msg';
@@ -65,11 +65,11 @@ function createCalendarNotification($userId, $type, $data = []) {
 
             case 'event_shared':
                 $fromName = $data['from_name'] ?? 'Iemand';
-                $eventTitle = $data['event_title'] ?? 'Event';
+                $eventTitle = $data['event_title'] ?? 'Aktiwiteit';
                 $titleKey = 'notif_event_shared';
                 $messageKey = 'notif_event_shared_msg';
                 $params = ['name' => $fromName, 'event' => $eventTitle];
-                $title = '📅 Gebeurtenis Gedeel';
+                $title = '📅 Aktiwiteit Gedeel';
                 $message = "{$fromName} het '{$eventTitle}' met jou gedeel.";
                 $link = '/calendar/calendar.php';
                 $icon = '📅';
@@ -97,7 +97,7 @@ function createCalendarNotification($userId, $type, $data = []) {
                 break;
 
             default:
-                $title = $data['title'] ?? 'Calendar Notification';
+                $title = $data['title'] ?? 'Kalender Kennisgewing';
                 $message = $data['message'] ?? '';
                 $link = $data['link'] ?? '/calendar/calendar.php';
                 $icon = $data['icon'] ?? '📅';

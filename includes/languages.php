@@ -1801,11 +1801,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Criar Novo'
     ],
     'event' => [
-        'af' => 'Gebeurtenis',
-        'en' => 'Event',
-        'zu' => 'Isenzakalo',
-        'xh' => 'Isiganeko',
-        'pt' => 'Evento'
+        'af' => 'Aktiwiteit',
+        'en' => 'Activity',
+        'zu' => 'Umsebenzi',
+        'xh' => 'Umsebenzi',
+        'pt' => 'Atividade'
     ],
     'title' => [
         'af' => 'Titel',
@@ -1857,11 +1857,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Compartilhar com cônjuge'
     ],
     'no_events' => [
-        'af' => 'Geen gebeure',
-        'en' => 'No events',
-        'zu' => 'Akukho zenzakalo',
-        'xh' => 'Akukho ziganeko',
-        'pt' => 'Sem eventos'
+        'af' => 'Geen aktiwiteite',
+        'en' => 'No activities',
+        'zu' => 'Akukho misebenzi',
+        'xh' => 'Akukho misebenzi',
+        'pt' => 'Sem atividades'
     ],
     'confirm_delete' => [
         'af' => 'Is jy seker jy wil hierdie inskrywing verwyder?',
@@ -1883,6 +1883,20 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Kususiwe ngempumelelo!',
         'xh' => 'Icinyiwe ngempumelelo!',
         'pt' => 'Excluído com sucesso!'
+    ],
+    'see_you_at' => [
+        'af' => 'Sien julle',
+        'en' => 'See you',
+        'zu' => 'Sizobonana',
+        'xh' => 'Sobonana',
+        'pt' => 'Vejo vocês'
+    ],
+    'type' => [
+        'af' => 'Tipe',
+        'en' => 'Type',
+        'zu' => 'Uhlobo',
+        'xh' => 'Uhlobo',
+        'pt' => 'Tipo'
     ],
 
     // ==================== DIARY ====================
@@ -3119,11 +3133,11 @@ define('UI_TRANSLATIONS', [
         'pt' => '{event} começa em 30 minutos às {time}'
     ],
     'notif_event_shared' => [
-        'af' => '📅 Gebeurtenis Gedeel',
-        'en' => '📅 Event Shared',
-        'zu' => '📅 Umcimbi Wabelwe',
-        'xh' => '📅 Isiganeko Sabelwe',
-        'pt' => '📅 Evento Compartilhado'
+        'af' => '📅 Aktiwiteit Gedeel',
+        'en' => '📅 Activity Shared',
+        'zu' => '📅 Umsebenzi Wabelwe',
+        'xh' => '📅 Umsebenzi Wabelwe',
+        'pt' => '📅 Atividade Compartilhada'
     ],
     'notif_event_shared_msg' => [
         'af' => "{name} het '{event}' met jou gedeel.",

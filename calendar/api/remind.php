@@ -12,6 +12,7 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../../session.php';
 require_once __DIR__ . '/../../app/db_connect.php';
+require_once __DIR__ . '/../../includes/languages.php';
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
@@ -58,6 +59,9 @@ try {
         exit;
     }
     // Build reminder post text
+    $userLang = $_SESSION['language'] ?? 'af';
+    $seeYouText = __t('see_you_at', $userLang);
+
     $dt = null;
     if ($event['event_at']) {
         $dt = new DateTime($event['event_at']);
@@ -65,7 +69,7 @@ try {
     $dateStr = $dt ? $dt->format('l H:i') : '';
     $text = '';
     if ($dateStr) {
-        $text = 'Sien julle ' . $dateStr;
+        $text = $seeYouText . ' ' . $dateStr;
     }
     if ($event['text']) {
         $text .= ' – ' . $event['text'];

@@ -154,7 +154,7 @@ $VER = time();
         <div class="cal-quick-overlay" id="quickOverlay"></div>
         <div class="cal-quick-panel">
             <h3 class="cal-quick-title"><?= esc(t('create_new')) ?></h3>
-            <button class="cal-quick-btn" data-action="gebeurtenis" type="button">
+            <button class="cal-quick-btn" data-action="aktiwiteit" type="button">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                 </svg>
@@ -205,7 +205,7 @@ $VER = time();
                         </div>
                     </div>
 
-                    <!-- Room selector (gebeurtenis) -->
+                    <!-- Room selector (aktiwiteit) -->
                     <div class="cal-form-group" id="roomGroup" style="display:none;">
                         <label class="cal-form-label"><?= esc(t('room')) ?></label>
                         <select id="eventRoom" name="room_id" class="cal-form-select">
@@ -288,7 +288,7 @@ $VER = time();
             month: '<?= esc(t('month')) ?>',
             today: '<?= esc(t('today')) ?>',
             noEvents: '<?= esc(t('no_events')) ?>',
-            gebeurtenis: '<?= esc(t('event')) ?>',
+            aktiwiteit: '<?= esc(t('event')) ?>',
             dagboek: '<?= esc(t('diary')) ?>',
             afspraak: '<?= esc(t('appointment')) ?>',
             edit: '<?= esc(t('edit')) ?>',

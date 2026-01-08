@@ -51,7 +51,7 @@ function translateLegacyTitle(string $title, string $lang): string {
         '/^✍️\s*Nuwe Plasing$/u' => 'notif_new_post',
         '/^🏷️\s*Ge-tag$/u' => 'notif_tagged',
         '/^⏰\s*Herinnering$/u' => 'notif_event_reminder',
-        '/^📅\s*Gebeurtenis Gedeel$/u' => 'notif_event_shared',
+        '/^📅\s*(Aktiwiteit|Gebeurtenis) Gedeel$/u' => 'notif_event_shared',
         '/^📓\s*Dagboek Herinnering$/u' => 'notif_diary_reminder',
         '/^🏠\s*Besoek Geskeduleer$/u' => 'notif_visit_scheduled',
         '/^✅\s*Account Goedgekeur$/u' => 'notif_account_approved',

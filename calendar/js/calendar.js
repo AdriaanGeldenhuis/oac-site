@@ -384,7 +384,7 @@
 
   // Handle Quick Action
   function handleQuickAction(action) {
-    if (action === 'gebeurtenis') {
+    if (action === 'aktiwiteit') {
       showModal('event', selectedDate, selectedTime);
     } else if (action === 'dagboek') {
       openDiary(selectedDate, selectedTime);
@@ -508,7 +508,7 @@
     shareGroup.style.display = hasSpouse ? 'block' : 'none';
     
     if (type === 'event') {
-      document.getElementById('modalTitle').textContent = window.T.gebeurtenis;
+      document.getElementById('modalTitle').textContent = window.T.aktiwiteit;
       roomGroup.style.display = 'block';
     } else if (type === 'visit') {
       document.getElementById('modalTitle').textContent = window.T.afspraak;
@@ -550,7 +550,7 @@
     shareGroup.style.display = hasSpouse ? 'block' : 'none';
     
     if (type === 'event') {
-      document.getElementById('modalTitle').textContent = window.T.gebeurtenis;
+      document.getElementById('modalTitle').textContent = window.T.aktiwiteit;
       roomGroup.style.display = 'block';
       document.getElementById('eventRoom').value = event.room_id || '';
     } else if (type === 'visit') {
