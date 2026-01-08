@@ -126,16 +126,42 @@ try {
 
             // 🔔 NOTIFY ROOM MEMBERS about new event
             try {
-                $roomNameStmt = $pdo->prepare("SELECT name FROM rooms WHERE id = ?");
-                $roomNameStmt->execute([$roomId]);
-                $roomName = $roomNameStmt->fetchColumn() ?: 'Room';
+                // Get room info
+                $roomInfoStmt = $pdo->prepare("SELECT name, type, town_id, gemeente_id FROM rooms WHERE id = ?");
+                $roomInfoStmt->execute([$roomId]);
+                $roomInfo = $roomInfoStmt->fetch(PDO::FETCH_ASSOC);
+                $roomName = $roomInfo['name'] ?? 'Room';
+                $roomType = strtolower($roomInfo['type'] ?? '');
+                $roomTownId = (int)($roomInfo['town_id'] ?? 0);
+                $roomGemeenteId = (int)($roomInfo['gemeente_id'] ?? 0);
 
-                $membersStmt = $pdo->prepare("
-                    SELECT user_id FROM room_members
-                    WHERE room_id = ? AND user_id != ?
-                ");
-                $membersStmt->execute([$roomId, $userId]);
-                $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+                // Get room members based on room type (implicit membership)
+                $members = [];
+
+                if ($roomType === 'gemeente' && $roomGemeenteId > 0) {
+                    $membersStmt = $pdo->prepare("
+                        SELECT id FROM users
+                        WHERE congregation_id = ? AND id != ? AND status = 'approved'
+                    ");
+                    $membersStmt->execute([$roomGemeenteId, $userId]);
+                    $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+
+                } elseif ($roomType === 'opsienerskap' && $roomTownId > 0) {
+                    $membersStmt = $pdo->prepare("
+                        SELECT id FROM users
+                        WHERE town_id = ? AND amp_id <= 5 AND id != ? AND status = 'approved'
+                    ");
+                    $membersStmt->execute([$roomTownId, $userId]);
+                    $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+
+                } elseif (in_array($roomType, ['jeug', 'sondagskool']) && $roomTownId > 0) {
+                    $membersStmt = $pdo->prepare("
+                        SELECT id FROM users
+                        WHERE town_id = ? AND id != ? AND status = 'approved'
+                    ");
+                    $membersStmt->execute([$roomTownId, $userId]);
+                    $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+                }
 
                 foreach ($members as $memberId) {
                     createGospelNotification($pdo, (int)$memberId, 'new_post', [
@@ -145,6 +171,8 @@ try {
                         'post_id' => $insertedId
                     ]);
                 }
+
+                error_log("Calendar event notification: Sent to " . count($members) . " members for room $roomId ($roomType)");
             } catch (Throwable $notifErr) {
                 error_log('Calendar event notification error: ' . $notifErr->getMessage());
             }
