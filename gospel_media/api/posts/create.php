@@ -142,7 +142,18 @@ try {
 
     $pdo->commit();
 
-    // Notify all room members about the new post
+    // Send response IMMEDIATELY so UI updates fast
+    echo json_encode(['ok'=>1, 'success'=>true, 'post_id'=>$postId]);
+
+    // Flush output to browser immediately, then continue with notifications
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } else {
+        if (ob_get_level() > 0) ob_end_flush();
+        flush();
+    }
+
+    // Notify all room members about the new post (runs in background after response sent)
     try {
         // Get room info
         $roomStmt = $pdo->prepare("SELECT name, type, town_id, gemeente_id FROM rooms WHERE id = ?");
@@ -203,8 +214,6 @@ try {
     } catch (Throwable $notifError) {
         error_log('Gospel post notification error: ' . $notifError->getMessage());
     }
-
-    echo json_encode(['ok'=>1, 'success'=>true, 'post_id'=>$postId]);
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log('Gospel create post error: '.$e->getMessage());
