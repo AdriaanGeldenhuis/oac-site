@@ -149,22 +149,21 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
 
     // V1 API requires sending one message at a time
     foreach ($tokens as $token) {
+        // Send DATA-ONLY message (no notification block)
+        // This ensures onMessageReceived is ALWAYS called in the Android app,
+        // even when the app is in the background. The app then creates the
+        // notification with the correct PendingIntent for deep linking.
         $message = [
             'message' => [
                 'token' => $token,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $body
-                ],
                 'android' => [
-                    'priority' => 'high',
-                    'notification' => [
-                        'sound' => 'default',
-                        'click_action' => $clickUrl,
-                        'channel_id' => 'oac_notifications'
-                    ]
+                    'priority' => 'high'
                 ],
-                'data' => array_map('strval', array_merge($data, ['click_url' => $clickUrl])) // V1 API requires string values
+                'data' => array_map('strval', array_merge($data, [
+                    'title' => $title,
+                    'body' => $body,
+                    'click_url' => $clickUrl
+                ]))
             ]
         ];
 
