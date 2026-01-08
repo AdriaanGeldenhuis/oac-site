@@ -2854,6 +2854,20 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Ingoma ayifumaneki.',
         'pt' => 'Canção não encontrada.'
     ],
+    'song_not_in_afrikaans' => [
+        'af' => 'Hierdie lied is nie in Afrikaans beskikbaar nie. Die Engelse weergawe word gewys.',
+        'en' => 'This song is not available in Afrikaans. Showing English version.',
+        'zu' => 'Le ngoma ayitholakali ngesi-Afrikaans. Kuboniswa inguqulo yesiNgisi.',
+        'xh' => 'Le ngoma ayifumaneki ngesi-Afrikaans. Kuboniswa inguqulelo yesiNgesi.',
+        'pt' => 'Esta canção não está disponível em Africâner. Mostrando versão em Inglês.'
+    ],
+    'song_not_in_english' => [
+        'af' => 'Hierdie lied is nie in Engels beskikbaar nie. Die Afrikaanse weergawe word gewys.',
+        'en' => 'This song is not available in English. Showing Afrikaans version.',
+        'zu' => 'Le ngoma ayitholakali ngesiNgisi. Kuboniswa inguqulo yesi-Afrikaans.',
+        'xh' => 'Le ngoma ayifumaneki ngesiNgesi. Kuboniswa inguqulelo yesi-Afrikaans.',
+        'pt' => 'Esta canção não está disponível em Inglês. Mostrando versão em Africâner.'
+    ],
 
     // ==================== AI SLIMBYBEL PAGE ====================
     'ai_slimbybel' => [
