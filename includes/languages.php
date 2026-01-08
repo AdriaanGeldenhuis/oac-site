@@ -260,7 +260,7 @@ define('UI_TRANSLATIONS', [
     ],
     'offices' => [
         'af' => 'Ampte',
-        'en' => 'Offices',
+        'en' => 'Officers',
         'zu' => 'Izihamba',
         'xh' => 'Iiofisi',
         'pt' => 'Cargos'
@@ -1184,14 +1184,14 @@ define('UI_TRANSLATIONS', [
     ],
     'search_offices' => [
         'af' => 'Soek ampte...',
-        'en' => 'Search offices...',
+        'en' => 'Search officers...',
         'zu' => 'Sesha izikhundla...',
         'xh' => 'Khangela izikhundla...',
         'pt' => 'Pesquisar cargos...'
     ],
     'no_office_holders' => [
         'af' => 'Geen ampte gevind nie.',
-        'en' => 'No office holders found.',
+        'en' => 'No officers found.',
         'zu' => 'Akukho zikhundla ezitholiwe.',
         'xh' => 'Akukho zikhundla zifunyenweyo.',
         'pt' => 'Nenhum titular de cargo encontrado.'
@@ -2626,7 +2626,7 @@ define('UI_TRANSLATIONS', [
     ],
     'office' => [
         'af' => 'Amp',
-        'en' => 'Office',
+        'en' => 'Officer',
         'zu' => 'Isikhundla',
         'xh' => 'Isikhundla',
         'pt' => 'Cargo'

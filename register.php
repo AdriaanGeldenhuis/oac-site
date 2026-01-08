@@ -151,7 +151,7 @@ $congregations = $pdo->query("SELECT * FROM congregations ORDER BY name")->fetch
     </div>
 
     <div>
-      <label>Office<br>
+      <label>Officer<br>
         <select name="amp_id" id="amp_id" disabled>
           <option value="">Select gender first...</option>
         </select>
