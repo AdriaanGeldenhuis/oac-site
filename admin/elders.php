@@ -957,14 +957,75 @@ function t(string $key): string {
                 if (ed) ed.addEventListener('input', () => hasChanges = true);
             });
 
-            // NO paste processing - let browser handle Word paste naturally
-            // User can use toolbar to fix any issues
+            // Paste handler - intercept and preserve Word formatting
             Object.values(editors).forEach(ed => {
                 if (!ed) return;
-                ed.addEventListener('paste', () => { hasChanges = true; });
+                ed.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    hasChanges = true;
+
+                    // Get HTML from clipboard
+                    const html = e.clipboardData.getData('text/html');
+                    const text = e.clipboardData.getData('text/plain');
+
+                    if (html) {
+                        // Create temp container to parse Word HTML
+                        const temp = document.createElement('div');
+                        temp.innerHTML = html;
+
+                        // Process Word HTML to extract and preserve formatting
+                        temp.querySelectorAll('[style]').forEach(el => {
+                            const style = el.getAttribute('style');
+
+                            // Extract font-size (Word uses pt)
+                            const sizeMatch = style.match(/font-size:\s*([^;]+)/i);
+                            if (sizeMatch) {
+                                let size = sizeMatch[1].trim();
+                                // Convert pt to px
+                                if (size.includes('pt')) {
+                                    const pt = parseFloat(size);
+                                    size = Math.round(pt * 1.33) + 'px';
+                                }
+                                el.style.fontSize = size;
+                            }
+
+                            // Extract font-family
+                            const fontMatch = style.match(/font-family:\s*([^;]+)/i);
+                            if (fontMatch) {
+                                el.style.fontFamily = fontMatch[1].trim();
+                            }
+
+                            // Extract color
+                            const colorMatch = style.match(/(?<!background-)color:\s*([^;]+)/i);
+                            if (colorMatch) {
+                                el.style.color = colorMatch[1].trim();
+                            }
+
+                            // Extract text-align
+                            const alignMatch = style.match(/text-align:\s*([^;]+)/i);
+                            if (alignMatch) {
+                                el.style.textAlign = alignMatch[1].trim();
+                            }
+                        });
+
+                        // Remove Word junk elements but keep content
+                        temp.querySelectorAll('o\\:p, xml, meta, link, style, script').forEach(el => el.remove());
+
+                        // Remove mso classes but keep formatting
+                        temp.querySelectorAll('[class*="Mso"]').forEach(el => {
+                            el.removeAttribute('class');
+                        });
+
+                        // Insert the cleaned HTML
+                        document.execCommand('insertHTML', false, temp.innerHTML);
+                    } else if (text) {
+                        // Fallback to plain text
+                        document.execCommand('insertText', false, text);
+                    }
+                });
             });
 
-            console.log('✅ Native paste enabled - full Word formatting preserved');
+            console.log('✅ Word paste handler with font preservation');
 
             // Lang switch
             document.querySelectorAll('.lang-btn').forEach(btn => {
