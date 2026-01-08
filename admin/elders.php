@@ -362,10 +362,6 @@ function t(string $key): string {
         .editor {
             min-height: 600px;
             padding: 40px;
-            font-family: Georgia, serif;
-            font-size: 16px;
-            line-height: 1.8;
-            color: #333;
             background: black;
             outline: none;
         }
