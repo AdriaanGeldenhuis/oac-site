@@ -6,19 +6,82 @@ declare(strict_types=1);
  * Uses AI for text translation but preserves Bible verses from actual Bible files
  */
 
+// Global error handler to catch all PHP errors and return JSON
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+set_exception_handler(function($e) {
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Server Error',
+        'detail' => $e->getMessage(),
+        'file' => basename($e->getFile()) . ':' . $e->getLine()
+    ]);
+    exit;
+});
+
 // Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
-// Load dependencies
+// Custom error log for this file
+$errorLogFile = dirname(__DIR__, 3) . '/logs/translate_all.log';
+if (!is_dir(dirname($errorLogFile))) {
+    @mkdir(dirname($errorLogFile), 0755, true);
+}
+ini_set('error_log', $errorLogFile);
+error_log('=== TRANSLATE_ALL START: ' . date('Y-m-d H:i:s') . ' ===');
+
+// Increase PHP timeout for long translations (4 languages)
+set_time_limit(600); // 10 minutes
+ini_set('max_execution_time', '600');
+
+// Load dependencies - check files exist first (require_once fatal errors can't be caught)
+$baseDir = dirname(__DIR__, 3);
+$requiredFiles = [
+    'security/config.php',
+    'security/session.php',
+    'security/auth.php',
+    'includes/languages.php'
+];
+
+// Check all required files exist
+foreach ($requiredFiles as $file) {
+    $fullPath = $baseDir . '/' . $file;
+    if (!file_exists($fullPath)) {
+        error_log('MISSING FILE: ' . $fullPath);
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Missing file: ' . $file]);
+        exit;
+    }
+}
+
+// Also check ai_config
+$aiConfigPath = dirname(__DIR__, 2) . '/config/ai_config.php';
+if (!file_exists($aiConfigPath)) {
+    error_log('MISSING FILE: ' . $aiConfigPath);
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Missing file: ai_config.php']);
+    exit;
+}
+
+// Now load them
 try {
-    require_once dirname(__DIR__, 3) . '/security/config.php';
-    require_once dirname(__DIR__, 3) . '/security/session.php';
-    require_once dirname(__DIR__, 3) . '/security/auth.php';
-    require_once dirname(__DIR__, 3) . '/includes/languages.php';
-    require_once dirname(__DIR__, 2) . '/config/ai_config.php';
+    error_log('Loading dependencies...');
+    require_once $baseDir . '/security/config.php';
+    require_once $baseDir . '/security/session.php';
+    require_once $baseDir . '/security/auth.php';
+    require_once $baseDir . '/includes/languages.php';
+    require_once $aiConfigPath;
+    error_log('All dependencies loaded successfully');
 } catch (Throwable $e) {
+    error_log('FAILED to load dependencies: ' . $e->getMessage());
     header('Content-Type: application/json');
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Failed to load dependencies', 'detail' => $e->getMessage()]);
@@ -85,7 +148,11 @@ $translations = [];
 $translations[$sourceLang] = $content; // Source stays the same
 
 try {
+    error_log('Starting translation loop. Source: ' . $sourceLang . ', Targets: ' . implode(', ', $targetLangs));
+    error_log('Content length: ' . strlen($content) . ' chars');
+
     foreach ($targetLangs as $targetLang) {
+        error_log('--- Translating to: ' . $targetLang . ' ---');
         $sourceName = $langNames[$sourceLang];
         $targetName = $langNames[$targetLang];
 
@@ -101,12 +168,16 @@ try {
             ['role' => 'user', 'content' => $content]
         ];
 
+        error_log('Calling OpenAI API for ' . $targetLang . '...');
         $data = openai_chat($messages);
+        error_log('OpenAI response received for ' . $targetLang);
         $translated = $data['choices'][0]['message']['content'] ?? '';
 
         if ($translated === '') {
+            error_log('ERROR: Empty translation for ' . $targetLang);
             throw new Exception("Empty translation for {$targetLang}");
         }
+        error_log('Translation for ' . $targetLang . ' length: ' . strlen($translated) . ' chars');
 
         // Now replace verse text with actual Bible verses
         $bible = loadBibleData($targetLang);
@@ -176,7 +247,10 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
-    error_log('Translation error: ' . $e->getMessage());
+    error_log('=== TRANSLATION ERROR ===');
+    error_log('Message: ' . $e->getMessage());
+    error_log('File: ' . $e->getFile() . ':' . $e->getLine());
+    error_log('Trace: ' . $e->getTraceAsString());
     ob_end_clean();
     http_response_code(500);
     echo json_encode([

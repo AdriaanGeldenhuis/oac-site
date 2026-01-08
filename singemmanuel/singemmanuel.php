@@ -16,16 +16,28 @@ function t(string $key): string {
     return __t($key, $lang);
 }
 
-// Load songs
-$songs = [];
-$songsPath = __DIR__ . '/songs/' . ($lang === 'en' ? 'sing_en.json' : 'sing_af.json');
-if (file_exists($songsPath)) {
-    $songsJson = file_get_contents($songsPath);
-    $decoded = json_decode($songsJson, true);
+// Load songs from both languages
+$songsEn = [];
+$songsAf = [];
+$songsPathEn = __DIR__ . '/songs/sing_en.json';
+$songsPathAf = __DIR__ . '/songs/sing_af.json';
+
+if (file_exists($songsPathEn)) {
+    $decoded = json_decode(file_get_contents($songsPathEn), true);
     if (is_array($decoded)) {
-        $songs = $decoded;
+        $songsEn = $decoded;
     }
 }
+if (file_exists($songsPathAf)) {
+    $decoded = json_decode(file_get_contents($songsPathAf), true);
+    if (is_array($decoded)) {
+        $songsAf = $decoded;
+    }
+}
+
+// Use current language songs for display (song picker)
+$songs = ($lang === 'en') ? $songsEn : $songsAf;
+$altSongs = ($lang === 'en') ? $songsAf : $songsEn;
 
 // Select song
 $songParam = null;
@@ -34,14 +46,31 @@ if (isset($_GET['song']) && preg_match('/^[0-9]+$/', $_GET['song'])) {
 }
 
 $selectedSong = null;
+$languageFallback = false; // Flag for showing notice
+$fallbackLang = '';
+
 if ($songParam) {
+    // First try to find song in current language
     foreach ($songs as $s) {
         if ((string)$s['number'] === (string)$songParam) {
             $selectedSong = $s;
             break;
         }
     }
+
+    // If not found, try the other language
+    if (!$selectedSong) {
+        foreach ($altSongs as $s) {
+            if ((string)$s['number'] === (string)$songParam) {
+                $selectedSong = $s;
+                $languageFallback = true;
+                $fallbackLang = ($lang === 'en') ? 'af' : 'en';
+                break;
+            }
+        }
+    }
 }
+
 if (!$selectedSong && !empty($songs)) {
     $selectedSong = $songs[0];
     $songParam = (string)$selectedSong['number'];
@@ -142,6 +171,15 @@ $VER = time();
       </div>
 
       <div class="se-song-content" id="songContent">
+        <?php if ($languageFallback): ?>
+          <div class="se-language-notice">
+            <svg class="se-notice-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span><?= t($lang === 'en' ? 'song_not_in_english' : 'song_not_in_afrikaans') ?></span>
+          </div>
+        <?php endif; ?>
         <?php if ($selectedSong): ?>
           <?php if (!empty($selectedSong['verses']) && is_array($selectedSong['verses'])): ?>
             <?php foreach ($selectedSong['verses'] as $verse): ?>
