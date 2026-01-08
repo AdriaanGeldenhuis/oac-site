@@ -45,7 +45,7 @@ $bible = loadBibleData($toLang);
 $verseReplacements = [];
 $verseCount = 0;
 
-if ($bible && preg_match_all('/<p class="vref">([^<]+)<\/p>\s*<p class="vtxt">(.+?)<\/p>/si', $content, $matches, PREG_SET_ORDER)) {
+if ($bible && preg_match_all('/<p class="verse-ref">([^<]+)<\/p>\s*<p class="verse-text">(.+?)<\/p>/si', $content, $matches, PREG_SET_ORDER)) {
     foreach ($matches as $match) {
         $reference = trim($match[1]);
         $originalText = $match[2];

@@ -138,8 +138,8 @@ $langNames = [
 $targetLangs = array_filter(SUPPORTED_LANGS, fn($l) => $l !== $sourceLang);
 
 // Extract verse references to preserve them
-// Pattern: <p class="vref">Book Chapter:Verse</p><p class="vtxt">...</p>
-$versePattern = '/<p class="vref">([^<]+)<\/p>\s*<p class="vtxt">(.+?)<\/p>/si';
+// Pattern: <p class="verse-ref">Book Chapter:Verse</p><p class="verse-text">...</p>
+$versePattern = '/<p class="verse-ref">([^<]+)<\/p>\s*<p class="verse-text">(.+?)<\/p>/si';
 $verseMatches = [];
 preg_match_all($versePattern, $content, $verseMatches, PREG_SET_ORDER);
 
@@ -222,11 +222,11 @@ try {
 
                         if (!empty($verseTexts)) {
                             // Build the replacement HTML
-                            $newVerseHtml = '<p class="vref">' . htmlspecialchars($reference) . '</p><p class="vtxt">' . implode(' ', $verseTexts) . '</p>';
+                            $newVerseHtml = '<p class="verse-ref">' . htmlspecialchars($reference) . '</p><p class="verse-text">' . implode(' ', $verseTexts) . '</p>';
 
                             // Find and replace the verse block in translated content
-                            // The reference should still be there, just need to replace the vtxt content
-                            $refPattern = '/<p class="vref">[^<]*' . preg_quote($parts[2] . ':' . $parts[3], '/') . '[^<]*<\/p>\s*<p class="vtxt">.+?<\/p>/si';
+                            // The reference should still be there, just need to replace the verse-text content
+                            $refPattern = '/<p class="verse-ref">[^<]*' . preg_quote($parts[2] . ':' . $parts[3], '/') . '[^<]*<\/p>\s*<p class="verse-text">.+?<\/p>/si';
                             $translated = preg_replace($refPattern, $newVerseHtml, $translated, 1);
                         }
                     }
