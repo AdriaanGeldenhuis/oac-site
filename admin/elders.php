@@ -1000,10 +1000,11 @@ function t(string $key): string {
                                 // Convert to H1 or H2 with BIG sizes
                                 const level = fontSize >= 16 ? 'h1' : 'h2';
                                 const heading = document.createElement(level);
-                                heading.innerHTML = el.innerHTML;
+                                // Just get text, strip all inner formatting
+                                heading.textContent = el.textContent;
                                 heading.style.cssText = level === 'h1'
-                                    ? "font-family: 'Parisienne', 'Dancing Script', cursive; color: #f3c3b1; text-align: center; margin: 0.5em 0; font-size: 3rem; font-weight: normal;"
-                                    : "font-family: 'Parisienne', 'Dancing Script', cursive; color: #f3c3b1; text-align: center; margin: 0.5em 0; font-size: 2rem; font-weight: normal;";
+                                    ? "font-family: 'Parisienne', 'Dancing Script', cursive; color: #f3c3b1; text-align: center; margin: 0.5em 0; font-size: 3rem; font-weight: normal; line-height: 1.2;"
+                                    : "font-family: 'Parisienne', 'Dancing Script', cursive; color: #f3c3b1; text-align: center; margin: 0.5em 0; font-size: 2rem; font-weight: normal; line-height: 1.2;";
                                 if (el.parentNode) el.parentNode.replaceChild(heading, el);
                             } else {
                                 // Body text - regular font, white
