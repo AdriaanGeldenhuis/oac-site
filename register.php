@@ -66,8 +66,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $csrf = csrf_token();
 
-// Haal ampte, lande, provinsies, dorpe, gemeentes
-$amptes = $pdo->query("SELECT * FROM amptes ORDER BY id")->fetchAll();
+// Get offices, countries, provinces, towns, congregations
+$amptesRaw = $pdo->query("SELECT * FROM amptes ORDER BY id")->fetchAll();
+// Translate office names to English
+$amptes = array_map(function($amp) {
+    $keys = AMP_TRANSLATION_KEYS[$amp['id']] ?? ['member', 'member'];
+    $amp['male_name'] = __t($keys[0], 'en');
+    $amp['female_name'] = __t($keys[1], 'en');
+    return $amp;
+}, $amptesRaw);
 $countries = $pdo->query("SELECT * FROM countries ORDER BY name")->fetchAll();
 $provinces = $pdo->query("SELECT * FROM provinces ORDER BY name")->fetchAll();
 $towns = $pdo->query("SELECT * FROM towns ORDER BY name")->fetchAll();
