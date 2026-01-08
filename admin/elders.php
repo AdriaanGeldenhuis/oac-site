@@ -831,6 +831,145 @@ function t(string $key): string {
                 if (ed) ed.addEventListener('input', () => hasChanges = true);
             });
 
+            // Smart paste handler - preserves Word formatting
+            function cleanWordHtml(html) {
+                // Create a temp div to work with
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+
+                // Remove Word-specific tags
+                const wordTags = ['o:p', 'w:sdt', 'w:sdtpr', 'w:sdtcontent', 'xml'];
+                wordTags.forEach(tag => {
+                    temp.querySelectorAll(tag).forEach(el => {
+                        while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
+                        el.remove();
+                    });
+                });
+
+                // Remove comments
+                const walker = document.createTreeWalker(temp, NodeFilter.SHOW_COMMENT, null, false);
+                const comments = [];
+                while (walker.nextNode()) comments.push(walker.currentNode);
+                comments.forEach(c => c.remove());
+
+                // Clean up styles - keep only useful ones
+                temp.querySelectorAll('[style]').forEach(el => {
+                    const style = el.getAttribute('style') || '';
+                    const newStyles = [];
+
+                    // Keep font-weight (bold)
+                    if (/font-weight\s*:\s*(bold|[6-9]00)/i.test(style)) {
+                        newStyles.push('font-weight: bold');
+                    }
+                    // Keep font-style (italic)
+                    if (/font-style\s*:\s*italic/i.test(style)) {
+                        newStyles.push('font-style: italic');
+                    }
+                    // Keep text-decoration (underline)
+                    if (/text-decoration[^;]*underline/i.test(style)) {
+                        newStyles.push('text-decoration: underline');
+                    }
+                    // Keep color (but not black/default)
+                    const colorMatch = style.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i);
+                    if (colorMatch) {
+                        const color = colorMatch[1].trim().toLowerCase();
+                        if (color !== 'black' && color !== '#000' && color !== '#000000' && color !== 'windowtext') {
+                            newStyles.push('color: ' + colorMatch[1].trim());
+                        }
+                    }
+                    // Keep font-size
+                    const sizeMatch = style.match(/font-size\s*:\s*([^;]+)/i);
+                    if (sizeMatch) {
+                        newStyles.push('font-size: ' + sizeMatch[1].trim());
+                    }
+                    // Keep text-align
+                    const alignMatch = style.match(/text-align\s*:\s*([^;]+)/i);
+                    if (alignMatch && alignMatch[1].trim() !== 'left') {
+                        newStyles.push('text-align: ' + alignMatch[1].trim());
+                    }
+
+                    if (newStyles.length > 0) {
+                        el.setAttribute('style', newStyles.join('; '));
+                    } else {
+                        el.removeAttribute('style');
+                    }
+                });
+
+                // Remove class attributes (Word adds tons of them)
+                temp.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'));
+
+                // Remove empty spans
+                temp.querySelectorAll('span').forEach(span => {
+                    if (!span.hasAttribute('style') && !span.querySelector('*')) {
+                        while (span.firstChild) span.parentNode.insertBefore(span.firstChild, span);
+                        span.remove();
+                    }
+                });
+
+                // Convert Word lists to proper HTML
+                temp.querySelectorAll('p').forEach(p => {
+                    const text = p.textContent || '';
+                    // Check if it starts with bullet or number patterns
+                    if (/^[\u2022\u2023\u25E6\u2043\u2219•]\s/.test(text)) {
+                        p.innerHTML = p.innerHTML.replace(/^[\u2022\u2023\u25E6\u2043\u2219•]\s*/, '• ');
+                    }
+                });
+
+                // Remove Word metadata attributes
+                temp.querySelectorAll('*').forEach(el => {
+                    const attrs = [...el.attributes];
+                    attrs.forEach(attr => {
+                        if (attr.name.startsWith('data-') ||
+                            attr.name.startsWith('mso-') ||
+                            attr.name === 'lang' ||
+                            attr.name === 'dir') {
+                            el.removeAttribute(attr.name);
+                        }
+                    });
+                });
+
+                // Convert b to strong, i to em for consistency
+                temp.querySelectorAll('b').forEach(b => {
+                    const strong = document.createElement('strong');
+                    strong.innerHTML = b.innerHTML;
+                    b.replaceWith(strong);
+                });
+                temp.querySelectorAll('i').forEach(i => {
+                    const em = document.createElement('em');
+                    em.innerHTML = i.innerHTML;
+                    i.replaceWith(em);
+                });
+
+                return temp.innerHTML;
+            }
+
+            // Attach paste handler to all editors
+            Object.values(editors).forEach(ed => {
+                if (!ed) return;
+
+                ed.addEventListener('paste', function(e) {
+                    // Check if we have HTML content
+                    const clipboardData = e.clipboardData || window.clipboardData;
+                    const htmlData = clipboardData.getData('text/html');
+
+                    if (htmlData) {
+                        e.preventDefault();
+
+                        // Clean the Word HTML
+                        const cleanedHtml = cleanWordHtml(htmlData);
+
+                        // Insert at cursor position
+                        document.execCommand('insertHTML', false, cleanedHtml);
+                        hasChanges = true;
+
+                        console.log('✅ Word content pasted with formatting preserved');
+                    }
+                    // If no HTML, let default paste handle plain text
+                });
+            });
+
+            console.log('✅ Word paste handler enabled');
+
             // Lang switch
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.onclick = () => {
