@@ -991,16 +991,26 @@ function t(string $key): string {
                             // Extract font-family - keep script/cursive fonts!
                             const fontMatch = style.match(/font-family:\s*([^;]+)/i);
                             if (fontMatch) {
-                                let font = fontMatch[1].trim();
+                                let font = fontMatch[1].trim().toLowerCase();
                                 // Map common Word script fonts to web equivalents
-                                if (font.toLowerCase().includes('monotype corsiva') ||
-                                    font.toLowerCase().includes('script') ||
-                                    font.toLowerCase().includes('cursive')) {
-                                    font = "'Dancing Script', 'Parisienne', cursive";
-                                } else if (font.toLowerCase().includes('edwardian')) {
-                                    font = "'Great Vibes', 'Parisienne', cursive";
+                                if (font.includes('monotype corsiva') ||
+                                    font.includes('edwardian') ||
+                                    font.includes('script') ||
+                                    font.includes('cursive') ||
+                                    font.includes('brush') ||
+                                    font.includes('lucida handwriting') ||
+                                    font.includes('palace') ||
+                                    font.includes('vivaldi') ||
+                                    font.includes('vladimir') ||
+                                    font.includes('freestyle') ||
+                                    font.includes('segoe script') ||
+                                    font.includes('lucida calligraphy') ||
+                                    font.includes('kunstler') ||
+                                    font.includes('mistral')) {
+                                    el.style.fontFamily = "'Dancing Script', 'Parisienne', cursive";
+                                } else {
+                                    el.style.fontFamily = fontMatch[1].trim();
                                 }
-                                el.style.fontFamily = font;
                             }
 
                             // Extract color (avoid matching background-color)
