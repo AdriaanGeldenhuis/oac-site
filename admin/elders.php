@@ -981,7 +981,6 @@ function t(string $key): string {
                             const sizeMatch = style.match(/font-size:\s*([^;]+)/i);
                             if (sizeMatch) {
                                 let size = sizeMatch[1].trim();
-                                // Convert pt to px
                                 if (size.includes('pt')) {
                                     const pt = parseFloat(size);
                                     size = Math.round(pt * 1.33) + 'px';
@@ -989,16 +988,31 @@ function t(string $key): string {
                                 el.style.fontSize = size;
                             }
 
-                            // Extract font-family
+                            // Extract font-family - keep script/cursive fonts!
                             const fontMatch = style.match(/font-family:\s*([^;]+)/i);
                             if (fontMatch) {
-                                el.style.fontFamily = fontMatch[1].trim();
+                                let font = fontMatch[1].trim();
+                                // Map common Word script fonts to web equivalents
+                                if (font.toLowerCase().includes('monotype corsiva') ||
+                                    font.toLowerCase().includes('script') ||
+                                    font.toLowerCase().includes('cursive')) {
+                                    font = "'Dancing Script', 'Parisienne', cursive";
+                                } else if (font.toLowerCase().includes('edwardian')) {
+                                    font = "'Great Vibes', 'Parisienne', cursive";
+                                }
+                                el.style.fontFamily = font;
                             }
 
-                            // Extract color
-                            const colorMatch = style.match(/(?<!background-)color:\s*([^;]+)/i);
+                            // Extract color (avoid matching background-color)
+                            const colorMatch = style.match(/(?:^|[^-])color:\s*([^;]+)/i);
                             if (colorMatch) {
                                 el.style.color = colorMatch[1].trim();
+                            }
+
+                            // Extract background-color
+                            const bgMatch = style.match(/background-color:\s*([^;]+)/i);
+                            if (bgMatch) {
+                                el.style.backgroundColor = bgMatch[1].trim();
                             }
 
                             // Extract text-align
@@ -1006,6 +1020,32 @@ function t(string $key): string {
                             if (alignMatch) {
                                 el.style.textAlign = alignMatch[1].trim();
                             }
+
+                            // Extract text-decoration (underline)
+                            const decoMatch = style.match(/text-decoration:\s*([^;]+)/i);
+                            if (decoMatch) {
+                                el.style.textDecoration = decoMatch[1].trim();
+                            }
+
+                            // Extract font-weight
+                            const weightMatch = style.match(/font-weight:\s*([^;]+)/i);
+                            if (weightMatch) {
+                                el.style.fontWeight = weightMatch[1].trim();
+                            }
+
+                            // Extract font-style (italic)
+                            const styleMatch = style.match(/font-style:\s*([^;]+)/i);
+                            if (styleMatch) {
+                                el.style.fontStyle = styleMatch[1].trim();
+                            }
+                        });
+
+                        // Fix spacing on paragraphs
+                        temp.querySelectorAll('p, div').forEach(el => {
+                            // Preserve existing styles but fix margins
+                            el.style.marginTop = '0';
+                            el.style.marginBottom = '0.5em';
+                            el.style.lineHeight = '1.5';
                         });
 
                         // Remove Word junk elements but keep content
@@ -1014,6 +1054,13 @@ function t(string $key): string {
                         // Remove mso classes but keep formatting
                         temp.querySelectorAll('[class*="Mso"]').forEach(el => {
                             el.removeAttribute('class');
+                        });
+
+                        // Remove empty paragraphs
+                        temp.querySelectorAll('p, span').forEach(el => {
+                            if (!el.textContent.trim() && !el.querySelector('img')) {
+                                el.remove();
+                            }
                         });
 
                         // Insert the cleaned HTML
@@ -1025,7 +1072,7 @@ function t(string $key): string {
                 });
             });
 
-            console.log('✅ Word paste handler with font preservation');
+            console.log('✅ Word paste handler with full formatting');
 
             // Lang switch
             document.querySelectorAll('.lang-btn').forEach(btn => {
