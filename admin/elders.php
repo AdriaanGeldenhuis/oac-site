@@ -957,7 +957,7 @@ function t(string $key): string {
                 if (ed) ed.addEventListener('input', () => hasChanges = true);
             });
 
-            // Simple paste handler - keep Word formatting, just fix colors for dark bg
+            // Paste handler - transform Word content to proper heading/body structure
             Object.values(editors).forEach(ed => {
                 if (!ed) return;
                 ed.addEventListener('paste', function(e) {
@@ -971,23 +971,73 @@ function t(string $key): string {
                         const temp = document.createElement('div');
                         temp.innerHTML = html;
 
-                        // Remove only actual junk
+                        // Remove junk
                         temp.querySelectorAll('meta, link, style, script, xml, o\\:p').forEach(el => el.remove());
 
-                        // Fix ALL elements - convert black to white for dark bg
-                        temp.querySelectorAll('*').forEach(el => {
-                            const style = el.style;
+                        // Process each paragraph - detect headings vs body
+                        temp.querySelectorAll('p').forEach(el => {
+                            const text = el.textContent.trim();
+                            const style = el.getAttribute('style') || '';
 
-                            // Fix text color - black becomes white
-                            const color = style.color?.toLowerCase() || '';
-                            if (!color || color === 'black' || color === 'windowtext' || color === '#000000' || color === '#000' || color.includes('rgb(0')) {
-                                style.color = '#ffffff';
+                            // Get font size in pt
+                            let fontSize = 11; // default
+                            const sizeMatch = style.match(/font-size:\s*([\d.]+)\s*pt/i);
+                            if (sizeMatch) fontSize = parseFloat(sizeMatch[1]);
+
+                            // Check if centered
+                            const isCentered = style.includes('center');
+
+                            // Check if short (likely a heading)
+                            const isShort = text.length < 100;
+
+                            // Check if has underline
+                            const hasUnderline = style.includes('underline') || el.querySelector('u');
+
+                            // Determine if heading
+                            const isHeading = (fontSize >= 14 && isShort) || (isCentered && isShort && hasUnderline);
+
+                            if (isHeading) {
+                                // Convert to H1 or H2
+                                const level = fontSize >= 16 ? 'h1' : 'h2';
+                                const heading = document.createElement(level);
+                                heading.innerHTML = el.innerHTML;
+                                heading.style.fontFamily = "'Parisienne', 'Dancing Script', cursive";
+                                heading.style.color = '#f3c3b1';
+                                heading.style.textAlign = 'center';
+                                heading.style.marginBottom = '0.5em';
+                                if (level === 'h1') {
+                                    heading.style.fontSize = '2.5rem';
+                                } else {
+                                    heading.style.fontSize = '1.8rem';
+                                }
+                                el.parentNode.replaceChild(heading, el);
+                            } else {
+                                // Body text - regular font, white
+                                el.style.fontFamily = 'Georgia, serif';
+                                el.style.color = '#ffffff';
+                                el.style.fontSize = '1rem';
+                                el.style.lineHeight = '1.6';
+                                el.style.marginTop = '0';
+                                el.style.marginBottom = '0.8em';
                             }
+                        });
 
-                            // Remove problematic margins but keep other styles
-                            if (el.tagName === 'P' || el.tagName === 'DIV') {
-                                style.marginTop = '0';
-                                style.marginBottom = '0.5em';
+                        // Handle lists
+                        temp.querySelectorAll('li').forEach(el => {
+                            el.style.fontFamily = 'Georgia, serif';
+                            el.style.color = '#ffffff';
+                            el.style.fontSize = '1rem';
+                            el.style.marginBottom = '0.3em';
+                        });
+
+                        // Handle spans with special colors (like red for verses)
+                        temp.querySelectorAll('span').forEach(el => {
+                            const color = el.style.color?.toLowerCase() || '';
+                            // Keep red/special colors
+                            if (color && !color.includes('black') && color !== 'windowtext' && color !== '#000000') {
+                                // Keep the color
+                            } else {
+                                el.style.color = '#ffffff';
                             }
                         });
 
@@ -998,7 +1048,7 @@ function t(string $key): string {
                 });
             });
 
-            console.log('✅ Simple paste handler');
+            console.log('✅ Transform paste handler');
 
             // Lang switch
             document.querySelectorAll('.lang-btn').forEach(btn => {
