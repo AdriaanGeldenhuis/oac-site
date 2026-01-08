@@ -4,6 +4,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../../security/auth_gate.php';
 require_once __DIR__ . '/notifications/helper.php';
+require_once __DIR__ . '/../../gospel_media/api/notifications/helper.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     http_response_code(500);
@@ -122,8 +123,33 @@ try {
                 'event_at' => $eventAt
             ]);
             $insertedId = (int)$pdo->lastInsertId();
+
+            // 🔔 NOTIFY ROOM MEMBERS about new event
+            try {
+                $roomNameStmt = $pdo->prepare("SELECT name FROM rooms WHERE id = ?");
+                $roomNameStmt->execute([$roomId]);
+                $roomName = $roomNameStmt->fetchColumn() ?: 'Room';
+
+                $membersStmt = $pdo->prepare("
+                    SELECT user_id FROM room_members
+                    WHERE room_id = ? AND user_id != ?
+                ");
+                $membersStmt->execute([$roomId, $userId]);
+                $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+
+                foreach ($members as $memberId) {
+                    createGospelNotification($pdo, (int)$memberId, 'new_post', [
+                        'room_id' => $roomId,
+                        'room_name' => $roomName,
+                        'author_name' => $userName,
+                        'post_id' => $insertedId
+                    ]);
+                }
+            } catch (Throwable $notifErr) {
+                error_log('Calendar event notification error: ' . $notifErr->getMessage());
+            }
         }
-        
+
     } elseif ($type === 'diary') {
         if ($id > 0) {
             $stmt = $pdo->prepare("

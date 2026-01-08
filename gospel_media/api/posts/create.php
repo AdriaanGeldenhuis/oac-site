@@ -3,10 +3,12 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
 require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
-if (!isset($pdo) || !($pdo instanceof PDO)) { 
-    http_response_code(500); 
-    echo json_encode(['error'=>'db_unavailable']); 
-    exit; 
+require_once __DIR__ . '/../notifications/helper.php';
+
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    http_response_code(500);
+    echo json_encode(['error'=>'db_unavailable']);
+    exit;
 }
 
 ini_set('display_errors', '0');
@@ -139,6 +141,39 @@ try {
     }
 
     $pdo->commit();
+
+    // Notify all room members about the new post
+    try {
+        // Get room name and author name
+        $roomStmt = $pdo->prepare("SELECT name FROM rooms WHERE id = ?");
+        $roomStmt->execute([$roomId]);
+        $roomName = $roomStmt->fetchColumn() ?: 'Room';
+
+        $authorStmt = $pdo->prepare("SELECT CONCAT(name, ' ', surname) AS full_name FROM users WHERE id = ?");
+        $authorStmt->execute([$userId]);
+        $authorName = $authorStmt->fetchColumn() ?: 'Someone';
+
+        // Get all room members except the post author
+        $membersStmt = $pdo->prepare("
+            SELECT user_id FROM room_members
+            WHERE room_id = ? AND user_id != ?
+        ");
+        $membersStmt->execute([$roomId, $userId]);
+        $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Send notification to each member
+        foreach ($members as $memberId) {
+            createGospelNotification($pdo, (int)$memberId, 'new_post', [
+                'room_id' => $roomId,
+                'room_name' => $roomName,
+                'author_name' => $authorName,
+                'post_id' => $postId
+            ]);
+        }
+    } catch (Throwable $notifError) {
+        error_log('Gospel post notification error: ' . $notifError->getMessage());
+    }
+
     echo json_encode(['ok'=>1, 'success'=>true, 'post_id'=>$postId]);
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();

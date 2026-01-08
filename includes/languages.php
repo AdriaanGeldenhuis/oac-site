@@ -3219,6 +3219,36 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Alguém'
     ],
 
+    // ==================== BIRTHDAY NOTIFICATIONS ====================
+    'happy_birthday' => [
+        'af' => 'Gelukkige Verjaarsdag!',
+        'en' => 'Happy Birthday!',
+        'zu' => 'Usuku lokuzalwa oluhle!',
+        'xh' => 'Usuku lokuzalwa olumnandi!',
+        'pt' => 'Feliz Aniversário!'
+    ],
+    'birthday_self_msg' => [
+        'af' => 'Baie geluk met jou verjaarsdag! Mag die Here jou seën.',
+        'en' => 'Congratulations on your birthday! May God bless you.',
+        'zu' => 'Siyakuhalalisela ngosuku lwakho lokuzalwa! Sengathi uNkulunkulu angakubusisa.',
+        'xh' => 'Sivuyisana nawe ngosuku lwakho lokuzalwa! Ngamana uThixo akusikelele.',
+        'pt' => 'Parabéns pelo seu aniversário! Que Deus te abençoe.'
+    ],
+    'birthday_notification' => [
+        'af' => 'Verjaarsdag Vandag',
+        'en' => 'Birthday Today',
+        'zu' => 'Usuku Lokuzalwa Namhlanje',
+        'xh' => 'Usuku Lokuzalwa Namhlanje',
+        'pt' => 'Aniversário Hoje'
+    ],
+    'birthday_notification_msg' => [
+        'af' => '{name} vier vandag verjaarsdag!',
+        'en' => '{name} is celebrating their birthday today!',
+        'zu' => '{name} ugubha usuku lwakhe lokuzalwa namhlanje!',
+        'xh' => '{name} ubhiyozela usuku lwakhe lokuzalwa namhlanje!',
+        'pt' => '{name} está comemorando seu aniversário hoje!'
+    ],
+
     // =====================================================================
     // JAVASCRIPT UI TRANSLATIONS (for gospel_media and prayers)
     // =====================================================================
