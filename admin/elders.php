@@ -997,23 +997,34 @@ function t(string $key): string {
                             }
                         });
 
-                        // Also detect headings by font-size (larger = heading)
-                        temp.querySelectorAll('p, span').forEach(el => {
+                        // Detect headings by font-size (Word uses pt - convert and check)
+                        temp.querySelectorAll('p').forEach(el => {
                             const style = el.getAttribute('style') || '';
-                            const sizeMatch = style.match(/font-size:\s*(\d+)/i);
+                            // Match both pt and px sizes
+                            const sizeMatch = style.match(/font-size:\s*([\d.]+)\s*(pt|px)?/i);
                             if (sizeMatch) {
-                                const size = parseInt(sizeMatch[1]);
+                                let size = parseFloat(sizeMatch[1]);
+                                const unit = (sizeMatch[2] || 'pt').toLowerCase();
+                                // Convert pt to px for comparison
+                                if (unit === 'pt') {
+                                    size = size * 1.33;
+                                }
                                 // If font size is large, treat as heading
-                                if (size >= 24 && el.tagName === 'P') {
+                                if (size >= 20) {
                                     const h1 = document.createElement('h1');
                                     h1.innerHTML = el.innerHTML;
                                     h1.setAttribute('style', style);
-                                    el.parentNode.replaceChild(h1, el);
-                                } else if (size >= 18 && size < 24 && el.tagName === 'P') {
+                                    if (el.parentNode) el.parentNode.replaceChild(h1, el);
+                                } else if (size >= 16) {
                                     const h2 = document.createElement('h2');
                                     h2.innerHTML = el.innerHTML;
                                     h2.setAttribute('style', style);
-                                    el.parentNode.replaceChild(h2, el);
+                                    if (el.parentNode) el.parentNode.replaceChild(h2, el);
+                                } else if (size >= 14) {
+                                    const h3 = document.createElement('h3');
+                                    h3.innerHTML = el.innerHTML;
+                                    h3.setAttribute('style', style);
+                                    if (el.parentNode) el.parentNode.replaceChild(h3, el);
                                 }
                             }
                         });
@@ -1058,19 +1069,27 @@ function t(string $key): string {
                                 }
                             }
 
-                            // Extract color - be more careful to get all colors
-                            // First try to get color that's NOT background-color
+                            // Extract color - preserve Word colors properly
                             let colorValue = null;
                             const colorParts = style.split(';');
                             for (const part of colorParts) {
                                 const trimmed = part.trim().toLowerCase();
-                                if (trimmed.startsWith('color:') && !trimmed.startsWith('background-color')) {
+                                if (trimmed.startsWith('color:') && !trimmed.includes('background')) {
                                     colorValue = part.split(':')[1]?.trim();
                                     break;
                                 }
                             }
+                            // Set color - if windowtext or black, make it actual black for dark bg
                             if (colorValue) {
-                                el.style.color = colorValue;
+                                const cv = colorValue.toLowerCase();
+                                if (cv === 'windowtext' || cv === 'black' || cv === '#000000' || cv === '#000' || cv === 'rgb(0,0,0)' || cv === 'rgb(0, 0, 0)') {
+                                    el.style.color = '#ffffff'; // White text on dark background
+                                } else {
+                                    el.style.color = colorValue;
+                                }
+                            } else {
+                                // No color specified - default to white for dark bg
+                                el.style.color = '#ffffff';
                             }
 
                             // Extract background-color
