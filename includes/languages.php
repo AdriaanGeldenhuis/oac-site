@@ -2668,6 +2668,41 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Excel',
         'pt' => 'Excel'
     ],
+    'generating_pdf' => [
+        'af' => 'Genereer PDF...',
+        'en' => 'Generating PDF...',
+        'zu' => 'Kukhiqizwa i-PDF...',
+        'xh' => 'Kuveliswa i-PDF...',
+        'pt' => 'Gerando PDF...'
+    ],
+    'generating_excel' => [
+        'af' => 'Genereer Excel...',
+        'en' => 'Generating Excel...',
+        'zu' => 'Kukhiqizwa i-Excel...',
+        'xh' => 'Kuveliswa i-Excel...',
+        'pt' => 'Gerando Excel...'
+    ],
+    'pdf_exported' => [
+        'af' => 'PDF uitgevoer!',
+        'en' => 'PDF exported!',
+        'zu' => 'I-PDF ithunyelwe!',
+        'xh' => 'I-PDF ithunyelwe!',
+        'pt' => 'PDF exportado!'
+    ],
+    'excel_exported' => [
+        'af' => 'Excel uitgevoer!',
+        'en' => 'Excel exported!',
+        'zu' => 'I-Excel ithunyelwe!',
+        'xh' => 'I-Excel ithunyelwe!',
+        'pt' => 'Excel exportado!'
+    ],
+    'export_failed' => [
+        'af' => 'Uitvoer het misluk',
+        'en' => 'Export failed',
+        'zu' => 'Ukuthumela kwehlulekile',
+        'xh' => 'Ukuthumela akuphumelelanga',
+        'pt' => 'Exportação falhou'
+    ],
 
     // ==================== NOTIFICATIONS PAGE ====================
     'ai_notifications' => [
