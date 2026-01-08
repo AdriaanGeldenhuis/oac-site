@@ -837,8 +837,8 @@ function t(string $key): string {
                 const temp = document.createElement('div');
                 temp.innerHTML = html;
 
-                // Remove Word-specific tags
-                const wordTags = ['o:p', 'w:sdt', 'w:sdtpr', 'w:sdtcontent', 'xml'];
+                // Remove Word-specific tags but keep their content
+                const wordTags = ['o:p', 'w:sdt', 'w:sdtpr', 'w:sdtcontent', 'xml', 'meta', 'link', 'style'];
                 wordTags.forEach(tag => {
                     temp.querySelectorAll(tag).forEach(el => {
                         while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
@@ -846,35 +846,55 @@ function t(string $key): string {
                     });
                 });
 
-                // Remove comments
-                const walker = document.createTreeWalker(temp, NodeFilter.SHOW_COMMENT, null, false);
-                const comments = [];
-                while (walker.nextNode()) comments.push(walker.currentNode);
-                comments.forEach(c => c.remove());
+                // Remove HTML comments
+                const removeComments = (node) => {
+                    for (let i = node.childNodes.length - 1; i >= 0; i--) {
+                        const child = node.childNodes[i];
+                        if (child.nodeType === 8) { // Comment node
+                            child.remove();
+                        } else if (child.nodeType === 1) { // Element node
+                            removeComments(child);
+                        }
+                    }
+                };
+                removeComments(temp);
 
-                // Clean up styles - keep only useful ones
+                // Clean up styles - keep useful formatting
                 temp.querySelectorAll('[style]').forEach(el => {
                     const style = el.getAttribute('style') || '';
                     const newStyles = [];
 
                     // Keep font-weight (bold)
-                    if (/font-weight\s*:\s*(bold|[6-9]00)/i.test(style)) {
+                    if (/font-weight\s*:\s*(bold|[5-9]00|1000)/i.test(style)) {
                         newStyles.push('font-weight: bold');
                     }
                     // Keep font-style (italic)
                     if (/font-style\s*:\s*italic/i.test(style)) {
                         newStyles.push('font-style: italic');
                     }
-                    // Keep text-decoration (underline)
+                    // Keep text-decoration (underline, line-through)
                     if (/text-decoration[^;]*underline/i.test(style)) {
                         newStyles.push('text-decoration: underline');
+                    }
+                    if (/text-decoration[^;]*line-through/i.test(style)) {
+                        newStyles.push('text-decoration: line-through');
                     }
                     // Keep color (but not black/default)
                     const colorMatch = style.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i);
                     if (colorMatch) {
                         const color = colorMatch[1].trim().toLowerCase();
-                        if (color !== 'black' && color !== '#000' && color !== '#000000' && color !== 'windowtext') {
+                        if (color !== 'black' && color !== '#000' && color !== '#000000' &&
+                            color !== 'windowtext' && color !== 'rgb(0, 0, 0)' && color !== 'rgb(0,0,0)') {
                             newStyles.push('color: ' + colorMatch[1].trim());
+                        }
+                    }
+                    // Keep background-color
+                    const bgMatch = style.match(/background-color\s*:\s*([^;]+)/i);
+                    if (bgMatch) {
+                        const bg = bgMatch[1].trim().toLowerCase();
+                        if (bg !== 'white' && bg !== '#fff' && bg !== '#ffffff' &&
+                            bg !== 'transparent' && bg !== 'rgb(255, 255, 255)') {
+                            newStyles.push('background-color: ' + bgMatch[1].trim());
                         }
                     }
                     // Keep font-size
@@ -884,8 +904,26 @@ function t(string $key): string {
                     }
                     // Keep text-align
                     const alignMatch = style.match(/text-align\s*:\s*([^;]+)/i);
-                    if (alignMatch && alignMatch[1].trim() !== 'left') {
+                    if (alignMatch && alignMatch[1].trim() !== 'left' && alignMatch[1].trim() !== 'start') {
                         newStyles.push('text-align: ' + alignMatch[1].trim());
+                    }
+                    // Keep line-height
+                    const lineHeightMatch = style.match(/line-height\s*:\s*([^;]+)/i);
+                    if (lineHeightMatch) {
+                        newStyles.push('line-height: ' + lineHeightMatch[1].trim());
+                    }
+                    // Keep margin (for spacing)
+                    const marginMatch = style.match(/margin\s*:\s*([^;]+)/i);
+                    if (marginMatch && marginMatch[1].trim() !== '0' && marginMatch[1].trim() !== '0px') {
+                        newStyles.push('margin: ' + marginMatch[1].trim());
+                    }
+                    const marginBottomMatch = style.match(/margin-bottom\s*:\s*([^;]+)/i);
+                    if (marginBottomMatch) {
+                        newStyles.push('margin-bottom: ' + marginBottomMatch[1].trim());
+                    }
+                    const marginTopMatch = style.match(/margin-top\s*:\s*([^;]+)/i);
+                    if (marginTopMatch) {
+                        newStyles.push('margin-top: ' + marginTopMatch[1].trim());
                     }
 
                     if (newStyles.length > 0) {
@@ -895,23 +933,14 @@ function t(string $key): string {
                     }
                 });
 
-                // Remove class attributes (Word adds tons of them)
+                // Remove class attributes (Word junk)
                 temp.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'));
 
-                // Remove empty spans
+                // Remove empty spans but keep styled ones
                 temp.querySelectorAll('span').forEach(span => {
-                    if (!span.hasAttribute('style') && !span.querySelector('*')) {
+                    if (!span.hasAttribute('style') && span.childNodes.length > 0) {
                         while (span.firstChild) span.parentNode.insertBefore(span.firstChild, span);
                         span.remove();
-                    }
-                });
-
-                // Convert Word lists to proper HTML
-                temp.querySelectorAll('p').forEach(p => {
-                    const text = p.textContent || '';
-                    // Check if it starts with bullet or number patterns
-                    if (/^[\u2022\u2023\u25E6\u2043\u2219•]\s/.test(text)) {
-                        p.innerHTML = p.innerHTML.replace(/^[\u2022\u2023\u25E6\u2043\u2219•]\s*/, '• ');
                     }
                 });
 
@@ -922,22 +951,34 @@ function t(string $key): string {
                         if (attr.name.startsWith('data-') ||
                             attr.name.startsWith('mso-') ||
                             attr.name === 'lang' ||
-                            attr.name === 'dir') {
+                            attr.name === 'dir' ||
+                            attr.name === 'xmlns' ||
+                            attr.name.includes(':')) {
                             el.removeAttribute(attr.name);
                         }
                     });
                 });
 
-                // Convert b to strong, i to em for consistency
+                // Convert b to strong, i to em
                 temp.querySelectorAll('b').forEach(b => {
                     const strong = document.createElement('strong');
                     strong.innerHTML = b.innerHTML;
+                    if (b.hasAttribute('style')) strong.setAttribute('style', b.getAttribute('style'));
                     b.replaceWith(strong);
                 });
                 temp.querySelectorAll('i').forEach(i => {
                     const em = document.createElement('em');
                     em.innerHTML = i.innerHTML;
+                    if (i.hasAttribute('style')) em.setAttribute('style', i.getAttribute('style'));
                     i.replaceWith(em);
+                });
+
+                // Convert u tags
+                temp.querySelectorAll('u').forEach(u => {
+                    const span = document.createElement('span');
+                    span.innerHTML = u.innerHTML;
+                    span.style.textDecoration = 'underline';
+                    u.replaceWith(span);
                 });
 
                 return temp.innerHTML;
@@ -948,23 +989,63 @@ function t(string $key): string {
                 if (!ed) return;
 
                 ed.addEventListener('paste', function(e) {
-                    // Check if we have HTML content
-                    const clipboardData = e.clipboardData || window.clipboardData;
-                    const htmlData = clipboardData.getData('text/html');
+                    try {
+                        const clipboardData = e.clipboardData || window.clipboardData;
+                        if (!clipboardData) return; // Let browser handle
 
-                    if (htmlData) {
-                        e.preventDefault();
+                        const htmlData = clipboardData.getData('text/html');
+                        const textData = clipboardData.getData('text/plain');
 
-                        // Clean the Word HTML
-                        const cleanedHtml = cleanWordHtml(htmlData);
+                        // If we have HTML data (from Word, web, etc.)
+                        if (htmlData && htmlData.trim()) {
+                            e.preventDefault();
 
-                        // Insert at cursor position
-                        document.execCommand('insertHTML', false, cleanedHtml);
-                        hasChanges = true;
+                            // Clean the HTML
+                            let cleanedHtml = cleanWordHtml(htmlData);
 
-                        console.log('✅ Word content pasted with formatting preserved');
+                            // If cleaning resulted in empty content, fall back to plain text
+                            if (!cleanedHtml.trim() && textData) {
+                                // Convert plain text to HTML with line breaks
+                                cleanedHtml = textData
+                                    .split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>')
+                                    .join('');
+                            }
+
+                            // Insert at cursor position
+                            const selection = window.getSelection();
+                            if (selection.rangeCount > 0) {
+                                const range = selection.getRangeAt(0);
+                                range.deleteContents();
+
+                                const frag = document.createRange().createContextualFragment(cleanedHtml);
+                                range.insertNode(frag);
+
+                                // Move cursor to end
+                                selection.collapseToEnd();
+                            } else {
+                                document.execCommand('insertHTML', false, cleanedHtml);
+                            }
+
+                            hasChanges = true;
+                            console.log('✅ Content pasted with formatting');
+                        }
+                        // If only plain text, let browser handle or convert to paragraphs
+                        else if (textData && textData.trim()) {
+                            e.preventDefault();
+
+                            // Convert plain text to HTML paragraphs
+                            const html = textData
+                                .split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>')
+                                .join('');
+
+                            document.execCommand('insertHTML', false, html);
+                            hasChanges = true;
+                        }
+                        // Otherwise let browser handle
+                    } catch (err) {
+                        console.error('Paste error:', err);
+                        // Let browser handle on error
                     }
-                    // If no HTML, let default paste handle plain text
                 });
             });
 
