@@ -337,6 +337,7 @@ $siteColors = [
             color: var(--primary);
             margin: 1em 0 0.5em;
             font-weight: normal;
+            text-decoration: underline;
         }
         .editor h3 {
             font-family: 'Parisienne', cursive;
@@ -346,7 +347,18 @@ $siteColors = [
             font-weight: normal;
         }
         .editor p {
+            font-family: Georgia, serif !important;
+            font-size: 16px !important;
             margin: 1em 0;
+            color: var(--editor-text);
+        }
+        .editor ul, .editor ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+        .editor li {
+            font-family: Georgia, serif;
+            margin: 0.5em 0;
         }
 
         /* Bible verse classes - matching welcome.css */
@@ -914,43 +926,83 @@ $siteColors = [
                     temp.innerHTML = html;
 
                     // Remove Word-specific junk
-                    temp.querySelectorAll('meta, link, style, script, xml, o\\:p, w\\:sdt').forEach(el => el.remove());
+                    temp.querySelectorAll('meta, link, style, script, xml, o\\:p, w\\:sdt, font').forEach(el => {
+                        // Unwrap font tags but keep content
+                        if (el.tagName === 'FONT') {
+                            el.replaceWith(...el.childNodes);
+                        } else {
+                            el.remove();
+                        }
+                    });
 
-                    // Process paragraphs - detect headings by style
-                    temp.querySelectorAll('p, h1, h2, h3, h4').forEach(el => {
+                    // Process all elements to detect headings
+                    temp.querySelectorAll('p, h1, h2, h3, h4, div').forEach(el => {
                         const style = el.getAttribute('style') || '';
-                        const text = el.textContent.trim();
+                        const textContent = el.textContent.trim();
+                        if (!textContent) return;
 
-                        // Get font size
+                        // Check for heading indicators
+                        const isUnderlined = style.includes('underline') || el.querySelector('u') || el.innerHTML.includes('<u>');
+                        const isBold = style.includes('font-weight') && (style.includes('bold') || style.includes('700')) || el.querySelector('b, strong');
+                        const isCentered = style.includes('center') || el.style.textAlign === 'center';
+                        const isShort = textContent.length < 100;
+                        const isAllCaps = textContent === textContent.toUpperCase() && textContent.length > 3;
+
+                        // Get font size in pt
                         let fontSize = 11;
                         const sizeMatch = style.match(/font-size:\s*([\d.]+)\s*pt/i);
                         if (sizeMatch) fontSize = parseFloat(sizeMatch[1]);
 
-                        // Detect if centered
-                        const isCentered = style.includes('center') || el.style.textAlign === 'center';
+                        // Already a heading tag
+                        if (el.tagName.match(/^H[1-4]$/)) {
+                            return; // Keep as-is
+                        }
 
-                        // Check if short (likely heading)
-                        const isShort = text.length < 120;
+                        // Detect heading: underlined + short, or large font + short, or all caps + centered + short
+                        const isHeading = (isUnderlined && isShort) ||
+                                         (fontSize >= 14 && isShort) ||
+                                         (isAllCaps && isCentered && isShort) ||
+                                         (isBold && isCentered && isShort);
 
-                        // Determine heading level
-                        if ((fontSize >= 16 && isShort) || el.tagName.match(/^H[123]$/)) {
-                            const level = fontSize >= 18 || el.tagName === 'H1' ? 'h1' :
-                                         fontSize >= 14 || el.tagName === 'H2' ? 'h2' : 'h3';
-                            const heading = document.createElement(level);
-                            heading.textContent = text;
-                            if (el.parentNode) el.parentNode.replaceChild(heading, el);
-                        } else {
-                            // Body paragraph - preserve line spacing
-                            const lineHeight = style.match(/line-height:\s*([\d.]+)/i);
-                            if (lineHeight) {
-                                el.style.lineHeight = lineHeight[1];
+                        if (isHeading) {
+                            // Determine level: H1 for main title, H2 for section headings
+                            let level = 'h2';
+                            if (fontSize >= 16 || (isAllCaps && textContent.length < 30)) {
+                                level = 'h1';
+                            } else if (fontSize <= 12 && !isUnderlined) {
+                                level = 'h3';
                             }
+
+                            const heading = document.createElement(level);
+                            heading.textContent = textContent;
+                            el.replaceWith(heading);
+                        } else {
+                            // Regular paragraph - convert to clean p tag
+                            const p = document.createElement('p');
+                            // Preserve inline formatting (bold, italic, underline) but clean up
+                            p.innerHTML = el.innerHTML
+                                .replace(/<span[^>]*>/gi, '')
+                                .replace(/<\/span>/gi, '')
+                                .replace(/style="[^"]*"/gi, '')
+                                .replace(/class="[^"]*"/gi, '');
+                            el.replaceWith(p);
                         }
                     });
 
-                    document.execCommand('insertHTML', false, temp.innerHTML);
+                    // Clean up the final HTML
+                    let cleanHtml = temp.innerHTML
+                        .replace(/<!--[\s\S]*?-->/g, '')  // Remove comments
+                        .replace(/<\/?o:[^>]*>/gi, '')     // Remove Office namespace tags
+                        .replace(/<\/?w:[^>]*>/gi, '')     // Remove Word namespace tags
+                        .replace(/\s+style=""/gi, '')      // Remove empty styles
+                        .replace(/\s+class=""/gi, '');     // Remove empty classes
+
+                    document.execCommand('insertHTML', false, cleanHtml);
                 } else if (text) {
-                    document.execCommand('insertText', false, text);
+                    // Plain text - wrap lines in paragraphs
+                    const lines = text.split(/\n\n+/);
+                    const html = lines.map(line => `<p>${line.trim()}</p>`).join('');
+                    document.execCommand('insertHTML', false, html);
                 }
             });
 
@@ -982,23 +1034,58 @@ $siteColors = [
             getCurrentEditor().focus();
         }
 
+        // Custom function to change block type (H1, H2, H3, P)
+        function changeBlockType(newTag) {
+            const editor = getCurrentEditor();
+            const sel = window.getSelection();
+            if (!sel.rangeCount) {
+                editor.focus();
+                return;
+            }
+
+            // Find the parent block element
+            let node = sel.anchorNode;
+            while (node && node !== editor) {
+                if (node.nodeType === 1 && ['P', 'H1', 'H2', 'H3', 'H4', 'DIV'].includes(node.tagName)) {
+                    break;
+                }
+                node = node.parentNode;
+            }
+
+            if (node && node !== editor && node.nodeType === 1) {
+                // Create new element with the desired tag
+                const newEl = document.createElement(newTag);
+                newEl.innerHTML = node.innerHTML;
+
+                // Replace the old element with the new one
+                node.parentNode.replaceChild(newEl, node);
+
+                // Restore cursor position
+                const range = document.createRange();
+                range.selectNodeContents(newEl);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+
+                hasChanges = true;
+                console.log('Changed block to:', newTag);
+            } else {
+                // No block element found, try execCommand as fallback
+                try {
+                    document.execCommand('formatBlock', false, '<' + newTag + '>');
+                    hasChanges = true;
+                } catch(e) {
+                    console.error('formatBlock failed:', e);
+                }
+            }
+            editor.focus();
+        }
+
         // Headings - apply site fonts automatically
-        document.getElementById('btn-h1').onclick = () => {
-            execCmd('formatBlock', '<h1>');
-            hasChanges = true;
-        };
-        document.getElementById('btn-h2').onclick = () => {
-            execCmd('formatBlock', '<h2>');
-            hasChanges = true;
-        };
-        document.getElementById('btn-h3').onclick = () => {
-            execCmd('formatBlock', '<h3>');
-            hasChanges = true;
-        };
-        document.getElementById('btn-p').onclick = () => {
-            execCmd('formatBlock', '<p>');
-            hasChanges = true;
-        };
+        document.getElementById('btn-h1').onclick = () => changeBlockType('h1');
+        document.getElementById('btn-h2').onclick = () => changeBlockType('h2');
+        document.getElementById('btn-h3').onclick = () => changeBlockType('h3');
+        document.getElementById('btn-p').onclick = () => changeBlockType('p');
 
         // Basic formatting
         document.getElementById('btn-bold').onclick = () => execCmd('bold');
