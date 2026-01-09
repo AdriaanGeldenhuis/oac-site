@@ -1391,6 +1391,19 @@ $siteColors = [
                 });
 
                 const res = await fetch('/admin/api/ai/translate_all.php', { method: 'POST', body: fd });
+
+                // Check if response is OK
+                if (!res.ok) {
+                    const text = await res.text();
+                    console.error('Translation API Error:', res.status, text);
+                    try {
+                        const errData = JSON.parse(text);
+                        throw new Error(errData.error + (errData.detail ? ': ' + errData.detail : ''));
+                    } catch(parseErr) {
+                        throw new Error('Server error ' + res.status + ': ' + text.substring(0, 200));
+                    }
+                }
+
                 const data = await res.json();
 
                 if (data.success) {
@@ -1411,10 +1424,13 @@ $siteColors = [
                     await new Promise(r => setTimeout(r, 1000));
                     showStatus('saved', 'All translations complete!');
                 } else {
-                    throw new Error(data.error || 'Translation failed');
+                    console.error('Translation failed:', data);
+                    throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
                 }
             } catch(e) {
+                console.error('Translation error:', e);
                 showStatus('error', e.message);
+                alert('Translation Error: ' + e.message);
             } finally {
                 overlay.classList.remove('show');
             }
