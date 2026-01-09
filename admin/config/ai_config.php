@@ -82,9 +82,13 @@ function openai_chat(array $messages): array {
     $fullContent = '';
     $finishReason = 'unknown';
     $streamError = null;
+    $rawResponse = ''; // Capture raw response for debugging
 
     // Callback function to process streaming data
-    $writeCallback = function($ch, $data) use (&$fullContent, &$finishReason, &$streamError) {
+    $writeCallback = function($ch, $data) use (&$fullContent, &$finishReason, &$streamError, &$rawResponse) {
+        // Capture raw response for debugging
+        $rawResponse .= $data;
+
         $lines = explode("\n", $data);
 
         foreach ($lines as $line) {
@@ -92,6 +96,16 @@ function openai_chat(array $messages): array {
 
             // Skip empty lines
             if (empty($line)) continue;
+
+            // Check for error JSON (non-streaming error response)
+            if (strpos($line, '{"error"') === 0) {
+                $errorJson = json_decode($line, true);
+                if ($errorJson && isset($errorJson['error']['message'])) {
+                    $streamError = $errorJson['error']['message'];
+                    error_log('openai_chat: API Error in response: ' . $streamError);
+                }
+                continue;
+            }
 
             // Check for data prefix
             if (strpos($line, 'data: ') !== 0) continue;
@@ -155,6 +169,7 @@ function openai_chat(array $messages): array {
 
     error_log('openai_chat: Stream complete. HTTP: ' . $httpCode . ', Time: ' . round($totalTime, 2) . 's');
     error_log('openai_chat: Content length: ' . strlen($fullContent) . ' chars');
+    error_log('openai_chat: Raw response length: ' . strlen($rawResponse) . ' chars');
 
     if ($curlError) {
         error_log('openai_chat: cURL ERROR: ' . $curlError);
@@ -168,12 +183,25 @@ function openai_chat(array $messages): array {
 
     if ($httpCode !== 200) {
         error_log('openai_chat: HTTP ERROR: ' . $httpCode);
-        throw new Exception('API error (HTTP ' . $httpCode . ')');
+        error_log('openai_chat: Raw response: ' . substr($rawResponse, 0, 1000));
+
+        // Try to extract error message from raw response
+        if (preg_match('/"message"\s*:\s*"([^"]+)"/', $rawResponse, $matches)) {
+            throw new Exception('API error: ' . $matches[1]);
+        }
+        throw new Exception('API error (HTTP ' . $httpCode . '): ' . substr($rawResponse, 0, 200));
     }
 
     if (empty($fullContent)) {
-        error_log('openai_chat: Empty response!');
-        throw new Exception('Empty response from API');
+        error_log('openai_chat: Empty response! Raw: ' . substr($rawResponse, 0, 500));
+
+        // Check if raw response has an error
+        $errorJson = json_decode($rawResponse, true);
+        if ($errorJson && isset($errorJson['error']['message'])) {
+            throw new Exception('API error: ' . $errorJson['error']['message']);
+        }
+
+        throw new Exception('Empty response from API. Raw: ' . substr($rawResponse, 0, 100));
     }
 
     if ($finishReason === 'length') {
