@@ -109,6 +109,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Check API key is configured
+if (!defined('OPENAI_API_KEY') || OPENAI_API_KEY === '') {
+    ob_end_clean();
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'OpenAI API key not configured. Please add your API key to admin/config/secrets.php']);
+    exit;
+}
+
 // Get inputs
 $content = trim((string)($_POST['content'] ?? ''));
 $sourceLang = trim((string)($_POST['source_lang'] ?? 'af'));
