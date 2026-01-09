@@ -324,36 +324,31 @@ $siteColors = [
         }
 
         /* Editor heading styles - MATCH WELCOME.CSS exactly */
+        .editor h1,
+        .editor h2,
+        .editor h3 {
+            font-weight: 400;
+            color: var(--primary);
+            margin: 28px 0 14px;
+            line-height: 1.3;
+        }
+        /* Only H1 gets Parisienne cursive */
         .editor h1 {
             font-family: 'Parisienne', cursive;
             font-size: 2rem;
-            color: var(--primary);
-            margin: 28px 0 14px;
-            font-weight: 400;
-            line-height: 1.3;
         }
-        .editor h1:first-child {
-            margin-top: 0;
-        }
+        /* H2 and H3 use system font */
         .editor h2 {
-            font-family: 'Parisienne', cursive;
-            font-size: 1.6rem;
-            color: var(--primary);
-            margin: 28px 0 14px;
-            font-weight: 400;
-            line-height: 1.3;
-        }
-        .editor h2:first-child {
-            margin-top: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 1.4rem;
         }
         .editor h3 {
-            font-family: 'Parisienne', cursive;
-            font-size: 1.3rem;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 1.2rem;
             color: var(--primary-dark);
-            margin: 20px 0 10px;
-            font-weight: 400;
-            line-height: 1.3;
         }
+        .editor h1:first-child,
+        .editor h2:first-child,
         .editor h3:first-child {
             margin-top: 0;
         }
