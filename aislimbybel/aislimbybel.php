@@ -59,15 +59,22 @@ if (isset($_GET['stream']) && $_GET['stream'] === '1') {
   if ($q === '') { $sse('error', t('empty_question')); $sse('done', 'end'); exit; }
   if (!$OPENAI_API_KEY) { $sse('error', t('missing_api_key')); $sse('done', 'end'); exit; }
 
+  // Language-specific instructions - STRICT enforcement
+  $langInstructions = [
+    'af' => 'BELANGRIK: Jy MOET alle antwoorde in SUIWER AFRIKAANS skryf. Gebruik SLEGS die 1933/1953 Afrikaanse Bybel vertaling. MOENIE ooit woorde of frases in Engels of enige ander taal gebruik nie. Elke woord moet Afrikaans wees.',
+    'en' => 'IMPORTANT: You MUST write all answers in PURE ENGLISH only. Use ONLY the King James Version (KJV) Bible. NEVER use words or phrases in any other language. Every single word must be English.',
+    'zu' => 'OKUBALULEKILE: KUMELE ubhale zonke izimpendulo ngesi-ZULU KUPHELA. Sebenzisa i-King James Version (KJV) Bible. UNGASEBENZISI amagama noma izingxenye ngesiNgisi noma ngolunye ulimi. Igama ngalinye kumele libe ngesiZulu.',
+    'xh' => 'OKUBALULEKILEYO: KUFUNEKA ubhale zonke iimpendulo ngesi-XHOSA KUPHELA. Sebenzisa i-King James Version (KJV) Bible. UNGAZE usebenzise amagama okanye amabinzana ngesiNgesi okanye naluphi na olunye ulwimi. Igama ngalinye kufuneka libe sesiXhosa.',
+    'pt' => 'IMPORTANTE: Você DEVE escrever todas as respostas em PORTUGUÊS PURO apenas. Use SOMENTE a versão King James (KJV) da Bíblia. NUNCA use palavras ou frases em inglês ou qualquer outro idioma. Cada palavra deve ser em português.'
+  ];
+
+  $langInstruction = $langInstructions[$pageLang] ?? $langInstructions['en'];
+
   $messages = [
     ['role' => 'system', 'content' => $SYSTEM_PROMPT],
+    ['role' => 'system', 'content' => $langInstruction],
     ['role' => 'user',   'content' => $q],
   ];
-  if ($pageLang === 'af') {
-    $messages[] = ['role' => 'system', 'content' => 'Beantwoord alle vrae in Afrikaans. Gebruik die 1933/1953 vertaling.'];
-  } else {
-    $messages[] = ['role' => 'system', 'content' => 'Answer all questions in English. Use KJV only.'];
-  }
 
   $payload = json_encode([
     'model'      => 'gpt-4o-mini',
