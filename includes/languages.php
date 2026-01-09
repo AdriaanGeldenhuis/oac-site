@@ -950,6 +950,13 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Nceda ungayivali le window ngethuba kuguqulelwa.',
         'pt' => 'Por favor, não feche esta janela durante a tradução.'
     ],
+    'translation_time' => [
+        'af' => 'Dit kan \'n paar minute neem...',
+        'en' => 'This can take a few minutes...',
+        'zu' => 'Lokhu kungathatha imizuzu embalwa...',
+        'xh' => 'Oku kunokuthatha imizuzu embalwa...',
+        'pt' => 'Isso pode levar alguns minutos...'
+    ],
     'ready_to_save' => [
         'af' => 'Gereed om te stoor',
         'en' => 'Ready to save',

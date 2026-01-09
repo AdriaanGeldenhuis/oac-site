@@ -457,8 +457,14 @@ $siteColors = [
             text-align: center;
         }
 
+        .translate-time {
+            font-size: 1.2rem;
+            color: var(--peach);
+            text-align: center;
+        }
+
         .translate-warning {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--text-dim);
             text-align: center;
             max-width: 400px;
@@ -779,6 +785,9 @@ $siteColors = [
     <div id="translate-overlay" class="translate-overlay">
         <div class="translate-spinner"></div>
         <div class="translate-text"><?= t('translating') ?>...</div>
+        <div class="translate-time">
+            <?= t('translation_time') ?>
+        </div>
         <div class="translate-warning">
             <?= t('do_not_close') ?>
         </div>
@@ -975,16 +984,20 @@ $siteColors = [
 
         // Headings - apply site fonts automatically
         document.getElementById('btn-h1').onclick = () => {
-            execCmd('formatBlock', 'h1');
+            execCmd('formatBlock', '<h1>');
+            hasChanges = true;
         };
         document.getElementById('btn-h2').onclick = () => {
-            execCmd('formatBlock', 'h2');
+            execCmd('formatBlock', '<h2>');
+            hasChanges = true;
         };
         document.getElementById('btn-h3').onclick = () => {
-            execCmd('formatBlock', 'h3');
+            execCmd('formatBlock', '<h3>');
+            hasChanges = true;
         };
         document.getElementById('btn-p').onclick = () => {
-            execCmd('formatBlock', 'p');
+            execCmd('formatBlock', '<p>');
+            hasChanges = true;
         };
 
         // Basic formatting

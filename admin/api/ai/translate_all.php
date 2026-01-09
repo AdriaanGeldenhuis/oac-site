@@ -156,12 +156,16 @@ try {
         $sourceName = $langNames[$sourceLang];
         $targetName = $langNames[$targetLang];
 
-        // Build system prompt
-        $systemPrompt = "You are a professional translator. Translate from {$sourceName} to {$targetName}. " .
-            "Preserve the exact HTML structure and tags. " .
-            "Keep all class attributes intact. " .
-            "Do NOT translate Bible verse references (book names, chapter:verse numbers). " .
-            "Respond with ONLY the translated HTML, no explanations.";
+        // Build system prompt - emphasize COMPLETE translation
+        $systemPrompt = "You are a professional translator specializing in religious content. " .
+            "Translate the ENTIRE content from {$sourceName} to {$targetName}. " .
+            "CRITICAL RULES:\n" .
+            "1. Translate ALL paragraphs, ALL headings, and ALL text - do not skip anything\n" .
+            "2. Preserve the exact HTML structure and tags (<p>, <h1>, <h2>, <h3>, <span>, etc.)\n" .
+            "3. Keep all class attributes intact (class=\"vref\", class=\"vtxt\", etc.)\n" .
+            "4. Do NOT translate Bible verse references (keep book names and chapter:verse numbers as-is)\n" .
+            "5. Output ONLY the translated HTML - no explanations, no comments\n" .
+            "6. Make sure to translate the COMPLETE document from start to finish";
 
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
@@ -177,7 +181,16 @@ try {
             error_log('ERROR: Empty translation for ' . $targetLang);
             throw new Exception("Empty translation for {$targetLang}");
         }
-        error_log('Translation for ' . $targetLang . ' length: ' . strlen($translated) . ' chars');
+
+        // Log translation length comparison
+        $sourceLen = strlen($content);
+        $transLen = strlen($translated);
+        error_log('Translation for ' . $targetLang . ' length: ' . $transLen . ' chars (source: ' . $sourceLen . ' chars)');
+
+        // Warning if translation is significantly shorter than source (might be truncated)
+        if ($transLen < ($sourceLen * 0.5)) {
+            error_log('WARNING: Translation for ' . $targetLang . ' seems truncated! Only ' . round(($transLen/$sourceLen)*100) . '% of source length');
+        }
 
         // Now replace verse text with actual Bible verses
         $bible = loadBibleData($targetLang);
