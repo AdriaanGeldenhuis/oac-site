@@ -1356,14 +1356,14 @@ $siteColors = [
         // ===== TRANSLATE ALL - with full-screen overlay =====
         // Translates ONE language at a time to avoid API timeout
         document.getElementById('btn-translate-all').onclick = async () => {
-            // Get source content and detect language
+            // Get source content from CURRENT TAB (not detection - more reliable)
             const sourceEditor = getCurrentEditor();
             const content = sourceEditor.innerHTML;
             if (!content.trim()) return;
 
-            // Detect source language from content
-            const textContent = sourceEditor.textContent;
-            const detectedLang = detectLanguage(textContent);
+            // Use current tab as source language (user is on this tab, so content is in this language)
+            const sourceLang = currentLang;
+            console.log('Source language (current tab):', sourceLang);
 
             // Show overlay
             const overlay = document.getElementById('translate-overlay');
@@ -1374,15 +1374,13 @@ $siteColors = [
                 b.classList.remove('active', 'done');
             });
 
-            // Mark source as done (no translation needed) and update its editor
-            const sourceBadge = document.querySelector(`.lang-badge[data-lang="${detectedLang}"]`);
+            // Mark source as done (no translation needed)
+            const sourceBadge = document.querySelector(`.lang-badge[data-lang="${sourceLang}"]`);
             if (sourceBadge) sourceBadge.classList.add('done');
-            if (editors[detectedLang]) {
-                editors[detectedLang].innerHTML = content;
-            }
 
             // Get target languages (exclude source)
-            const targetLangs = CONFIG.supportedLangs.filter(l => l !== detectedLang);
+            const targetLangs = CONFIG.supportedLangs.filter(l => l !== sourceLang);
+            console.log('Target languages:', targetLangs);
             let successCount = 0;
             let errorLang = null;
 
@@ -1396,11 +1394,11 @@ $siteColors = [
                         badge.classList.add('active');
                     }
 
-                    console.log('Translating to:', targetLang);
+                    console.log('Translating', sourceLang, '->', targetLang);
 
                     const fd = new URLSearchParams();
                     fd.append('content', content);
-                    fd.append('source_lang', detectedLang);
+                    fd.append('source_lang', sourceLang);
                     fd.append('target_lang', targetLang);
 
                     const res = await fetch('/admin/api/ai/translate_all.php', { method: 'POST', body: fd });
