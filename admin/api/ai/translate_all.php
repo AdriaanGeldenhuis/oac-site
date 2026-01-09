@@ -138,8 +138,8 @@ $langNames = [
 $targetLangs = array_filter(SUPPORTED_LANGS, fn($l) => $l !== $sourceLang);
 
 // Extract verse references to preserve them
-// Pattern: <p class="verse-ref">Book Chapter:Verse</p><p class="verse-text">...</p>
-$versePattern = '/<p class="verse-ref">([^<]+)<\/p>\s*<p class="verse-text">(.+?)<\/p>/si';
+// Pattern supports both old (verse-ref/verse-text) and new (vref/vtxt) class names
+$versePattern = '/<p class="(?:verse-ref|vref)">([^<]+)<\/p>\s*<p class="(?:verse-text|vtxt)">(.+?)<\/p>/si';
 $verseMatches = [];
 preg_match_all($versePattern, $content, $verseMatches, PREG_SET_ORDER);
 
@@ -211,22 +211,26 @@ try {
 
                     if ($bibleVerses) {
                         $verseTexts = [];
+                        // Handle both array structures: with 'n' key or just sequential 'v' entries
+                        $verseNum = 1;
                         foreach ($bibleVerses as $v) {
-                            if (isset($v['n'], $v['v'])) {
-                                $num = (int)$v['n'];
+                            if (isset($v['v'])) {
+                                $num = isset($v['n']) ? (int)$v['n'] : $verseNum;
                                 if ($num >= $verseFrom && $num <= $verseTo) {
-                                    $verseTexts[] = '<sup>' . $num . '</sup> ' . htmlspecialchars($v['v']);
+                                    // Use exact verse text from Bible file - no htmlspecialchars to preserve formatting
+                                    $verseTexts[] = '<sup>' . $num . '</sup> ' . $v['v'];
                                 }
+                                $verseNum++;
                             }
                         }
 
                         if (!empty($verseTexts)) {
-                            // Build the replacement HTML
-                            $newVerseHtml = '<p class="verse-ref">' . htmlspecialchars($reference) . '</p><p class="verse-text">' . implode(' ', $verseTexts) . '</p>';
+                            // Build the replacement HTML using vref/vtxt classes (new standard)
+                            $newVerseHtml = '<p class="vref">' . htmlspecialchars($reference) . '</p><p class="vtxt">' . implode(' ', $verseTexts) . '</p>';
 
                             // Find and replace the verse block in translated content
-                            // The reference should still be there, just need to replace the verse-text content
-                            $refPattern = '/<p class="verse-ref">[^<]*' . preg_quote($parts[2] . ':' . $parts[3], '/') . '[^<]*<\/p>\s*<p class="verse-text">.+?<\/p>/si';
+                            // Support both old (verse-ref/verse-text) and new (vref/vtxt) class names
+                            $refPattern = '/<p class="(?:verse-ref|vref)">[^<]*' . preg_quote($parts[2] . ':' . $parts[3], '/') . '[^<]*<\/p>\s*<p class="(?:verse-text|vtxt)">.+?<\/p>/si';
                             $translated = preg_replace($refPattern, $newVerseHtml, $translated, 1);
                         }
                     }

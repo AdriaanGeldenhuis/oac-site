@@ -11,7 +11,6 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = (int)$_SESSION['user_id'];
 $lang = $_SESSION['language'] ?? 'af';
-$activeLang = in_array($lang, SUPPORTED_LANGS, true) ? $lang : 'af';
 
 // Check Elder permissions
 $stmt = $pdo->prepare('SELECT amp_id, town_id FROM users WHERE id = ? LIMIT 1');
@@ -68,7 +67,7 @@ $contentFiles = [
     'pt' => $baseDir . '/teaching_content.pt.html'
 ];
 
-// Backwards compatibility: check for legacy teaching_content.html for English
+// Backwards compatibility
 if (!file_exists($contentFiles['en']) && file_exists($baseDir . '/teaching_content.html')) {
     $contentFiles['en'] = $baseDir . '/teaching_content.html';
 }
@@ -88,11 +87,22 @@ foreach (SUPPORTED_LANGS as $code) {
     $contents[$code] = file_exists($file) ? file_get_contents($file) : $defaultContent[$code];
 }
 
-// Translation helper using central 5-language system
 function t(string $key): string {
     global $lang;
     return __t($key, $lang);
 }
+
+// Site colors for toolbar
+$siteColors = [
+    ['name' => 'Rose Gold', 'value' => '#e8b4a8'],
+    ['name' => 'Rose Gold Dark', 'value' => '#c99485'],
+    ['name' => 'Peach', 'value' => '#f5d5c8'],
+    ['name' => 'Peach Light', 'value' => '#fae8e0'],
+    ['name' => 'Silver', 'value' => '#b8b8b8'],
+    ['name' => 'White', 'value' => '#ffffff'],
+    ['name' => 'Black', 'value' => '#1a1816'],
+    ['name' => 'Dark Gray', 'value' => '#3d3835'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($lang) ?>">
@@ -100,34 +110,53 @@ function t(string $key): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= t('edit_teaching') ?></title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Parisienne&family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
-    
+
     <style>
+        /* ===== THEME VARIABLES ===== */
         :root {
             --bg: #0a0a0a;
             --surface: #1a1a1a;
             --surface-light: #2a2a2a;
-            --primary: #f3c3b1;
-            --primary-dark: #d4939e;
-            --text: #f5d5c8;
-            --text-dim: #c0c0c0;
-            --border: rgba(192, 192, 192, 0.2);
+            --primary: #e8b4a8;
+            --primary-dark: #c99485;
+            --peach: #f5d5c8;
+            --text: #f5ebe6;
+            --text-dim: #c8c0ba;
+            --border: rgba(232, 180, 168, 0.2);
             --success: #4caf50;
             --error: #f44336;
             --warning: #ff9800;
+            --editor-bg: #0a0a0a;
+            --editor-text: #f5ebe6;
+        }
+
+        [data-theme="light"] {
+            --bg: #faf8f6;
+            --surface: #ffffff;
+            --surface-light: #f0eeec;
+            --primary: #c9847a;
+            --primary-dark: #a86860;
+            --peach: #1a1816;
+            --text: #1a1816;
+            --text-dim: #3d3835;
+            --border: rgba(169, 104, 96, 0.25);
+            --editor-bg: #ffffff;
+            --editor-text: #1a1816;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--bg) 0%, #0f0f0f 100%);
+            background: var(--bg);
             color: var(--text);
             min-height: 100vh;
             padding-top: 80px;
+            transition: background 0.4s, color 0.4s;
         }
 
         .container {
@@ -136,15 +165,16 @@ function t(string $key): string {
             padding: 0 20px 100px;
         }
 
+        /* ===== HEADER ===== */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 25px 30px;
-            background: linear-gradient(135deg, var(--surface), var(--surface-light));
+            background: var(--surface);
             border-radius: 16px;
             margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             border: 1px solid var(--border);
         }
 
@@ -160,46 +190,21 @@ function t(string $key): string {
             align-items: center;
             gap: 6px;
             padding: 6px 14px;
-            background: var(--surface);
+            background: var(--surface-light);
             border: 1px solid var(--primary);
             border-radius: 20px;
             font-size: 0.85rem;
         }
 
-        .lang-switch {
-            display: flex;
-            gap: 0;
-            background: var(--surface);
-            border-radius: 8px;
-            padding: 4px;
-            border: 1px solid var(--border);
-        }
-
-        .lang-btn {
-            padding: 10px 20px;
-            border: none;
-            background: transparent;
-            color: var(--text-dim);
-            font-weight: 500;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.3s;
-        }
-
-        .lang-btn.active {
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-            color: white;
-        }
-
+        /* ===== TOOLBAR ===== */
         .toolbar {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 15px 20px;
+            gap: 10px;
+            padding: 12px 16px;
             background: var(--surface);
             border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 16px;
             border: 1px solid var(--border);
             flex-wrap: wrap;
         }
@@ -207,46 +212,35 @@ function t(string $key): string {
         .tool-group {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .tool-group label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-dim);
             font-weight: 500;
         }
 
         .tool-group select {
-            padding: 6px 12px;
-            background: #0a0a0a;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 0.9rem;
-            cursor: pointer;
-            min-width: 120px;
-        }
-
-        .tool-group input[type="color"] {
-            width: 50px;
-            height: 36px;
-            padding: 4px;
-            background: #0a0a0a;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .tool-btn {
-            padding: 8px 14px;
+            padding: 6px 10px;
             background: var(--surface-light);
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--text);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .tool-btn {
+            padding: 6px 12px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
 
         .tool-btn:hover {
@@ -255,163 +249,132 @@ function t(string $key): string {
         }
 
         .tool-btn.active {
-            border-color: var(--primary);
             background: var(--primary);
             color: white;
+            border-color: var(--primary);
         }
 
         .sep {
             width: 1px;
-            height: 30px;
+            height: 28px;
             background: var(--border);
+            margin: 0 4px;
         }
 
+        /* Heading buttons with site fonts */
+        .btn-h1, .btn-h2, .btn-h3 {
+            font-family: 'Parisienne', cursive;
+        }
+        .btn-h1 { font-size: 1.1rem; }
+        .btn-h2 { font-size: 1rem; }
+        .btn-h3 { font-size: 0.9rem; }
+
+        /* Color swatches */
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .color-swatch:hover {
+            transform: scale(1.15);
+            border-color: var(--primary);
+        }
+
+        /* Special buttons */
         .btn-bible {
             background: linear-gradient(135deg, #2196f3, #1976d2);
             color: white;
             border: none;
         }
 
-        .btn-ai {
-            background: linear-gradient(135deg, #9c27b0, #7b1fa2);
-            color: white;
-            border: none;
-            position: relative;
-            min-width: 100px;
-        }
-
-        .btn-ai.loading {
-            color: transparent;
-            pointer-events: none;
-        }
-
-        .btn-ai.loading::after {
-            content: '⏳';
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
         .btn-translate {
             background: linear-gradient(135deg, #4caf50, #388e3c);
             color: white;
             border: none;
+            min-width: 160px;
             position: relative;
-            min-width: 140px;
-            transition: all 0.3s ease;
         }
 
-        .btn-translate.loading {
-            pointer-events: none;
-            background: linear-gradient(135deg, #388e3c, #2e7d32);
+        .btn-improve {
+            background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+            color: white;
+            border: none;
         }
 
-        .btn-translate .btn-text {
-            transition: opacity 0.3s ease;
-        }
-
-        .btn-translate.loading .btn-text {
-            opacity: 0;
-        }
-
-        .btn-translate .btn-loading {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-translate.loading .btn-loading {
-            opacity: 1;
-        }
-
-        .btn-translate .btn-loading .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
+        /* ===== EDITOR ===== */
         .editor-wrap {
-            background: black;
+            background: var(--editor-bg);
             border: 2px solid var(--border);
             border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
             overflow: hidden;
         }
 
         .editor {
             min-height: 600px;
             padding: 40px;
-            background: black;
             outline: none;
+            font-family: Georgia, serif;
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--editor-text);
+            background: var(--editor-bg);
         }
 
-        .editor:focus {
-            outline: none;
-        }
-
-        .editor h1 { 
-            font-size: 2.5em; 
-            color: #f3c3b1; 
-            margin: 1em 0 0.5em; 
+        /* Editor heading styles - use site fonts */
+        .editor h1 {
             font-family: 'Parisienne', cursive;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin: 1em 0 0.5em;
+            font-weight: normal;
         }
-        
-        .editor h2 { 
-            font-size: 2em; 
-            color: #d4939e; 
-            margin: 1em 0 0.5em; 
+        .editor h2 {
+            font-family: 'Parisienne', cursive;
+            font-size: 2rem;
+            color: var(--primary);
+            margin: 1em 0 0.5em;
+            font-weight: normal;
         }
-        
-        .editor h3 { 
-            font-size: 1.5em; 
-            color: #b76e79; 
-            margin: 0.8em 0 0.4em; 
+        .editor h3 {
+            font-family: 'Parisienne', cursive;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            margin: 0.8em 0 0.4em;
+            font-weight: normal;
         }
-        
-        .editor p { 
-            margin: 1em 0; 
-        }
-        
-        .editor .vref { 
-            color: #f3c3b1; 
-            font-weight: bold; 
-            font-size: 1.1em; 
-            margin: 1.5em 0 0.5em; 
-            display: block; 
-        }
-        
-        .editor .vtxt { 
-            font-style: italic; 
-            color: #555; 
-            line-height: 1.9; 
-        }
-        
-        .editor .vtxt sup { 
-            color: #f3c3b1; 
-            font-weight: bold; 
+        .editor p {
+            margin: 1em 0;
         }
 
+        /* Bible verse classes - matching welcome.css */
+        .editor .vref {
+            font-family: 'Parisienne', cursive;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--primary);
+            margin: 1.5em 0 0.5em;
+            display: block;
+        }
+        .editor .vtxt {
+            font-style: italic;
+            color: var(--text-dim);
+            line-height: 1.9;
+            padding-left: 16px;
+            border-left: 2px solid var(--primary-dark);
+            margin: 0 0 1em;
+        }
+        .editor .vtxt sup {
+            font-size: 0.7em;
+            font-weight: 600;
+            color: var(--primary);
+            margin-right: 2px;
+            font-style: normal;
+        }
+
+        /* ===== ACTIONS ===== */
         .actions {
             display: flex;
             justify-content: space-between;
@@ -420,7 +383,6 @@ function t(string $key): string {
             background: var(--surface);
             border-radius: 12px;
             margin-top: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
         }
 
@@ -434,10 +396,9 @@ function t(string $key): string {
             border-radius: 20px;
             font-size: 0.9rem;
         }
-
-        .status.saving { border-color: var(--warning); }
-        .status.saved { border-color: var(--success); }
-        .status.error { border-color: var(--error); }
+        .status.saving { border-color: var(--warning); color: var(--warning); }
+        .status.saved { border-color: var(--success); color: var(--success); }
+        .status.error { border-color: var(--error); color: var(--error); }
 
         .btn {
             padding: 12px 24px;
@@ -455,36 +416,95 @@ function t(string $key): string {
         .btn-primary {
             background: linear-gradient(135deg, var(--primary-dark), var(--primary));
             color: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
-
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
 
-        .btn-secondary {
-            background: var(--surface-light);
-            color: var(--text);
+        /* ===== TRANSLATION OVERLAY ===== */
+        .translate-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            z-index: 20000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .translate-overlay.show { display: flex; }
+
+        .translate-spinner {
+            width: 80px;
+            height: 80px;
+            border: 4px solid var(--surface-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .translate-text {
+            font-family: 'Parisienne', cursive;
+            font-size: 2rem;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .translate-warning {
+            font-size: 1rem;
+            color: var(--text-dim);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .translate-progress {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .lang-badge {
+            padding: 6px 14px;
+            background: var(--surface);
             border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            transition: all 0.3s;
+        }
+        .lang-badge.active {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+        .lang-badge.done {
+            border-color: var(--success);
+            color: var(--success);
         }
 
+        /* ===== MODAL ===== */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0,0,0,0.9);
             backdrop-filter: blur(8px);
             z-index: 10000;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-
         .modal.show { display: flex; }
 
         .modal-content {
-            background: linear-gradient(135deg, var(--surface), var(--surface-light));
+            background: var(--surface);
             border: 2px solid var(--primary);
             border-radius: 16px;
             max-width: 700px;
@@ -493,13 +513,6 @@ function t(string $key): string {
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-            animation: slide 0.3s ease-out;
-        }
-
-        @keyframes slide {
-            from { opacity: 0; transform: translateY(-40px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .modal-header {
@@ -522,7 +535,6 @@ function t(string $key): string {
             color: var(--text);
             font-size: 2rem;
             cursor: pointer;
-            line-height: 1;
         }
 
         .modal-body {
@@ -555,12 +567,12 @@ function t(string $key): string {
         .form-group label {
             font-size: 0.9rem;
             font-weight: 500;
-            color: var(--text);
+            color: var(--primary);
         }
 
         .form-control {
             padding: 10px 14px;
-            background: #0a0a0a;
+            background: var(--surface-light);
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text);
@@ -569,7 +581,7 @@ function t(string $key): string {
 
         .verse-preview {
             padding: 20px;
-            background: #0a0a0a;
+            background: var(--surface-light);
             border-left: 4px solid var(--primary);
             border-radius: 8px;
             max-height: 300px;
@@ -578,18 +590,55 @@ function t(string $key): string {
             color: var(--text);
             font-family: Georgia, serif;
         }
-
         .verse-preview:empty { display: none; }
-
         .verse-preview strong {
             color: var(--primary);
             font-size: 1.1rem;
             display: block;
             margin-bottom: 12px;
         }
+        .verse-preview sup {
+            color: var(--primary);
+            font-weight: bold;
+        }
 
+        .btn-secondary {
+            background: var(--surface-light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        /* ===== TABS for language preview ===== */
+        .lang-tabs {
+            display: flex;
+            gap: 0;
+            background: var(--surface-light);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+
+        .lang-tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .lang-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 20px; }
+            .toolbar { padding: 10px; }
             .sep { display: none; }
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -597,105 +646,55 @@ function t(string $key): string {
 </head>
 <body>
     <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
-    
+
     <div class="container">
         <div class="header">
             <div>
                 <h1><?= t('monthly_teaching') ?></h1>
                 <span class="location">
-                    📍 <?= htmlspecialchars($cityName) ?>, <?= htmlspecialchars($provinceName) ?>
+                    <?= htmlspecialchars($cityName) ?>, <?= htmlspecialchars($provinceName) ?>
                 </span>
             </div>
-            <div class="lang-switch">
+            <!-- Language tabs for viewing different translations -->
+            <div class="lang-tabs">
                 <?php foreach (SUPPORTED_LANGS as $code): ?>
-                <button class="lang-btn <?= $activeLang === $code ? 'active' : '' ?>" data-lang="<?= $code ?>"><?= htmlspecialchars(LANG_NAMES[$code]) ?></button>
+                <button class="lang-tab <?= $code === 'af' ? 'active' : '' ?>" data-lang="<?= $code ?>"><?= htmlspecialchars(LANG_NAMES[$code]) ?></button>
                 <?php endforeach; ?>
             </div>
         </div>
-        
-        <!-- TOOLBAR ROW 1: Fonts, Size, Basic Formatting -->
+
+        <!-- TOOLBAR ROW 1: Headings & Basic Formatting -->
         <div class="toolbar">
             <div class="tool-group">
-                <label><?= t('font') ?></label>
-                <select id="font-family">
-                    <optgroup label="Sans Serif">
-                        <option value="Arial, sans-serif">Arial</option>
-                        <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
-                        <option value="Verdana, sans-serif">Verdana</option>
-                        <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
-                        <option value="'Segoe UI', sans-serif">Segoe UI</option>
-                        <option value="Tahoma, sans-serif">Tahoma</option>
-                        <option value="'Open Sans', sans-serif">Open Sans</option>
-                        <option value="Roboto, sans-serif">Roboto</option>
-                        <option value="Lato, sans-serif">Lato</option>
-                        <option value="'Source Sans Pro', sans-serif">Source Sans</option>
-                        <option value="Ubuntu, sans-serif">Ubuntu</option>
-                        <option value="'Nunito', sans-serif">Nunito</option>
-                        <option value="'Poppins', sans-serif">Poppins</option>
-                        <option value="Montserrat, sans-serif">Montserrat</option>
-                        <option value="Raleway, sans-serif">Raleway</option>
-                    </optgroup>
-                    <optgroup label="Serif">
-                        <option value="Georgia, serif" selected>Georgia</option>
-                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                        <option value="'Palatino Linotype', Palatino, serif">Palatino</option>
-                        <option value="'Book Antiqua', serif">Book Antiqua</option>
-                        <option value="Garamond, serif">Garamond</option>
-                        <option value="'Playfair Display', serif">Playfair Display</option>
-                        <option value="Merriweather, serif">Merriweather</option>
-                        <option value="'Libre Baskerville', serif">Libre Baskerville</option>
-                        <option value="'Crimson Text', serif">Crimson Text</option>
-                        <option value="'EB Garamond', serif">EB Garamond</option>
-                    </optgroup>
-                    <optgroup label="Script / Fancy">
-                        <option value="'Parisienne', cursive">Parisienne</option>
-                        <option value="'Dancing Script', cursive">Dancing Script</option>
-                        <option value="'Great Vibes', cursive">Great Vibes</option>
-                        <option value="'Allura', cursive">Allura</option>
-                        <option value="'Alex Brush', cursive">Alex Brush</option>
-                        <option value="'Sacramento', cursive">Sacramento</option>
-                        <option value="'Tangerine', cursive">Tangerine</option>
-                        <option value="'Pinyon Script', cursive">Pinyon Script</option>
-                        <option value="'Satisfy', cursive">Satisfy</option>
-                        <option value="'Cookie', cursive">Cookie</option>
-                        <option value="'Kaushan Script', cursive">Kaushan Script</option>
-                        <option value="'Lobster', cursive">Lobster</option>
-                        <option value="'Pacifico', cursive">Pacifico</option>
-                        <option value="'Caveat', cursive">Caveat</option>
-                        <option value="'Indie Flower', cursive">Indie Flower</option>
-                    </optgroup>
-                    <optgroup label="Monospace">
-                        <option value="'Courier New', Courier, monospace">Courier New</option>
-                        <option value="Consolas, monospace">Consolas</option>
-                        <option value="'Source Code Pro', monospace">Source Code Pro</option>
-                        <option value="Monaco, monospace">Monaco</option>
-                    </optgroup>
-                </select>
+                <button class="tool-btn btn-h1" id="btn-h1" title="Heading 1">H1</button>
+                <button class="tool-btn btn-h2" id="btn-h2" title="Heading 2">H2</button>
+                <button class="tool-btn btn-h3" id="btn-h3" title="Heading 3">H3</button>
+                <button class="tool-btn" id="btn-p" title="Paragraph">P</button>
             </div>
 
+            <div class="sep"></div>
+
             <div class="tool-group">
-                <label><?= t('size') ?></label>
+                <button class="tool-btn" id="btn-bold" title="Bold"><b>B</b></button>
+                <button class="tool-btn" id="btn-italic" title="Italic"><i>I</i></button>
+                <button class="tool-btn" id="btn-underline" title="Underline"><u>U</u></button>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="tool-group">
+                <label>Size</label>
                 <select id="font-size">
-                    <option value="10px">10</option>
-                    <option value="11px">11</option>
                     <option value="12px">12</option>
-                    <option value="13px">13</option>
                     <option value="14px">14</option>
-                    <option value="15px">15</option>
                     <option value="16px" selected>16</option>
                     <option value="18px">18</option>
                     <option value="20px">20</option>
-                    <option value="22px">22</option>
                     <option value="24px">24</option>
-                    <option value="26px">26</option>
                     <option value="28px">28</option>
                     <option value="32px">32</option>
                     <option value="36px">36</option>
-                    <option value="40px">40</option>
                     <option value="48px">48</option>
-                    <option value="56px">56</option>
-                    <option value="64px">64</option>
-                    <option value="72px">72</option>
                 </select>
             </div>
 
@@ -703,129 +702,94 @@ function t(string $key): string {
                 <label>Line</label>
                 <select id="line-spacing">
                     <option value="1">1.0</option>
-                    <option value="1.15">1.15</option>
                     <option value="1.5" selected>1.5</option>
-                    <option value="1.75">1.75</option>
+                    <option value="1.8">1.8</option>
                     <option value="2">2.0</option>
                     <option value="2.5">2.5</option>
-                    <option value="3">3.0</option>
                 </select>
             </div>
 
             <div class="sep"></div>
 
-            <!-- Basic formatting -->
             <div class="tool-group">
-                <button class="tool-btn" id="btn-bold" title="Bold (Ctrl+B)"><b>B</b></button>
-                <button class="tool-btn" id="btn-italic" title="Italic (Ctrl+I)"><i>I</i></button>
-                <button class="tool-btn" id="btn-underline" title="Underline (Ctrl+U)"><u>U</u></button>
-                <button class="tool-btn" id="btn-strike" title="Strikethrough"><s>S</s></button>
+                <button class="tool-btn" id="btn-left" title="Align Left">&#8676;</button>
+                <button class="tool-btn" id="btn-center" title="Center">&#8801;</button>
+                <button class="tool-btn" id="btn-right" title="Align Right">&#8677;</button>
             </div>
 
             <div class="sep"></div>
 
-            <!-- Superscript/Subscript -->
             <div class="tool-group">
-                <button class="tool-btn" id="btn-super" title="Superscript">X<sup>2</sup></button>
-                <button class="tool-btn" id="btn-sub" title="Subscript">X<sub>2</sub></button>
-            </div>
-
-            <div class="sep"></div>
-
-            <!-- Headings -->
-            <div class="tool-group">
-                <button class="tool-btn" id="btn-h1" title="Heading 1">H1</button>
-                <button class="tool-btn" id="btn-h2" title="Heading 2">H2</button>
-                <button class="tool-btn" id="btn-h3" title="Heading 3">H3</button>
-                <button class="tool-btn" id="btn-p" title="Paragraph">P</button>
-            </div>
-
-            <div class="sep"></div>
-
-            <!-- Colors -->
-            <div class="tool-group">
-                <label><?= t('color') ?></label>
-                <input type="color" id="text-color" value="#333333" title="Text Color">
-                <input type="color" id="bg-color" value="#ffffff" title="Background Color">
-            </div>
-        </div>
-
-        <!-- TOOLBAR ROW 2: Lists, Align, Indent, Actions -->
-        <div class="toolbar">
-            <!-- Lists -->
-            <div class="tool-group">
-                <button class="tool-btn" id="btn-ul" title="Bullet List">• List</button>
+                <button class="tool-btn" id="btn-ul" title="Bullet List">&#8226; List</button>
                 <button class="tool-btn" id="btn-ol" title="Numbered List">1. List</button>
             </div>
+        </div>
 
-            <div class="sep"></div>
-
-            <!-- Alignment -->
+        <!-- TOOLBAR ROW 2: Colors & Actions -->
+        <div class="toolbar">
             <div class="tool-group">
-                <button class="tool-btn" id="btn-left" title="Align Left">⫷</button>
-                <button class="tool-btn" id="btn-center" title="Align Center">☰</button>
-                <button class="tool-btn" id="btn-right" title="Align Right">⫸</button>
-                <button class="tool-btn" id="btn-justify" title="Justify">☰☰</button>
+                <label>Text Color</label>
+                <?php foreach ($siteColors as $color): ?>
+                <button class="color-swatch"
+                        style="background: <?= $color['value'] ?>"
+                        data-color="<?= $color['value'] ?>"
+                        data-type="text"
+                        title="<?= $color['name'] ?>"></button>
+                <?php endforeach; ?>
             </div>
 
             <div class="sep"></div>
 
-            <!-- Indent -->
-            <div class="tool-group">
-                <button class="tool-btn" id="btn-outdent" title="Decrease Indent">←</button>
-                <button class="tool-btn" id="btn-indent" title="Increase Indent">→</button>
-            </div>
-
-            <div class="sep"></div>
-
-            <!-- Undo/Redo -->
-            <div class="tool-group">
-                <button class="tool-btn" id="btn-undo" title="Undo (Ctrl+Z)">↶</button>
-                <button class="tool-btn" id="btn-redo" title="Redo (Ctrl+Y)">↷</button>
-            </div>
-
-            <div class="sep"></div>
-
-            <!-- Clear formatting -->
-            <div class="tool-group">
-                <button class="tool-btn" id="btn-clear" title="Clear Formatting">✕ Clear</button>
-            </div>
-
-            <div class="sep"></div>
-
-            <!-- Special buttons -->
             <button class="tool-btn btn-bible" id="btn-verse">
-                📖 <?= t('add_verse') ?>
+                <?= t('add_verse') ?>
             </button>
-            <button class="tool-btn btn-ai" id="btn-translate">
-                🌐 <?= t('translate') ?>
+
+            <button class="tool-btn btn-improve" id="btn-improve">
+                <?= t('improve') ?>
             </button>
-            <button class="tool-btn btn-ai" id="btn-improve">
-                ✨ <?= t('improve') ?>
-            </button>
+
             <button class="tool-btn btn-translate" id="btn-translate-all">
-                <span class="btn-text">🌍 <?= t('translate_all') ?></span>
-                <span class="btn-loading"><span class="spinner"></span><span class="loading-text"><?= t('translating') ?>...</span></span>
+                <?= t('translate_all') ?>
             </button>
         </div>
-        
+
+        <!-- Editors for each language -->
         <div class="editor-wrap">
             <?php foreach (SUPPORTED_LANGS as $code): ?>
-            <div class="editor" id="editor-<?= $code ?>" contenteditable="true" <?= $activeLang !== $code ? 'style="display:none"' : '' ?>><?= $contents[$code] ?></div>
+            <div class="editor"
+                 id="editor-<?= $code ?>"
+                 contenteditable="true"
+                 data-lang="<?= $code ?>"
+                 <?= $code !== 'af' ? 'style="display:none"' : '' ?>><?= $contents[$code] ?></div>
             <?php endforeach; ?>
         </div>
-        
+
         <div class="actions">
             <span class="status" id="status">
-                <span id="status-icon">💾</span>
+                <span id="status-icon">&#128190;</span>
                 <span id="status-text"><?= t('ready_to_save') ?></span>
             </span>
             <button class="btn btn-primary" id="btn-save">
-                💾 <?= t('save_all') ?>
+                <?= t('save_all') ?>
             </button>
         </div>
     </div>
-    
+
+    <!-- Translation Overlay -->
+    <div id="translate-overlay" class="translate-overlay">
+        <div class="translate-spinner"></div>
+        <div class="translate-text"><?= t('translating') ?>...</div>
+        <div class="translate-warning">
+            <?= t('do_not_close') ?>
+        </div>
+        <div class="translate-progress">
+            <?php foreach (SUPPORTED_LANGS as $code): ?>
+            <span class="lang-badge" data-lang="<?= $code ?>"><?= LANG_NAMES[$code] ?></span>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- Verse Modal -->
     <div id="verse-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -861,638 +825,554 @@ function t(string $key): string {
             </div>
         </div>
     </div>
-    
+
     <script>
+    (function() {
+        'use strict';
+
+        // Configuration
         const CONFIG = {
             townId: <?= $townId ?? 'null' ?>,
-            lang: '<?= $activeLang ?>',
             supportedLangs: <?= json_encode(SUPPORTED_LANGS) ?>,
             bibleFiles: <?= json_encode(BIBLE_FILES) ?>,
-            t: {
-                af: {
-                    saving: 'Besig om te stoor...',
-                    saved: 'Gestoor!',
-                    error: 'Fout',
-                    improving: 'Besig om te verbeter...',
-                    improved: 'Verbeter!',
-                    translating: 'Besig om te vertaal...',
-                    translated: 'Vertaal!',
-                    selectVerse: 'Kies alle velde',
-                    verseInserted: 'Vers ingevoeg!',
-                    noBible: 'Bybel nie beskikbaar vir hierdie taal nie',
-                    selectTargetLang: 'Kies eers \'n teikentaal'
-                },
-                en: {
-                    saving: 'Saving...',
-                    saved: 'Saved!',
-                    error: 'Error',
-                    improving: 'Improving...',
-                    improved: 'Improved!',
-                    translating: 'Translating...',
-                    translated: 'Translated!',
-                    selectVerse: 'Select all fields',
-                    verseInserted: 'Verse inserted!',
-                    noBible: 'Bible not available for this language',
-                    selectTargetLang: 'Select a target language first'
-                },
-                zu: {
-                    saving: 'Ukulondoloza...',
-                    saved: 'Kulondoloziwe!',
-                    error: 'Iphutha',
-                    improving: 'Ukuthuthukisa...',
-                    improved: 'Kuthuthukisiwe!',
-                    translating: 'Ukuhumusha...',
-                    translated: 'Kuhunyushiwe!',
-                    selectVerse: 'Khetha zonke izindawo',
-                    verseInserted: 'Ivesi lifakiwe!',
-                    noBible: 'IBhayibheli alitholakali ngalolu limi',
-                    selectTargetLang: 'Khetha ulimi oluqondwe kuqala'
-                },
-                xh: {
-                    saving: 'Ukugcina...',
-                    saved: 'Kugciniwe!',
-                    error: 'Impazamo',
-                    improving: 'Ukuphucula...',
-                    improved: 'Kuphuculiwe!',
-                    translating: 'Ukuguqulela...',
-                    translated: 'Kuguqulelwe!',
-                    selectVerse: 'Khetha zonke iindawo',
-                    verseInserted: 'Ivesi lifakiwe!',
-                    noBible: 'IBhayibhile ayifumaneki ngolu lwimi',
-                    selectTargetLang: 'Khetha ulwimi ekujoliswe kulo kuqala'
-                },
-                pt: {
-                    saving: 'Salvando...',
-                    saved: 'Salvo!',
-                    error: 'Erro',
-                    improving: 'Melhorando...',
-                    improved: 'Melhorado!',
-                    translating: 'Traduzindo...',
-                    translated: 'Traduzido!',
-                    selectVerse: 'Selecione todos os campos',
-                    verseInserted: 'Versículo inserido!',
-                    noBible: 'Bíblia não disponível para este idioma',
-                    selectTargetLang: 'Selecione um idioma de destino primeiro'
+            langNames: <?= json_encode(LANG_NAMES) ?>
+        };
+
+        // State
+        let currentLang = 'af';
+        let editors = {};
+        let bibles = {};
+        let hasChanges = false;
+
+        // Get all editors
+        CONFIG.supportedLangs.forEach(code => {
+            editors[code] = document.getElementById('editor-' + code);
+        });
+
+        // Current editor getter
+        const getCurrentEditor = () => editors[currentLang];
+
+        // ===== LANGUAGE DETECTION =====
+        function detectLanguage(text) {
+            // Common words in each language
+            const markers = {
+                af: ['die', 'en', 'van', 'het', 'ons', 'met', 'is', 'dat', 'nie', 'vir', 'wat', 'sal', 'kan', 'hul', 'ook'],
+                en: ['the', 'and', 'of', 'to', 'is', 'in', 'that', 'for', 'with', 'was', 'are', 'have', 'this', 'will', 'but'],
+                zu: ['ukuthi', 'futhi', 'yena', 'kwa', 'ngi', 'uma', 'yabo', 'bonke', 'wena', 'ukuba'],
+                xh: ['ukuba', 'futhi', 'yena', 'kwa', 'ndi', 'ukuthi', 'wabo', 'bonke', 'wena', 'ukuba'],
+                pt: ['que', 'de', 'para', 'com', 'uma', 'seu', 'sua', 'como', 'mais', 'quando', 'esse', 'esta']
+            };
+
+            const words = text.toLowerCase().split(/\s+/);
+            const scores = {};
+
+            CONFIG.supportedLangs.forEach(lang => {
+                scores[lang] = 0;
+                markers[lang].forEach(marker => {
+                    words.forEach(word => {
+                        if (word === marker || word.startsWith(marker)) {
+                            scores[lang]++;
+                        }
+                    });
+                });
+            });
+
+            // Find highest score
+            let detected = 'af';
+            let maxScore = 0;
+            Object.keys(scores).forEach(lang => {
+                if (scores[lang] > maxScore) {
+                    maxScore = scores[lang];
+                    detected = lang;
                 }
+            });
+
+            return detected;
+        }
+
+        // ===== PASTE HANDLER - Preserve Word formatting =====
+        Object.values(editors).forEach(ed => {
+            if (!ed) return;
+            ed.addEventListener('paste', function(e) {
+                e.preventDefault();
+                hasChanges = true;
+
+                const html = e.clipboardData.getData('text/html');
+                const text = e.clipboardData.getData('text/plain');
+
+                if (html) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+
+                    // Remove Word-specific junk
+                    temp.querySelectorAll('meta, link, style, script, xml, o\\:p, w\\:sdt').forEach(el => el.remove());
+
+                    // Process paragraphs - detect headings by style
+                    temp.querySelectorAll('p, h1, h2, h3, h4').forEach(el => {
+                        const style = el.getAttribute('style') || '';
+                        const text = el.textContent.trim();
+
+                        // Get font size
+                        let fontSize = 11;
+                        const sizeMatch = style.match(/font-size:\s*([\d.]+)\s*pt/i);
+                        if (sizeMatch) fontSize = parseFloat(sizeMatch[1]);
+
+                        // Detect if centered
+                        const isCentered = style.includes('center') || el.style.textAlign === 'center';
+
+                        // Check if short (likely heading)
+                        const isShort = text.length < 120;
+
+                        // Determine heading level
+                        if ((fontSize >= 16 && isShort) || el.tagName.match(/^H[123]$/)) {
+                            const level = fontSize >= 18 || el.tagName === 'H1' ? 'h1' :
+                                         fontSize >= 14 || el.tagName === 'H2' ? 'h2' : 'h3';
+                            const heading = document.createElement(level);
+                            heading.textContent = text;
+                            if (el.parentNode) el.parentNode.replaceChild(heading, el);
+                        } else {
+                            // Body paragraph - preserve line spacing
+                            const lineHeight = style.match(/line-height:\s*([\d.]+)/i);
+                            if (lineHeight) {
+                                el.style.lineHeight = lineHeight[1];
+                            }
+                        }
+                    });
+
+                    document.execCommand('insertHTML', false, temp.innerHTML);
+                } else if (text) {
+                    document.execCommand('insertText', false, text);
+                }
+            });
+
+            // Track changes
+            ed.addEventListener('input', () => hasChanges = true);
+        });
+
+        // ===== LANGUAGE TABS =====
+        document.querySelectorAll('.lang-tab').forEach(tab => {
+            tab.onclick = () => {
+                currentLang = tab.dataset.lang;
+                document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show/hide editors
+                CONFIG.supportedLangs.forEach(code => {
+                    if (editors[code]) {
+                        editors[code].style.display = (code === currentLang) ? 'block' : 'none';
+                    }
+                });
+
+                loadBible(currentLang);
+            };
+        });
+
+        // ===== FORMATTING COMMANDS =====
+        function execCmd(cmd, val = null) {
+            document.execCommand(cmd, false, val);
+            getCurrentEditor().focus();
+        }
+
+        // Headings - apply site fonts automatically
+        document.getElementById('btn-h1').onclick = () => {
+            execCmd('formatBlock', 'h1');
+        };
+        document.getElementById('btn-h2').onclick = () => {
+            execCmd('formatBlock', 'h2');
+        };
+        document.getElementById('btn-h3').onclick = () => {
+            execCmd('formatBlock', 'h3');
+        };
+        document.getElementById('btn-p').onclick = () => {
+            execCmd('formatBlock', 'p');
+        };
+
+        // Basic formatting
+        document.getElementById('btn-bold').onclick = () => execCmd('bold');
+        document.getElementById('btn-italic').onclick = () => execCmd('italic');
+        document.getElementById('btn-underline').onclick = () => execCmd('underline');
+
+        // Alignment
+        document.getElementById('btn-left').onclick = () => execCmd('justifyLeft');
+        document.getElementById('btn-center').onclick = () => execCmd('justifyCenter');
+        document.getElementById('btn-right').onclick = () => execCmd('justifyRight');
+
+        // Lists
+        document.getElementById('btn-ul').onclick = () => execCmd('insertUnorderedList');
+        document.getElementById('btn-ol').onclick = () => execCmd('insertOrderedList');
+
+        // Font size
+        document.getElementById('font-size').onchange = function() {
+            const size = this.value;
+            const sel = window.getSelection();
+            if (!sel.rangeCount || sel.getRangeAt(0).collapsed) return;
+
+            const range = sel.getRangeAt(0);
+            const contents = range.extractContents();
+            const span = document.createElement('span');
+            span.style.fontSize = size;
+            span.appendChild(contents);
+            range.insertNode(span);
+            getCurrentEditor().focus();
+            hasChanges = true;
+        };
+
+        // Line spacing
+        document.getElementById('line-spacing').onchange = function() {
+            const lineHeight = this.value;
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+
+            let node = sel.anchorNode;
+            while (node && node !== getCurrentEditor()) {
+                if (node.nodeType === 1 && ['P', 'DIV', 'H1', 'H2', 'H3', 'LI'].includes(node.tagName)) {
+                    node.style.lineHeight = lineHeight;
+                    break;
+                }
+                node = node.parentNode;
+            }
+            getCurrentEditor().focus();
+            hasChanges = true;
+        };
+
+        // Color swatches
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            swatch.onclick = function() {
+                const color = this.dataset.color;
+                execCmd('foreColor', color);
+            };
+        });
+
+        // ===== BIBLE LOADING =====
+        async function loadBible(lang) {
+            if (bibles[lang]) return bibles[lang];
+
+            const file = CONFIG.bibleFiles[lang] || CONFIG.bibleFiles['en'];
+            try {
+                const res = await fetch(`/bible/bibles/${file}`);
+                const data = await res.json();
+                if (data && Object.keys(data).length > 0) {
+                    bibles[lang] = data;
+                    console.log('Bible loaded for', lang);
+                    return data;
+                }
+            } catch(e) {
+                console.error('Bible load failed for', lang, e);
+            }
+            return null;
+        }
+
+        // ===== VERSE MODAL =====
+        document.getElementById('btn-verse').onclick = async () => {
+            const bible = await loadBible(currentLang);
+            if (!bible) {
+                alert('Bible not available for this language');
+                return;
+            }
+
+            const modal = document.getElementById('verse-modal');
+            const bookSel = document.getElementById('v-book');
+
+            bookSel.innerHTML = '<option value="">Select...</option>';
+            Object.keys(bible).forEach(book => {
+                const opt = document.createElement('option');
+                opt.value = book;
+                opt.textContent = book;
+                bookSel.appendChild(opt);
+            });
+
+            document.getElementById('v-chapter').innerHTML = '';
+            document.getElementById('v-from').innerHTML = '';
+            document.getElementById('v-to').innerHTML = '';
+            document.getElementById('v-preview').innerHTML = '';
+
+            modal.classList.add('show');
+        };
+
+        // Book change
+        document.getElementById('v-book').onchange = async function() {
+            const bible = bibles[currentLang];
+            const book = this.value;
+            const chapterSel = document.getElementById('v-chapter');
+
+            chapterSel.innerHTML = '<option value="">Select...</option>';
+            document.getElementById('v-from').innerHTML = '';
+            document.getElementById('v-to').innerHTML = '';
+            document.getElementById('v-preview').innerHTML = '';
+
+            if (book && bible[book]) {
+                Object.keys(bible[book]).forEach(ch => {
+                    const opt = document.createElement('option');
+                    opt.value = ch;
+                    opt.textContent = ch;
+                    chapterSel.appendChild(opt);
+                });
             }
         };
-        
-        (function() {
-            const T = k => CONFIG.t[CONFIG.lang]?.[k] || CONFIG.t['en']?.[k] || k;
 
-            // Get all editors
-            const editors = {};
-            CONFIG.supportedLangs.forEach(code => {
-                editors[code] = document.getElementById('editor-' + code);
+        // Get verses with proper numbering
+        function getVersesWithNumbers(bible, book, chapter) {
+            if (!bible || !bible[book] || !bible[book][chapter]) return [];
+            const raw = bible[book][chapter];
+            const verses = [];
+            let num = 1;
+            for (const item of raw) {
+                if (item.v) {
+                    verses.push({ n: num, v: item.v });
+                    num++;
+                }
+            }
+            return verses;
+        }
+
+        // Chapter change
+        document.getElementById('v-chapter').onchange = function() {
+            const bible = bibles[currentLang];
+            const book = document.getElementById('v-book').value;
+            const chapter = this.value;
+            const fromSel = document.getElementById('v-from');
+            const toSel = document.getElementById('v-to');
+
+            fromSel.innerHTML = '<option value="">Select...</option>';
+            toSel.innerHTML = '<option value="">Select...</option>';
+            document.getElementById('v-preview').innerHTML = '';
+
+            if (book && chapter) {
+                const verses = getVersesWithNumbers(bible, book, chapter);
+                verses.forEach(v => {
+                    const opt1 = document.createElement('option');
+                    opt1.value = v.n;
+                    opt1.textContent = v.n;
+                    fromSel.appendChild(opt1);
+
+                    const opt2 = document.createElement('option');
+                    opt2.value = v.n;
+                    opt2.textContent = v.n;
+                    toSel.appendChild(opt2);
+                });
+            }
+        };
+
+        // Preview
+        function updateVersePreview() {
+            const bible = bibles[currentLang];
+            const book = document.getElementById('v-book').value;
+            const chapter = document.getElementById('v-chapter').value;
+            const from = parseInt(document.getElementById('v-from').value);
+            const to = parseInt(document.getElementById('v-to').value) || from;
+            const preview = document.getElementById('v-preview');
+
+            if (!book || !chapter || !from) {
+                preview.innerHTML = '';
+                return;
+            }
+
+            const verses = getVersesWithNumbers(bible, book, chapter);
+            let html = `<strong>${book} ${chapter}:${from}${to > from ? '-' + to : ''}</strong><br><br>`;
+            verses.forEach(v => {
+                if (v.n >= from && v.n <= to) {
+                    html += `<sup>${v.n}</sup> ${v.v} `;
+                }
+            });
+            preview.innerHTML = html;
+        }
+
+        document.getElementById('v-from').onchange = updateVersePreview;
+        document.getElementById('v-to').onchange = updateVersePreview;
+
+        // Insert verse - using vref/vtxt classes to match welcome.css
+        document.getElementById('btn-insert').onclick = () => {
+            const bible = bibles[currentLang];
+            const book = document.getElementById('v-book').value;
+            const chapter = document.getElementById('v-chapter').value;
+            const from = parseInt(document.getElementById('v-from').value);
+            const to = parseInt(document.getElementById('v-to').value) || from;
+
+            if (!book || !chapter || !from) {
+                alert('Please select all fields');
+                return;
+            }
+
+            const verses = getVersesWithNumbers(bible, book, chapter);
+            let html = `<p class="vref">${book} ${chapter}:${from}${to > from ? '-' + to : ''}</p><p class="vtxt">`;
+            verses.forEach(v => {
+                if (v.n >= from && v.n <= to) {
+                    html += `<sup>${v.n}</sup> ${v.v} `;
+                }
+            });
+            html += '</p>';
+
+            execCmd('insertHTML', html);
+            document.getElementById('verse-modal').classList.remove('show');
+            showStatus('saved', 'Verse inserted!');
+            hasChanges = true;
+        };
+
+        // Modal close
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.onclick = () => btn.closest('.modal').classList.remove('show');
+        });
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.onclick = e => {
+                if (e.target === modal) modal.classList.remove('show');
+            };
+        });
+
+        // ===== IMPROVE WITH AI =====
+        document.getElementById('btn-improve').onclick = async () => {
+            const editor = getCurrentEditor();
+            const content = editor.innerHTML;
+            if (!content.trim()) return;
+
+            const btn = document.getElementById('btn-improve');
+            btn.disabled = true;
+            btn.textContent = 'Improving...';
+            showStatus('saving', 'Improving...');
+
+            try {
+                const fd = new URLSearchParams();
+                fd.append('content', content);
+                fd.append('lang', currentLang);
+
+                const res = await fetch('/admin/api/ai/improve.php', { method: 'POST', body: fd });
+                const data = await res.json();
+
+                if (data.success) {
+                    editor.innerHTML = data.improved;
+                    showStatus('saved', 'Improved!');
+                    hasChanges = true;
+                } else {
+                    throw new Error(data.error || 'Improvement failed');
+                }
+            } catch(e) {
+                showStatus('error', e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Improve';
+            }
+        };
+
+        // ===== TRANSLATE ALL - with full-screen overlay =====
+        document.getElementById('btn-translate-all').onclick = async () => {
+            // Get source content and detect language
+            const sourceEditor = getCurrentEditor();
+            const content = sourceEditor.innerHTML;
+            if (!content.trim()) return;
+
+            // Detect source language from content
+            const textContent = sourceEditor.textContent;
+            const detectedLang = detectLanguage(textContent);
+
+            // Show overlay
+            const overlay = document.getElementById('translate-overlay');
+            overlay.classList.add('show');
+
+            // Reset badges
+            document.querySelectorAll('.translate-progress .lang-badge').forEach(b => {
+                b.classList.remove('active', 'done');
             });
 
-            let currentEditor = editors[CONFIG.lang];
-            let bible = null;
-            let hasChanges = false;
+            // Mark source as done (no translation needed)
+            const sourceBadge = document.querySelector(`.lang-badge[data-lang="${detectedLang}"]`);
+            if (sourceBadge) sourceBadge.classList.add('done');
 
-            console.log('✅ Custom editor loaded for 5 languages');
+            try {
+                const fd = new URLSearchParams();
+                fd.append('content', content);
+                fd.append('source_lang', detectedLang);
 
-            // Track changes on all editors
-            Object.values(editors).forEach(ed => {
-                if (ed) ed.addEventListener('input', () => hasChanges = true);
-            });
+                // Mark all others as active (being translated)
+                CONFIG.supportedLangs.forEach(lang => {
+                    if (lang !== detectedLang) {
+                        const badge = document.querySelector(`.lang-badge[data-lang="${lang}"]`);
+                        if (badge) badge.classList.add('active');
+                    }
+                });
 
-            // Paste handler - transform Word content to proper heading/body structure
-            Object.values(editors).forEach(ed => {
-                if (!ed) return;
-                ed.addEventListener('paste', function(e) {
-                    e.preventDefault();
+                const res = await fetch('/admin/api/ai/translate_all.php', { method: 'POST', body: fd });
+                const data = await res.json();
+
+                if (data.success) {
+                    // Update all editors
+                    Object.keys(data.translations).forEach(lang => {
+                        if (editors[lang]) {
+                            editors[lang].innerHTML = data.translations[lang];
+                            const badge = document.querySelector(`.lang-badge[data-lang="${lang}"]`);
+                            if (badge) {
+                                badge.classList.remove('active');
+                                badge.classList.add('done');
+                            }
+                        }
+                    });
                     hasChanges = true;
 
-                    const html = e.clipboardData.getData('text/html');
-                    const text = e.clipboardData.getData('text/plain');
+                    // Short delay to show success
+                    await new Promise(r => setTimeout(r, 1000));
+                    showStatus('saved', 'All translations complete!');
+                } else {
+                    throw new Error(data.error || 'Translation failed');
+                }
+            } catch(e) {
+                showStatus('error', e.message);
+            } finally {
+                overlay.classList.remove('show');
+            }
+        };
 
-                    if (html) {
-                        const temp = document.createElement('div');
-                        temp.innerHTML = html;
+        // ===== SAVE ALL =====
+        document.getElementById('btn-save').onclick = async () => {
+            showStatus('saving', 'Saving...');
 
-                        // Remove junk
-                        temp.querySelectorAll('meta, link, style, script, xml, o\\:p').forEach(el => el.remove());
-
-                        // Process each paragraph - detect headings vs body
-                        temp.querySelectorAll('p').forEach(el => {
-                            const text = el.textContent.trim();
-                            const style = el.getAttribute('style') || '';
-
-                            // Get font size in pt
-                            let fontSize = 11; // default
-                            const sizeMatch = style.match(/font-size:\s*([\d.]+)\s*pt/i);
-                            if (sizeMatch) fontSize = parseFloat(sizeMatch[1]);
-
-                            // Check if centered
-                            const isCentered = style.includes('center');
-
-                            // Check if short (likely a heading)
-                            const isShort = text.length < 100;
-
-                            // Check if has underline
-                            const hasUnderline = style.includes('underline') || el.querySelector('u');
-
-                            // Determine if heading
-                            const isHeading = (fontSize >= 14 && isShort) || (isCentered && isShort && hasUnderline);
-
-                            if (isHeading) {
-                                // Convert to H1 or H2 with BIG sizes
-                                const level = fontSize >= 16 ? 'h1' : 'h2';
-                                const heading = document.createElement(level);
-                                // Just get text, strip all inner formatting
-                                heading.textContent = el.textContent;
-                                heading.style.cssText = level === 'h1'
-                                    ? "font-family: 'Parisienne', 'Dancing Script', cursive; color: #f3c3b1; text-align: center; margin: 0.5em 0; font-size: 3rem; font-weight: normal; line-height: 1.2;"
-                                    : "font-family: 'Parisienne', 'Dancing Script', cursive; color: #f3c3b1; text-align: center; margin: 0.5em 0; font-size: 2rem; font-weight: normal; line-height: 1.2;";
-                                if (el.parentNode) el.parentNode.replaceChild(heading, el);
-                            } else {
-                                // Body text - regular font, white
-                                el.style.fontFamily = 'Georgia, serif';
-                                el.style.color = '#ffffff';
-                                el.style.fontSize = '1rem';
-                                el.style.lineHeight = '1.6';
-                                el.style.marginTop = '0';
-                                el.style.marginBottom = '0.8em';
-                            }
-                        });
-
-                        // Handle lists
-                        temp.querySelectorAll('li').forEach(el => {
-                            el.style.fontFamily = 'Georgia, serif';
-                            el.style.color = '#ffffff';
-                            el.style.fontSize = '1rem';
-                            el.style.marginBottom = '0.3em';
-                        });
-
-                        // Handle spans with special colors (like red for verses)
-                        temp.querySelectorAll('span').forEach(el => {
-                            const color = el.style.color?.toLowerCase() || '';
-                            // Keep red/special colors
-                            if (color && !color.includes('black') && color !== 'windowtext' && color !== '#000000') {
-                                // Keep the color
-                            } else {
-                                el.style.color = '#ffffff';
-                            }
-                        });
-
-                        document.execCommand('insertHTML', false, temp.innerHTML);
-                    } else if (text) {
-                        document.execCommand('insertText', false, text);
+            try {
+                const fd = new URLSearchParams();
+                CONFIG.supportedLangs.forEach(code => {
+                    if (editors[code]) {
+                        fd.append('content_' + code, editors[code].innerHTML);
                     }
                 });
-            });
+                fd.append('town_id', CONFIG.townId);
 
-            console.log('✅ Transform paste handler');
+                const res = await fetch('/admin/api/elders/save_teaching.php', { method: 'POST', body: fd });
+                const data = await res.json();
 
-            // Lang switch
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.onclick = () => {
-                    CONFIG.lang = btn.dataset.lang;
-                    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    // Hide all editors, show selected one
-                    CONFIG.supportedLangs.forEach(code => {
-                        if (editors[code]) {
-                            editors[code].style.display = (code === CONFIG.lang) ? 'block' : 'none';
-                        }
-                    });
-
-                    currentEditor = editors[CONFIG.lang];
-                    loadBible();
-                };
-            });
-            
-            // Format commands
-            function execCmd(cmd, val = null) {
-                document.execCommand(cmd, false, val);
-                currentEditor.focus();
+                if (data.success) {
+                    showStatus('saved', 'Saved!');
+                    hasChanges = false;
+                } else {
+                    throw new Error(data.error || 'Save failed');
+                }
+            } catch(e) {
+                showStatus('error', e.message);
             }
-            
-            // Basic formatting
-            document.getElementById('btn-bold').onclick = () => execCmd('bold');
-            document.getElementById('btn-italic').onclick = () => execCmd('italic');
-            document.getElementById('btn-underline').onclick = () => execCmd('underline');
-            document.getElementById('btn-strike').onclick = () => execCmd('strikeThrough');
+        };
 
-            // Superscript/Subscript
-            document.getElementById('btn-super').onclick = () => execCmd('superscript');
-            document.getElementById('btn-sub').onclick = () => execCmd('subscript');
+        // ===== STATUS =====
+        function showStatus(type, msg) {
+            const badge = document.getElementById('status');
+            const icon = document.getElementById('status-icon');
+            const text = document.getElementById('status-text');
 
-            // Headings
-            document.getElementById('btn-h1').onclick = () => execCmd('formatBlock', 'h1');
-            document.getElementById('btn-h2').onclick = () => execCmd('formatBlock', 'h2');
-            document.getElementById('btn-h3').onclick = () => execCmd('formatBlock', 'h3');
-            document.getElementById('btn-p').onclick = () => execCmd('formatBlock', 'p');
+            badge.className = 'status ' + type;
+            icon.innerHTML = type === 'saving' ? '&#9203;' : type === 'saved' ? '&#9989;' : '&#10060;';
+            text.textContent = msg;
+        }
 
-            // Lists
-            document.getElementById('btn-ul').onclick = () => execCmd('insertUnorderedList');
-            document.getElementById('btn-ol').onclick = () => execCmd('insertOrderedList');
-
-            // Alignment
-            document.getElementById('btn-left').onclick = () => execCmd('justifyLeft');
-            document.getElementById('btn-center').onclick = () => execCmd('justifyCenter');
-            document.getElementById('btn-right').onclick = () => execCmd('justifyRight');
-            document.getElementById('btn-justify').onclick = () => execCmd('justifyFull');
-
-            // Indent
-            document.getElementById('btn-outdent').onclick = () => execCmd('outdent');
-            document.getElementById('btn-indent').onclick = () => execCmd('indent');
-
-            // Undo/Redo
-            document.getElementById('btn-undo').onclick = () => execCmd('undo');
-            document.getElementById('btn-redo').onclick = () => execCmd('redo');
-
-            // Clear formatting
-            document.getElementById('btn-clear').onclick = () => execCmd('removeFormat');
-
-            // Font family
-            document.getElementById('font-family').onchange = function() {
-                execCmd('fontName', this.value);
-            };
-
-            // Font size - use span with inline style for pixel sizes
-            document.getElementById('font-size').onchange = function() {
-                const size = this.value;
-                const sel = window.getSelection();
-                if (!sel.rangeCount) return;
-
-                const range = sel.getRangeAt(0);
-                if (range.collapsed) {
-                    currentEditor.focus();
-                    return;
-                }
-
-                // Extract contents and wrap in span
-                const contents = range.extractContents();
-                const span = document.createElement('span');
-                span.style.fontSize = size;
-                span.appendChild(contents);
-                range.insertNode(span);
-
-                // Re-select the content
-                sel.removeAllRanges();
-                const newRange = document.createRange();
-                newRange.selectNodeContents(span);
-                sel.addRange(newRange);
-
-                currentEditor.focus();
-                hasChanges = true;
-            };
-
-            // Line spacing
-            document.getElementById('line-spacing').onchange = function() {
-                const lineHeight = this.value;
-                const sel = window.getSelection();
-
-                if (sel.rangeCount) {
-                    // Find the parent block element
-                    let node = sel.anchorNode;
-                    while (node && node !== currentEditor) {
-                        if (node.nodeType === 1 && ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI'].includes(node.tagName)) {
-                            node.style.lineHeight = lineHeight;
-                            break;
-                        }
-                        node = node.parentNode;
-                    }
-
-                    // If no block found, apply to editor
-                    if (node === currentEditor || !node) {
-                        currentEditor.style.lineHeight = lineHeight;
-                    }
-                }
-
-                currentEditor.focus();
-                hasChanges = true;
-            };
-
-            // Text color
-            document.getElementById('text-color').oninput = function() {
-                execCmd('foreColor', this.value);
-            };
-
-            // Background/Highlight color
-            document.getElementById('bg-color').oninput = function() {
-                execCmd('hiliteColor', this.value);
-            };
-            
-            // Load Bible for current language
-            async function loadBible() {
-                const file = CONFIG.bibleFiles[CONFIG.lang] || CONFIG.bibleFiles['en'];
-                try {
-                    const res = await fetch(`/bible/bibles/${file}`);
-                    bible = await res.json();
-                    if (Object.keys(bible).length === 0) {
-                        bible = null;
-                        console.log('⚠️ Bible is empty for', CONFIG.lang);
-                    } else {
-                        console.log('✅ Bible loaded for', CONFIG.lang);
-                    }
-                } catch(e) {
-                    bible = null;
-                    console.error('❌ Bible load failed:', e);
-                }
+        // ===== PREVENT LOSS =====
+        window.onbeforeunload = e => {
+            if (hasChanges) {
+                e.preventDefault();
+                e.returnValue = '';
             }
-            
-            // Verse modal
-            document.getElementById('btn-verse').onclick = () => {
-                if (!bible) { alert(T('noBible')); return; }
-                const modal = document.getElementById('verse-modal');
-                const bookSel = document.getElementById('v-book');
-                bookSel.innerHTML = '<option value="">Kies...</option>';
-                Object.keys(bible).forEach(book => {
-                    const opt = document.createElement('option');
-                    opt.value = book;
-                    opt.textContent = book;
-                    bookSel.appendChild(opt);
-                });
-                modal.classList.add('show');
-            };
-            
-            document.getElementById('v-book').onchange = function() {
-                const book = this.value;
-                const chapterSel = document.getElementById('v-chapter');
-                chapterSel.innerHTML = '<option value="">Kies...</option>';
-                document.getElementById('v-from').innerHTML = '';
-                document.getElementById('v-to').innerHTML = '';
-                document.getElementById('v-preview').innerHTML = '';
-                
-                if (book && bible[book]) {
-                    Object.keys(bible[book]).forEach(ch => {
-                        const opt = document.createElement('option');
-                        opt.value = ch;
-                        opt.textContent = ch;
-                        chapterSel.appendChild(opt);
-                    });
-                }
-            };
-            
-            // Helper to get verses with numbers (filter out headers with 'h')
-            function getVersesWithNumbers(book, chapter) {
-                if (!bible || !bible[book] || !bible[book][chapter]) return [];
-                const raw = bible[book][chapter];
-                const verses = [];
-                let verseNum = 1;
-                for (const item of raw) {
-                    if (item.v) {
-                        verses.push({ n: verseNum, v: item.v });
-                        verseNum++;
-                    }
-                }
-                return verses;
-            }
+        };
 
-            document.getElementById('v-chapter').onchange = function() {
-                const book = document.getElementById('v-book').value;
-                const chapter = this.value;
-                const fromSel = document.getElementById('v-from');
-                const toSel = document.getElementById('v-to');
-                fromSel.innerHTML = '<option value="">Kies...</option>';
-                toSel.innerHTML = '<option value="">Kies...</option>';
+        // ===== INIT =====
+        loadBible('af');
+        console.log('Elder teaching editor initialized');
 
-                if (book && chapter) {
-                    const verses = getVersesWithNumbers(book, chapter);
-                    verses.forEach(v => {
-                        const opt1 = document.createElement('option');
-                        opt1.value = v.n;
-                        opt1.textContent = v.n;
-                        fromSel.appendChild(opt1);
-
-                        const opt2 = document.createElement('option');
-                        opt2.value = v.n;
-                        opt2.textContent = v.n;
-                        toSel.appendChild(opt2);
-                    });
-                }
-            };
-            
-            function updatePreview() {
-                const book = document.getElementById('v-book').value;
-                const chapter = document.getElementById('v-chapter').value;
-                const from = parseInt(document.getElementById('v-from').value);
-                const to = parseInt(document.getElementById('v-to').value) || from;
-                const preview = document.getElementById('v-preview');
-
-                if (!book || !chapter || !from) {
-                    preview.innerHTML = '';
-                    return;
-                }
-
-                const verses = getVersesWithNumbers(book, chapter);
-                let html = `<strong>${book} ${chapter}:${from}${to > from ? '-' + to : ''}</strong><br><br>`;
-                verses.forEach(v => {
-                    if (v.n >= from && v.n <= to) {
-                        html += `<sup>${v.n}</sup> ${v.v} `;
-                    }
-                });
-                preview.innerHTML = html;
-            }
-            
-            document.getElementById('v-from').onchange = updatePreview;
-            document.getElementById('v-to').onchange = updatePreview;
-            
-            document.getElementById('btn-insert').onclick = () => {
-                const book = document.getElementById('v-book').value;
-                const chapter = document.getElementById('v-chapter').value;
-                const from = parseInt(document.getElementById('v-from').value);
-                const to = parseInt(document.getElementById('v-to').value) || from;
-
-                if (!book || !chapter || !from) {
-                    alert(T('selectVerse'));
-                    return;
-                }
-
-                const verses = getVersesWithNumbers(book, chapter);
-                let html = `<p class="vref">${book} ${chapter}:${from}${to > from ? '-' + to : ''}</p><p class="vtxt">`;
-                verses.forEach(v => {
-                    if (v.n >= from && v.n <= to) {
-                        html += `<sup>${v.n}</sup> ${v.v} `;
-                    }
-                });
-                html += '</p>';
-
-                execCmd('insertHTML', html);
-                document.getElementById('verse-modal').classList.remove('show');
-                showStatus('saved', T('verseInserted'));
-            };
-            
-            // Translate to another language
-            document.getElementById('btn-translate').onclick = async () => {
-                const content = currentEditor.innerHTML;
-                if (!content.trim()) return;
-
-                // Only translate between AF and EN for now
-                const fromLang = CONFIG.lang;
-                const toLang = (fromLang === 'af') ? 'en' : 'af';
-                const targetEditor = editors[toLang];
-
-                if (!targetEditor) {
-                    alert(T('selectTargetLang'));
-                    return;
-                }
-
-                const btn = document.getElementById('btn-translate');
-                btn.classList.add('loading');
-
-                try {
-                    const fd = new URLSearchParams();
-                    fd.append('content', content);
-                    fd.append('from_lang', fromLang);
-
-                    const res = await fetch('/admin/api/ai/translate.php', { method: 'POST', body: fd });
-                    const data = await res.json();
-
-                    if (data.success) {
-                        targetEditor.innerHTML = data.translated;
-                        showStatus('saved', T('translated'));
-                        hasChanges = true;
-                    } else {
-                        throw new Error(data.error);
-                    }
-                } catch(e) {
-                    showStatus('error', e.message);
-                } finally {
-                    btn.classList.remove('loading');
-                }
-            };
-
-            // Improve with AI
-            document.getElementById('btn-improve').onclick = async () => {
-                const content = currentEditor.innerHTML;
-                if (!content.trim()) return;
-
-                const btn = document.getElementById('btn-improve');
-                btn.classList.add('loading');
-
-                try {
-                    const fd = new URLSearchParams();
-                    fd.append('content', content);
-                    fd.append('lang', CONFIG.lang);
-
-                    const res = await fetch('/admin/api/ai/improve.php', { method: 'POST', body: fd });
-                    const data = await res.json();
-
-                    if (data.success) {
-                        currentEditor.innerHTML = data.improved;
-                        showStatus('saved', T('improved'));
-                        hasChanges = true;
-                    } else {
-                        throw new Error(data.error);
-                    }
-                } catch(e) {
-                    showStatus('error', e.message);
-                } finally {
-                    btn.classList.remove('loading');
-                }
-            };
-
-            // Translate to all languages
-            document.getElementById('btn-translate-all').onclick = async () => {
-                const content = currentEditor.innerHTML;
-                if (!content.trim()) return;
-
-                const btn = document.getElementById('btn-translate-all');
-                const loadingText = btn.querySelector('.loading-text');
-
-                // Update loading text based on current language
-                loadingText.textContent = T('translating') + '...';
-                btn.classList.add('loading');
-                showStatus('saving', T('translating'));
-
-                try {
-                    const fd = new URLSearchParams();
-                    fd.append('content', content);
-                    fd.append('source_lang', CONFIG.lang);
-
-                    const res = await fetch('/admin/api/ai/translate_all.php', { method: 'POST', body: fd });
-                    const data = await res.json();
-
-                    if (data.success) {
-                        // Update all editors with translated content
-                        Object.keys(data.translations).forEach(lang => {
-                            if (editors[lang] && lang !== CONFIG.lang) {
-                                editors[lang].innerHTML = data.translations[lang];
-                            }
-                        });
-                        showStatus('saved', T('translated'));
-                        hasChanges = true;
-                    } else {
-                        throw new Error(data.error);
-                    }
-                } catch(e) {
-                    showStatus('error', e.message);
-                } finally {
-                    btn.classList.remove('loading');
-                }
-            };
-
-            // Save all languages
-            document.getElementById('btn-save').onclick = async () => {
-                const sourceContent = currentEditor.innerHTML;
-                if (!sourceContent.trim()) return;
-
-                showStatus('saving', T('saving'));
-
-                try {
-                    // Save all language contents
-                    const fd = new URLSearchParams();
-                    CONFIG.supportedLangs.forEach(code => {
-                        if (editors[code]) {
-                            fd.append('content_' + code, editors[code].innerHTML);
-                        }
-                    });
-                    fd.append('town_id', CONFIG.townId);
-
-                    const res = await fetch('/admin/api/elders/save_teaching.php', { method: 'POST', body: fd });
-                    const data = await res.json();
-
-                    if (data.success) {
-                        showStatus('saved', T('saved'));
-                        hasChanges = false;
-                    } else {
-                        throw new Error(data.error);
-                    }
-                } catch(e) {
-                    showStatus('error', e.message);
-                }
-            };
-            
-            function showStatus(type, msg) {
-                const badge = document.getElementById('status');
-                const icon = document.getElementById('status-icon');
-                const text = document.getElementById('status-text');
-                
-                badge.className = 'status ' + type;
-                icon.textContent = type === 'saving' ? '⏳' : type === 'saved' ? '✅' : '❌';
-                text.textContent = msg;
-            }
-            
-            // Modal close
-            document.querySelectorAll('.modal-close').forEach(btn => {
-                btn.onclick = () => btn.closest('.modal').classList.remove('show');
-            });
-            
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.onclick = e => {
-                    if (e.target === modal) modal.classList.remove('show');
-                };
-            });
-            
-            // Prevent loss
-            window.onbeforeunload = e => {
-                if (hasChanges) {
-                    e.preventDefault();
-                    e.returnValue = '';
-                }
-            };
-            
-            // Initialize
-            loadBible();
-            console.log('✅ All initialized');
-        })();
+    })();
     </script>
-    
+
     <?php require_once __DIR__ . '/../header_footer/footer.php'; ?>
 </body>
 </html>

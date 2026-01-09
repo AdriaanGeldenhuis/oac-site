@@ -936,6 +936,20 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Guqulela Konke',
         'pt' => 'Traduzir Tudo'
     ],
+    'translating' => [
+        'af' => 'Besig om te vertaal',
+        'en' => 'Translating',
+        'zu' => 'Ukuhumusha',
+        'xh' => 'Ukuguqulela',
+        'pt' => 'Traduzindo'
+    ],
+    'do_not_close' => [
+        'af' => 'Moenie hierdie venster toemaak terwyl dit vertaal nie.',
+        'en' => 'Please do not close this window while translating.',
+        'zu' => 'Sicela ungavali leli windi ngesikhathi kuhunyushwa.',
+        'xh' => 'Nceda ungayivali le window ngethuba kuguqulelwa.',
+        'pt' => 'Por favor, não feche esta janela durante a tradução.'
+    ],
     'ready_to_save' => [
         'af' => 'Gereed om te stoor',
         'en' => 'Ready to save',
