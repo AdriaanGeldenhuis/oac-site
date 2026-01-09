@@ -2,6 +2,7 @@
 /**
  * AI Configuration for Teaching Editor
  * =====================================
+ * Uses STREAMING to avoid timeout issues
  */
 declare(strict_types=1);
 
@@ -9,12 +10,10 @@ declare(strict_types=1);
 // LOAD SECRETS (API key stored separately, not in git)
 // =============================================================================
 
-// Load API key from secrets file (excluded from version control)
 $secretsFile = __DIR__ . '/secrets.php';
 if (file_exists($secretsFile)) {
     require_once $secretsFile;
 } else {
-    // Fallback: check environment variable
     $envKey = getenv('OPENAI_API_KEY');
     if ($envKey) {
         define('OPENAI_API_KEY', $envKey);
@@ -27,18 +26,16 @@ if (file_exists($secretsFile)) {
 // OPENAI API CONFIGURATION
 // =============================================================================
 
-// OpenAI API endpoint
 define('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions');
 
-// Model to use
-define('OPENAI_MODEL', 'gpt-4o-mini');
+// GPT-4o - Stronger model, better translations
+define('OPENAI_MODEL', 'gpt-4o');
 
-// Maximum tokens for AI responses (increased for long translations)
-// gpt-4o-mini supports up to 16k output tokens
+// Maximum tokens for AI responses
 define('OPENAI_MAX_TOKENS', 16000);
 
-// Temperature (0.0-2.0, lower = more focused)
-define('OPENAI_TEMPERATURE', 0.3);
+// Temperature (lower = more accurate translations)
+define('OPENAI_TEMPERATURE', 0.2);
 
 // =============================================================================
 // BIBLE CONFIGURATION
@@ -46,7 +43,6 @@ define('OPENAI_TEMPERATURE', 0.3);
 
 define('BIBLE_DIR', dirname(__DIR__, 2) . '/bible/bibles/');
 
-// Bible file mapping per language
 define('BIBLE_VERSIONS', [
     'af' => 'af_1933_53.json',
     'en' => 'en_kjv1611.json',
@@ -56,87 +52,145 @@ define('BIBLE_VERSIONS', [
 ]);
 
 // =============================================================================
-// OPENAI CHAT FUNCTION
+// OPENAI STREAMING CHAT FUNCTION
 // =============================================================================
 
 /**
- * Make a chat completion request to OpenAI
+ * Make a STREAMING chat completion request to OpenAI
+ * Streaming prevents timeout by receiving data chunks as they're generated
  *
  * @param array $messages Array of message objects with 'role' and 'content'
- * @return array The API response data
+ * @return array The API response data (assembled from stream)
  * @throws Exception on failure
  */
 function openai_chat(array $messages): array {
-    error_log('openai_chat: Starting API call');
-    $ch = curl_init(OPENAI_API_URL);
+    error_log('openai_chat: Starting STREAMING API call with model ' . OPENAI_MODEL);
 
     $payload = json_encode([
         'model' => OPENAI_MODEL,
         'messages' => $messages,
         'max_tokens' => OPENAI_MAX_TOKENS,
-        'temperature' => OPENAI_TEMPERATURE
+        'temperature' => OPENAI_TEMPERATURE,
+        'stream' => true  // STREAMING ENABLED
     ], JSON_UNESCAPED_UNICODE);
 
     error_log('openai_chat: Payload size: ' . strlen($payload) . ' bytes');
 
+    $ch = curl_init(OPENAI_API_URL);
+
+    // Collect streamed content
+    $fullContent = '';
+    $finishReason = 'unknown';
+    $streamError = null;
+
+    // Callback function to process streaming data
+    $writeCallback = function($ch, $data) use (&$fullContent, &$finishReason, &$streamError) {
+        $lines = explode("\n", $data);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            // Skip empty lines
+            if (empty($line)) continue;
+
+            // Check for data prefix
+            if (strpos($line, 'data: ') !== 0) continue;
+
+            $jsonStr = substr($line, 6); // Remove "data: " prefix
+
+            // Check for stream end
+            if ($jsonStr === '[DONE]') {
+                continue;
+            }
+
+            $json = json_decode($jsonStr, true);
+            if (!$json) continue;
+
+            // Check for error in stream
+            if (isset($json['error'])) {
+                $streamError = $json['error']['message'] ?? 'Unknown stream error';
+                continue;
+            }
+
+            // Extract content delta
+            if (isset($json['choices'][0]['delta']['content'])) {
+                $fullContent .= $json['choices'][0]['delta']['content'];
+            }
+
+            // Check finish reason
+            if (isset($json['choices'][0]['finish_reason']) && $json['choices'][0]['finish_reason']) {
+                $finishReason = $json['choices'][0]['finish_reason'];
+            }
+        }
+
+        return strlen($data); // Must return length for cURL
+    };
+
     curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $payload,
         CURLOPT_HTTPHEADER => [
             'Content-Type: application/json',
-            'Authorization: Bearer ' . OPENAI_API_KEY
+            'Authorization: Bearer ' . OPENAI_API_KEY,
+            'Accept: text/event-stream'
         ],
-        CURLOPT_TIMEOUT => 300,  // 5 minutes for long translations
-        CURLOPT_CONNECTTIMEOUT => 60,  // 60 seconds to connect
+        CURLOPT_WRITEFUNCTION => $writeCallback,
+        CURLOPT_TIMEOUT => 600,        // 10 minutes total (streaming keeps alive)
+        CURLOPT_CONNECTTIMEOUT => 30,  // 30 seconds to connect
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_SSL_VERIFYHOST => 2,
-        CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_ENCODING => '',  // Accept any encoding
-        CURLOPT_VERBOSE => false
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_RETURNTRANSFER => false // Using write callback instead
     ]);
 
-    // Log curl info for debugging
-    error_log('openai_chat: Attempting connection to ' . OPENAI_API_URL);
+    error_log('openai_chat: Connecting with STREAMING...');
 
-    $response = curl_exec($ch);
+    $result = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
     $curlErrno = curl_errno($ch);
-    $curlInfo = curl_getinfo($ch);
+    $totalTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
     curl_close($ch);
 
-    error_log('openai_chat: HTTP code: ' . $httpCode . ', cURL errno: ' . $curlErrno);
-    error_log('openai_chat: Total time: ' . ($curlInfo['total_time'] ?? 'unknown') . 's, Connect time: ' . ($curlInfo['connect_time'] ?? 'unknown') . 's');
+    error_log('openai_chat: Stream complete. HTTP: ' . $httpCode . ', Time: ' . round($totalTime, 2) . 's');
+    error_log('openai_chat: Content length: ' . strlen($fullContent) . ' chars');
 
     if ($curlError) {
-        error_log('openai_chat: cURL ERROR: ' . $curlError . ' (errno: ' . $curlErrno . ')');
-        error_log('openai_chat: Primary IP: ' . ($curlInfo['primary_ip'] ?? 'none'));
-        throw new Exception('cURL error: ' . $curlError);
+        error_log('openai_chat: cURL ERROR: ' . $curlError);
+        throw new Exception('Connection error: ' . $curlError);
     }
 
-    $data = json_decode($response, true);
+    if ($streamError) {
+        error_log('openai_chat: Stream ERROR: ' . $streamError);
+        throw new Exception('API error: ' . $streamError);
+    }
 
     if ($httpCode !== 200) {
-        $errorMsg = $data['error']['message'] ?? 'Unknown API error';
-        error_log('openai_chat: API ERROR: ' . $errorMsg);
-        error_log('openai_chat: Full response: ' . substr($response, 0, 500));
-        throw new Exception('API error (' . $httpCode . '): ' . $errorMsg);
+        error_log('openai_chat: HTTP ERROR: ' . $httpCode);
+        throw new Exception('API error (HTTP ' . $httpCode . ')');
     }
 
-    if (!isset($data['choices'][0]['message']['content'])) {
-        error_log('openai_chat: Invalid response structure: ' . substr($response, 0, 500));
-        throw new Exception('Invalid API response structure');
+    if (empty($fullContent)) {
+        error_log('openai_chat: Empty response!');
+        throw new Exception('Empty response from API');
     }
 
-    // Check if response was truncated
-    $finishReason = $data['choices'][0]['finish_reason'] ?? 'unknown';
     if ($finishReason === 'length') {
-        error_log('openai_chat: WARNING - Response was truncated due to max_tokens limit!');
+        error_log('openai_chat: WARNING - Response was truncated!');
     }
-    error_log('openai_chat: Success, response length: ' . strlen($data['choices'][0]['message']['content']) . ', finish_reason: ' . $finishReason);
-    return $data;
+
+    error_log('openai_chat: Success! finish_reason: ' . $finishReason);
+
+    // Return in same format as non-streaming for compatibility
+    return [
+        'choices' => [
+            [
+                'message' => ['content' => $fullContent],
+                'finish_reason' => $finishReason
+            ]
+        ]
+    ];
 }
 
 // =============================================================================
@@ -145,10 +199,6 @@ function openai_chat(array $messages): array {
 
 /**
  * Load Bible data for a specific language
- * Adds verse numbers (n) to each verse for easy lookup
- *
- * @param string $lang Language code (af, en, zu, xh, pt)
- * @return array|null Bible data or null if not available
  */
 function loadBibleData(string $lang): ?array {
     $file = BIBLE_VERSIONS[$lang] ?? BIBLE_VERSIONS['en'] ?? null;
@@ -177,13 +227,10 @@ function loadBibleData(string $lang): ?array {
     }
 
     // Add verse numbers to the data structure
-    // The Bible JSON has 'v' for verse text and 'h' for headers
-    // We need to add 'n' (verse number) based on position
     foreach ($data as $book => &$chapters) {
         foreach ($chapters as $chapter => &$items) {
             $verseNum = 0;
             foreach ($items as &$item) {
-                // Skip headers, only number verses
                 if (isset($item['v']) && !isset($item['h'])) {
                     $verseNum++;
                     $item['n'] = $verseNum;
