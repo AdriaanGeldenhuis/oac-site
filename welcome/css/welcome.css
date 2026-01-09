@@ -354,6 +354,7 @@ html {
 .wc-teaching-content {
   padding: 32px;
   padding-left: 36px;
+  font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 300;
   line-height: 1.9;
@@ -382,6 +383,10 @@ html {
 .wc-teaching-content h3 { font-size: 1.3rem; }
 
 .wc-teaching-content p {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.9;
   margin: 0 0 16px;
   color: var(--text-primary);
 }
@@ -406,6 +411,10 @@ html {
 }
 
 .wc-teaching-content li {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.9;
   margin-bottom: 8px;
   color: var(--text-primary);
 }
