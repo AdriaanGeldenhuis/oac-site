@@ -34,6 +34,242 @@ if (defined('SLIMBYBEL_SYSTEM_PROMPT')) {
   $SYSTEM_PROMPT = 'Interpret the Scriptures spiritually. Use Afrikaans 1933/1953 or KJV only.';
 }
 
+// =====================================================================
+// BIBLE VERSE LOOKUP SYSTEM - Loads verses directly from server files
+// =====================================================================
+$BIBLE_DIR = __DIR__ . '/../bible/bibles/';
+$BIBLE_FILES = [
+  'af' => $BIBLE_DIR . 'af_1933_53.json',
+  'en' => $BIBLE_DIR . 'en_kjv1611.json',
+];
+
+// Book name mapping (Afrikaans to English and vice versa)
+$BOOK_NAMES = [
+  // Afrikaans => English
+  'genesis' => 'Genesis', 'gen' => 'Genesis',
+  'eksodus' => 'Exodus', 'eks' => 'Exodus', 'exodus' => 'Exodus', 'ex' => 'Exodus',
+  'levitikus' => 'Leviticus', 'lev' => 'Leviticus', 'leviticus' => 'Leviticus',
+  'numeri' => 'Numbers', 'num' => 'Numbers', 'numbers' => 'Numbers',
+  'deuteronomium' => 'Deuteronomy', 'deut' => 'Deuteronomy', 'deuteronomy' => 'Deuteronomy',
+  'josua' => 'Joshua', 'jos' => 'Joshua', 'joshua' => 'Joshua',
+  'rigters' => 'Judges', 'rig' => 'Judges', 'judges' => 'Judges',
+  'rut' => 'Ruth', 'ruth' => 'Ruth',
+  '1 samuel' => '1 Samuel', '1 sam' => '1 Samuel', '1samuel' => '1 Samuel',
+  '2 samuel' => '2 Samuel', '2 sam' => '2 Samuel', '2samuel' => '2 Samuel',
+  '1 konings' => '1 Kings', '1 kon' => '1 Kings', '1 kings' => '1 Kings', '1konings' => '1 Kings',
+  '2 konings' => '2 Kings', '2 kon' => '2 Kings', '2 kings' => '2 Kings', '2konings' => '2 Kings',
+  '1 kronieke' => '1 Chronicles', '1 kron' => '1 Chronicles', '1 chronicles' => '1 Chronicles',
+  '2 kronieke' => '2 Chronicles', '2 kron' => '2 Chronicles', '2 chronicles' => '2 Chronicles',
+  'esra' => 'Ezra', 'ezra' => 'Ezra',
+  'nehemia' => 'Nehemiah', 'neh' => 'Nehemiah', 'nehemiah' => 'Nehemiah',
+  'ester' => 'Esther', 'esther' => 'Esther',
+  'job' => 'Job',
+  'psalms' => 'Psalms', 'ps' => 'Psalms', 'psalm' => 'Psalms',
+  'spreuke' => 'Proverbs', 'spr' => 'Proverbs', 'proverbs' => 'Proverbs', 'prov' => 'Proverbs',
+  'prediker' => 'Ecclesiastes', 'pred' => 'Ecclesiastes', 'ecclesiastes' => 'Ecclesiastes', 'eccl' => 'Ecclesiastes',
+  'hooglied' => 'Song of Solomon', 'hoogl' => 'Song of Solomon', 'song of solomon' => 'Song of Solomon', 'song' => 'Song of Solomon',
+  'jesaja' => 'Isaiah', 'jes' => 'Isaiah', 'isaiah' => 'Isaiah', 'isa' => 'Isaiah',
+  'jeremia' => 'Jeremiah', 'jer' => 'Jeremiah', 'jeremiah' => 'Jeremiah',
+  'klaagliedere' => 'Lamentations', 'klaag' => 'Lamentations', 'lamentations' => 'Lamentations', 'lam' => 'Lamentations',
+  'esegiël' => 'Ezekiel', 'eseg' => 'Ezekiel', 'ezekiel' => 'Ezekiel', 'ezek' => 'Ezekiel',
+  'daniël' => 'Daniel', 'dan' => 'Daniel', 'daniel' => 'Daniel',
+  'hosea' => 'Hosea', 'hos' => 'Hosea',
+  'joël' => 'Joel', 'joel' => 'Joel',
+  'amos' => 'Amos',
+  'obadja' => 'Obadiah', 'obad' => 'Obadiah', 'obadiah' => 'Obadiah',
+  'jona' => 'Jonah', 'jonah' => 'Jonah',
+  'miga' => 'Micah', 'micah' => 'Micah', 'mic' => 'Micah',
+  'nahum' => 'Nahum', 'nah' => 'Nahum',
+  'habakuk' => 'Habakkuk', 'hab' => 'Habakkuk', 'habakkuk' => 'Habakkuk',
+  'sefanja' => 'Zephaniah', 'sef' => 'Zephaniah', 'zephaniah' => 'Zephaniah', 'zeph' => 'Zephaniah',
+  'haggai' => 'Haggai', 'hag' => 'Haggai',
+  'sagaria' => 'Zechariah', 'sag' => 'Zechariah', 'zechariah' => 'Zechariah', 'zech' => 'Zechariah',
+  'maleagi' => 'Malachi', 'mal' => 'Malachi', 'malachi' => 'Malachi',
+  // New Testament
+  'matteus' => 'Matthew', 'mat' => 'Matthew', 'matthew' => 'Matthew', 'matt' => 'Matthew',
+  'markus' => 'Mark', 'mark' => 'Mark', 'mar' => 'Mark',
+  'lukas' => 'Luke', 'luk' => 'Luke', 'luke' => 'Luke',
+  'johannes' => 'John', 'joh' => 'John', 'john' => 'John',
+  'handelinge' => 'Acts', 'hand' => 'Acts', 'acts' => 'Acts',
+  'romeine' => 'Romans', 'rom' => 'Romans', 'romans' => 'Romans',
+  '1 korintiërs' => '1 Corinthians', '1 kor' => '1 Corinthians', '1 corinthians' => '1 Corinthians', '1kor' => '1 Corinthians',
+  '2 korintiërs' => '2 Corinthians', '2 kor' => '2 Corinthians', '2 corinthians' => '2 Corinthians', '2kor' => '2 Corinthians',
+  'galasiërs' => 'Galatians', 'gal' => 'Galatians', 'galatians' => 'Galatians',
+  'efesiërs' => 'Ephesians', 'ef' => 'Ephesians', 'ephesians' => 'Ephesians', 'eph' => 'Ephesians',
+  'filippense' => 'Philippians', 'fil' => 'Philippians', 'philippians' => 'Philippians', 'phil' => 'Philippians', 'filp' => 'Philippians',
+  'kolossense' => 'Colossians', 'kol' => 'Colossians', 'colossians' => 'Colossians', 'col' => 'Colossians',
+  '1 tessalonisense' => '1 Thessalonians', '1 tes' => '1 Thessalonians', '1 thessalonians' => '1 Thessalonians', '1tes' => '1 Thessalonians', '1 thes' => '1 Thessalonians',
+  '2 tessalonisense' => '2 Thessalonians', '2 tes' => '2 Thessalonians', '2 thessalonians' => '2 Thessalonians', '2tes' => '2 Thessalonians', '2 thes' => '2 Thessalonians',
+  '1 timoteus' => '1 Timothy', '1 tim' => '1 Timothy', '1 timothy' => '1 Timothy', '1tim' => '1 Timothy',
+  '2 timoteus' => '2 Timothy', '2 tim' => '2 Timothy', '2 timothy' => '2 Timothy', '2tim' => '2 Timothy',
+  'titus' => 'Titus', 'tit' => 'Titus',
+  'filemon' => 'Philemon', 'filem' => 'Philemon', 'philemon' => 'Philemon', 'phm' => 'Philemon',
+  'hebreërs' => 'Hebrews', 'heb' => 'Hebrews', 'hebrews' => 'Hebrews', 'hebr' => 'Hebrews',
+  'jakobus' => 'James', 'jak' => 'James', 'james' => 'James', 'jas' => 'James',
+  '1 petrus' => '1 Peter', '1 pet' => '1 Peter', '1 peter' => '1 Peter', '1pet' => '1 Peter',
+  '2 petrus' => '2 Peter', '2 pet' => '2 Peter', '2 peter' => '2 Peter', '2pet' => '2 Peter',
+  '1 johannes' => '1 John', '1 joh' => '1 John', '1 john' => '1 John', '1joh' => '1 John',
+  '2 johannes' => '2 John', '2 joh' => '2 John', '2 john' => '2 John', '2joh' => '2 John',
+  '3 johannes' => '3 John', '3 joh' => '3 John', '3 john' => '3 John', '3joh' => '3 John',
+  'judas' => 'Jude', 'jude' => 'Jude',
+  'openbaring' => 'Revelation', 'op' => 'Revelation', 'openb' => 'Revelation', 'revelation' => 'Revelation', 'rev' => 'Revelation',
+];
+
+// Cache for loaded Bible data
+$BIBLE_CACHE = [];
+
+/**
+ * Load Bible data for a language
+ */
+function loadBible(string $lang): ?array {
+  global $BIBLE_FILES, $BIBLE_CACHE;
+
+  if (isset($BIBLE_CACHE[$lang])) {
+    return $BIBLE_CACHE[$lang];
+  }
+
+  $file = $BIBLE_FILES[$lang] ?? null;
+  if (!$file || !is_readable($file)) {
+    return null;
+  }
+
+  $data = @json_decode(file_get_contents($file), true);
+  if ($data) {
+    $BIBLE_CACHE[$lang] = $data;
+  }
+  return $data;
+}
+
+/**
+ * Normalize book name to standard format
+ */
+function normalizeBookName(string $name): ?string {
+  global $BOOK_NAMES;
+  $lower = strtolower(trim($name));
+  return $BOOK_NAMES[$lower] ?? null;
+}
+
+/**
+ * Get a specific verse from the Bible
+ * Returns the verse text or null if not found
+ */
+function getVerse(string $lang, string $book, int $chapter, int $verse): ?string {
+  $bible = loadBible($lang);
+  if (!$bible) return null;
+
+  $normalBook = normalizeBookName($book);
+  if (!$normalBook) return null;
+
+  // Try exact match first
+  if (!isset($bible[$normalBook])) {
+    // Try case-insensitive search
+    foreach ($bible as $bookName => $chapters) {
+      if (strtolower($bookName) === strtolower($normalBook)) {
+        $normalBook = $bookName;
+        break;
+      }
+    }
+  }
+
+  if (!isset($bible[$normalBook][(string)$chapter])) return null;
+
+  $chapterData = $bible[$normalBook][(string)$chapter];
+
+  // Verses are 1-indexed, but array is 0-indexed
+  // Also need to account for headings (items with 'h' key)
+  $verseIndex = 0;
+  $currentVerse = 0;
+
+  foreach ($chapterData as $item) {
+    if (isset($item['v'])) {
+      $currentVerse++;
+      if ($currentVerse === $verse) {
+        return $item['v'];
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get a range of verses
+ */
+function getVerseRange(string $lang, string $book, int $chapter, int $startVerse, int $endVerse): array {
+  $verses = [];
+  for ($v = $startVerse; $v <= $endVerse; $v++) {
+    $text = getVerse($lang, $book, $chapter, $v);
+    if ($text) {
+      $verses[$v] = $text;
+    }
+  }
+  return $verses;
+}
+
+/**
+ * Parse Bible references from text
+ * Returns array of [book, chapter, verse_start, verse_end]
+ */
+function parseBibleReferences(string $text): array {
+  $refs = [];
+
+  // Pattern to match Bible references like "Joh 3:16", "Johannes 3:16-18", "1 Kor 12:27", etc.
+  $pattern = '/\b((?:\d\s*)?[A-Za-zëïöü]+(?:\s+[A-Za-zëïöü]+)?)\s*(\d{1,3})\s*[:v\.]\s*(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?\b/ui';
+
+  if (preg_match_all($pattern, $text, $matches, PREG_SET_ORDER)) {
+    foreach ($matches as $match) {
+      $book = trim($match[1]);
+      $chapter = (int)$match[2];
+      $verseStart = (int)$match[3];
+      $verseEnd = isset($match[4]) ? (int)$match[4] : $verseStart;
+
+      // Validate book name
+      if (normalizeBookName($book)) {
+        $refs[] = [
+          'book' => $book,
+          'chapter' => $chapter,
+          'verse_start' => $verseStart,
+          'verse_end' => $verseEnd,
+        ];
+      }
+    }
+  }
+
+  return $refs;
+}
+
+/**
+ * Fetch all referenced verses and format them for the prompt
+ */
+function fetchReferencedVerses(string $text, string $lang): string {
+  $refs = parseBibleReferences($text);
+  if (empty($refs)) return '';
+
+  $output = [];
+  $usedLang = ($lang === 'af') ? 'af' : 'en'; // Default to English for other languages
+  $langLabel = ($usedLang === 'af') ? '1933/1953 Afrikaans' : 'KJV 1611';
+
+  foreach ($refs as $ref) {
+    $verses = getVerseRange($usedLang, $ref['book'], $ref['chapter'], $ref['verse_start'], $ref['verse_end']);
+    if (!empty($verses)) {
+      $normalBook = normalizeBookName($ref['book']);
+      $refStr = $normalBook . ' ' . $ref['chapter'] . ':' . $ref['verse_start'];
+      if ($ref['verse_end'] > $ref['verse_start']) {
+        $refStr .= '-' . $ref['verse_end'];
+      }
+
+      $versesText = [];
+      foreach ($verses as $num => $text) {
+        $versesText[] = $num . '. ' . $text;
+      }
+
+      $output[] = "[$refStr ($langLabel)]\n" . implode("\n", $versesText);
+    }
+  }
+
+  return implode("\n\n", $output);
+}
+
 // ------------------------- SSE ROUTE ----------------------------------
 if (isset($_GET['stream']) && $_GET['stream'] === '1') {
   $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
@@ -59,22 +295,66 @@ if (isset($_GET['stream']) && $_GET['stream'] === '1') {
   if ($q === '') { $sse('error', t('empty_question')); $sse('done', 'end'); exit; }
   if (!$OPENAI_API_KEY) { $sse('error', t('missing_api_key')); $sse('done', 'end'); exit; }
 
+  // =====================================================================
+  // FETCH BIBLE VERSES FROM SERVER - STRICT word-for-word requirement
+  // =====================================================================
+  $referencedVerses = fetchReferencedVerses($q, $pageLang);
+  $systemInstructions = fetchReferencedVerses($SYSTEM_PROMPT, $pageLang);
+  $allVerses = trim($referencedVerses . "\n\n" . $systemInstructions);
+
+  // Build strict verse instruction
+  $verseInstruction = '';
+  if ($allVerses) {
+    $verseInstruction = "
+=== AMPTELIKE BYBELVERSE VAN DIE SERVER (STRENG WOORD-VIR-WOORD) ===
+Die volgende verse is direk vanaf die amptelike Bybellêers op die server gelaai.
+Jy MOET hierdie presiese teks gebruik wanneer jy hierdie verse aanhaal.
+MOENIE enige ander vertaling of bewoording gebruik nie.
+MOENIE woorde byvoeg, weglaat of verander nie.
+
+$allVerses
+
+=== EINDE VAN AMPTELIKE VERSE ===
+";
+  }
+
   // Language-specific instructions - STRICT enforcement
   $langInstructions = [
-    'af' => 'BELANGRIK: Jy MOET alle antwoorde in SUIWER AFRIKAANS skryf. Gebruik SLEGS die 1933/1953 Afrikaanse Bybel vertaling. MOENIE ooit woorde of frases in Engels of enige ander taal gebruik nie. Elke woord moet Afrikaans wees.',
-    'en' => 'IMPORTANT: You MUST write all answers in PURE ENGLISH only. Use ONLY the King James Version (KJV) Bible. NEVER use words or phrases in any other language. Every single word must be English.',
-    'zu' => 'OKUBALULEKILE: KUMELE ubhale zonke izimpendulo ngesi-ZULU KUPHELA. Sebenzisa i-King James Version (KJV) Bible. UNGASEBENZISI amagama noma izingxenye ngesiNgisi noma ngolunye ulimi. Igama ngalinye kumele libe ngesiZulu.',
-    'xh' => 'OKUBALULEKILEYO: KUFUNEKA ubhale zonke iimpendulo ngesi-XHOSA KUPHELA. Sebenzisa i-King James Version (KJV) Bible. UNGAZE usebenzise amagama okanye amabinzana ngesiNgesi okanye naluphi na olunye ulwimi. Igama ngalinye kufuneka libe sesiXhosa.',
-    'pt' => 'IMPORTANTE: Você DEVE escrever todas as respostas em PORTUGUÊS PURO apenas. Use SOMENTE a versão King James (KJV) da Bíblia. NUNCA use palavras ou frases em inglês ou qualquer outro idioma. Cada palavra deve ser em português.'
+    'af' => 'STRENG INSTRUKSIE:
+1. Jy MOET alle antwoorde in SUIWER AFRIKAANS skryf - geen Engels of ander tale nie.
+2. Wanneer jy Bybelverse aanhaal, gebruik SLEGS die 1933/1953 Afrikaanse vertaling WOORD-VIR-WOORD soos hierbo verskaf.
+3. As \'n vers nie hierbo verskaf is nie, moet jy dit presies uit die 1933/1953 vertaling aanhaal - GEEN ander vertalings nie.
+4. MOENIE verse parafraseer of in jou eie woorde stel nie - gebruik die presiese Bybelteks.
+5. Elke woord in jou antwoord moet Afrikaans wees.',
+
+    'en' => 'STRICT INSTRUCTION:
+1. You MUST write all answers in PURE ENGLISH only - no other languages.
+2. When quoting Bible verses, use ONLY the King James Version (KJV) 1611 WORD-FOR-WORD as provided above.
+3. If a verse is not provided above, quote it exactly from the KJV 1611 - NO other translations.
+4. DO NOT paraphrase or put verses in your own words - use the exact Bible text.
+5. Every single word in your answer must be English.',
+
+    'zu' => 'UMYALELO OQINILE: KUMELE ubhale zonke izimpendulo ngesi-ZULU KUPHELA. Sebenzisa i-King James Version (KJV) Bible njengoba inikeziwe ngenhla. UNGASEBENZISI amagama ngesiNgisi.',
+
+    'xh' => 'UMYALELO ONGQONGQO: KUFUNEKA ubhale zonke iimpendulo ngesi-XHOSA KUPHELA. Sebenzisa i-King James Version (KJV) Bible njengoko inikezelwe ngentla. UNGAZE usebenzise amagama ngesiNgesi.',
+
+    'pt' => 'INSTRUÇÃO ESTRITA: Você DEVE escrever todas as respostas em PORTUGUÊS PURO apenas. Use a versão King James (KJV) da Bíblia conforme fornecido acima. NUNCA use palavras em inglês.'
   ];
 
   $langInstruction = $langInstructions[$pageLang] ?? $langInstructions['en'];
 
+  // Build messages with verse context
   $messages = [
     ['role' => 'system', 'content' => $SYSTEM_PROMPT],
-    ['role' => 'system', 'content' => $langInstruction],
-    ['role' => 'user',   'content' => $q],
   ];
+
+  // Add verse context if available
+  if ($verseInstruction) {
+    $messages[] = ['role' => 'system', 'content' => $verseInstruction];
+  }
+
+  $messages[] = ['role' => 'system', 'content' => $langInstruction];
+  $messages[] = ['role' => 'user', 'content' => $q];
 
   $payload = json_encode([
     'model'      => 'gpt-4o-mini',
