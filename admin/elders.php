@@ -940,7 +940,7 @@ $siteColors = [
             return detected;
         }
 
-        // ===== PASTE HANDLER - Preserve Word formatting better =====
+        // ===== PASTE HANDLER - Plain paste, user chooses formatting =====
         Object.values(editors).forEach(ed => {
             if (!ed) return;
             ed.addEventListener('paste', function(e) {
@@ -954,24 +954,16 @@ $siteColors = [
                     const temp = document.createElement('div');
                     temp.innerHTML = html;
 
-                    // Remove Word-specific junk but keep content
+                    // Remove Word-specific junk
                     temp.querySelectorAll('meta, link, style, script, xml').forEach(el => el.remove());
 
-                    // Unwrap o:p tags (Word paragraph markers) - keep content
+                    // Unwrap o:p tags (Word paragraph markers)
                     temp.querySelectorAll('o\\:p').forEach(el => {
                         el.replaceWith(...el.childNodes);
                     });
 
-                    // Process font tags - unwrap but keep content
-                    temp.querySelectorAll('font').forEach(el => {
-                        const span = document.createElement('span');
-                        span.innerHTML = el.innerHTML;
-                        el.replaceWith(span);
-                    });
-
-                    // Process all block elements
+                    // Convert ALL block elements to plain paragraphs
                     temp.querySelectorAll('p, h1, h2, h3, h4, h5, h6, div').forEach(el => {
-                        const style = el.getAttribute('style') || '';
                         const textContent = el.textContent.trim();
 
                         // Skip empty elements
@@ -980,78 +972,21 @@ $siteColors = [
                             return;
                         }
 
-                        // Preserve existing headings
-                        if (el.tagName.match(/^H[1-6]$/)) {
-                            // Clean but keep the heading
-                            el.removeAttribute('style');
-                            el.removeAttribute('class');
-                            return;
-                        }
+                        // Convert everything to plain paragraph
+                        const p = document.createElement('p');
 
-                        // Detect heading based on Word styling
-                        const isUnderlined = style.includes('underline') ||
-                            el.querySelector('u') !== null ||
-                            el.innerHTML.includes('<u>');
+                        // Keep only basic inline formatting: b, i, u, strong, em, sup, sub
+                        let cleanedInner = el.innerHTML
+                            .replace(/<span[^>]*>([\s\S]*?)<\/span>/gi, '$1')
+                            .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, '$1')
+                            .replace(/\sclass="[^"]*"/gi, '')
+                            .replace(/\sstyle="[^"]*"/gi, '');
 
-                        const isBold = style.includes('font-weight') && (style.includes('bold') || style.includes('700')) ||
-                            el.querySelector('b, strong') !== null;
-
-                        const isCentered = style.includes('text-align') && style.includes('center');
-                        const isShort = textContent.length < 120;
-                        const isAllCaps = textContent === textContent.toUpperCase() && textContent.length > 3 && /[A-Z]/.test(textContent);
-
-                        // Get font size
-                        let fontSize = 11;
-                        const sizeMatchPt = style.match(/font-size:\s*([\d.]+)\s*pt/i);
-                        const sizeMatchPx = style.match(/font-size:\s*([\d.]+)\s*px/i);
-                        if (sizeMatchPt) fontSize = parseFloat(sizeMatchPt[1]);
-                        else if (sizeMatchPx) fontSize = parseFloat(sizeMatchPx[1]) * 0.75;
-
-                        // Detect if this should be a heading
-                        const isHeading = (isUnderlined && isShort && isBold) ||
-                                         (fontSize >= 14 && isShort && (isBold || isCentered)) ||
-                                         (isAllCaps && isCentered && isShort) ||
-                                         (fontSize >= 16 && isShort);
-
-                        if (isHeading) {
-                            // Determine heading level
-                            let level = 'h2';
-                            if (fontSize >= 18 || (isAllCaps && textContent.length < 40)) {
-                                level = 'h1';
-                            } else if (fontSize <= 12 || (!isUnderlined && !isAllCaps)) {
-                                level = 'h3';
-                            }
-
-                            const heading = document.createElement(level);
-                            heading.textContent = textContent;
-                            el.replaceWith(heading);
-                        } else {
-                            // Keep as paragraph but preserve some inline formatting
-                            const p = document.createElement('p');
-
-                            // Clean HTML but keep b, i, u, strong, em, sup, sub
-                            let cleanedInner = el.innerHTML
-                                // Remove spans with only style (no semantic meaning)
-                                .replace(/<span[^>]*style="[^"]*"[^>]*>([\s\S]*?)<\/span>/gi, '$1')
-                                // Remove empty spans
-                                .replace(/<span[^>]*><\/span>/gi, '')
-                                // Remove Word classes
-                                .replace(/\sclass="[^"]*"/gi, '')
-                                // Remove inline styles except for some basics
-                                .replace(/\sstyle="(?!.*(?:font-weight|font-style|text-decoration))[^"]*"/gi, '');
-
-                            p.innerHTML = cleanedInner;
-
-                            // Copy text alignment if centered
-                            if (isCentered) {
-                                p.style.textAlign = 'center';
-                            }
-
-                            el.replaceWith(p);
-                        }
+                        p.innerHTML = cleanedInner;
+                        el.replaceWith(p);
                     });
 
-                    // Process lists
+                    // Process lists - keep structure but clean
                     temp.querySelectorAll('ul, ol').forEach(list => {
                         list.removeAttribute('style');
                         list.removeAttribute('class');
@@ -1063,32 +998,24 @@ $siteColors = [
 
                     // Clean up the final HTML
                     let cleanHtml = temp.innerHTML
-                        .replace(/<!--[\s\S]*?-->/g, '')     // Remove comments
-                        .replace(/<\/?o:[^>]*>/gi, '')       // Remove Office namespace tags
-                        .replace(/<\/?w:[^>]*>/gi, '')       // Remove Word namespace tags
-                        .replace(/<\/?m:[^>]*>/gi, '')       // Remove math namespace tags
-                        .replace(/\s+style=""/gi, '')        // Remove empty styles
-                        .replace(/\s+class=""/gi, '')        // Remove empty classes
-                        .replace(/<p>\s*<\/p>/gi, '')        // Remove empty paragraphs
-                        .replace(/<p>\s*&nbsp;\s*<\/p>/gi, ''); // Remove nbsp-only paragraphs
+                        .replace(/<!--[\s\S]*?-->/g, '')
+                        .replace(/<\/?o:[^>]*>/gi, '')
+                        .replace(/<\/?w:[^>]*>/gi, '')
+                        .replace(/<\/?m:[^>]*>/gi, '')
+                        .replace(/\s+style=""/gi, '')
+                        .replace(/\s+class=""/gi, '')
+                        .replace(/<p>\s*<\/p>/gi, '')
+                        .replace(/<p>\s*&nbsp;\s*<\/p>/gi, '');
 
                     document.execCommand('insertHTML', false, cleanHtml);
                 } else if (text) {
-                    // Plain text - preserve structure
+                    // Plain text - just wrap in paragraphs
                     const paragraphs = text.split(/\n\n+/);
                     const htmlParts = paragraphs.map(para => {
-                        // Check if line looks like a numbered item
                         const trimmed = para.trim();
-                        if (/^\d+[\.\)]\s+/.test(trimmed)) {
-                            // Numbered item - keep as paragraph with number
-                            return `<p>${trimmed}</p>`;
-                        }
-                        // Check if it's short and might be a heading
-                        if (trimmed.length < 60 && trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed)) {
-                            return `<h2>${trimmed}</h2>`;
-                        }
+                        if (!trimmed) return '';
                         return `<p>${trimmed}</p>`;
-                    });
+                    }).filter(p => p);
                     document.execCommand('insertHTML', false, htmlParts.join(''));
                 }
             });
