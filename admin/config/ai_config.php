@@ -6,15 +6,13 @@
 declare(strict_types=1);
 
 // =============================================================================
-// LOAD SECRETS (API key stored separately, not in git)
+// LOAD SECRETS
 // =============================================================================
 
-// Load API key from secrets file (excluded from version control)
 $secretsFile = __DIR__ . '/secrets.php';
 if (file_exists($secretsFile)) {
     require_once $secretsFile;
 } else {
-    // Fallback: check environment variable
     $envKey = getenv('OPENAI_API_KEY');
     if ($envKey) {
         define('OPENAI_API_KEY', $envKey);
@@ -27,18 +25,16 @@ if (file_exists($secretsFile)) {
 // OPENAI API CONFIGURATION
 // =============================================================================
 
-// OpenAI API endpoint
 define('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions');
 
-// Model to use
-define('OPENAI_MODEL', 'gpt-4o-mini');
+// GPT-4o - Better translations
+define('OPENAI_MODEL', 'gpt-4o');
 
-// Maximum tokens for AI responses (increased for long translations)
-// gpt-4o-mini supports up to 16k output tokens
-define('OPENAI_MAX_TOKENS', 16000);
+// Max tokens - reduced to speed up response
+define('OPENAI_MAX_TOKENS', 8000);
 
-// Temperature (0.0-2.0, lower = more focused)
-define('OPENAI_TEMPERATURE', 0.3);
+// Temperature (lower = more accurate)
+define('OPENAI_TEMPERATURE', 0.2);
 
 // =============================================================================
 // BIBLE CONFIGURATION
@@ -46,7 +42,6 @@ define('OPENAI_TEMPERATURE', 0.3);
 
 define('BIBLE_DIR', dirname(__DIR__, 2) . '/bible/bibles/');
 
-// Bible file mapping per language
 define('BIBLE_VERSIONS', [
     'af' => 'af_1933_53.json',
     'en' => 'en_kjv1611.json',
@@ -56,19 +51,11 @@ define('BIBLE_VERSIONS', [
 ]);
 
 // =============================================================================
-// OPENAI CHAT FUNCTION
+// OPENAI CHAT FUNCTION (NON-STREAMING - MORE RELIABLE)
 // =============================================================================
 
-/**
- * Make a chat completion request to OpenAI
- *
- * @param array $messages Array of message objects with 'role' and 'content'
- * @return array The API response data
- * @throws Exception on failure
- */
 function openai_chat(array $messages): array {
-    error_log('openai_chat: Starting API call');
-    $ch = curl_init(OPENAI_API_URL);
+    error_log('openai_chat: Starting API call with ' . OPENAI_MODEL);
 
     $payload = json_encode([
         'model' => OPENAI_MODEL,
@@ -79,6 +66,8 @@ function openai_chat(array $messages): array {
 
     error_log('openai_chat: Payload size: ' . strlen($payload) . ' bytes');
 
+    $ch = curl_init(OPENAI_API_URL);
+
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
@@ -87,42 +76,41 @@ function openai_chat(array $messages): array {
             'Content-Type: application/json',
             'Authorization: Bearer ' . OPENAI_API_KEY
         ],
-        CURLOPT_TIMEOUT => 180,  // 3 minutes for long translations
-        CURLOPT_CONNECTTIMEOUT => 30
+        CURLOPT_TIMEOUT => 180,         // 3 minutes per language
+        CURLOPT_CONNECTTIMEOUT => 30,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_ENCODING => ''
     ]);
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
+    $totalTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
     curl_close($ch);
 
-    error_log('openai_chat: HTTP code: ' . $httpCode);
+    error_log('openai_chat: HTTP ' . $httpCode . ', Time: ' . round($totalTime, 2) . 's');
 
     if ($curlError) {
         error_log('openai_chat: cURL ERROR: ' . $curlError);
-        throw new Exception('cURL error: ' . $curlError);
+        throw new Exception('Connection error: ' . $curlError);
     }
 
     $data = json_decode($response, true);
 
     if ($httpCode !== 200) {
-        $errorMsg = $data['error']['message'] ?? 'Unknown API error';
+        $errorMsg = $data['error']['message'] ?? 'Unknown error';
         error_log('openai_chat: API ERROR: ' . $errorMsg);
-        error_log('openai_chat: Full response: ' . substr($response, 0, 500));
-        throw new Exception('API error (' . $httpCode . '): ' . $errorMsg);
+        throw new Exception('API error: ' . $errorMsg);
     }
 
     if (!isset($data['choices'][0]['message']['content'])) {
-        error_log('openai_chat: Invalid response structure: ' . substr($response, 0, 500));
-        throw new Exception('Invalid API response structure');
+        error_log('openai_chat: Invalid response: ' . substr($response, 0, 500));
+        throw new Exception('Invalid API response');
     }
 
-    // Check if response was truncated
-    $finishReason = $data['choices'][0]['finish_reason'] ?? 'unknown';
-    if ($finishReason === 'length') {
-        error_log('openai_chat: WARNING - Response was truncated due to max_tokens limit!');
-    }
-    error_log('openai_chat: Success, response length: ' . strlen($data['choices'][0]['message']['content']) . ', finish_reason: ' . $finishReason);
+    error_log('openai_chat: Success! Response length: ' . strlen($data['choices'][0]['message']['content']));
     return $data;
 }
 
@@ -130,47 +118,26 @@ function openai_chat(array $messages): array {
 // BIBLE DATA LOADER
 // =============================================================================
 
-/**
- * Load Bible data for a specific language
- * Adds verse numbers (n) to each verse for easy lookup
- *
- * @param string $lang Language code (af, en, zu, xh, pt)
- * @return array|null Bible data or null if not available
- */
 function loadBibleData(string $lang): ?array {
     $file = BIBLE_VERSIONS[$lang] ?? BIBLE_VERSIONS['en'] ?? null;
-
-    if (!$file) {
-        return null;
-    }
+    if (!$file) return null;
 
     $filePath = BIBLE_DIR . $file;
-
     if (!file_exists($filePath)) {
         error_log('Bible file not found: ' . $filePath);
         return null;
     }
 
     $json = file_get_contents($filePath);
-    if ($json === false) {
-        error_log('Failed to read Bible file: ' . $filePath);
-        return null;
-    }
+    if ($json === false) return null;
 
     $data = json_decode($json, true);
-    if (!is_array($data) || empty($data)) {
-        error_log('Invalid or empty Bible data: ' . $filePath);
-        return null;
-    }
+    if (!is_array($data) || empty($data)) return null;
 
-    // Add verse numbers to the data structure
-    // The Bible JSON has 'v' for verse text and 'h' for headers
-    // We need to add 'n' (verse number) based on position
     foreach ($data as $book => &$chapters) {
         foreach ($chapters as $chapter => &$items) {
             $verseNum = 0;
             foreach ($items as &$item) {
-                // Skip headers, only number verses
                 if (isset($item['v']) && !isset($item['h'])) {
                     $verseNum++;
                     $item['n'] = $verseNum;

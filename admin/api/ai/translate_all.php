@@ -2,9 +2,13 @@
 declare(strict_types=1);
 
 /**
- * Translate content to all supported languages
+ * Translate content to a SINGLE target language
+ * Called multiple times by frontend (once per language)
  * Uses AI for text translation but preserves Bible verses from actual Bible files
  */
+
+// ALWAYS output JSON
+header('Content-Type: application/json; charset=utf-8');
 
 // Global error handler to catch all PHP errors and return JSON
 set_error_handler(function($severity, $message, $file, $line) {
@@ -12,14 +16,14 @@ set_error_handler(function($severity, $message, $file, $line) {
 });
 
 set_exception_handler(function($e) {
-    header('Content-Type: application/json');
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Server Error',
+        'error' => 'PHP Error',
         'detail' => $e->getMessage(),
-        'file' => basename($e->getFile()) . ':' . $e->getLine()
-    ]);
+        'file' => basename($e->getFile()) . ':' . $e->getLine(),
+        'trace' => $e->getTraceAsString()
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 });
 
@@ -28,19 +32,11 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
-// Custom error log for this file
-$errorLogFile = dirname(__DIR__, 3) . '/logs/translate_all.log';
-if (!is_dir(dirname($errorLogFile))) {
-    @mkdir(dirname($errorLogFile), 0755, true);
-}
-ini_set('error_log', $errorLogFile);
-error_log('=== TRANSLATE_ALL START: ' . date('Y-m-d H:i:s') . ' ===');
+// 3 minutes for ONE language should be plenty
+set_time_limit(180);
+ini_set('max_execution_time', '180');
 
-// Increase PHP timeout for long translations (4 languages)
-set_time_limit(600); // 10 minutes
-ini_set('max_execution_time', '600');
-
-// Load dependencies - check files exist first (require_once fatal errors can't be caught)
+// Load dependencies - check files exist first
 $baseDir = dirname(__DIR__, 3);
 $requiredFiles = [
     'security/config.php',
@@ -53,10 +49,8 @@ $requiredFiles = [
 foreach ($requiredFiles as $file) {
     $fullPath = $baseDir . '/' . $file;
     if (!file_exists($fullPath)) {
-        error_log('MISSING FILE: ' . $fullPath);
-        header('Content-Type: application/json');
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Missing file: ' . $file]);
+        echo json_encode(['success' => false, 'error' => 'Missing file: ' . $file, 'path' => $fullPath]);
         exit;
     }
 }
@@ -64,33 +58,26 @@ foreach ($requiredFiles as $file) {
 // Also check ai_config
 $aiConfigPath = dirname(__DIR__, 2) . '/config/ai_config.php';
 if (!file_exists($aiConfigPath)) {
-    error_log('MISSING FILE: ' . $aiConfigPath);
-    header('Content-Type: application/json');
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Missing file: ai_config.php']);
+    echo json_encode(['success' => false, 'error' => 'Missing file: ai_config.php', 'path' => $aiConfigPath]);
     exit;
 }
 
 // Now load them
 try {
-    error_log('Loading dependencies...');
     require_once $baseDir . '/security/config.php';
     require_once $baseDir . '/security/session.php';
     require_once $baseDir . '/security/auth.php';
     require_once $baseDir . '/includes/languages.php';
     require_once $aiConfigPath;
-    error_log('All dependencies loaded successfully');
 } catch (Throwable $e) {
-    error_log('FAILED to load dependencies: ' . $e->getMessage());
-    header('Content-Type: application/json');
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Failed to load dependencies', 'detail' => $e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => 'Failed to load: ' . $e->getMessage(), 'file' => basename($e->getFile()) . ':' . $e->getLine()]);
     exit;
 }
 
-// Headers
+// Start output buffering
 ob_start();
-header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
 // Auth check
@@ -109,9 +96,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Check API key is configured
+if (!defined('OPENAI_API_KEY') || OPENAI_API_KEY === '') {
+    ob_end_clean();
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'OpenAI API key not configured. Please add your API key to admin/config/secrets.php']);
+    exit;
+}
+
 // Get inputs
 $content = trim((string)($_POST['content'] ?? ''));
 $sourceLang = trim((string)($_POST['source_lang'] ?? 'af'));
+$targetLang = trim((string)($_POST['target_lang'] ?? ''));
 
 if ($content === '') {
     ob_end_clean();
@@ -120,9 +116,35 @@ if ($content === '') {
     exit;
 }
 
-// Validate source language
+if ($targetLang === '') {
+    ob_end_clean();
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'No target_lang provided']);
+    exit;
+}
+
+// Validate languages
 if (!in_array($sourceLang, SUPPORTED_LANGS, true)) {
     $sourceLang = 'af';
+}
+
+if (!in_array($targetLang, SUPPORTED_LANGS, true)) {
+    ob_end_clean();
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Invalid target language: ' . $targetLang]);
+    exit;
+}
+
+// If source == target, just return the content as-is
+if ($sourceLang === $targetLang) {
+    ob_end_clean();
+    http_response_code(200);
+    echo json_encode([
+        'success' => true,
+        'target_lang' => $targetLang,
+        'translation' => $content
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 // Language names for prompts
@@ -134,116 +156,112 @@ $langNames = [
     'pt' => 'Portuguese'
 ];
 
-// Target languages (exclude source)
-$targetLangs = array_filter(SUPPORTED_LANGS, fn($l) => $l !== $sourceLang);
-
 // Extract verse references to preserve them
-// Pattern: <p class="verse-ref">Book Chapter:Verse</p><p class="verse-text">...</p>
-$versePattern = '/<p class="verse-ref">([^<]+)<\/p>\s*<p class="verse-text">(.+?)<\/p>/si';
+$versePattern = '/<p class="(?:verse-ref|vref)">([^<]+)<\/p>\s*<p class="(?:verse-text|vtxt)">(.+?)<\/p>/si';
 $verseMatches = [];
 preg_match_all($versePattern, $content, $verseMatches, PREG_SET_ORDER);
 
-// Build translations array
-$translations = [];
-$translations[$sourceLang] = $content; // Source stays the same
-
 try {
-    error_log('Starting translation loop. Source: ' . $sourceLang . ', Targets: ' . implode(', ', $targetLangs));
+    error_log('=== Translating to: ' . $targetLang . ' ===');
     error_log('Content length: ' . strlen($content) . ' chars');
 
-    foreach ($targetLangs as $targetLang) {
-        error_log('--- Translating to: ' . $targetLang . ' ---');
-        $sourceName = $langNames[$sourceLang];
-        $targetName = $langNames[$targetLang];
+    $sourceName = $langNames[$sourceLang];
+    $targetName = $langNames[$targetLang];
 
-        // Build system prompt
-        $systemPrompt = "You are a professional translator. Translate from {$sourceName} to {$targetName}. " .
-            "Preserve the exact HTML structure and tags. " .
-            "Keep all class attributes intact. " .
-            "Do NOT translate Bible verse references (book names, chapter:verse numbers). " .
-            "Respond with ONLY the translated HTML, no explanations.";
+    // Build system prompt - emphasize COMPLETE translation
+    $systemPrompt = "You are a professional translator specializing in religious content. " .
+        "Translate the ENTIRE content from {$sourceName} to {$targetName}. " .
+        "CRITICAL RULES:\n" .
+        "1. Translate ALL paragraphs, ALL headings, and ALL text - do not skip anything\n" .
+        "2. Preserve the exact HTML structure and tags (<p>, <h1>, <h2>, <h3>, <span>, etc.)\n" .
+        "3. Keep all class attributes intact (class=\"vref\", class=\"vtxt\", etc.)\n" .
+        "4. Do NOT translate Bible verse references (keep book names and chapter:verse numbers as-is)\n" .
+        "5. Output ONLY the translated HTML - no explanations, no comments\n" .
+        "6. Make sure to translate the COMPLETE document from start to finish";
 
-        $messages = [
-            ['role' => 'system', 'content' => $systemPrompt],
-            ['role' => 'user', 'content' => $content]
-        ];
+    $messages = [
+        ['role' => 'system', 'content' => $systemPrompt],
+        ['role' => 'user', 'content' => $content]
+    ];
 
-        error_log('Calling OpenAI API for ' . $targetLang . '...');
-        $data = openai_chat($messages);
-        error_log('OpenAI response received for ' . $targetLang);
-        $translated = $data['choices'][0]['message']['content'] ?? '';
+    error_log('Calling OpenAI API for ' . $targetLang . '...');
+    $data = openai_chat($messages);
+    error_log('OpenAI response received for ' . $targetLang);
+    $translated = $data['choices'][0]['message']['content'] ?? '';
 
-        if ($translated === '') {
-            error_log('ERROR: Empty translation for ' . $targetLang);
-            throw new Exception("Empty translation for {$targetLang}");
-        }
-        error_log('Translation for ' . $targetLang . ' length: ' . strlen($translated) . ' chars');
+    if ($translated === '') {
+        error_log('ERROR: Empty translation for ' . $targetLang);
+        throw new Exception("Empty translation for {$targetLang}");
+    }
 
-        // Now replace verse text with actual Bible verses
-        $bible = loadBibleData($targetLang);
-        if ($bible && !empty($verseMatches)) {
-            foreach ($verseMatches as $match) {
-                $reference = trim($match[1]);
+    // Log translation length comparison
+    $sourceLen = strlen($content);
+    $transLen = strlen($translated);
+    error_log('Translation for ' . $targetLang . ' length: ' . $transLen . ' chars (source: ' . $sourceLen . ' chars)');
 
-                // Parse reference: "Book Chapter:VerseFrom-VerseTo" or "Book Chapter:Verse"
-                if (preg_match('/^([A-Za-zÀ-ÿ\s]+)\s+(\d+):(\d+)(?:-(\d+))?$/u', $reference, $parts)) {
-                    $book = trim($parts[1]);
-                    $chapter = (int)$parts[2];
-                    $verseFrom = (int)$parts[3];
-                    $verseTo = isset($parts[4]) ? (int)$parts[4] : $verseFrom;
+    // Warning if translation is significantly shorter than source (might be truncated)
+    if ($transLen < ($sourceLen * 0.5)) {
+        error_log('WARNING: Translation for ' . $targetLang . ' seems truncated! Only ' . round(($transLen/$sourceLen)*100) . '% of source length');
+    }
 
-                    // Try to find the book in the Bible data
-                    // Book names might differ between languages, try exact match first
-                    $bibleVerses = null;
-                    if (isset($bible[$book][$chapter])) {
-                        $bibleVerses = $bible[$book][$chapter];
-                    } else {
-                        // Try to find by partial match or common variations
-                        foreach (array_keys($bible) as $bibleBook) {
-                            if (stripos($bibleBook, $book) === 0 || stripos($book, $bibleBook) === 0) {
-                                if (isset($bible[$bibleBook][$chapter])) {
-                                    $bibleVerses = $bible[$bibleBook][$chapter];
-                                    break;
-                                }
+    // Now replace verse text with actual Bible verses
+    $bible = loadBibleData($targetLang);
+    if ($bible && !empty($verseMatches)) {
+        foreach ($verseMatches as $match) {
+            $reference = trim($match[1]);
+
+            // Parse reference: "Book Chapter:VerseFrom-VerseTo" or "Book Chapter:Verse"
+            if (preg_match('/^([A-Za-zÀ-ÿ\s]+)\s+(\d+):(\d+)(?:-(\d+))?$/u', $reference, $parts)) {
+                $book = trim($parts[1]);
+                $chapter = (int)$parts[2];
+                $verseFrom = (int)$parts[3];
+                $verseTo = isset($parts[4]) ? (int)$parts[4] : $verseFrom;
+
+                // Try to find the book in the Bible data
+                $bibleVerses = null;
+                if (isset($bible[$book][$chapter])) {
+                    $bibleVerses = $bible[$book][$chapter];
+                } else {
+                    // Try to find by partial match or common variations
+                    foreach (array_keys($bible) as $bibleBook) {
+                        if (stripos($bibleBook, $book) === 0 || stripos($book, $bibleBook) === 0) {
+                            if (isset($bible[$bibleBook][$chapter])) {
+                                $bibleVerses = $bible[$bibleBook][$chapter];
+                                break;
                             }
                         }
                     }
+                }
 
-                    if ($bibleVerses) {
-                        $verseTexts = [];
-                        foreach ($bibleVerses as $v) {
-                            if (isset($v['n'], $v['v'])) {
-                                $num = (int)$v['n'];
-                                if ($num >= $verseFrom && $num <= $verseTo) {
-                                    $verseTexts[] = '<sup>' . $num . '</sup> ' . htmlspecialchars($v['v']);
-                                }
+                if ($bibleVerses) {
+                    $verseTexts = [];
+                    $verseNum = 1;
+                    foreach ($bibleVerses as $v) {
+                        if (isset($v['v'])) {
+                            $num = isset($v['n']) ? (int)$v['n'] : $verseNum;
+                            if ($num >= $verseFrom && $num <= $verseTo) {
+                                $verseTexts[] = '<sup>' . $num . '</sup> ' . $v['v'];
                             }
+                            $verseNum++;
                         }
+                    }
 
-                        if (!empty($verseTexts)) {
-                            // Build the replacement HTML
-                            $newVerseHtml = '<p class="verse-ref">' . htmlspecialchars($reference) . '</p><p class="verse-text">' . implode(' ', $verseTexts) . '</p>';
-
-                            // Find and replace the verse block in translated content
-                            // The reference should still be there, just need to replace the verse-text content
-                            $refPattern = '/<p class="verse-ref">[^<]*' . preg_quote($parts[2] . ':' . $parts[3], '/') . '[^<]*<\/p>\s*<p class="verse-text">.+?<\/p>/si';
-                            $translated = preg_replace($refPattern, $newVerseHtml, $translated, 1);
-                        }
+                    if (!empty($verseTexts)) {
+                        $newVerseHtml = '<p class="vref">' . htmlspecialchars($reference) . '</p><p class="vtxt">' . implode(' ', $verseTexts) . '</p>';
+                        $refPattern = '/<p class="(?:verse-ref|vref)">[^<]*' . preg_quote($parts[2] . ':' . $parts[3], '/') . '[^<]*<\/p>\s*<p class="(?:verse-text|vtxt)">.+?<\/p>/si';
+                        $translated = preg_replace($refPattern, $newVerseHtml, $translated, 1);
                     }
                 }
             }
         }
-
-        $translations[$targetLang] = $translated;
     }
 
     ob_end_clean();
     http_response_code(200);
     echo json_encode([
         'success' => true,
-        'translations' => $translations,
-        'source_lang' => $sourceLang,
-        'translated_count' => count($targetLangs)
+        'target_lang' => $targetLang,
+        'translation' => $translated
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
@@ -256,7 +274,8 @@ try {
     echo json_encode([
         'success' => false,
         'error' => 'Translation failed',
-        'detail' => $e->getMessage()
+        'detail' => $e->getMessage(),
+        'target_lang' => $targetLang
     ], JSON_UNESCAPED_UNICODE);
 }
 
