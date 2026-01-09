@@ -1354,6 +1354,7 @@ $siteColors = [
         };
 
         // ===== TRANSLATE ALL - with full-screen overlay =====
+        // Translates ONE language at a time to avoid API timeout
         document.getElementById('btn-translate-all').onclick = async () => {
             // Get source content and detect language
             const sourceEditor = getCurrentEditor();
@@ -1373,64 +1374,86 @@ $siteColors = [
                 b.classList.remove('active', 'done');
             });
 
-            // Mark source as done (no translation needed)
+            // Mark source as done (no translation needed) and update its editor
             const sourceBadge = document.querySelector(`.lang-badge[data-lang="${detectedLang}"]`);
             if (sourceBadge) sourceBadge.classList.add('done');
+            if (editors[detectedLang]) {
+                editors[detectedLang].innerHTML = content;
+            }
+
+            // Get target languages (exclude source)
+            const targetLangs = CONFIG.supportedLangs.filter(l => l !== detectedLang);
+            let successCount = 0;
+            let errorLang = null;
 
             try {
-                const fd = new URLSearchParams();
-                fd.append('content', content);
-                fd.append('source_lang', detectedLang);
-
-                // Mark all others as active (being translated)
-                CONFIG.supportedLangs.forEach(lang => {
-                    if (lang !== detectedLang) {
-                        const badge = document.querySelector(`.lang-badge[data-lang="${lang}"]`);
-                        if (badge) badge.classList.add('active');
+                // Translate ONE language at a time (sequential)
+                for (const targetLang of targetLangs) {
+                    // Mark this language as active
+                    const badge = document.querySelector(`.lang-badge[data-lang="${targetLang}"]`);
+                    if (badge) {
+                        badge.classList.remove('done');
+                        badge.classList.add('active');
                     }
-                });
 
-                const res = await fetch('/admin/api/ai/translate_all.php', { method: 'POST', body: fd });
+                    console.log('Translating to:', targetLang);
 
-                // Check if response is OK
-                if (!res.ok) {
-                    const text = await res.text();
-                    console.error('Translation API Error:', res.status, text);
-                    try {
-                        const errData = JSON.parse(text);
-                        throw new Error(errData.error + (errData.detail ? ': ' + errData.detail : ''));
-                    } catch(parseErr) {
-                        throw new Error('Server error ' + res.status + ': ' + text.substring(0, 200));
-                    }
-                }
+                    const fd = new URLSearchParams();
+                    fd.append('content', content);
+                    fd.append('source_lang', detectedLang);
+                    fd.append('target_lang', targetLang);
 
-                const data = await res.json();
+                    const res = await fetch('/admin/api/ai/translate_all.php', { method: 'POST', body: fd });
 
-                if (data.success) {
-                    // Update all editors
-                    Object.keys(data.translations).forEach(lang => {
-                        if (editors[lang]) {
-                            editors[lang].innerHTML = data.translations[lang];
-                            const badge = document.querySelector(`.lang-badge[data-lang="${lang}"]`);
-                            if (badge) {
-                                badge.classList.remove('active');
-                                badge.classList.add('done');
-                            }
+                    // Check if response is OK
+                    if (!res.ok) {
+                        const text = await res.text();
+                        console.error('Translation API Error for ' + targetLang + ':', res.status, text);
+                        errorLang = targetLang;
+                        try {
+                            const errData = JSON.parse(text);
+                            throw new Error(errData.error + (errData.detail ? ': ' + errData.detail : ''));
+                        } catch(parseErr) {
+                            if (parseErr.message.includes('error')) throw parseErr;
+                            throw new Error('Server error ' + res.status + ': ' + text.substring(0, 200));
                         }
-                    });
-                    hasChanges = true;
+                    }
 
-                    // Short delay to show success
-                    await new Promise(r => setTimeout(r, 1000));
-                    showStatus('saved', 'All translations complete!');
-                } else {
-                    console.error('Translation failed:', data);
-                    throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
+                    const data = await res.json();
+
+                    if (data.success) {
+                        // Update this language's editor
+                        if (editors[targetLang]) {
+                            editors[targetLang].innerHTML = data.translation;
+                        }
+                        // Mark as done
+                        if (badge) {
+                            badge.classList.remove('active');
+                            badge.classList.add('done');
+                        }
+                        successCount++;
+                        console.log('Translation complete for:', targetLang);
+                    } else {
+                        console.error('Translation failed for ' + targetLang + ':', data);
+                        errorLang = targetLang;
+                        throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));
+                    }
                 }
+
+                hasChanges = true;
+
+                // Short delay to show success
+                await new Promise(r => setTimeout(r, 500));
+                showStatus('saved', 'All ' + successCount + ' translations complete!');
+
             } catch(e) {
                 console.error('Translation error:', e);
-                showStatus('error', e.message);
-                alert('Translation Error: ' + e.message);
+                showStatus('error', (errorLang ? errorLang.toUpperCase() + ': ' : '') + e.message);
+                if (successCount > 0) {
+                    alert('Translation stopped at ' + (errorLang || 'unknown') + ': ' + e.message + '\n\n' + successCount + ' language(s) completed successfully.');
+                } else {
+                    alert('Translation Error: ' + e.message);
+                }
             } finally {
                 overlay.classList.remove('show');
             }
