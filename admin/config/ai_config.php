@@ -87,19 +87,32 @@ function openai_chat(array $messages): array {
             'Content-Type: application/json',
             'Authorization: Bearer ' . OPENAI_API_KEY
         ],
-        CURLOPT_TIMEOUT => 180,  // 3 minutes for long translations
-        CURLOPT_CONNECTTIMEOUT => 30
+        CURLOPT_TIMEOUT => 300,  // 5 minutes for long translations
+        CURLOPT_CONNECTTIMEOUT => 60,  // 60 seconds to connect
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_ENCODING => '',  // Accept any encoding
+        CURLOPT_VERBOSE => false
     ]);
+
+    // Log curl info for debugging
+    error_log('openai_chat: Attempting connection to ' . OPENAI_API_URL);
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
+    $curlErrno = curl_errno($ch);
+    $curlInfo = curl_getinfo($ch);
     curl_close($ch);
 
-    error_log('openai_chat: HTTP code: ' . $httpCode);
+    error_log('openai_chat: HTTP code: ' . $httpCode . ', cURL errno: ' . $curlErrno);
+    error_log('openai_chat: Total time: ' . ($curlInfo['total_time'] ?? 'unknown') . 's, Connect time: ' . ($curlInfo['connect_time'] ?? 'unknown') . 's');
 
     if ($curlError) {
-        error_log('openai_chat: cURL ERROR: ' . $curlError);
+        error_log('openai_chat: cURL ERROR: ' . $curlError . ' (errno: ' . $curlErrno . ')');
+        error_log('openai_chat: Primary IP: ' . ($curlInfo['primary_ip'] ?? 'none'));
         throw new Exception('cURL error: ' . $curlError);
     }
 
