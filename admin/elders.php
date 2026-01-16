@@ -323,51 +323,69 @@ $siteColors = [
             background: var(--editor-bg);
         }
 
-        /* Editor heading styles - use site fonts */
+        /* Editor heading styles - MATCH WELCOME.CSS exactly */
+        .editor h1,
+        .editor h2,
+        .editor h3 {
+            font-weight: 400;
+            color: var(--primary);
+            margin: 28px 0 14px;
+            line-height: 1.3;
+        }
+        /* Only H1 gets Parisienne cursive */
         .editor h1 {
             font-family: 'Parisienne', cursive;
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin: 1em 0 0.5em;
-            font-weight: normal;
-        }
-        .editor h2 {
-            font-family: 'Parisienne', cursive;
             font-size: 2rem;
-            color: var(--primary);
-            margin: 1em 0 0.5em;
-            font-weight: normal;
-            text-decoration: underline;
+        }
+        /* H2 and H3 use system font */
+        .editor h2 {
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 1.4rem;
         }
         .editor h3 {
-            font-family: 'Parisienne', cursive;
-            font-size: 1.5rem;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 1.2rem;
             color: var(--primary-dark);
-            margin: 0.8em 0 0.4em;
-            font-weight: normal;
+        }
+        .editor h1:first-child,
+        .editor h2:first-child,
+        .editor h3:first-child {
+            margin-top: 0;
         }
         .editor p {
-            font-family: Georgia, serif !important;
-            font-size: 16px !important;
-            margin: 1em 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 16px;
+            font-weight: 300;
+            margin: 0 0 16px;
             color: var(--editor-text);
+            line-height: 1.9;
+        }
+        .editor p:last-child {
+            margin-bottom: 0;
         }
         .editor ul, .editor ol {
-            margin: 1em 0;
-            padding-left: 2em;
+            margin: 0 0 16px;
+            padding-left: 24px;
         }
         .editor li {
-            font-family: Georgia, serif;
-            margin: 0.5em 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 16px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            line-height: 1.7;
+            color: var(--editor-text);
+        }
+        .editor strong, .editor b {
+            font-weight: 500;
         }
 
-        /* Bible verse classes - matching welcome.css */
+        /* Bible verse classes - MATCH WELCOME.CSS exactly */
         .editor .vref {
             font-family: 'Parisienne', cursive;
             font-size: 1.1rem;
             font-weight: 500;
             color: var(--primary);
-            margin: 1.5em 0 0.5em;
+            margin: 24px 0 8px;
             display: block;
         }
         .editor .vtxt {
@@ -376,7 +394,7 @@ $siteColors = [
             line-height: 1.9;
             padding-left: 16px;
             border-left: 2px solid var(--primary-dark);
-            margin: 0 0 1em;
+            margin: 0 0 20px;
         }
         .editor .vtxt sup {
             font-size: 0.7em;
@@ -384,6 +402,12 @@ $siteColors = [
             color: var(--primary);
             margin-right: 2px;
             font-style: normal;
+            vertical-align: super;
+        }
+
+        /* Numbered paragraphs styling */
+        .editor p[style*="text-align: center"] {
+            text-align: center;
         }
 
         /* ===== ACTIONS ===== */
@@ -911,7 +935,7 @@ $siteColors = [
             return detected;
         }
 
-        // ===== PASTE HANDLER - Preserve Word formatting =====
+        // ===== PASTE HANDLER - Plain paste, user chooses formatting =====
         Object.values(editors).forEach(ed => {
             if (!ed) return;
             ed.addEventListener('paste', function(e) {
@@ -926,83 +950,68 @@ $siteColors = [
                     temp.innerHTML = html;
 
                     // Remove Word-specific junk
-                    temp.querySelectorAll('meta, link, style, script, xml, o\\:p, w\\:sdt, font').forEach(el => {
-                        // Unwrap font tags but keep content
-                        if (el.tagName === 'FONT') {
-                            el.replaceWith(...el.childNodes);
-                        } else {
-                            el.remove();
-                        }
+                    temp.querySelectorAll('meta, link, style, script, xml').forEach(el => el.remove());
+
+                    // Unwrap o:p tags (Word paragraph markers)
+                    temp.querySelectorAll('o\\:p').forEach(el => {
+                        el.replaceWith(...el.childNodes);
                     });
 
-                    // Process all elements to detect headings
-                    temp.querySelectorAll('p, h1, h2, h3, h4, div').forEach(el => {
-                        const style = el.getAttribute('style') || '';
+                    // Convert ALL block elements to plain paragraphs
+                    temp.querySelectorAll('p, h1, h2, h3, h4, h5, h6, div').forEach(el => {
                         const textContent = el.textContent.trim();
-                        if (!textContent) return;
 
-                        // Check for heading indicators
-                        const isUnderlined = style.includes('underline') || el.querySelector('u') || el.innerHTML.includes('<u>');
-                        const isBold = style.includes('font-weight') && (style.includes('bold') || style.includes('700')) || el.querySelector('b, strong');
-                        const isCentered = style.includes('center') || el.style.textAlign === 'center';
-                        const isShort = textContent.length < 100;
-                        const isAllCaps = textContent === textContent.toUpperCase() && textContent.length > 3;
-
-                        // Get font size in pt
-                        let fontSize = 11;
-                        const sizeMatch = style.match(/font-size:\s*([\d.]+)\s*pt/i);
-                        if (sizeMatch) fontSize = parseFloat(sizeMatch[1]);
-
-                        // Already a heading tag
-                        if (el.tagName.match(/^H[1-4]$/)) {
-                            return; // Keep as-is
+                        // Skip empty elements
+                        if (!textContent) {
+                            el.remove();
+                            return;
                         }
 
-                        // Detect heading: underlined + short, or large font + short, or all caps + centered + short
-                        const isHeading = (isUnderlined && isShort) ||
-                                         (fontSize >= 14 && isShort) ||
-                                         (isAllCaps && isCentered && isShort) ||
-                                         (isBold && isCentered && isShort);
+                        // Convert everything to plain paragraph
+                        const p = document.createElement('p');
 
-                        if (isHeading) {
-                            // Determine level: H1 for main title, H2 for section headings
-                            let level = 'h2';
-                            if (fontSize >= 16 || (isAllCaps && textContent.length < 30)) {
-                                level = 'h1';
-                            } else if (fontSize <= 12 && !isUnderlined) {
-                                level = 'h3';
-                            }
+                        // Keep only basic inline formatting: b, i, u, strong, em, sup, sub
+                        let cleanedInner = el.innerHTML
+                            .replace(/<span[^>]*>([\s\S]*?)<\/span>/gi, '$1')
+                            .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, '$1')
+                            .replace(/\sclass="[^"]*"/gi, '')
+                            .replace(/\sstyle="[^"]*"/gi, '');
 
-                            const heading = document.createElement(level);
-                            heading.textContent = textContent;
-                            el.replaceWith(heading);
-                        } else {
-                            // Regular paragraph - convert to clean p tag
-                            const p = document.createElement('p');
-                            // Preserve inline formatting (bold, italic, underline) but clean up
-                            p.innerHTML = el.innerHTML
-                                .replace(/<span[^>]*>/gi, '')
-                                .replace(/<\/span>/gi, '')
-                                .replace(/style="[^"]*"/gi, '')
-                                .replace(/class="[^"]*"/gi, '');
-                            el.replaceWith(p);
-                        }
+                        p.innerHTML = cleanedInner;
+                        el.replaceWith(p);
+                    });
+
+                    // Process lists - keep structure but clean
+                    temp.querySelectorAll('ul, ol').forEach(list => {
+                        list.removeAttribute('style');
+                        list.removeAttribute('class');
+                        list.querySelectorAll('li').forEach(li => {
+                            li.removeAttribute('style');
+                            li.removeAttribute('class');
+                        });
                     });
 
                     // Clean up the final HTML
                     let cleanHtml = temp.innerHTML
-                        .replace(/<!--[\s\S]*?-->/g, '')  // Remove comments
-                        .replace(/<\/?o:[^>]*>/gi, '')     // Remove Office namespace tags
-                        .replace(/<\/?w:[^>]*>/gi, '')     // Remove Word namespace tags
-                        .replace(/\s+style=""/gi, '')      // Remove empty styles
-                        .replace(/\s+class=""/gi, '');     // Remove empty classes
+                        .replace(/<!--[\s\S]*?-->/g, '')
+                        .replace(/<\/?o:[^>]*>/gi, '')
+                        .replace(/<\/?w:[^>]*>/gi, '')
+                        .replace(/<\/?m:[^>]*>/gi, '')
+                        .replace(/\s+style=""/gi, '')
+                        .replace(/\s+class=""/gi, '')
+                        .replace(/<p>\s*<\/p>/gi, '')
+                        .replace(/<p>\s*&nbsp;\s*<\/p>/gi, '');
 
                     document.execCommand('insertHTML', false, cleanHtml);
                 } else if (text) {
-                    // Plain text - wrap lines in paragraphs
-                    const lines = text.split(/\n\n+/);
-                    const html = lines.map(line => `<p>${line.trim()}</p>`).join('');
-                    document.execCommand('insertHTML', false, html);
+                    // Plain text - just wrap in paragraphs
+                    const paragraphs = text.split(/\n\n+/);
+                    const htmlParts = paragraphs.map(para => {
+                        const trimmed = para.trim();
+                        if (!trimmed) return '';
+                        return `<p>${trimmed}</p>`;
+                    }).filter(p => p);
+                    document.execCommand('insertHTML', false, htmlParts.join(''));
                 }
             });
 
@@ -1034,46 +1043,88 @@ $siteColors = [
             getCurrentEditor().focus();
         }
 
-        // Custom function to change block type (H1, H2, H3, P)
+        // Custom function to change block type (H1, H2, H3, P) - IMPROVED
         function changeBlockType(newTag) {
             const editor = getCurrentEditor();
+            editor.focus();
+
             const sel = window.getSelection();
             if (!sel.rangeCount) {
-                editor.focus();
+                // No selection - create a new element at cursor
+                const newEl = document.createElement(newTag);
+                newEl.innerHTML = '<br>';
+                editor.appendChild(newEl);
+
+                const range = document.createRange();
+                range.selectNodeContents(newEl);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                hasChanges = true;
                 return;
             }
 
             // Find the parent block element
             let node = sel.anchorNode;
-            while (node && node !== editor) {
-                if (node.nodeType === 1 && ['P', 'H1', 'H2', 'H3', 'H4', 'DIV'].includes(node.tagName)) {
+
+            // If we're on a text node, get the parent
+            if (node.nodeType === 3) {
+                node = node.parentNode;
+            }
+
+            // Walk up to find the block element
+            while (node && node !== editor && node.parentNode !== editor) {
+                if (node.nodeType === 1 && ['P', 'H1', 'H2', 'H3', 'H4', 'DIV', 'LI'].includes(node.tagName)) {
                     break;
                 }
                 node = node.parentNode;
             }
 
-            if (node && node !== editor && node.nodeType === 1) {
-                // Create new element with the desired tag
-                const newEl = document.createElement(newTag);
-                newEl.innerHTML = node.innerHTML;
+            // If node is direct child of editor or we found a block
+            if (node && node !== editor) {
+                // Check if this is actually a block we can convert
+                const isBlock = node.nodeType === 1 &&
+                    (node.parentNode === editor || ['P', 'H1', 'H2', 'H3', 'H4', 'DIV'].includes(node.tagName));
 
-                // Replace the old element with the new one
-                node.parentNode.replaceChild(newEl, node);
+                if (isBlock && node.tagName !== newTag.toUpperCase()) {
+                    // Create new element with the desired tag
+                    const newEl = document.createElement(newTag);
 
-                // Restore cursor position
-                const range = document.createRange();
-                range.selectNodeContents(newEl);
-                range.collapse(false);
-                sel.removeAllRanges();
-                sel.addRange(range);
+                    // Copy content (strip only the outermost tag, keep inner formatting)
+                    newEl.innerHTML = node.innerHTML || '<br>';
 
-                hasChanges = true;
-                console.log('Changed block to:', newTag);
-            } else {
-                // No block element found, try execCommand as fallback
-                try {
-                    document.execCommand('formatBlock', false, '<' + newTag + '>');
+                    // Copy any relevant styles (like text-align)
+                    if (node.style.textAlign) {
+                        newEl.style.textAlign = node.style.textAlign;
+                    }
+                    if (node.style.lineHeight) {
+                        newEl.style.lineHeight = node.style.lineHeight;
+                    }
+
+                    // Replace the old element with the new one
+                    node.parentNode.replaceChild(newEl, node);
+
+                    // Restore cursor position at end of new element
+                    const range = document.createRange();
+                    range.selectNodeContents(newEl);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+
                     hasChanges = true;
+                    console.log('Changed block from', node.tagName, 'to:', newTag);
+                } else if (!isBlock) {
+                    // Wrap current content in the new tag
+                    document.execCommand('formatBlock', false, newTag);
+                    hasChanges = true;
+                    console.log('Wrapped content in:', newTag);
+                }
+            } else {
+                // Fallback: use execCommand
+                try {
+                    document.execCommand('formatBlock', false, newTag);
+                    hasChanges = true;
+                    console.log('Used execCommand for:', newTag);
                 } catch(e) {
                     console.error('formatBlock failed:', e);
                 }
