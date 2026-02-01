@@ -136,14 +136,25 @@ $VER = time();
           <?= htmlspecialchars($town ?: '') ?><?= ($town && $province) ? ', ' : '' ?><?= htmlspecialchars($province ?: '') ?>
         </p>
       <?php endif; ?>
+      <span class="wc-frame-ornament"></span>
     </div>
     <div class="wc-sparkles">
-      <span class="wc-sparkle" style="--delay: 0s; --x: 15%; --y: 25%;"></span>
-      <span class="wc-sparkle" style="--delay: 0.5s; --x: 80%; --y: 35%;"></span>
-      <span class="wc-sparkle" style="--delay: 1s; --x: 45%; --y: 65%;"></span>
-      <span class="wc-sparkle" style="--delay: 1.5s; --x: 25%; --y: 75%;"></span>
-      <span class="wc-sparkle" style="--delay: 2s; --x: 85%; --y: 65%;"></span>
+      <span class="wc-sparkle" style="--delay: 0s; --x: 10%; --y: 20%;"></span>
+      <span class="wc-sparkle" style="--delay: 0.4s; --x: 90%; --y: 15%;"></span>
+      <span class="wc-sparkle" style="--delay: 0.8s; --x: 5%; --y: 50%;"></span>
+      <span class="wc-sparkle" style="--delay: 1.2s; --x: 95%; --y: 55%;"></span>
+      <span class="wc-sparkle" style="--delay: 1.6s; --x: 15%; --y: 80%;"></span>
+      <span class="wc-sparkle" style="--delay: 2s; --x: 85%; --y: 85%;"></span>
+      <span class="wc-sparkle" style="--delay: 2.4s; --x: 50%; --y: 10%;"></span>
     </div>
+    <?php if ($town || $province): ?>
+    <div class="wc-bottom-location">
+      <svg class="wc-location-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+      </svg>
+      <?= htmlspecialchars($town ?: '') ?><?= ($town && $province) ? ', ' : '' ?><?= htmlspecialchars($province ?: '') ?>
+    </div>
+    <?php endif; ?>
   </div>
 
   <main class="wc-main">
