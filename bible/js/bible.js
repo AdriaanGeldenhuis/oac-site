@@ -564,13 +564,18 @@
       const scrollTopR = els.rightColumn.scrollTop;
       const scrollHeightR = els.rightColumn.scrollHeight;
 
-      // Prepend chapters in chronological order
+      // Use DocumentFragment to prepend chapters in correct chronological order.
+      // Direct insertBefore(el, firstChild) in a loop reverses the order.
+      const leftFrag = document.createDocumentFragment();
+      const rightFrag = document.createDocumentFragment();
       chapters.forEach(ch => {
-        els.leftContent.insertBefore(ch.leftEl, els.leftContent.firstChild);
-        els.rightContent.insertBefore(ch.rightEl, els.rightContent.firstChild);
+        leftFrag.appendChild(ch.leftEl);
+        rightFrag.appendChild(ch.rightEl);
         state.renderedChapters.add(ch.leftKey);
         state.renderedChapters.add(ch.rightKey);
       });
+      els.leftContent.insertBefore(leftFrag, els.leftContent.firstChild);
+      els.rightContent.insertBefore(rightFrag, els.rightContent.firstChild);
 
       // Restore scroll position so the view doesn't jump
       const diffL = els.leftColumn.scrollHeight - scrollHeightL;
