@@ -1,0 +1,143 @@
+/* ===== Daily Thought Admin ===== */
+
+.gedagte-form {
+  margin-bottom: 36px;
+}
+
+.gedagte-field {
+  margin-bottom: 16px;
+}
+
+.gedagte-field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-accent, #f3c3b1);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+.gedagte-field textarea,
+.gedagte-field input[type="text"],
+.gedagte-field input[type="date"] {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--card-bg-start, rgba(10, 10, 10, 0.85));
+  border: 1px solid var(--card-border, rgba(243, 195, 177, 0.15));
+  border-radius: 10px;
+  color: var(--text-primary, #f5d5c8);
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease;
+}
+
+.gedagte-field textarea:focus,
+.gedagte-field input:focus {
+  outline: none;
+  border-color: var(--color-rosegold, #f3c3b1);
+}
+
+.gedagte-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.gedagte-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.gedagte-actions {
+  margin-top: 8px;
+}
+
+/* ===== Thought list ===== */
+.gedagte-list-section {
+  border-top: 1px solid var(--card-border, rgba(243, 195, 177, 0.15));
+  padding-top: 24px;
+}
+
+.gedagte-list-title {
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary, #c0c0c0);
+  margin-bottom: 16px;
+}
+
+.gedagte-empty {
+  color: var(--text-secondary, #c0c0c0);
+  font-size: 0.9rem;
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.gedagte-item {
+  position: relative;
+  padding: 16px;
+  background: var(--card-bg-start, rgba(10, 10, 10, 0.85));
+  border: 1px solid var(--card-border, rgba(243, 195, 177, 0.15));
+  border-radius: 12px;
+  margin-bottom: 12px;
+  transition: border-color 0.3s ease;
+}
+
+.gedagte-item--today {
+  border-color: var(--color-rosegold, #f3c3b1);
+}
+
+.gedagte-item--past {
+  opacity: 0.5;
+}
+
+.gedagte-item-date {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-rosegold, #f3c3b1);
+  margin-bottom: 8px;
+}
+
+.gedagte-item-content {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-primary, #f5d5c8);
+  margin-bottom: 4px;
+}
+
+.gedagte-item-author {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-secondary, #c0c0c0);
+  margin-bottom: 8px;
+}
+
+.gedagte-delete-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: 1px solid rgba(200, 80, 80, 0.3);
+  color: #c85050;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.gedagte-delete-btn:hover {
+  background: rgba(200, 80, 80, 0.15);
+  border-color: #c85050;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .gedagte-row {
+    grid-template-columns: 1fr;
+  }
+}

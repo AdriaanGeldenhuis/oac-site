@@ -107,6 +107,29 @@ foreach ($candidates as $cand) {
     }
 }
 
+// Fetch today's thought
+$dailyThought = null;
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS daily_thoughts (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            content TEXT NOT NULL,
+            author VARCHAR(255) DEFAULT NULL,
+            display_date DATE NOT NULL,
+            created_by INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_date (display_date),
+            INDEX idx_display_date (display_date),
+            INDEX idx_created_by (created_by)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    $stmt = $pdo->prepare('SELECT content, author FROM daily_thoughts WHERE display_date = CURDATE() LIMIT 1');
+    $stmt->execute();
+    $dailyThought = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+} catch (Throwable $e) {
+    error_log("Daily thought fetch error: " . $e->getMessage());
+}
+
 $VER = time();
 
 // Quick navigation items
@@ -161,6 +184,19 @@ $navItems = [
         <?php endforeach; ?>
       </div>
     </section>
+
+    <!-- Thought of the Day -->
+    <?php if ($dailyThought): ?>
+    <section class="wc-thought-section">
+      <h3 class="wc-section-label"><?= t('thought_of_day') ?></h3>
+      <div class="wc-thought-card">
+        <div class="wc-thought-content"><?= htmlspecialchars($dailyThought['content']) ?></div>
+        <?php if (!empty($dailyThought['author'])): ?>
+          <div class="wc-thought-author">&mdash; <?= htmlspecialchars($dailyThought['author']) ?></div>
+        <?php endif; ?>
+      </div>
+    </section>
+    <?php endif; ?>
 
     <!-- Teaching Section -->
     <section class="wc-teaching-section">
