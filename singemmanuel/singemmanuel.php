@@ -104,6 +104,7 @@ $VER = time();
   <main class="se-main">
     <!-- Language & Search Section -->
     <section class="se-section se-controls-section">
+      <h2 class="se-page-title">Sing Emmanuel</h2>
       <div class="se-section-header">
         <div class="se-icon-wrapper">
           <svg class="se-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
