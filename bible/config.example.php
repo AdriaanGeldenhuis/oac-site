@@ -24,8 +24,8 @@ define('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions');
 // Model to use (gpt-4o-mini is fast and affordable, gpt-4o for better quality)
 define('OPENAI_MODEL', 'gpt-4o-mini');
 
-// Maximum tokens for AI responses (1000 for rich contextual storytelling)
-define('OPENAI_MAX_TOKENS', 1000);
+// Maximum tokens for AI responses (800 for concise but rich context)
+define('OPENAI_MAX_TOKENS', 800);
 
 // Temperature (0.0-2.0, lower = more focused, higher = more creative)
 define('OPENAI_TEMPERATURE', 0.3);
