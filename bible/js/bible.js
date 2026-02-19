@@ -1433,7 +1433,9 @@
 
     if (!els.aiPanel || !els.aiOutput) return;
 
-    const loadingMsg = state.lang === 'af' ? 'AI verduidelik gedeelte...' : 'AI explaining passage...';
+    const loadingMsg = state.lang === 'af'
+      ? 'AI lees die verse rondom hierdie gedeelte en vertel die storie...'
+      : 'AI is reading the surrounding verses and telling the story...';
     els.aiOutput.innerHTML = `<div class="bible-loading">${loadingMsg}</div>`;
     showPanel(els.aiPanel);
 
@@ -1455,11 +1457,37 @@
       const data = await res.json();
 
       if (data.success) {
-        const formattedAnswer = esc(data.answer).replace(/\n/g, '<br>');
+        // Parse markdown-like response into styled sections
+        const raw = data.answer;
+        // Split into sections by **HEADING:** pattern
+        const sections = raw.split(/\*\*([^*]+)\*\*/g);
+        let html = '';
+        for (let i = 0; i < sections.length; i++) {
+          const part = sections[i].trim();
+          if (!part) continue;
+          // Check if next part is content (odd indices are headings, even are content after split)
+          if (i % 2 === 1) {
+            // This is a heading
+            html += `<div class="bible-ai-section"><div class="bible-ai-heading">${esc(part)}</div>`;
+          } else if (html) {
+            // This is content following a heading
+            const escaped = esc(part).replace(/\n/g, '<br>');
+            // Convert inline quotes (text between "") to styled spans
+            const withQuotes = escaped.replace(/&quot;([^&]*?)&quot;/g,
+              '<span class="bible-ai-quote">"$1"</span>');
+            html += `<div class="bible-ai-content">${withQuotes}</div></div>`;
+          } else {
+            // Content before any heading (intro text)
+            html += `<div class="bible-ai-intro">${esc(part).replace(/\n/g, '<br>')}</div>`;
+          }
+        }
         els.aiOutput.innerHTML = `
           <div class="bible-ai-response">
             <div class="bible-ai-verse-ref">${esc(verseRef)}</div>
-            <div class="bible-ai-answer">${formattedAnswer}</div>
+            <div class="bible-ai-context-note">${esc(state.lang === 'af'
+              ? 'Gebaseer op ' + (data.context_verses || 20) + ' omliggende verse'
+              : 'Based on ' + (data.context_verses || 20) + ' surrounding verses')}</div>
+            <div class="bible-ai-answer">${html}</div>
           </div>
         `;
       } else {

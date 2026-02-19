@@ -899,10 +899,56 @@ html {
   border-bottom: 1px solid var(--border);
 }
 
+.bible-ai-context-note {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
 .bible-ai-answer {
   font-size: 0.95rem;
   color: var(--text-primary);
   line-height: 1.8;
+}
+
+.bible-ai-section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.bible-ai-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.bible-ai-heading {
+  font-weight: 700;
+  color: var(--rose-gold);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.bible-ai-content {
+  color: var(--text-primary);
+  line-height: 1.8;
+}
+
+.bible-ai-quote {
+  color: var(--rose-gold);
+  font-style: italic;
+}
+
+.bible-ai-intro {
+  color: var(--text-secondary);
+  margin-bottom: 15px;
+  font-style: italic;
 }
 
 .bible-cross-ref-item {
