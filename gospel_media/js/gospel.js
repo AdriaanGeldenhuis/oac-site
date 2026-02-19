@@ -63,38 +63,27 @@
   }
 
   // ===== EDIT RIGHTS =====
-  function canEditPost(p) {
-    if (!ME.id) return false;
-    if (String(ME.id) === String(p.user_id)) return true;
-    
+  function canModerate() {
     const a = parseInt(ME.amp_id || 0, 10);
     if (!a) return false;
-    
-    const rt = (window.CURRENT_ROOM_TYPE || '').toLowerCase();
-    
+    const rt = ROOM_TYPE;
     if (rt === 'opsienerskap') return a >= 2 && a <= 5;
     if (rt === 'gemeente') return a >= 5 && a <= 9;
     if (rt === 'jeug' || rt === 'sondagskool') return a >= 1 && a <= 9;
     if (rt === 'gemeenskap') return a >= 1 && a <= 6;
-    
     return false;
+  }
+
+  function canEditPost(p) {
+    if (!ME.id) return false;
+    if (String(ME.id) === String(p.user_id)) return true;
+    return canModerate();
   }
 
   function canEditComment(c) {
     if (!ME.id) return false;
     if (String(ME.id) === String(c.user_id)) return true;
-    
-    const a = parseInt(ME.amp_id || 0, 10);
-    if (!a) return false;
-    
-    const rt = (window.CURRENT_ROOM_TYPE || '').toLowerCase();
-    
-    if (rt === 'opsienerskap') return a >= 2 && a <= 5;
-    if (rt === 'gemeente') return a >= 5 && a <= 9;
-    if (rt === 'jeug' || rt === 'sondagskool') return a >= 1 && a <= 9;
-    if (rt === 'gemeenskap') return a >= 1 && a <= 6;
-    
-    return false;
+    return canModerate();
   }
 
   // ===== DATE FORMATTING =====
@@ -111,140 +100,156 @@
     }
   };
 
-  // ===== COMPOSER =====
-  function showEventFields(show) {
-    const box = $('#composer-event-fields');
-    if (box) box.classList.toggle('hide', !show);
-  }
-
-  function bindComposerTabs() {
-    const postTab = $('#composer-type-post');
-    const evtTab = $('#composer-type-event');
-    
-    if (postTab) {
-      postTab.addEventListener('click', (e) => {
-        e.preventDefault();
-        activeType = 'post';
-        postTab.classList.add('active');
-        if (evtTab) evtTab.classList.remove('active');
-        showEventFields(false);
-      });
-    }
-    
-    if (evtTab) {
-      evtTab.addEventListener('click', (e) => {
-        e.preventDefault();
-        activeType = 'event';
-        evtTab.classList.add('active');
-        if (postTab) postTab.classList.remove('active');
-        showEventFields(true);
-      });
-    }
-  }
-
-  function bindComposer() {
-    const choose = $('#btn-choose-image');
-    const file = $('#composer-image');
-    const prev = $('#composer-preview');
-    
-    if (choose && file && !choose.dataset.gmBound) {
-      choose.dataset.gmBound = '1';
-      choose.addEventListener('click', () => file.click());
-      
-      file.addEventListener('change', () => {
-        if (!prev) return;
-        prev.innerHTML = '';
-        Array.from(file.files || []).forEach(f => {
-          const img = ce('img', { class: 'composer-preview-img' });
-          img.src = URL.createObjectURL(f);
-          prev.appendChild(img);
-        });
-      });
-    }
-    
-    const submit = $('#composer-submit');
-    if (submit && !submit.dataset.gmBound) {
-      submit.dataset.gmBound = '1';
-      submit.addEventListener('click', submitPost);
-    }
-  }
-
-  async function submitPost() {
+  // ===== COMPOSER OVERLAY =====
+  function openComposerOverlay() {
     if (!window.CAN_POST) return;
-    
-    const text = ($('#composer-text')?.value || '').trim();
-    if (!text) {
-      alert(T('type_message'));
-      return;
-    }
-    
-    const fd = new FormData();
-    fd.append('room_id', ROOM_ID);
-    fd.append('text', text);
-    fd.append('type', activeType === 'event' ? 'event' : 'post');
-    
-    if (activeType === 'event') {
-      const at = $('#composer-event-at')?.value || '';
-      const place = $('#composer-event-place')?.value || '';
-      if (at) fd.append('event_at', at);
-      if (place) fd.append('event_place', place);
-    }
-    
-    const file = $('#composer-image');
-    if (file && file.files && file.files.length) {
-      Array.from(file.files).forEach(f => fd.append('images[]', f));
-    }
-    
-    const submit = $('#composer-submit');
-    if (submit) {
-      submit.disabled = true;
-      submit.textContent = T('posting');
-    }
-    
-    const j = await fetchJSON('/gospel_media/api/posts/create.php', { method: 'POST', body: fd });
-    
-    if (submit) {
-      submit.disabled = false;
-      submit.innerHTML = `<span class="sb-btn-shine"></span>
+
+    const existing = $('.composer-overlay');
+    if (existing) existing.remove();
+
+    activeType = 'post';
+
+    const backdrop = ce('div', { class: 'composer-overlay' });
+    const panel = ce('div', { class: 'composer-overlay-panel' });
+
+    // Header
+    const header = ce('div', { class: 'composer-overlay-header' });
+    const title = ce('span', { class: 'composer-overlay-title', text: T('post') });
+    const closeBtn = ce('button', { class: 'composer-overlay-close', type: 'button', text: '\u00d7' });
+    header.append(title, closeBtn);
+
+    function closeOverlay() { backdrop.remove(); }
+    closeBtn.addEventListener('click', closeOverlay);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeOverlay(); });
+
+    // Tabs
+    const tabs = ce('div', { class: 'composer-tabs' });
+    const postTab = ce('button', { class: 'composer-tab active', type: 'button', text: T('post') });
+    const evtTab = ce('button', { class: 'composer-tab', type: 'button', text: T('datetime') });
+    tabs.append(postTab, evtTab);
+
+    if (ROOM_TYPE === 'gemeenskap') evtTab.style.display = 'none';
+
+    // Event fields
+    const evtFields = ce('div', { class: 'composer-event-fields hide' });
+    const evtAt = ce('input', { type: 'datetime-local', class: 'composer-input' });
+    const evtPlace = ce('input', { type: 'text', class: 'composer-input', placeholder: T('place') });
+    evtFields.append(evtAt, evtPlace);
+
+    postTab.addEventListener('click', () => {
+      activeType = 'post';
+      postTab.classList.add('active');
+      evtTab.classList.remove('active');
+      evtFields.classList.add('hide');
+    });
+    evtTab.addEventListener('click', () => {
+      activeType = 'event';
+      evtTab.classList.add('active');
+      postTab.classList.remove('active');
+      evtFields.classList.remove('hide');
+    });
+
+    // Textarea
+    const ta = ce('textarea', { class: 'composer-textarea', placeholder: T('type_message') });
+
+    // File input + preview
+    const fileInput = ce('input', { type: 'file', accept: 'image/*', multiple: 'multiple' });
+    fileInput.style.display = 'none';
+    const preview = ce('div', { class: 'composer-preview' });
+
+    fileInput.addEventListener('change', () => {
+      preview.innerHTML = '';
+      Array.from(fileInput.files || []).forEach(f => {
+        const img = ce('img', { class: 'composer-preview-img' });
+        img.src = URL.createObjectURL(f);
+        preview.appendChild(img);
+      });
+    });
+
+    // Actions
+    const actions = ce('div', { class: 'composer-actions' });
+
+    const attachBtn = ce('button', { type: 'button', class: 'composer-attach' });
+    attachBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg><span>${T('add_photo')}</span>`;
+    attachBtn.addEventListener('click', () => fileInput.click());
+
+    const submitBtn = ce('button', { type: 'button', class: 'composer-submit' });
+    submitBtn.innerHTML = `<span class="sb-btn-shine"></span>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg><span>${T('post')}</span>`;
+
+    submitBtn.addEventListener('click', async () => {
+      const text = (ta.value || '').trim();
+      if (!text) { alert(T('type_message')); return; }
+
+      const fd = new FormData();
+      fd.append('room_id', ROOM_ID);
+      fd.append('text', text);
+      fd.append('type', activeType === 'event' ? 'event' : 'post');
+
+      if (activeType === 'event') {
+        if (evtAt.value) fd.append('event_at', evtAt.value);
+        if (evtPlace.value) fd.append('event_place', evtPlace.value);
+      }
+
+      if (fileInput.files && fileInput.files.length) {
+        Array.from(fileInput.files).forEach(f => fd.append('images[]', f));
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = T('posting');
+
+      const j = await fetchJSON('/gospel_media/api/posts/create.php', { method: 'POST', body: fd });
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span class="sb-btn-shine"></span>
         <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>${T('post')}</span>`;
-    }
-    
-    if (!(j && (j.ok || j.success))) {
-      alert(j && j.error ? j.error : T('error_posting'));
-      return;
-    }
-    
-    const area = $('#composer-text');
-    if (area) area.value = '';
-    if (file) {
-      file.value = '';
-      const prev = $('#composer-preview');
-      if (prev) prev.innerHTML = '';
-    }
-    
-    await loadFeed(ROOM_ID);
+        </svg><span>${T('post')}</span>`;
+
+      if (!(j && (j.ok || j.success))) {
+        alert(j && j.error ? j.error : T('error_posting'));
+        return;
+      }
+
+      closeOverlay();
+      feedLastId = null;
+      feedDone = false;
+      await loadFeed(ROOM_ID, true);
+    });
+
+    actions.append(attachBtn, submitBtn);
+
+    panel.append(header, tabs, ta, evtFields, fileInput, preview, actions);
+    backdrop.appendChild(panel);
+    document.body.appendChild(backdrop);
+    ta.focus();
   }
 
   // ===== REACTIONS =====
   function renderReactions(card, p) {
     const bar = ce('div', { class: 'post-actions' });
-    
+    const myReacts = Array.isArray(p.my_reactions) ? p.my_reactions : [];
+
     const bH = ce('button', { type: 'button', class: 'btn-react heart-btn' });
+    if (myReacts.includes('heart')) bH.classList.add('reacted');
     const heartIcon = ce('img', { class: 'icon', src: '/assets/icons/heart.png', alt: 'heart' });
     const heartCount = ce('span', { class: 'badge count-heart', text: (p.heart_count || 0) });
     bH.append(heartIcon, heartCount);
-    
+
     const bP = ce('button', { type: 'button', class: 'btn-react pray-btn' });
+    if (myReacts.includes('pray')) bP.classList.add('reacted');
     const prayIcon = ce('img', { class: 'icon', src: '/assets/icons/amen.png', alt: 'amen' });
     const prayCount = ce('span', { class: 'badge count-pray', text: (p.pray_count || 0) });
     bP.append(prayIcon, prayCount);
-    
+
     bH.addEventListener('click', () => toggleReact(p.id, 'heart', bH, bP));
     bP.addEventListener('click', () => toggleReact(p.id, 'pray', bH, bP));
-    
+
     const bC = ce('button', { type: 'button', class: 'btn-react comments-btn' });
     bC.innerHTML = `
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -253,19 +258,26 @@
       <span class="badge count-comments">${p.comment_count || 0}</span>
     `;
     bC.addEventListener('click', () => toggleComments(p.id, card));
-    
+
     bar.append(bH, bP, bC);
     card.appendChild(bar);
   }
 
   async function toggleReact(post_id, type, bH, bP) {
+    const btn = type === 'heart' ? bH : bP;
+    btn.disabled = true;
+
     const fd = new FormData();
     fd.append('post_id', post_id);
     fd.append('type', type);
-    
+
     const j = await fetchJSON('/gospel_media/api/posts/react.php', { method: 'POST', body: fd });
+    btn.disabled = false;
     if (!(j && j.ok)) return;
-    
+
+    // Toggle active state
+    btn.classList.toggle('reacted');
+
     if (bH && typeof j.heart_count !== 'undefined') {
       bH.querySelector('.count-heart').textContent = j.heart_count;
     }
@@ -300,22 +312,59 @@
     await loadComments(postId, listEl);
   }
 
-  async function editComment(commentId, currentText, postId, listEl) {
-    const newText = prompt(T('edit_comment'), currentText);
-    if (!newText || newText.trim() === '' || newText.trim() === currentText) return;
-    
-    const fd = new FormData();
-    fd.append('comment_id', commentId);
-    fd.append('text', newText.trim());
-    
-    const j = await fetchJSON('/gospel_media/api/comments/update.php', { method: 'POST', body: fd });
-    
-    if (!(j && (j.ok || j.success))) {
-      alert(j && j.error ? j.error : T('error'));
-      return;
-    }
-    
-    await loadComments(postId, listEl);
+  function editComment(commentId, currentText, postId, listEl) {
+    // Find the comment item and replace text with inline editor
+    const items = $$(`.comment-item`, listEl);
+    const item = items.find(el => {
+      const editBtn = el.querySelector('.comment-action-btn');
+      return editBtn && editBtn._commentId === commentId;
+    });
+    if (!item) return;
+
+    const textEl = item.querySelector('.comment-text');
+    if (!textEl) return;
+
+    const ta = ce('textarea', { class: 'comment-input comment-edit-input' });
+    ta.value = currentText;
+    ta.rows = 2;
+
+    const btnRow = ce('div', { class: 'comment-edit-actions' });
+    const saveBtn = ce('button', { class: 'comment-submit', type: 'button', text: T('save') });
+    const cancelBtn = ce('button', { class: 'modal-btn', type: 'button', text: T('cancel') });
+
+    cancelBtn.addEventListener('click', () => {
+      ta.replaceWith(textEl);
+      btnRow.remove();
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const newText = ta.value.trim();
+      if (!newText || newText === currentText) {
+        ta.replaceWith(textEl);
+        btnRow.remove();
+        return;
+      }
+      saveBtn.disabled = true;
+      saveBtn.textContent = T('saving');
+
+      const fd = new FormData();
+      fd.append('comment_id', commentId);
+      fd.append('text', newText);
+
+      const j = await fetchJSON('/gospel_media/api/comments/update.php', { method: 'POST', body: fd });
+      if (!(j && (j.ok || j.success))) {
+        alert(j && j.error ? j.error : T('error'));
+        saveBtn.disabled = false;
+        saveBtn.textContent = T('save');
+        return;
+      }
+      await loadComments(postId, listEl);
+    });
+
+    btnRow.append(saveBtn, cancelBtn);
+    textEl.replaceWith(ta);
+    ta.after(btnRow);
+    ta.focus();
   }
 
  async function toggleComments(postId, card) {
@@ -434,17 +483,18 @@
       
       if (canEditComment(c)) {
         const actions = ce('div', { class: 'comment-actions' });
-        
+
         const editBtn = ce('button', { class: 'comment-action-btn', type: 'button' });
         editBtn.textContent = '✎';
         editBtn.title = T('edit');
+        editBtn._commentId = c.id;
         editBtn.addEventListener('click', () => editComment(c.id, c.text, postId, listEl));
 
         const delBtn = ce('button', { class: 'comment-action-btn', type: 'button' });
         delBtn.textContent = '×';
         delBtn.title = T('delete');
         delBtn.addEventListener('click', () => deleteComment(c.id, postId, listEl));
-        
+
         actions.append(editBtn, delBtn);
         header.appendChild(actions);
       }
@@ -505,43 +555,173 @@
     
     card.appendChild(ce('div', { class: 'post-text', text: p.text || '' }));
     
-    if (Array.isArray(p.attachments)) {
-      p.attachments.forEach(a => {
-        const img = ce('img', { class: 'post-image' });
-        img.src = a.path_original || a.path_thumb || a.url || '';
-        img.alt = 'img';
-        card.appendChild(img);
+    // ===== FACEBOOK-STYLE PHOTO GRID =====
+    if (Array.isArray(p.attachments) && p.attachments.length) {
+      const atts = p.attachments;
+      const count = atts.length;
+      const grid = ce('div', { class: 'photo-grid photo-grid-' + Math.min(count, 5) });
+
+      atts.forEach((a, idx) => {
+        const cell = ce('div', { class: 'photo-grid-cell' });
+        const img = ce('img', {
+          class: 'photo-grid-img',
+          alt: 'img'
+        });
+        img.loading = 'lazy';
+        img.src = a.path_thumb || a.path_original || a.url || '';
+        img.dataset.full = a.path_original || a.path_thumb || a.url || '';
+
+        // For 5+ images, show overlay on the last visible cell
+        if (count > 4 && idx === 3) {
+          const overlay = ce('div', { class: 'photo-grid-more', text: '+' + (count - 4) });
+          cell.appendChild(overlay);
+        }
+
+        // Hide images beyond 4th
+        if (idx >= 4) cell.style.display = 'none';
+
+        img.addEventListener('click', () => openLightbox(atts, idx));
+        cell.appendChild(img);
+        grid.appendChild(cell);
       });
+
+      // Clicking the "+N" overlay opens lightbox at image 4
+      if (count > 4) {
+        const lastVisible = grid.children[3];
+        if (lastVisible) {
+          lastVisible.addEventListener('click', (e) => {
+            if (e.target.classList.contains('photo-grid-more')) {
+              openLightbox(atts, 3);
+            }
+          });
+        }
+      }
+
+      card.appendChild(grid);
     }
-    
+
     renderReactions(card, p);
     return card;
   }
 
-  async function loadFeed(roomId) {
+  // ===== LIGHTBOX =====
+  function openLightbox(attachments, startIdx) {
+    let idx = startIdx;
+    const backdrop = ce('div', { class: 'lightbox-backdrop' });
+    const img = ce('img', { class: 'lightbox-img' });
+    const counter = ce('div', { class: 'lightbox-counter' });
+    const closeBtn = ce('button', { class: 'lightbox-close', type: 'button', text: '\u00d7' });
+
+    function show(i) {
+      idx = i;
+      const a = attachments[idx];
+      img.src = a.path_original || a.path_thumb || a.url || '';
+      counter.textContent = (idx + 1) + ' / ' + attachments.length;
+    }
+
+    function closeLightbox() {
+      document.removeEventListener('keydown', onKey);
+      backdrop.remove();
+    }
+
+    closeBtn.addEventListener('click', closeLightbox);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeLightbox(); });
+
+    if (attachments.length > 1) {
+      const prev = ce('button', { class: 'lightbox-nav lightbox-prev', type: 'button', text: '\u2039' });
+      const next = ce('button', { class: 'lightbox-nav lightbox-next', type: 'button', text: '\u203a' });
+      prev.addEventListener('click', (e) => { e.stopPropagation(); show((idx - 1 + attachments.length) % attachments.length); });
+      next.addEventListener('click', (e) => { e.stopPropagation(); show((idx + 1) % attachments.length); });
+      backdrop.append(prev, next);
+    }
+
+    backdrop.append(closeBtn, img, counter);
+
+    function onKey(e) {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') show((idx - 1 + attachments.length) % attachments.length);
+      if (e.key === 'ArrowRight') show((idx + 1) % attachments.length);
+    }
+    document.addEventListener('keydown', onKey);
+
+    document.body.appendChild(backdrop);
+    show(startIdx);
+  }
+
+  // ===== INFINITE SCROLL FEED =====
+  const FEED_LIMIT = 10;
+  let feedLastId = null;
+  let feedLoading = false;
+  let feedDone = false;
+  let scrollObserver = null;
+  let sentinelEl = null;
+
+  async function loadFeed(roomId, reset) {
+    if (reset === undefined) reset = true;
     const feed = $('#feed');
     if (!feed) return;
-    
+
     const loading = $('#loadingIndicator');
+
+    if (reset) {
+      feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('loading_posts') + '</p></div>';
+      POST_MAP.clear();
+      feedLastId = null;
+      feedDone = false;
+      if (scrollObserver) scrollObserver.disconnect();
+    }
+
+    if (feedLoading || feedDone) return;
+    feedLoading = true;
     if (loading) loading.hidden = false;
-    
-    feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('loading_posts') + '</p></div>';
-    POST_MAP.clear();
-    
-    const j = await fetchJSON('/gospel_media/api/posts/list.php?room_id=' + encodeURIComponent(roomId));
-    
+
+    let url = '/gospel_media/api/posts/list.php?room_id=' + encodeURIComponent(roomId) + '&limit=' + FEED_LIMIT;
+    if (feedLastId) url += '&after_id=' + feedLastId;
+
+    const j = await fetchJSON(url);
+
     if (loading) loading.hidden = true;
-    
+    feedLoading = false;
+
     const rows = Array.isArray(j) ? j : (Array.isArray(j.rows) ? j.rows : []);
-    
-    feed.innerHTML = '';
-    
+
+    if (reset) feed.innerHTML = '';
+
     if (!rows.length) {
-      feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('no_posts') + '</p></div>';
+      if (reset) {
+        feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('no_posts') + '</p></div>';
+      }
+      feedDone = true;
       return;
     }
-    
-    rows.forEach(p => feed.appendChild(renderCard(p)));
+
+    if (rows.length < FEED_LIMIT) feedDone = true;
+
+    rows.forEach(p => {
+      feed.appendChild(renderCard(p));
+      feedLastId = p.id;
+    });
+
+    // Set up infinite scroll sentinel
+    setupScrollObserver(feed, roomId);
+  }
+
+  function setupScrollObserver(feed, roomId) {
+    if (scrollObserver) scrollObserver.disconnect();
+    if (feedDone) return;
+
+    // Remove old sentinel
+    if (sentinelEl) sentinelEl.remove();
+    sentinelEl = ce('div', { class: 'feed-sentinel' });
+    feed.appendChild(sentinelEl);
+
+    scrollObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !feedLoading && !feedDone) {
+        loadFeed(roomId, false);
+      }
+    }, { rootMargin: '200px' });
+
+    scrollObserver.observe(sentinelEl);
   }
 
   // ===== MODALS =====
@@ -799,17 +979,13 @@
     } catch (e) {
       console.error('Failed to load user info:', e);
     }
-    
-    const evtTab = $('#composer-type-event');
-    if (evtTab && ROOM_TYPE === 'gemeenskap') {
-      evtTab.style.display = 'none';
-      showEventFields(false);
+
+    // Wire up the "New Post" hero button
+    const composerBtn = $('#open-composer');
+    if (composerBtn) {
+      composerBtn.addEventListener('click', openComposerOverlay);
     }
-    
-    showEventFields(false);
-    bindComposerTabs();
-    bindComposer();
-    
+
     await loadFeed(ROOM_ID);
   }
 

@@ -234,6 +234,13 @@ html {
   animation: none;
 }
 
+.gm-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .gm-rooms-btn {
   position: relative;
   padding: 14px 30px;
@@ -245,7 +252,6 @@ html {
   font-size: 16px;
   font-weight: 300;
   cursor: pointer;
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -335,7 +341,11 @@ html {
     rgba(192, 192, 192, 0.1) 50%,
     transparent 100%
   );
-  animation: shine-sweep 3s ease-in-out infinite;
+  transition: left 0.6s ease;
+}
+
+.gm-section:hover::before {
+  left: 100%;
 }
 
 @keyframes shine-sweep {
@@ -367,7 +377,6 @@ html {
   box-shadow: var(--shadow-md), var(--glow-silver);
   position: relative;
   overflow: hidden;
-  animation: icon-pulse 2s ease-in-out infinite;
   flex-shrink: 0;
   transition: var(--transition);
 }
@@ -395,6 +404,12 @@ html {
     rgba(192, 192, 192, 0.3) 50%,
     transparent 70%
   );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.gm-icon-wrapper:hover::before {
+  opacity: 1;
   animation: rotate-shine 3s linear infinite;
 }
 
@@ -715,6 +730,86 @@ html {
   transform: none !important;
 }
 
+/* ===== COMPOSER OVERLAY ===== */
+.composer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15000;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+  animation: fade-in 0.2s ease-out;
+  overflow-y: auto;
+}
+
+[data-theme="light"] .composer-overlay {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.composer-overlay-panel {
+  width: 100%;
+  max-width: 600px;
+  background: linear-gradient(135deg, var(--section-bg-start) 0%, var(--section-bg-end) 100%);
+  border: 1px solid var(--section-border);
+  border-radius: 16px;
+  padding: 30px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), var(--glow-rosegold);
+  animation: fade-in-up 0.3s ease-out;
+  margin: 0 16px 40px;
+}
+
+[data-theme="light"] .composer-overlay-panel {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), var(--glow-rosegold);
+}
+
+.composer-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.composer-overlay-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 400;
+  color: var(--color-rosegold);
+  text-shadow: 0 0 8px rgba(183, 110, 121, 0.3);
+}
+
+.composer-overlay-close {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--btn-border);
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  color: var(--text-primary);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.composer-overlay-close:hover {
+  border-color: var(--color-rosegold);
+  box-shadow: var(--glow-rosegold);
+}
+
+@media (max-width: 768px) {
+  .composer-overlay {
+    padding-top: 60px;
+  }
+
+  .composer-overlay-panel {
+    margin: 0 10px 30px;
+    padding: 24px 16px;
+  }
+}
+
 /* ===== FEED ===== */
 .gm-feed {
   position: relative;
@@ -767,16 +862,15 @@ html {
 .post-card::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: radial-gradient(
-    circle,
-    rgba(183, 110, 121, 0.05) 0%,
-    transparent 70%
+    circle at 30% 30%,
+    rgba(183, 110, 121, 0.04) 0%,
+    transparent 60%
   );
-  animation: rotate-glow 10s linear infinite;
   pointer-events: none;
 }
 
@@ -942,6 +1036,178 @@ html {
   box-shadow: var(--shadow-md);
   position: relative;
   z-index: 1;
+}
+
+/* ===== FACEBOOK-STYLE PHOTO GRID ===== */
+.photo-grid {
+  display: grid;
+  gap: 3px;
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.photo-grid-1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+}
+
+.photo-grid-2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 280px;
+}
+
+.photo-grid-3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 260px 180px;
+}
+
+.photo-grid-3 .photo-grid-cell:first-child {
+  grid-column: 1 / -1;
+}
+
+.photo-grid-4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 240px 180px;
+}
+
+.photo-grid-5 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 240px 180px;
+}
+
+.photo-grid-5 .photo-grid-cell:first-child {
+  grid-column: 1 / -1;
+}
+
+.photo-grid-cell {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 0;
+}
+
+.photo-grid-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.photo-grid-1 .photo-grid-img {
+  max-height: 500px;
+  height: auto;
+}
+
+.photo-grid-cell:hover .photo-grid-img {
+  transform: scale(1.03);
+}
+
+.photo-grid-more {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ===== LIGHTBOX ===== */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.2s ease-out;
+}
+
+.lightbox-img {
+  max-width: 92vw;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 3;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 3;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.lightbox-prev { left: 16px; }
+.lightbox-next { right: 16px; }
+
+.lightbox-counter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 400;
+  z-index: 3;
+}
+
+/* ===== FEED SENTINEL ===== */
+.feed-sentinel {
+  height: 1px;
+  width: 100%;
 }
 
 /* ===== POST ACTIONS (REACTIONS) ===== */
@@ -1411,11 +1677,29 @@ html {
   transition: var(--transition);
 }
 
-/* ===== SMOOTH TRANSITIONS ===== */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, text-shadow, filter;
-  transition-duration: 0.4s;
-  transition-timing-function: ease;
+/* ===== REACTED BUTTONS ===== */
+.btn-react.reacted {
+  border-color: var(--color-rosegold);
+  background: linear-gradient(135deg, var(--card-bg-start) 0%, var(--card-bg-end) 100%);
+  box-shadow: var(--shadow-sm), var(--glow-rosegold);
+}
+
+/* ===== INLINE COMMENT EDIT ===== */
+.comment-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.comment-edit-actions .comment-submit {
+  padding: 8px 18px;
+  font-size: 14px;
+}
+
+.comment-edit-actions .modal-btn {
+  padding: 8px 18px;
+  font-size: 14px;
+  min-width: auto;
 }
 
 /* ===== MOBILE RESPONSIVENESS ===== */
@@ -1543,7 +1827,22 @@ html {
     margin-left: -15px;
     margin-right: -15px;
   }
-  
+
+  .photo-grid {
+    width: calc(100% + 30px);
+    margin-left: -15px;
+    margin-right: -15px;
+  }
+
+  .photo-grid-2 { grid-template-rows: 220px; }
+  .photo-grid-3 { grid-template-rows: 200px 140px; }
+  .photo-grid-4,
+  .photo-grid-5 { grid-template-rows: 200px 140px; }
+
+  .lightbox-nav { width: 40px; height: 40px; font-size: 26px; }
+  .lightbox-prev { left: 8px; }
+  .lightbox-next { right: 8px; }
+
   .post-actions {
     gap: 10px;
     flex-wrap: wrap;

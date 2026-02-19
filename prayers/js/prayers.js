@@ -13,69 +13,181 @@
   let editingCommentId = null;
 
   document.addEventListener('DOMContentLoaded', () => {
-    initCreatePost();
+    const openBtn = document.getElementById('open-composer');
+    if (openBtn) openBtn.addEventListener('click', () => openComposerOverlay());
     loadPosts();
     initModal();
   });
 
-  // ==================== CREATE/UPDATE POST ====================
-  function initCreatePost() {
-    const form = document.getElementById('createPostForm');
-    const tabs = document.querySelectorAll('.pr-tab');
-    const fileInput = document.getElementById('photoInput');
-    const fileLabel = document.getElementById('fileLabel');
-    const submitBtn = document.getElementById('submitBtn');
-    const textarea = document.getElementById('postText');
+  // ==================== COMPOSER OVERLAY ====================
+  function openComposerOverlay(editId, editText, editPhotoUrl) {
+    // Remove existing overlay if any
+    const existing = document.querySelector('.pr-composer-overlay');
+    if (existing) existing.remove();
 
-    tabs.forEach(tab => {
+    const isEdit = !!editId;
+    if (isEdit) {
+      editingPostId = editId;
+      editingPostPhotoUrl = editPhotoUrl || null;
+    } else {
+      editingPostId = null;
+      editingPostPhotoUrl = null;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'pr-composer-overlay';
+
+    const photoPreviewHTML = editingPostPhotoUrl ? `
+      <div class="pr-photo-preview">
+        <img src="${editingPostPhotoUrl}" alt="Current photo">
+        <button type="button" class="pr-remove-photo-btn" id="overlayRemovePhoto">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
+          ${T('remove_photo')}
+        </button>
+      </div>
+    ` : '';
+
+    overlay.innerHTML = `
+      <div class="pr-composer-overlay-panel">
+        <div class="pr-composer-overlay-header">
+          <h2 class="pr-composer-overlay-title">${isEdit ? T('edit') : T('share')}</h2>
+          <button type="button" class="pr-composer-overlay-close" id="closeComposerOverlay">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <form id="composerForm" class="pr-form" enctype="multipart/form-data">
+          ${!isEdit ? `
+          <div class="pr-tabs">
+            <button type="button" class="pr-tab ${currentKind === 'prayer' ? 'active' : ''}" data-kind="prayer">
+              <svg class="pr-tab-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="currentColor" opacity="0.3"/>
+              </svg>
+              <span>${T('prayer')}</span>
+            </button>
+            <button type="button" class="pr-tab ${currentKind === 'testimony' ? 'active' : ''}" data-kind="testimony">
+              <svg class="pr-tab-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" opacity="0.3"/>
+              </svg>
+              <span>${T('testimony')}</span>
+            </button>
+          </div>
+          ` : ''}
+
+          <textarea id="overlayPostText" name="text" class="pr-textarea" placeholder="${T('prayer')}" rows="4" required>${isEdit ? escapeHtml(editText || '') : ''}</textarea>
+
+          ${photoPreviewHTML}
+
+          <div class="pr-form-row">
+            <div class="pr-file-input-wrapper">
+              <input type="file" id="overlayPhotoInput" name="photo" accept="image/*" class="pr-file-input">
+              <label for="overlayPhotoInput" class="pr-file-label">
+                <svg class="pr-file-icon" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="currentColor" opacity="0.3"/>
+                </svg>
+                <span id="overlayFileLabel">${T('choose_photo')}</span>
+              </label>
+            </div>
+            <button type="submit" class="pr-btn pr-btn-primary" id="overlaySubmitBtn">
+              <span class="pr-btn-shine"></span>
+              <svg class="pr-btn-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="pr-btn-text">${isEdit ? T('update') : T('share')}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('open'));
+
+    // Wire close
+    const closeBtn = overlay.querySelector('#closeComposerOverlay');
+    closeBtn.addEventListener('click', () => closeComposerOverlay());
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeComposerOverlay();
+    });
+
+    // Wire escape key
+    const onEsc = (e) => {
+      if (e.key === 'Escape') { closeComposerOverlay(); document.removeEventListener('keydown', onEsc); }
+    };
+    document.addEventListener('keydown', onEsc);
+
+    // Wire tabs
+    overlay.querySelectorAll('.pr-tab').forEach(tab => {
       tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
+        overlay.querySelectorAll('.pr-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         currentKind = tab.dataset.kind;
       });
     });
 
+    // Wire file input
+    const fileInput = overlay.querySelector('#overlayPhotoInput');
+    const fileLabel = overlay.querySelector('#overlayFileLabel');
     fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        fileLabel.textContent = file.name;
+      fileLabel.textContent = e.target.files[0] ? e.target.files[0].name : T('choose_photo');
+    });
+
+    // Wire remove photo button
+    const removePhotoBtn = overlay.querySelector('#overlayRemovePhoto');
+    if (removePhotoBtn) {
+      removePhotoBtn.addEventListener('click', async () => {
+        await removePostPhoto(editId);
+        const preview = overlay.querySelector('.pr-photo-preview');
+        if (preview) preview.remove();
+      });
+    }
+
+    // Wire form submit
+    const form = overlay.querySelector('#composerForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const textarea = overlay.querySelector('#overlayPostText');
+      const formData = new FormData(form);
+
+      if (isEdit) {
+        await updatePost(editId, textarea.value, formData);
       } else {
-        fileLabel.textContent = T('choose_photo');
+        await createPost(formData);
       }
     });
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      if (editingPostId) {
-        await updatePost(editingPostId, textarea.value, new FormData(form));
-      } else {
-        await createPost(new FormData(form));
-      }
-    });
+    // Focus textarea
+    setTimeout(() => overlay.querySelector('#overlayPostText').focus(), 200);
+  }
+
+  function closeComposerOverlay() {
+    const overlay = document.querySelector('.pr-composer-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    setTimeout(() => overlay.remove(), 300);
+    editingPostId = null;
+    editingPostPhotoUrl = null;
   }
 
   async function createPost(formData) {
-    const submitBtn = document.getElementById('submitBtn');
-    const form = document.getElementById('createPostForm');
-    const fileLabel = document.getElementById('fileLabel');
-    
+    const submitBtn = document.querySelector('#overlaySubmitBtn');
+
     formData.append('kind', currentKind);
-    
-    submitBtn.disabled = true;
-    submitBtn.querySelector('.pr-btn-text').textContent = T('posting');
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.pr-btn-text').textContent = T('posting');
+    }
 
     try {
       const res = await fetch('/prayers/api/posts/create.php', {
         method: 'POST',
         body: formData
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
-        form.reset();
-        fileLabel.textContent = T('choose_photo');
+        closeComposerOverlay();
         showToast(T('prayer_shared'), 'success');
         loadPosts();
       } else {
@@ -85,31 +197,35 @@
       console.error(err);
       showToast(T('could_not_post'), 'error');
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.querySelector('.pr-btn-text').textContent = T('share');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.querySelector('.pr-btn-text').textContent = T('share');
+      }
     }
   }
 
   async function updatePost(postId, text, formData) {
-    const submitBtn = document.getElementById('submitBtn');
-    
+    const submitBtn = document.querySelector('#overlaySubmitBtn');
+
     formData.append('post_id', postId);
     formData.append('text', text);
-    
-    submitBtn.disabled = true;
-    submitBtn.querySelector('.pr-btn-text').textContent = T('posting');
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.pr-btn-text').textContent = T('posting');
+    }
 
     try {
       const res = await fetch('/prayers/api/posts/update.php', {
         method: 'POST',
         body: formData
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
+        closeComposerOverlay();
         showToast(T('post_updated'), 'success');
-        cancelEdit();
         loadPosts();
       } else {
         showToast(data.error || T('error'), 'error');
@@ -118,31 +234,33 @@
       console.error(err);
       showToast(T('could_not_update'), 'error');
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.querySelector('.pr-btn-text').textContent = T('share');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.querySelector('.pr-btn-text').textContent = T('update');
+      }
     }
   }
 
   async function removePostPhoto(postId) {
     if (!confirm(T('delete_photo'))) return;
 
+    const textEl = document.querySelector('#overlayPostText');
     try {
       const res = await fetch('/prayers/api/posts/update.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          post_id: postId, 
-          text: document.getElementById('postText').value,
-          remove_photo: true 
+        body: JSON.stringify({
+          post_id: postId,
+          text: textEl ? textEl.value : '',
+          remove_photo: true
         })
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
         showToast(T('photo_removed'), 'success');
         editingPostPhotoUrl = null;
-        updatePhotoPreview();
       } else {
         showToast(data.error || T('error'), 'error');
       }
@@ -177,56 +295,7 @@
   }
 
   function startEditPost(postId, text, photoUrl) {
-    editingPostId = postId;
-    editingPostPhotoUrl = photoUrl;
-    
-    const textarea = document.getElementById('postText');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    textarea.value = text;
-    textarea.focus();
-    submitBtn.querySelector('.pr-btn-text').textContent = T('update');
-    
-    updatePhotoPreview();
-    
-    document.querySelector('.pr-create-section').scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function updatePhotoPreview() {
-    const form = document.getElementById('createPostForm');
-    let preview = form.querySelector('.pr-photo-preview');
-    
-    if (preview) preview.remove();
-    
-    if (editingPostPhotoUrl) {
-      preview = document.createElement('div');
-      preview.className = 'pr-photo-preview';
-      preview.innerHTML = `
-        <img src="${editingPostPhotoUrl}" alt="Current photo">
-        <button type="button" class="pr-remove-photo-btn">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          ${T('remove_photo')}
-        </button>
-      `;
-      
-      form.querySelector('.pr-form-row').before(preview);
-      
-      preview.querySelector('.pr-remove-photo-btn').addEventListener('click', () => {
-        removePostPhoto(editingPostId);
-      });
-    }
-  }
-
-  function cancelEdit() {
-    editingPostId = null;
-    editingPostPhotoUrl = null;
-    document.getElementById('createPostForm').reset();
-    document.getElementById('submitBtn').querySelector('.pr-btn-text').textContent = T('share');
-    
-    const preview = document.querySelector('.pr-photo-preview');
-    if (preview) preview.remove();
+    openComposerOverlay(postId, text, photoUrl);
   }
 
   // ==================== LOAD POSTS ====================

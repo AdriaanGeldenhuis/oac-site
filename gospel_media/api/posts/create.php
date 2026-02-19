@@ -34,6 +34,25 @@ function parse_event_at(?string $raw): ?string {
 $eventAt    = $type === 'event' ? parse_event_at(trim((string)($_POST['event_at'] ?? ''))) : null;
 $eventPlace = $type === 'event' ? trim((string)($_POST['event_place'] ?? '')) : null;
 
+// Helper: resize an image resource to fit within max dimensions
+function resize_image($img, int $origW, int $origH, int $maxW, int $maxH) {
+    if ($origW <= $maxW && $origH <= $maxH) return $img;
+
+    $ratio = min($maxW / $origW, $maxH / $origH);
+    $newW = (int)round($origW * $ratio);
+    $newH = (int)round($origH * $ratio);
+
+    $resized = @imagecreatetruecolor($newW, $newH);
+    if (!$resized) return $img;
+
+    // Preserve transparency
+    @imagealphablending($resized, false);
+    @imagesavealpha($resized, true);
+
+    @imagecopyresampled($resized, $img, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+    return $resized;
+}
+
 // Image processing function
 function process_uploaded_image(string $tmpPath, int $userId, int $postId): ?array {
     // Create user-specific upload directory
@@ -41,21 +60,22 @@ function process_uploaded_image(string $tmpPath, int $userId, int $postId): ?arr
     if (!is_dir($uploadBase)) {
         @mkdir($uploadBase, 0755, true);
     }
-    
+
     // Generate unique filename
     $timestamp = date('YmdHis');
     $random = substr(md5(uniqid((string)mt_rand(), true)), 0, 6);
-    $filename = $timestamp . '_' . $random . '.webp';
-    $destPath = $uploadBase . '/' . $filename;
-    
+    $filenameBase = $timestamp . '_' . $random;
+    $destPath = $uploadBase . '/' . $filenameBase . '.webp';
+    $thumbPath = $uploadBase . '/' . $filenameBase . '_thumb.webp';
+
     // Load image
     $info = @getimagesize($tmpPath);
     if (!$info) return null;
-    
+
     $mime = $info['mime'];
     $width = $info[0];
     $height = $info[1];
-    
+
     // Create image resource based on mime type
     $img = null;
     switch ($mime) {
@@ -75,24 +95,40 @@ function process_uploaded_image(string $tmpPath, int $userId, int $postId): ?arr
         default:
             return null;
     }
-    
+
     if (!$img) return null;
-    
-    // Convert to WebP
-    $success = @imagewebp($img, $destPath, 85);
+
+    // Resize original to max 1920px wide for bandwidth savings
+    $imgResized = resize_image($img, $width, $height, 1920, 1920);
+    $finalW = imagesx($imgResized);
+    $finalH = imagesy($imgResized);
+
+    // Save resized original as WebP
+    $success = @imagewebp($imgResized, $destPath, 82);
+    if ($imgResized !== $img) @imagedestroy($imgResized);
+
+    if (!$success) {
+        @imagedestroy($img);
+        return null;
+    }
+
+    // Generate thumbnail (max 600px) for feed display
+    $imgThumb = resize_image($img, $width, $height, 600, 600);
+    @imagewebp($imgThumb, $thumbPath, 75);
+    if ($imgThumb !== $img) @imagedestroy($imgThumb);
+
     @imagedestroy($img);
-    
-    if (!$success) return null;
-    
-    // Return URL path (relative to document root)
-    $urlPath = '/uploads/posts/' . $userId . '/' . $filename;
-    
+
+    // Return URL paths (relative to document root)
+    $urlPath = '/uploads/posts/' . $userId . '/' . $filenameBase . '.webp';
+    $thumbUrl = '/uploads/posts/' . $userId . '/' . $filenameBase . '_thumb.webp';
+
     return [
         'path_original' => $urlPath,
-        'path_thumb' => $urlPath,
+        'path_thumb' => $thumbUrl,
         'mime' => 'image/webp',
-        'width' => $width,
-        'height' => $height
+        'width' => $finalW,
+        'height' => $finalH
     ];
 }
 

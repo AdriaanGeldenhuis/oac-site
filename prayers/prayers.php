@@ -23,8 +23,9 @@ function t(string $key): string {
 }
 
 $currentUserId = $_SESSION['user_id'] ?? 0;
+$VER = '2.1.0';
 
-function esc($s) { 
+function esc($s) {
   return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); 
 }
 
@@ -56,7 +57,7 @@ $currentUser = [
     }
   </style>
   
-  <link rel="stylesheet" href="/prayers/css/prayers.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="/prayers/css/prayers.css?v=<?= $VER ?>">
 </head>
 <body class="prayers-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
@@ -66,6 +67,14 @@ $currentUser = [
     <div class="pr-hero-content">
       <h1 class="pr-hero-title"><?= esc(t('prayers_testimonies')) ?></h1>
       <p class="pr-hero-subtitle"><?= esc(t('prayers_subtitle')) ?></p>
+      <div class="pr-hero-actions">
+        <button id="open-composer" class="pr-hero-btn" type="button">
+          <svg class="pr-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span><?= esc(t('share_prayer_testimony')) ?></span>
+        </button>
+      </div>
     </div>
     <div class="pr-sparkles">
       <span class="pr-sparkle" style="--x: 20%; --y: 30%; --delay: 0s;"></span>
@@ -77,62 +86,6 @@ $currentUser = [
   </div>
 
   <main class="pr-main">
-    <section class="pr-section pr-create-section">
-      <div class="pr-section-header">
-        <div class="pr-icon-wrapper">
-          <svg class="pr-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h2 class="pr-section-title"><?= esc(t('share_prayer_testimony')) ?></h2>
-      </div>
-
-      <form id="createPostForm" class="pr-form" enctype="multipart/form-data">
-        <div class="pr-tabs">
-          <button type="button" class="pr-tab active" data-kind="prayer">
-            <svg class="pr-tab-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="currentColor" opacity="0.3"/>
-            </svg>
-            <span><?= esc(t('prayer')) ?></span>
-          </button>
-          <button type="button" class="pr-tab" data-kind="testimony">
-            <svg class="pr-tab-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" opacity="0.3"/>
-            </svg>
-            <span><?= esc(t('testimony')) ?></span>
-          </button>
-        </div>
-
-        <textarea 
-          id="postText" 
-          name="text" 
-          class="pr-textarea" 
-          placeholder="<?= esc(t('share_heart_placeholder')) ?>" 
-          rows="4" 
-          required
-        ></textarea>
-
-        <div class="pr-form-row">
-          <div class="pr-file-input-wrapper">
-            <input type="file" id="photoInput" name="photo" accept="image/*" class="pr-file-input">
-            <label for="photoInput" class="pr-file-label">
-              <svg class="pr-file-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="currentColor" opacity="0.3"/>
-              </svg>
-              <span id="fileLabel"><?= esc(t('choose_photo_optional')) ?></span>
-            </label>
-          </div>
-          <button type="submit" class="pr-btn pr-btn-primary" id="submitBtn">
-            <span class="pr-btn-shine"></span>
-            <svg class="pr-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="pr-btn-text"><?= esc(t('share')) ?></span>
-          </button>
-        </div>
-      </form>
-    </section>
-
     <!-- FILTER SECTION REMOVED -->
 
     <section class="pr-section pr-feed-section">
@@ -214,7 +167,7 @@ $currentUser = [
       no_comments: <?= json_encode(__t('js_no_comments', $pageLang)) ?>
     };
   </script>
-  <script src="/prayers/js/prayers.js?v=<?= time() ?>"></script>
+  <script src="/prayers/js/prayers.js?v=<?= $VER ?>"></script>
 
   <?php require_once __DIR__ . '/../header_footer/footer.php'; ?>
 </body>

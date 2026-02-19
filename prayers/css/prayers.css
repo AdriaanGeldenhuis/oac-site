@@ -235,18 +235,7 @@ html {
   box-shadow: var(--shadow-md), var(--glow-silver);
   position: relative;
   overflow: hidden;
-  animation: icon-pulse 2s ease-in-out infinite;
   transition: var(--transition);
-}
-
-@keyframes icon-pulse {
-  0%, 100% { box-shadow: var(--shadow-md), var(--glow-silver); }
-  50% { box-shadow: var(--shadow-lg), 0 0 30px rgba(192, 192, 192, 0.5); }
-}
-
-[data-theme="light"] @keyframes icon-pulse {
-  0%, 100% { box-shadow: var(--shadow-sm), var(--glow-silver); }
-  50% { box-shadow: var(--shadow-md), 0 0 20px rgba(106, 106, 106, 0.5); }
 }
 
 .pr-hero-icon::before {
@@ -262,12 +251,12 @@ html {
     rgba(192, 192, 192, 0.3) 50%,
     transparent 70%
   );
-  animation: rotate-shine 3s linear infinite;
+  transform: rotate(0deg);
+  transition: transform 0.6s ease;
 }
 
-@keyframes rotate-shine {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.pr-hero-icon:hover::before {
+  transform: rotate(180deg);
 }
 
 .pr-hero-icon svg {
@@ -382,12 +371,11 @@ html {
     rgba(192, 192, 192, 0.1) 50%,
     transparent 100%
   );
-  animation: shine-sweep 3s ease-in-out infinite;
+  transition: left 0.6s ease;
 }
 
-@keyframes shine-sweep {
-  0% { left: -100%; }
-  50%, 100% { left: 100%; }
+.pr-section:hover::before {
+  left: 100%;
 }
 
 .pr-section:hover {
@@ -414,7 +402,6 @@ html {
   box-shadow: var(--shadow-md), var(--glow-silver);
   position: relative;
   overflow: hidden;
-  animation: icon-pulse 2s ease-in-out infinite;
   flex-shrink: 0;
   transition: var(--transition);
 }
@@ -432,7 +419,12 @@ html {
     rgba(192, 192, 192, 0.3) 50%,
     transparent 70%
   );
-  animation: rotate-shine 3s linear infinite;
+  transform: rotate(0deg);
+  transition: transform 0.6s ease;
+}
+
+.pr-icon-wrapper:hover::before {
+  transform: rotate(180deg);
 }
 
 .pr-icon {
@@ -636,13 +628,12 @@ html {
     rgba(192, 192, 192, 0.4) 50%,
     transparent 100%
   );
-  animation: btn-shine 3s ease-in-out infinite;
   pointer-events: none;
+  transition: left 0.6s ease;
 }
 
-@keyframes btn-shine {
-  0% { left: -100%; }
-  50%, 100% { left: 100%; }
+.pr-btn:hover .pr-btn-shine {
+  left: 100%;
 }
 
 .pr-btn:hover {
@@ -762,22 +753,16 @@ html {
 .pr-post-card::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: radial-gradient(
-    circle,
+    circle at 30% 20%,
     rgba(183, 110, 121, 0.05) 0%,
     transparent 70%
   );
-  animation: rotate-glow 10s linear infinite;
   pointer-events: none;
-}
-
-@keyframes rotate-glow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .pr-post-card:hover {
@@ -1324,6 +1309,128 @@ html {
   font-weight: 300;
 }
 
+/* ===== HERO ACTIONS ===== */
+.pr-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pr-hero-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 12px;
+  color: var(--btn-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 300;
+  cursor: pointer;
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.pr-hero-btn:hover {
+  border-color: var(--color-rosegold);
+  box-shadow: var(--shadow-lg), var(--glow-rosegold);
+  transform: translateY(-2px);
+}
+
+.pr-hero-btn .pr-btn-icon {
+  width: 20px;
+  height: 20px;
+  stroke: var(--btn-text);
+}
+
+/* ===== COMPOSER OVERLAY ===== */
+.pr-composer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pr-composer-overlay.open {
+  opacity: 1;
+}
+
+.pr-composer-overlay-panel {
+  background: linear-gradient(135deg, var(--section-bg-start) 0%, var(--section-bg-end) 100%);
+  border: 2px solid var(--card-border);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl), var(--glow-rosegold);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.pr-composer-overlay.open .pr-composer-overlay-panel {
+  transform: translateY(0);
+}
+
+.pr-composer-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--section-border);
+}
+
+.pr-composer-overlay-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  color: var(--color-rosegold);
+  text-shadow: 0 0 8px rgba(183, 110, 121, 0.3);
+  font-weight: 400;
+}
+
+[data-theme="light"] .pr-composer-overlay-title {
+  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+}
+
+.pr-composer-overlay-close {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--section-border);
+  border-radius: 50%;
+  color: var(--btn-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.pr-composer-overlay-close:hover {
+  border-color: var(--color-rosegold);
+  box-shadow: var(--glow-rosegold);
+  transform: scale(1.1);
+}
+
+.pr-composer-overlay-close svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+}
+
 /* ===== TOAST ANIMATIONS ===== */
 @keyframes slide-in-right {
   from {
@@ -1347,11 +1454,9 @@ html {
   }
 }
 
-/* ===== SMOOTH TRANSITIONS ===== */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, text-shadow, filter;
-  transition-duration: 0.4s;
-  transition-timing-function: ease;
+/* ===== REACTED BUTTON TRANSITIONS ===== */
+.pr-action-btn.active {
+  transition: border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* ===== MOBILE RESPONSIVENESS ===== */
@@ -1512,6 +1617,24 @@ html {
     height: 14px;
   }
   
+  .pr-hero-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .pr-composer-overlay {
+    padding: 10px;
+  }
+
+  .pr-composer-overlay-panel {
+    padding: 20px 15px;
+    max-height: 95vh;
+  }
+
+  .pr-composer-overlay-title {
+    font-size: 1.5rem;
+  }
+
   .pr-modal-content {
     padding: 20px 15px;
     max-height: 90vh;
