@@ -203,14 +203,14 @@ body {
 
 /* ===== TITLE ===== */
 .ghf-title {
-  font-family: 'Parisienne', cursive;
-  font-size: clamp(1.3rem, 4vw, 2rem);
-  font-weight: 200;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(1.1rem, 3.5vw, 1.6rem);
+  font-weight: 600;
   color: var(--ghf-text-rose);
-  text-shadow: 
+  text-shadow:
     0 0 10px rgba(183, 110, 121, 0.5),
     0 2px 4px rgba(0, 0, 0, 0.3);
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -598,11 +598,13 @@ body.ghf-open .ghf-drawer {
 }
 
 .ghf-drawer-title {
-  font-family: 'Parisienne', cursive;
-  font-size: 2.5rem;
-  font-weight: 200;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
   color: var(--ghf-text-rose);
   text-shadow: 0 0 20px rgba(183, 110, 121, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 2px;
   margin: 0;
   animation: ghf-glow 3s ease-in-out infinite;
 }
@@ -673,10 +675,10 @@ body.ghf-open .ghf-drawer {
   padding: 12px 30px;
   color: var(--ghf-text);
   text-decoration: none;
-  font-family: 'Parisienne', cursive;
-  font-size: clamp(1.1rem, 2.5vh, 1.6rem);
-  font-weight: 400;
-  letter-spacing: 1px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(1rem, 2.5vh, 1.3rem);
+  font-weight: 500;
+  letter-spacing: 0.5px;
   border-top: 1px solid rgba(183, 110, 121, 0.2);
   border-bottom: 1px solid rgba(183, 110, 121, 0.2);
   background: linear-gradient(90deg, transparent 0%, rgba(183, 110, 121, 0.05) 50%, transparent 100%);
@@ -780,12 +782,12 @@ body.ghf-open .ghf-drawer {
   }
 
   .ghf-nav-link {
-    font-size: clamp(1.3rem, 3vh, 1.8rem);
+    font-size: clamp(1rem, 2.8vh, 1.3rem);
     padding: 14px 20px;
   }
 
   .ghf-drawer-title {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
   }
 
   .ghf-drawer-header {
@@ -818,12 +820,12 @@ body.ghf-open .ghf-drawer {
   }
 
   .ghf-nav-link {
-    font-size: clamp(1.2rem, 2.8vh, 1.6rem);
+    font-size: clamp(0.95rem, 2.5vh, 1.2rem);
     padding: 12px 15px;
   }
 
   .ghf-drawer-title {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
 
   .ghf-drawer-header {
