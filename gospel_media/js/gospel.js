@@ -505,43 +505,170 @@
     
     card.appendChild(ce('div', { class: 'post-text', text: p.text || '' }));
     
-    if (Array.isArray(p.attachments)) {
-      p.attachments.forEach(a => {
-        const img = ce('img', { class: 'post-image' });
-        img.src = a.path_original || a.path_thumb || a.url || '';
-        img.alt = 'img';
-        card.appendChild(img);
+    // ===== FACEBOOK-STYLE PHOTO GRID =====
+    if (Array.isArray(p.attachments) && p.attachments.length) {
+      const atts = p.attachments;
+      const count = atts.length;
+      const grid = ce('div', { class: 'photo-grid photo-grid-' + Math.min(count, 5) });
+
+      atts.forEach((a, idx) => {
+        const cell = ce('div', { class: 'photo-grid-cell' });
+        const img = ce('img', {
+          class: 'photo-grid-img',
+          alt: 'img'
+        });
+        img.loading = 'lazy';
+        img.src = a.path_thumb || a.path_original || a.url || '';
+        img.dataset.full = a.path_original || a.path_thumb || a.url || '';
+
+        // For 5+ images, show overlay on the last visible cell
+        if (count > 4 && idx === 3) {
+          const overlay = ce('div', { class: 'photo-grid-more', text: '+' + (count - 4) });
+          cell.appendChild(overlay);
+        }
+
+        // Hide images beyond 4th
+        if (idx >= 4) cell.style.display = 'none';
+
+        img.addEventListener('click', () => openLightbox(atts, idx));
+        cell.appendChild(img);
+        grid.appendChild(cell);
       });
+
+      // Clicking the "+N" overlay opens lightbox at image 4
+      if (count > 4) {
+        const lastVisible = grid.children[3];
+        if (lastVisible) {
+          lastVisible.addEventListener('click', (e) => {
+            if (e.target.classList.contains('photo-grid-more')) {
+              openLightbox(atts, 3);
+            }
+          });
+        }
+      }
+
+      card.appendChild(grid);
     }
-    
+
     renderReactions(card, p);
     return card;
   }
 
-  async function loadFeed(roomId) {
+  // ===== LIGHTBOX =====
+  function openLightbox(attachments, startIdx) {
+    let idx = startIdx;
+    const backdrop = ce('div', { class: 'lightbox-backdrop' });
+    const img = ce('img', { class: 'lightbox-img' });
+    const counter = ce('div', { class: 'lightbox-counter' });
+    const closeBtn = ce('button', { class: 'lightbox-close', type: 'button', text: '\u00d7' });
+
+    function show(i) {
+      idx = i;
+      const a = attachments[idx];
+      img.src = a.path_original || a.path_thumb || a.url || '';
+      counter.textContent = (idx + 1) + ' / ' + attachments.length;
+    }
+
+    closeBtn.addEventListener('click', () => backdrop.remove());
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.remove(); });
+
+    if (attachments.length > 1) {
+      const prev = ce('button', { class: 'lightbox-nav lightbox-prev', type: 'button', text: '\u2039' });
+      const next = ce('button', { class: 'lightbox-nav lightbox-next', type: 'button', text: '\u203a' });
+      prev.addEventListener('click', (e) => { e.stopPropagation(); show((idx - 1 + attachments.length) % attachments.length); });
+      next.addEventListener('click', (e) => { e.stopPropagation(); show((idx + 1) % attachments.length); });
+      backdrop.append(prev, next);
+    }
+
+    backdrop.append(closeBtn, img, counter);
+
+    // Keyboard nav
+    function onKey(e) {
+      if (e.key === 'Escape') { backdrop.remove(); document.removeEventListener('keydown', onKey); }
+      if (e.key === 'ArrowLeft') show((idx - 1 + attachments.length) % attachments.length);
+      if (e.key === 'ArrowRight') show((idx + 1) % attachments.length);
+    }
+    document.addEventListener('keydown', onKey);
+    backdrop.addEventListener('remove', () => document.removeEventListener('keydown', onKey));
+
+    document.body.appendChild(backdrop);
+    show(startIdx);
+  }
+
+  // ===== INFINITE SCROLL FEED =====
+  const FEED_LIMIT = 10;
+  let feedLastId = null;
+  let feedLoading = false;
+  let feedDone = false;
+  let scrollObserver = null;
+  let sentinelEl = null;
+
+  async function loadFeed(roomId, reset) {
+    if (reset === undefined) reset = true;
     const feed = $('#feed');
     if (!feed) return;
-    
+
     const loading = $('#loadingIndicator');
+
+    if (reset) {
+      feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('loading_posts') + '</p></div>';
+      POST_MAP.clear();
+      feedLastId = null;
+      feedDone = false;
+      if (scrollObserver) scrollObserver.disconnect();
+    }
+
+    if (feedLoading || feedDone) return;
+    feedLoading = true;
     if (loading) loading.hidden = false;
-    
-    feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('loading_posts') + '</p></div>';
-    POST_MAP.clear();
-    
-    const j = await fetchJSON('/gospel_media/api/posts/list.php?room_id=' + encodeURIComponent(roomId));
-    
+
+    let url = '/gospel_media/api/posts/list.php?room_id=' + encodeURIComponent(roomId) + '&limit=' + FEED_LIMIT;
+    if (feedLastId) url += '&after_id=' + feedLastId;
+
+    const j = await fetchJSON(url);
+
     if (loading) loading.hidden = true;
-    
+    feedLoading = false;
+
     const rows = Array.isArray(j) ? j : (Array.isArray(j.rows) ? j.rows : []);
-    
-    feed.innerHTML = '';
-    
+
+    if (reset) feed.innerHTML = '';
+
     if (!rows.length) {
-      feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('no_posts') + '</p></div>';
+      if (reset) {
+        feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('no_posts') + '</p></div>';
+      }
+      feedDone = true;
       return;
     }
-    
-    rows.forEach(p => feed.appendChild(renderCard(p)));
+
+    if (rows.length < FEED_LIMIT) feedDone = true;
+
+    rows.forEach(p => {
+      feed.appendChild(renderCard(p));
+      feedLastId = p.id;
+    });
+
+    // Set up infinite scroll sentinel
+    setupScrollObserver(feed, roomId);
+  }
+
+  function setupScrollObserver(feed, roomId) {
+    if (scrollObserver) scrollObserver.disconnect();
+    if (feedDone) return;
+
+    // Remove old sentinel
+    if (sentinelEl) sentinelEl.remove();
+    sentinelEl = ce('div', { class: 'feed-sentinel' });
+    feed.appendChild(sentinelEl);
+
+    scrollObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !feedLoading && !feedDone) {
+        loadFeed(roomId, false);
+      }
+    }, { rootMargin: '200px' });
+
+    scrollObserver.observe(sentinelEl);
   }
 
   // ===== MODALS =====
