@@ -205,12 +205,12 @@ body {
 .ghf-title {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(1.1rem, 3.5vw, 1.6rem);
-  font-weight: 600;
+  font-weight: 300;
   color: var(--ghf-text-rose);
   text-shadow:
     0 0 10px rgba(183, 110, 121, 0.5),
     0 2px 4px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -600,11 +600,11 @@ body.ghf-open .ghf-drawer {
 .ghf-drawer-title {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.8rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--ghf-text-rose);
   text-shadow: 0 0 20px rgba(183, 110, 121, 0.5);
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   margin: 0;
   animation: ghf-glow 3s ease-in-out infinite;
 }
@@ -677,8 +677,8 @@ body.ghf-open .ghf-drawer {
   text-decoration: none;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(1rem, 2.5vh, 1.3rem);
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  font-weight: 300;
+  letter-spacing: 1px;
   border-top: 1px solid rgba(183, 110, 121, 0.2);
   border-bottom: 1px solid rgba(183, 110, 121, 0.2);
   background: linear-gradient(90deg, transparent 0%, rgba(183, 110, 121, 0.05) 50%, transparent 100%);
