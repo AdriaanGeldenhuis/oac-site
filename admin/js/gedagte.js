@@ -4,6 +4,7 @@
   var form = document.getElementById('gedagteForm');
   var listEl = document.getElementById('gedagteList');
   var dateInput = document.getElementById('thoughtDate');
+  var timeInput = document.getElementById('thoughtTime');
   var lang = window.GEDAGTE_LANG || {};
 
   // Default date to today
@@ -33,6 +34,7 @@
           alert(lang.saved || 'Saved!');
           form.reset();
           if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+          if (timeInput) timeInput.value = '07:00';
           loadThoughts();
         } else {
           alert(data.error || 'Error');
@@ -65,10 +67,19 @@
         var statusClass = isToday ? 'gedagte-item--today' : (isPast ? 'gedagte-item--past' : '');
 
         html += '<div class="gedagte-item ' + statusClass + '" data-id="' + t.id + '">';
-        html += '  <div class="gedagte-item-date">' + formatDate(t.display_date) + '</div>';
+        html += '  <div class="gedagte-item-date">' + formatDate(t.display_date);
+        if (t.display_time) {
+          html += '<span class="gedagte-item-time">' + formatTime(t.display_time) + '</span>';
+        }
+        if (t.notification_sent == 1) {
+          html += '<span class="gedagte-item-notif gedagte-item-notif--sent">' + (lang.notifSent || 'Sent') + '</span>';
+        } else if (!isPast) {
+          html += '<span class="gedagte-item-notif gedagte-item-notif--pending">' + (lang.notifPending || 'Pending') + '</span>';
+        }
+        html += '</div>';
         html += '  <div class="gedagte-item-content">' + escapeHtml(t.content) + '</div>';
         if (t.author) {
-          html += '  <div class="gedagte-item-author">— ' + escapeHtml(t.author) + '</div>';
+          html += '  <div class="gedagte-item-author">&mdash; ' + escapeHtml(t.author) + '</div>';
         }
         html += '  <button class="gedagte-delete-btn" data-id="' + t.id + '">' + (lang.deleteLabel || 'Delete') + '</button>';
         html += '</div>';
@@ -116,6 +127,12 @@
   function formatDate(dateStr) {
     var d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function formatTime(timeStr) {
+    // timeStr is "HH:MM:SS" - format as "HH:MM"
+    var parts = timeStr.split(':');
+    return parts[0] + ':' + parts[1];
   }
 
   function escapeHtml(str) {

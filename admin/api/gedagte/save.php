@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $content = trim((string)($_POST['content'] ?? ''));
 $author = trim((string)($_POST['author'] ?? ''));
 $displayDate = trim((string)($_POST['display_date'] ?? ''));
+$displayTime = trim((string)($_POST['display_time'] ?? ''));
 
 if ($content === '') {
     ob_end_clean();
@@ -63,6 +64,14 @@ if ($displayDate === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $displayDate)) {
     exit;
 }
 
+// Validate time format (HH:MM)
+if ($displayTime !== '' && !preg_match('/^\d{2}:\d{2}$/', $displayTime)) {
+    ob_end_clean();
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Valid time is required (HH:MM)']);
+    exit;
+}
+
 // Sanitize content (strip dangerous HTML)
 $content = strip_tags($content, '<p><br><strong><em><b><i>');
 
@@ -74,6 +83,8 @@ try {
             content TEXT NOT NULL,
             author VARCHAR(255) DEFAULT NULL,
             display_date DATE NOT NULL,
+            display_time TIME DEFAULT NULL,
+            notification_sent TINYINT(1) DEFAULT 0,
             created_by INT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY unique_date (display_date),
@@ -82,16 +93,25 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 
+    // Add columns if they don't exist (for existing tables)
+    try {
+        $pdo->exec("ALTER TABLE daily_thoughts ADD COLUMN display_time TIME DEFAULT NULL AFTER display_date");
+    } catch (Throwable $e) { /* column already exists */ }
+    try {
+        $pdo->exec("ALTER TABLE daily_thoughts ADD COLUMN notification_sent TINYINT(1) DEFAULT 0 AFTER display_time");
+    } catch (Throwable $e) { /* column already exists */ }
+
     // Insert or update (replace if same date exists)
     $stmt = $pdo->prepare('
-        INSERT INTO daily_thoughts (content, author, display_date, created_by)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE content = VALUES(content), author = VALUES(author), created_by = VALUES(created_by)
+        INSERT INTO daily_thoughts (content, author, display_date, display_time, notification_sent, created_by)
+        VALUES (?, ?, ?, ?, 0, ?)
+        ON DUPLICATE KEY UPDATE content = VALUES(content), author = VALUES(author), display_time = VALUES(display_time), notification_sent = 0, created_by = VALUES(created_by)
     ');
     $stmt->execute([
         $content,
         $author !== '' ? $author : null,
         $displayDate,
+        $displayTime !== '' ? $displayTime . ':00' : null,
         $userId
     ]);
 

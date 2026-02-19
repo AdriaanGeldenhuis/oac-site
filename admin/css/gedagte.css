@@ -19,7 +19,8 @@
 
 .gedagte-field textarea,
 .gedagte-field input[type="text"],
-.gedagte-field input[type="date"] {
+.gedagte-field input[type="date"],
+.gedagte-field input[type="time"] {
   width: 100%;
   padding: 12px 16px;
   background: var(--card-bg-start, rgba(10, 10, 10, 0.85));
@@ -44,7 +45,7 @@
 
 .gedagte-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
 }
 
@@ -114,6 +115,38 @@
   font-style: italic;
   color: var(--text-secondary, #c0c0c0);
   margin-bottom: 8px;
+}
+
+.gedagte-item-time {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-secondary, #c0c0c0);
+  background: rgba(243, 195, 177, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.gedagte-item-notif {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.gedagte-item-notif--sent {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.gedagte-item-notif--pending {
+  color: var(--color-rosegold, #f3c3b1);
+  background: rgba(243, 195, 177, 0.1);
 }
 
 .gedagte-delete-btn {

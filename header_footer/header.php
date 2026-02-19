@@ -49,6 +49,8 @@ if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !
   $pageTitle = t_hdr('diary');
 } elseif (strpos($reqPath, '/singemmanuel/singemmanuel.php') !== false) {
   $pageTitle = t_hdr('sing_emmanuel');
+} elseif (strpos($reqPath, '/gedagtes/gedagtes.php') !== false) {
+  $pageTitle = t_hdr('thought_history');
 }
 
 // Navigation links with translation keys
@@ -62,6 +64,7 @@ $navLinks = [
   ['/diary/diary.php', 'diary'],
   ['/singemmanuel/singemmanuel.php', 'sing_emmanuel'],
   ['/notifications/notifications.php', 'notifications'],
+  ['/gedagtes/gedagtes.php', 'thought_history'],
   ['/admin/index.php', 'admin'],
   ['/logout.php', 'logout']
 ];

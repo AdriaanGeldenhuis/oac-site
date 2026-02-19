@@ -26,6 +26,10 @@
         <label for="thoughtDate"><?= t('thought_date') ?></label>
         <input type="date" id="thoughtDate" name="display_date" required>
       </div>
+      <div class="gedagte-field">
+        <label for="thoughtTime"><?= t('thought_time') ?></label>
+        <input type="time" id="thoughtTime" name="display_time" value="07:00">
+      </div>
     </div>
 
     <div class="gedagte-actions">
@@ -48,7 +52,9 @@
     deleted: <?= json_encode(t('thought_deleted')) ?>,
     confirmDelete: <?= json_encode(t('confirm_delete_thought')) ?>,
     noUpcoming: <?= json_encode(t('no_upcoming')) ?>,
-    deleteLabel: <?= json_encode(t('delete')) ?>
+    deleteLabel: <?= json_encode(t('delete')) ?>,
+    notifSent: <?= json_encode(t('notif_sent')) ?>,
+    notifPending: <?= json_encode(t('notif_pending')) ?>
   };
 </script>
 <script src="/admin/js/gedagte.js?v=<?= $VER ?>"></script>

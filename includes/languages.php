@@ -3798,6 +3798,55 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Uqinisekile ukuthi ufuna ukususa lo mcabango?',
         'xh' => 'Uqinisekile ukuba ufuna ukucima le ngcinga?',
         'pt' => 'Tem certeza de que deseja excluir este pensamento?'
+    ],
+    'thought_time' => [
+        'af' => 'Tyd om te wys',
+        'en' => 'Time to display',
+        'zu' => 'Isikhathi sokubonisa',
+        'xh' => 'Ixesha lokubonisa',
+        'pt' => 'Hora para exibir'
+    ],
+    'notif_sent' => [
+        'af' => 'Gestuur',
+        'en' => 'Sent',
+        'zu' => 'Ithunyelwe',
+        'xh' => 'Ithunyelwe',
+        'pt' => 'Enviado'
+    ],
+    'notif_pending' => [
+        'af' => 'Wag',
+        'en' => 'Pending',
+        'zu' => 'Ilindile',
+        'xh' => 'Ilindile',
+        'pt' => 'Pendente'
+    ],
+    'thought_history' => [
+        'af' => 'Gedagtes',
+        'en' => 'Thoughts',
+        'zu' => 'Imicabango',
+        'xh' => 'Iingcinga',
+        'pt' => 'Pensamentos'
+    ],
+    'thought_history_title' => [
+        'af' => 'Gedagtes van die Afgelope 30 Dae',
+        'en' => 'Thoughts from the Past 30 Days',
+        'zu' => 'Imicabango Yezinsuku Ezingu-30 Ezedlule',
+        'xh' => 'Iingcinga Zeentsuku Ezingama-30 Ezidlulileyo',
+        'pt' => 'Pensamentos dos Últimos 30 Dias'
+    ],
+    'no_thoughts_yet' => [
+        'af' => 'Nog geen gedagtes nie',
+        'en' => 'No thoughts yet',
+        'zu' => 'Akukho micabango okwamanje',
+        'xh' => 'Akukho ngcinga okwangoku',
+        'pt' => 'Nenhum pensamento ainda'
+    ],
+    'notif_thought_title' => [
+        'af' => 'Gedagte van die Dag',
+        'en' => 'Thought of the Day',
+        'zu' => 'Umcabango Wosuku',
+        'xh' => 'Ingcinga Yosuku',
+        'pt' => 'Pensamento do Dia'
     ]
 ]);
 

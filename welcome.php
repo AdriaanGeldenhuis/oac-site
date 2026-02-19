@@ -107,7 +107,7 @@ foreach ($candidates as $cand) {
     }
 }
 
-// Fetch today's thought
+// Fetch today's thought (only if display_time has passed or is NULL)
 $dailyThought = null;
 try {
     $pdo->exec("
@@ -116,6 +116,8 @@ try {
             content TEXT NOT NULL,
             author VARCHAR(255) DEFAULT NULL,
             display_date DATE NOT NULL,
+            display_time TIME DEFAULT NULL,
+            notification_sent TINYINT(1) DEFAULT 0,
             created_by INT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY unique_date (display_date),
@@ -123,7 +125,13 @@ try {
             INDEX idx_created_by (created_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
-    $stmt = $pdo->prepare('SELECT content, author FROM daily_thoughts WHERE display_date = CURDATE() LIMIT 1');
+    $stmt = $pdo->prepare('
+        SELECT content, author
+        FROM daily_thoughts
+        WHERE display_date = CURDATE()
+          AND (display_time IS NULL OR display_time <= CURTIME())
+        LIMIT 1
+    ');
     $stmt->execute();
     $dailyThought = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 } catch (Throwable $e) {
@@ -142,6 +150,7 @@ $navItems = [
     ['href' => '/diary/diary.php', 'key' => 'diary', 'icon' => '<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>'],
     ['href' => '/singemmanuel/singemmanuel.php', 'key' => 'sing_emmanuel', 'icon' => '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>'],
     ['href' => '/notifications/notifications.php', 'key' => 'notifications', 'icon' => '<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>'],
+    ['href' => '/gedagtes/gedagtes.php', 'key' => 'thought_history', 'icon' => '<path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>'],
 ];
 ?><!doctype html>
 <html lang="<?= $lang ?>">
