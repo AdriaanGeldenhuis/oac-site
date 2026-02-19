@@ -23,8 +23,9 @@ function t(string $key): string {
 }
 
 $currentUserId = $_SESSION['user_id'] ?? 0;
+$VER = '2.1.0';
 
-function esc($s) { 
+function esc($s) {
   return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); 
 }
 
@@ -56,7 +57,6 @@ $currentUser = [
     }
   </style>
   
-<?php $VER = '2.1.0'; ?>
   <link rel="stylesheet" href="/prayers/css/prayers.css?v=<?= $VER ?>">
 </head>
 <body class="prayers-body">

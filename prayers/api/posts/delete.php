@@ -40,22 +40,29 @@ try {
     exit;
   }
   
-  if ($post['photo_url']) {
-    $photoPath = __DIR__ . '/../../../' . ltrim($post['photo_url'], '/');
-    if (file_exists($photoPath)) unlink($photoPath);
-  }
-  
+  $pdo->beginTransaction();
+
   $stmt = $pdo->prepare("DELETE FROM prayers_comments WHERE post_id = ?");
   $stmt->execute([$postId]);
-  
+
   $stmt = $pdo->prepare("DELETE FROM prayers_reactions WHERE post_id = ?");
   $stmt->execute([$postId]);
-  
+
   $stmt = $pdo->prepare("DELETE FROM prayers_posts WHERE id = ?");
   $stmt->execute([$postId]);
-  
+
+  $pdo->commit();
+
+  // Delete photo file after successful DB transaction
+  if ($post['photo_url']) {
+    $photoPath = __DIR__ . '/../../../' . ltrim($post['photo_url'], '/');
+    if (file_exists($photoPath)) @unlink($photoPath);
+  }
+
   echo json_encode(['success' => true]);
 } catch (Exception $e) {
+  if ($pdo->inTransaction()) $pdo->rollBack();
+  error_log('Prayers delete error: ' . $e->getMessage());
   http_response_code(500);
-  echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+  echo json_encode(['success' => false, 'error' => 'server_error']);
 }

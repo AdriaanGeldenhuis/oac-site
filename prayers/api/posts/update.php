@@ -31,58 +31,103 @@ if (!$postId || empty($text)) {
   exit;
 }
 
+// Helper: resize image to fit within max dimensions
+function resize_prayer_image_update($img, int $origW, int $origH, int $maxW, int $maxH) {
+    if ($origW <= $maxW && $origH <= $maxH) return $img;
+    $ratio = min($maxW / $origW, $maxH / $origH);
+    $newW = (int)round($origW * $ratio);
+    $newH = (int)round($origH * $ratio);
+    $resized = @imagecreatetruecolor($newW, $newH);
+    if (!$resized) return $img;
+    @imagealphablending($resized, false);
+    @imagesavealpha($resized, true);
+    @imagecopyresampled($resized, $img, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+    return $resized;
+}
+
+// Process uploaded image: resize and save as WebP
+function process_prayer_image_update(string $tmpPath): ?string {
+    $info = @getimagesize($tmpPath);
+    if (!$info) return null;
+
+    $mime = $info['mime'];
+    $width = $info[0];
+    $height = $info[1];
+
+    $img = null;
+    switch ($mime) {
+        case 'image/jpeg': case 'image/jpg': $img = @imagecreatefromjpeg($tmpPath); break;
+        case 'image/png': $img = @imagecreatefrompng($tmpPath); break;
+        case 'image/gif': $img = @imagecreatefromgif($tmpPath); break;
+        case 'image/webp': $img = @imagecreatefromwebp($tmpPath); break;
+        default: return null;
+    }
+    if (!$img) return null;
+
+    $uploadDir = __DIR__ . '/../../../uploads/prayers/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+    $filename = 'prayer_' . uniqid() . '.webp';
+
+    $resized = resize_prayer_image_update($img, $width, $height, 1920, 1920);
+    $success = @imagewebp($resized, $uploadDir . $filename, 82);
+    if ($resized !== $img) @imagedestroy($resized);
+    @imagedestroy($img);
+
+    if (!$success) return null;
+
+    return '/uploads/prayers/' . $filename;
+}
+
 try {
   $stmt = $pdo->prepare("SELECT user_id, photo_url FROM prayers_posts WHERE id = ?");
   $stmt->execute([$postId]);
   $post = $stmt->fetch();
-  
+
   if (!$post) {
     echo json_encode(['success' => false, 'error' => 'Post not found']);
     exit;
   }
-  
+
   $isAdmin = ($userApte >= 2 && $userApte <= 7);
   $isOwner = ($post['user_id'] == $userId);
-  
+
   if (!$isOwner && !$isAdmin) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Permission denied']);
     exit;
   }
-  
+
   $newPhotoUrl = $post['photo_url'];
-  
+
   if ($removePhoto && $post['photo_url']) {
     $photoPath = __DIR__ . '/../../../' . ltrim($post['photo_url'], '/');
-    if (file_exists($photoPath)) unlink($photoPath);
+    if (file_exists($photoPath)) @unlink($photoPath);
     $newPhotoUrl = null;
   }
-  
+
   if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+    // Delete old photo first
     if ($post['photo_url']) {
       $photoPath = __DIR__ . '/../../../' . ltrim($post['photo_url'], '/');
-      if (file_exists($photoPath)) unlink($photoPath);
+      if (file_exists($photoPath)) @unlink($photoPath);
     }
-    
-    $uploadDir = __DIR__ . '/../../../uploads/prayers/';
-    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-    
+
     $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
     $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    
+
     if (in_array($ext, $allowed)) {
-      $filename = 'prayer_' . uniqid() . '.' . $ext;
-      if (move_uploaded_file($_FILES['photo']['tmp_name'], $uploadDir . $filename)) {
-        $newPhotoUrl = '/uploads/prayers/' . $filename;
-      }
+      $result = process_prayer_image_update($_FILES['photo']['tmp_name']);
+      if ($result) $newPhotoUrl = $result;
     }
   }
-  
+
   $stmt = $pdo->prepare("UPDATE prayers_posts SET text = ?, photo_url = ?, updated_at = NOW() WHERE id = ?");
   $stmt->execute([$text, $newPhotoUrl, $postId]);
-  
+
   echo json_encode(['success' => true, 'photo_url' => $newPhotoUrl]);
 } catch (Exception $e) {
+  error_log('Prayers update error: ' . $e->getMessage());
   http_response_code(500);
-  echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+  echo json_encode(['success' => false, 'error' => 'server_error']);
 }

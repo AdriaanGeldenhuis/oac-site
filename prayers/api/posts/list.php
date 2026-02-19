@@ -33,14 +33,19 @@ try {
       u.amp_id,
       u.gender,
       u.photo as user_pic,
-      t.name as town_name
+      t.name as town_name,
+      (SELECT COUNT(*) FROM prayers_reactions r WHERE r.post_id = p.id AND r.type = 'heart') AS heart_count,
+      (SELECT COUNT(*) FROM prayers_reactions r WHERE r.post_id = p.id AND r.type = 'pray') AS pray_count,
+      (SELECT COUNT(*) FROM prayers_comments c WHERE c.post_id = p.id) AS comment_count,
+      (SELECT COUNT(*) FROM prayers_reactions r WHERE r.post_id = p.id AND r.user_id = ? AND r.type = 'heart') AS user_hearted,
+      (SELECT COUNT(*) FROM prayers_reactions r WHERE r.post_id = p.id AND r.user_id = ? AND r.type = 'pray') AS user_prayed
     FROM prayers_posts p
     JOIN users u ON p.user_id = u.id
     LEFT JOIN towns t ON p.town_id = t.id
     WHERE 1=1
   ";
 
-  $params = [];
+  $params = [$userId, $userId];
 
   if (!$isAdmin && $userTownId > 0) {
     $sql .= " AND (p.town_id = ? OR p.town_id = 0)";
@@ -52,7 +57,7 @@ try {
   $stmt = $pdo->prepare($sql);
   $stmt->execute($params);
   $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  
+
   foreach ($posts as &$post) {
     $post['created_at'] = date('Y-m-d H:i', strtotime($post['created_at']));
     $post['user_pic'] = $post['user_pic'] ?: null;
@@ -77,32 +82,18 @@ try {
     // Clean up fields not needed in response
     unset($post['user_name'], $post['user_surname'], $post['amp_id'], $post['gender']);
 
-    $stmtHeart = $pdo->prepare("SELECT COUNT(*) FROM prayers_reactions WHERE post_id = ? AND type = 'heart'");
-    $stmtHeart->execute([$post['id']]);
-    $post['heart_count'] = (int)$stmtHeart->fetchColumn();
-    
-    $stmtPray = $pdo->prepare("SELECT COUNT(*) FROM prayers_reactions WHERE post_id = ? AND type = 'pray'");
-    $stmtPray->execute([$post['id']]);
-    $post['pray_count'] = (int)$stmtPray->fetchColumn();
-    
-    $stmtComment = $pdo->prepare("SELECT COUNT(*) FROM prayers_comments WHERE post_id = ?");
-    $stmtComment->execute([$post['id']]);
-    $post['comment_count'] = (int)$stmtComment->fetchColumn();
-    
-    $stmtUserHeart = $pdo->prepare("SELECT COUNT(*) FROM prayers_reactions WHERE post_id = ? AND user_id = ? AND type = 'heart'");
-    $stmtUserHeart->execute([$post['id'], $userId]);
-    $post['user_hearted'] = $stmtUserHeart->fetchColumn() > 0;
-    
-    $stmtUserPray = $pdo->prepare("SELECT COUNT(*) FROM prayers_reactions WHERE post_id = ? AND user_id = ? AND type = 'pray'");
-    $stmtUserPray->execute([$post['id'], $userId]);
-    $post['user_prayed'] = $stmtUserPray->fetchColumn() > 0;
-    
+    $post['heart_count'] = (int)$post['heart_count'];
+    $post['pray_count'] = (int)$post['pray_count'];
+    $post['comment_count'] = (int)$post['comment_count'];
+    $post['user_hearted'] = (int)$post['user_hearted'] > 0;
+    $post['user_prayed'] = (int)$post['user_prayed'] > 0;
     $post['can_edit'] = ($post['user_id'] == $userId || $isAdmin);
     $post['can_delete'] = ($post['user_id'] == $userId || $isAdmin);
   }
-  
+
   echo json_encode(['success' => true, 'posts' => $posts]);
 } catch (Exception $e) {
+  error_log('Prayers list error: ' . $e->getMessage());
   http_response_code(500);
-  echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+  echo json_encode(['success' => false, 'error' => 'server_error']);
 }

@@ -37,7 +37,6 @@
     const overlay = document.createElement('div');
     overlay.className = 'pr-composer-overlay';
 
-    const prayerKind = isEdit ? '' : 'active';
     const photoPreviewHTML = editingPostPhotoUrl ? `
       <div class="pr-photo-preview">
         <img src="${editingPostPhotoUrl}" alt="Current photo">
