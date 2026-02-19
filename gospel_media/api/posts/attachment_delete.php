@@ -2,6 +2,7 @@
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/lib/permissions.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) { 
     http_response_code(500); 
@@ -58,42 +59,47 @@ function safe_unlink_attachment(string $path): bool {
 try {
     $pdo->beginTransaction();
     
-    // Get attachment info
+    // Get attachment info with room data for permission check
     if ($attId > 0) {
         $st = $pdo->prepare("
-            SELECT a.id, a.path_original, a.path_thumb, p.user_id 
-            FROM attachments a 
-            JOIN posts p ON p.id = a.post_id 
+            SELECT a.id, a.path_original, a.path_thumb, p.user_id, p.room_id,
+                   r.type AS room_type, r.town_id, r.gemeente_id
+            FROM attachments a
+            JOIN posts p ON p.id = a.post_id
+            LEFT JOIN rooms r ON r.id = p.room_id
             WHERE a.id = ? LIMIT 1
         ");
         $st->execute([$attId]);
     } else {
-        // Find by post_id and path
         $st = $pdo->prepare("
-            SELECT a.id, a.path_original, a.path_thumb, p.user_id 
-            FROM attachments a 
-            JOIN posts p ON p.id = a.post_id 
-            WHERE a.post_id = ? AND (a.path_original = ? OR a.path_thumb = ?) 
+            SELECT a.id, a.path_original, a.path_thumb, p.user_id, p.room_id,
+                   r.type AS room_type, r.town_id, r.gemeente_id
+            FROM attachments a
+            JOIN posts p ON p.id = a.post_id
+            LEFT JOIN rooms r ON r.id = p.room_id
+            WHERE a.post_id = ? AND (a.path_original = ? OR a.path_thumb = ?)
             LIMIT 1
         ");
         $st->execute([$postId, $path, $path]);
     }
-    
+
     $row = $st->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$row) { 
-        $pdo->rollBack(); 
-        http_response_code(404); 
-        echo json_encode(['error'=>'not_found']); 
-        exit; 
+
+    if (!$row) {
+        $pdo->rollBack();
+        http_response_code(404);
+        echo json_encode(['error'=>'not_found']);
+        exit;
     }
-    
-    // Check ownership
-    if ((int)$row['user_id'] !== $userId) { 
-        $pdo->rollBack(); 
-        http_response_code(403); 
-        echo json_encode(['error'=>'forbidden']); 
-        exit; 
+
+    // Check permissions using room-based logic (owner + moderators)
+    $post = ['user_id' => $row['user_id'], 'room_id' => $row['room_id']];
+    $room = ['id' => $row['room_id'], 'type' => $row['room_type'] ?? '', 'town_id' => $row['town_id'] ?? 0, 'gemeente_id' => $row['gemeente_id'] ?? 0];
+    if (!user_can_edit_post($pdo, $userId, $post, $room)) {
+        $pdo->rollBack();
+        http_response_code(403);
+        echo json_encode(['error'=>'forbidden']);
+        exit;
     }
 
     $deletedId = (int)$row['id'];

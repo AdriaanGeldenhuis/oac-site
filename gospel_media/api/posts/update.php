@@ -30,25 +30,39 @@ if ($userId <= 0 || $postId <= 0) {
     exit; 
 }
 
-// Image processing function
+// Image processing function (matches create.php logic)
+function resize_image_update($img, int $origW, int $origH, int $maxW, int $maxH) {
+    if ($origW <= $maxW && $origH <= $maxH) return $img;
+    $ratio = min($maxW / $origW, $maxH / $origH);
+    $newW = (int)round($origW * $ratio);
+    $newH = (int)round($origH * $ratio);
+    $resized = @imagecreatetruecolor($newW, $newH);
+    if (!$resized) return $img;
+    @imagealphablending($resized, false);
+    @imagesavealpha($resized, true);
+    @imagecopyresampled($resized, $img, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+    return $resized;
+}
+
 function process_uploaded_image_update(string $tmpPath, int $userId, int $postId): ?array {
     $uploadBase = dirname(__DIR__, 3) . '/uploads/posts/' . $userId;
     if (!is_dir($uploadBase)) {
         @mkdir($uploadBase, 0755, true);
     }
-    
+
     $timestamp = date('YmdHis');
     $random = substr(md5(uniqid((string)mt_rand(), true)), 0, 6);
-    $filename = $timestamp . '_' . $random . '.webp';
-    $destPath = $uploadBase . '/' . $filename;
-    
+    $filenameBase = $timestamp . '_' . $random;
+    $destPath = $uploadBase . '/' . $filenameBase . '.webp';
+    $thumbPath = $uploadBase . '/' . $filenameBase . '_thumb.webp';
+
     $info = @getimagesize($tmpPath);
     if (!$info) return null;
-    
+
     $mime = $info['mime'];
     $width = $info[0];
     $height = $info[1];
-    
+
     $img = null;
     switch ($mime) {
         case 'image/jpeg':
@@ -67,22 +81,38 @@ function process_uploaded_image_update(string $tmpPath, int $userId, int $postId
         default:
             return null;
     }
-    
+
     if (!$img) return null;
-    
-    $success = @imagewebp($img, $destPath, 85);
+
+    // Resize original to max 1920px
+    $imgResized = resize_image_update($img, $width, $height, 1920, 1920);
+    $finalW = imagesx($imgResized);
+    $finalH = imagesy($imgResized);
+
+    $success = @imagewebp($imgResized, $destPath, 82);
+    if ($imgResized !== $img) @imagedestroy($imgResized);
+
+    if (!$success) {
+        @imagedestroy($img);
+        return null;
+    }
+
+    // Generate thumbnail (max 600px)
+    $imgThumb = resize_image_update($img, $width, $height, 600, 600);
+    @imagewebp($imgThumb, $thumbPath, 75);
+    if ($imgThumb !== $img) @imagedestroy($imgThumb);
+
     @imagedestroy($img);
-    
-    if (!$success) return null;
-    
-    $urlPath = '/uploads/posts/' . $userId . '/' . $filename;
-    
+
+    $urlPath = '/uploads/posts/' . $userId . '/' . $filenameBase . '.webp';
+    $thumbUrl = '/uploads/posts/' . $userId . '/' . $filenameBase . '_thumb.webp';
+
     return [
         'path_original' => $urlPath,
-        'path_thumb' => $urlPath,
+        'path_thumb' => $thumbUrl,
         'mime' => 'image/webp',
-        'width' => $width,
-        'height' => $height
+        'width' => $finalW,
+        'height' => $finalH
     ];
 }
 

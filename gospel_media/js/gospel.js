@@ -63,38 +63,27 @@
   }
 
   // ===== EDIT RIGHTS =====
-  function canEditPost(p) {
-    if (!ME.id) return false;
-    if (String(ME.id) === String(p.user_id)) return true;
-    
+  function canModerate() {
     const a = parseInt(ME.amp_id || 0, 10);
     if (!a) return false;
-    
-    const rt = (window.CURRENT_ROOM_TYPE || '').toLowerCase();
-    
+    const rt = ROOM_TYPE;
     if (rt === 'opsienerskap') return a >= 2 && a <= 5;
     if (rt === 'gemeente') return a >= 5 && a <= 9;
     if (rt === 'jeug' || rt === 'sondagskool') return a >= 1 && a <= 9;
     if (rt === 'gemeenskap') return a >= 1 && a <= 6;
-    
     return false;
+  }
+
+  function canEditPost(p) {
+    if (!ME.id) return false;
+    if (String(ME.id) === String(p.user_id)) return true;
+    return canModerate();
   }
 
   function canEditComment(c) {
     if (!ME.id) return false;
     if (String(ME.id) === String(c.user_id)) return true;
-    
-    const a = parseInt(ME.amp_id || 0, 10);
-    if (!a) return false;
-    
-    const rt = (window.CURRENT_ROOM_TYPE || '').toLowerCase();
-    
-    if (rt === 'opsienerskap') return a >= 2 && a <= 5;
-    if (rt === 'gemeente') return a >= 5 && a <= 9;
-    if (rt === 'jeug' || rt === 'sondagskool') return a >= 1 && a <= 9;
-    if (rt === 'gemeenskap') return a >= 1 && a <= 6;
-    
-    return false;
+    return canModerate();
   }
 
   // ===== DATE FORMATTING =====
@@ -224,27 +213,33 @@
       const prev = $('#composer-preview');
       if (prev) prev.innerHTML = '';
     }
-    
-    await loadFeed(ROOM_ID);
+
+    // Reload feed to show new post at top (resets scroll position to latest)
+    feedLastId = null;
+    feedDone = false;
+    await loadFeed(ROOM_ID, true);
   }
 
   // ===== REACTIONS =====
   function renderReactions(card, p) {
     const bar = ce('div', { class: 'post-actions' });
-    
+    const myReacts = Array.isArray(p.my_reactions) ? p.my_reactions : [];
+
     const bH = ce('button', { type: 'button', class: 'btn-react heart-btn' });
+    if (myReacts.includes('heart')) bH.classList.add('reacted');
     const heartIcon = ce('img', { class: 'icon', src: '/assets/icons/heart.png', alt: 'heart' });
     const heartCount = ce('span', { class: 'badge count-heart', text: (p.heart_count || 0) });
     bH.append(heartIcon, heartCount);
-    
+
     const bP = ce('button', { type: 'button', class: 'btn-react pray-btn' });
+    if (myReacts.includes('pray')) bP.classList.add('reacted');
     const prayIcon = ce('img', { class: 'icon', src: '/assets/icons/amen.png', alt: 'amen' });
     const prayCount = ce('span', { class: 'badge count-pray', text: (p.pray_count || 0) });
     bP.append(prayIcon, prayCount);
-    
+
     bH.addEventListener('click', () => toggleReact(p.id, 'heart', bH, bP));
     bP.addEventListener('click', () => toggleReact(p.id, 'pray', bH, bP));
-    
+
     const bC = ce('button', { type: 'button', class: 'btn-react comments-btn' });
     bC.innerHTML = `
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -253,19 +248,26 @@
       <span class="badge count-comments">${p.comment_count || 0}</span>
     `;
     bC.addEventListener('click', () => toggleComments(p.id, card));
-    
+
     bar.append(bH, bP, bC);
     card.appendChild(bar);
   }
 
   async function toggleReact(post_id, type, bH, bP) {
+    const btn = type === 'heart' ? bH : bP;
+    btn.disabled = true;
+
     const fd = new FormData();
     fd.append('post_id', post_id);
     fd.append('type', type);
-    
+
     const j = await fetchJSON('/gospel_media/api/posts/react.php', { method: 'POST', body: fd });
+    btn.disabled = false;
     if (!(j && j.ok)) return;
-    
+
+    // Toggle active state
+    btn.classList.toggle('reacted');
+
     if (bH && typeof j.heart_count !== 'undefined') {
       bH.querySelector('.count-heart').textContent = j.heart_count;
     }
@@ -300,22 +302,59 @@
     await loadComments(postId, listEl);
   }
 
-  async function editComment(commentId, currentText, postId, listEl) {
-    const newText = prompt(T('edit_comment'), currentText);
-    if (!newText || newText.trim() === '' || newText.trim() === currentText) return;
-    
-    const fd = new FormData();
-    fd.append('comment_id', commentId);
-    fd.append('text', newText.trim());
-    
-    const j = await fetchJSON('/gospel_media/api/comments/update.php', { method: 'POST', body: fd });
-    
-    if (!(j && (j.ok || j.success))) {
-      alert(j && j.error ? j.error : T('error'));
-      return;
-    }
-    
-    await loadComments(postId, listEl);
+  function editComment(commentId, currentText, postId, listEl) {
+    // Find the comment item and replace text with inline editor
+    const items = $$(`.comment-item`, listEl);
+    const item = items.find(el => {
+      const editBtn = el.querySelector('.comment-action-btn');
+      return editBtn && editBtn._commentId === commentId;
+    });
+    if (!item) return;
+
+    const textEl = item.querySelector('.comment-text');
+    if (!textEl) return;
+
+    const ta = ce('textarea', { class: 'comment-input comment-edit-input' });
+    ta.value = currentText;
+    ta.rows = 2;
+
+    const btnRow = ce('div', { class: 'comment-edit-actions' });
+    const saveBtn = ce('button', { class: 'comment-submit', type: 'button', text: T('save') });
+    const cancelBtn = ce('button', { class: 'modal-btn', type: 'button', text: T('cancel') });
+
+    cancelBtn.addEventListener('click', () => {
+      ta.replaceWith(textEl);
+      btnRow.remove();
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const newText = ta.value.trim();
+      if (!newText || newText === currentText) {
+        ta.replaceWith(textEl);
+        btnRow.remove();
+        return;
+      }
+      saveBtn.disabled = true;
+      saveBtn.textContent = T('saving');
+
+      const fd = new FormData();
+      fd.append('comment_id', commentId);
+      fd.append('text', newText);
+
+      const j = await fetchJSON('/gospel_media/api/comments/update.php', { method: 'POST', body: fd });
+      if (!(j && (j.ok || j.success))) {
+        alert(j && j.error ? j.error : T('error'));
+        saveBtn.disabled = false;
+        saveBtn.textContent = T('save');
+        return;
+      }
+      await loadComments(postId, listEl);
+    });
+
+    btnRow.append(saveBtn, cancelBtn);
+    textEl.replaceWith(ta);
+    ta.after(btnRow);
+    ta.focus();
   }
 
  async function toggleComments(postId, card) {
@@ -434,17 +473,18 @@
       
       if (canEditComment(c)) {
         const actions = ce('div', { class: 'comment-actions' });
-        
+
         const editBtn = ce('button', { class: 'comment-action-btn', type: 'button' });
         editBtn.textContent = '✎';
         editBtn.title = T('edit');
+        editBtn._commentId = c.id;
         editBtn.addEventListener('click', () => editComment(c.id, c.text, postId, listEl));
 
         const delBtn = ce('button', { class: 'comment-action-btn', type: 'button' });
         delBtn.textContent = '×';
         delBtn.title = T('delete');
         delBtn.addEventListener('click', () => deleteComment(c.id, postId, listEl));
-        
+
         actions.append(editBtn, delBtn);
         header.appendChild(actions);
       }
@@ -569,8 +609,13 @@
       counter.textContent = (idx + 1) + ' / ' + attachments.length;
     }
 
-    closeBtn.addEventListener('click', () => backdrop.remove());
-    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.remove(); });
+    function closeLightbox() {
+      document.removeEventListener('keydown', onKey);
+      backdrop.remove();
+    }
+
+    closeBtn.addEventListener('click', closeLightbox);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeLightbox(); });
 
     if (attachments.length > 1) {
       const prev = ce('button', { class: 'lightbox-nav lightbox-prev', type: 'button', text: '\u2039' });
@@ -582,14 +627,12 @@
 
     backdrop.append(closeBtn, img, counter);
 
-    // Keyboard nav
     function onKey(e) {
-      if (e.key === 'Escape') { backdrop.remove(); document.removeEventListener('keydown', onKey); }
+      if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowLeft') show((idx - 1 + attachments.length) % attachments.length);
       if (e.key === 'ArrowRight') show((idx + 1) % attachments.length);
     }
     document.addEventListener('keydown', onKey);
-    backdrop.addEventListener('remove', () => document.removeEventListener('keydown', onKey));
 
     document.body.appendChild(backdrop);
     show(startIdx);
