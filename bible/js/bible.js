@@ -1,6 +1,8 @@
 (() => {
   'use strict';
 
+  console.log('%c[BIBLE v4] Synchronous batch rendering loaded', 'color: lime; font-weight: bold');
+
   // ===== UTILITIES =====
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s || '').replace(/[&<>"']/g, m => ({
@@ -676,8 +678,27 @@
   }
 
   // ===== INFINITE SCROLL =====
+  function checkChapterContinuity() {
+    const blocks = els.leftContent.querySelectorAll('.bible-chapter-block[data-side="left"]');
+    let prevBook = null;
+    let prevChapter = 0;
+
+    blocks.forEach(block => {
+      const bookEN = block.dataset.booken;
+      const ch = parseInt(block.dataset.chapter, 10);
+
+      if (prevBook === bookEN && ch !== prevChapter + 1) {
+        console.error(`[BIBLE GAP] ${bookEN}: chapter ${prevChapter} → ${ch} (missing ${prevChapter + 1} to ${ch - 1})`);
+      }
+
+      prevBook = bookEN;
+      prevChapter = ch;
+    });
+  }
+
   function setupInfiniteScroll() {
     let scrollTimeout = null;
+    let checkTimeout = null;
 
     const handleScroll = () => {
       clearTimeout(scrollTimeout);
@@ -698,6 +719,10 @@
         }
 
         updateHeaderRef();
+
+        // Periodically check for gaps
+        clearTimeout(checkTimeout);
+        checkTimeout = setTimeout(checkChapterContinuity, 2000);
       }, 100);
     };
 
@@ -961,6 +986,7 @@
     let bookIdx = startBookIdx;
     let chapter = startChapter;
     let rendered = 0;
+    const log = [];
 
     while (rendered < count && bookIdx < state.booksEN.length) {
       const bookEN = state.booksEN[bookIdx];
@@ -987,6 +1013,7 @@
         state.renderedChapters.add(rightKey);
       }
 
+      log.push(`${bookForLeft} ${chapter}`);
       rendered++;
       chapter++;
     }
@@ -995,6 +1022,7 @@
     if (rendered > 0) {
       state.currentBookIndex = bookIdx;
       state.currentChapter = chapter - 1;
+      console.log(`[BIBLE] Rendered ${rendered} chapters: ${log.join(', ')} → state: book=${state.booksEN[bookIdx] || 'END'} ch=${chapter - 1}`);
     }
 
     return rendered;
