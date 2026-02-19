@@ -72,6 +72,11 @@ if ($roomId <= 0) {
 function gm_label($type, $name, $lang) {
     $t = strtolower((string)$type);
     $n = (string)$name;
+    // Strip existing Afrikaans type prefix from room name to avoid duplication
+    $afPrefixes = ['gemeente' => 'Gemeente ', 'opsienerskap' => 'Opsienerskap ', 'jeug' => 'Jeug ', 'sondagskool' => 'Sondagskool '];
+    if (isset($afPrefixes[$t]) && stripos($n, $afPrefixes[$t]) === 0) {
+        $n = substr($n, strlen($afPrefixes[$t]));
+    }
     if ($t === 'gemeente') return __t('congregation', $lang) . ' ' . $n;
     if ($t === 'opsienerskap') return __t('oversight', $lang) . ' ' . $n;
     if ($t === 'jeug') return __t('youth', $lang) . ' ' . $n;

@@ -17,6 +17,11 @@ function t(string $key): string {
 function formatRoomDisplayName(string $type, string $name): string {
     global $pageLang;
     $t = strtolower($type);
+    // Strip existing Afrikaans type prefix from room name to avoid duplication
+    $afPrefixes = ['gemeente' => 'Gemeente ', 'opsienerskap' => 'Opsienerskap ', 'jeug' => 'Jeug ', 'sondagskool' => 'Sondagskool '];
+    if (isset($afPrefixes[$t]) && stripos($name, $afPrefixes[$t]) === 0) {
+        $name = substr($name, strlen($afPrefixes[$t]));
+    }
     if ($t === 'gemeente') return __t('congregation', $pageLang) . ' ' . $name;
     if ($t === 'opsienerskap') return __t('oversight', $pageLang) . ' ' . $name;
     if ($t === 'jeug') return __t('youth', $pageLang) . ' ' . $name;

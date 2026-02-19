@@ -74,6 +74,12 @@ try {
         $room['id'] = (int)$room['id'];
         $type = $room['type'] ?? '';
         $originalName = $room['name'] ?? '';
+        // Strip existing Afrikaans type prefix from room name to avoid duplication
+        $afPrefixes = ['gemeente' => 'Gemeente ', 'opsienerskap' => 'Opsienerskap ', 'jeug' => 'Jeug ', 'sondagskool' => 'Sondagskool '];
+        $tLower = strtolower($type);
+        if (isset($afPrefixes[$tLower]) && stripos($originalName, $afPrefixes[$tLower]) === 0) {
+            $originalName = substr($originalName, strlen($afPrefixes[$tLower]));
+        }
         if ($type === 'jeug') {
             $room['name'] = __t('youth', $pageLang) . ' ' . $originalName;
         } elseif ($type === 'sondagskool') {
