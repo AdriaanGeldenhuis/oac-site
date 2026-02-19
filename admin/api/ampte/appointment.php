@@ -2,6 +2,7 @@
 declare(strict_types=1);
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once __DIR__ . '/../notifications/helper.php';
 
 $userId = $_SESSION['user_id'] ?? null;
 $targetUserId = isset($_POST['target_user_id']) && is_numeric($_POST['target_user_id']) ? (int)$_POST['target_user_id'] : 0;
@@ -46,14 +47,11 @@ try {
     $userStmt->execute([$userId]);
     $user = $userStmt->fetch(PDO::FETCH_ASSOC);
     
-    $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, type, payload) VALUES (?, 'appointment_request', ?)");
-    $notifStmt->execute([$targetUserId, json_encode([
-        'from_id' => $userId,
+    createAdminNotification($targetUserId, 'appointment_request', [
         'from_name' => trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? '')),
-        'appointment_id' => $appointmentId,
         'date' => $appointmentDate,
         'time' => $appointmentTime
-    ])]);
+    ]);
     
     // Add to calendar for both users
     $calendarStmt = $pdo->prepare("INSERT INTO calendar_events 

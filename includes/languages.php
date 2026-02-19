@@ -541,7 +541,7 @@ define('UI_TRANSLATIONS', [
     'room' => [
         'af' => 'Kamer',
         'en' => 'Room',
-        'zu' => 'Ikamelo',
+        'zu' => 'Igumbi',
         'xh' => 'Igumbi',
         'pt' => 'Sala'
     ],
@@ -1835,13 +1835,6 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Isihloko',
         'pt' => 'Título'
     ],
-    'room' => [
-        'af' => 'Kamer',
-        'en' => 'Room',
-        'zu' => 'Igumbi',
-        'xh' => 'Igumbi',
-        'pt' => 'Sala'
-    ],
     'select_room' => [
         'af' => 'Kies kamer...',
         'en' => 'Select room...',
@@ -2426,13 +2419,6 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Amagumbi Akho',
         'pt' => 'Suas Salas'
     ],
-    'welcome' => [
-        'af' => 'Welkom',
-        'en' => 'Welcome',
-        'zu' => 'Siyakwemukela',
-        'xh' => 'Wamkelekile',
-        'pt' => 'Bem-vindo'
-    ],
     'town' => [
         'af' => 'Dorp',
         'en' => 'Town',
@@ -2537,13 +2523,6 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Shiya',
         'xh' => 'Shiya',
         'pt' => 'Sair'
-    ],
-    'view' => [
-        'af' => 'Bekyk',
-        'en' => 'View',
-        'zu' => 'Buka',
-        'xh' => 'Jonga',
-        'pt' => 'Ver'
     ],
     'joined' => [
         'af' => 'Gekose',
@@ -2762,7 +2741,7 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Não Lido'
     ],
     'reminders' => [
-        'af' => 'Herrineringe',
+        'af' => 'Herinnerings',
         'en' => 'Reminders',
         'zu' => 'Izikhumbuzi',
         'xh' => 'Izikhumbuzo',
@@ -3113,6 +3092,20 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Isithembiso sakho siqinisekisiwe!',
         'xh' => 'Isigqibo sakho siqinisekisiwe!',
         'pt' => 'Seu compromisso foi confirmado!'
+    ],
+    'notif_appointment_cancelled' => [
+        'af' => '❌ Afspraak Gekanselleer',
+        'en' => '❌ Appointment Cancelled',
+        'zu' => '❌ Isithembiso Sikhanseliwe',
+        'xh' => '❌ Ukuhlangana Kurhoxisiwe',
+        'pt' => '❌ Compromisso Cancelado'
+    ],
+    'notif_appointment_cancelled_msg' => [
+        'af' => '{name} het jou afspraak op {date} om {time} gekanselleer.',
+        'en' => '{name} cancelled your appointment on {date} at {time}.',
+        'zu' => '{name} ukhanselile isithembiso sakho ngo-{date} ngo-{time}.',
+        'xh' => '{name} urhoxisile ukuhlangana kwakho ngo-{date} ngo-{time}.',
+        'pt' => '{name} cancelou seu compromisso em {date} às {time}.'
     ],
     'notif_ampte_change' => [
         'af' => '⭐ Amp Verander',

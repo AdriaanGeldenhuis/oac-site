@@ -48,8 +48,8 @@ try {
     $roomType = strtolower($room['type'] ?? '');
     $roomGemeenteId = (int)($room['gemeente_id'] ?? 0);
     
-    // RULE 1: Cannot leave opsienerskap rooms (auto-membership)
-    if ($roomType === 'opsienerskap') {
+    // RULE 1: Cannot leave opsienerskap rooms (auto-membership) — except Apostle (amp 1) who manually joins
+    if ($roomType === 'opsienerskap' && $ampId !== 1) {
         http_response_code(403);
         echo json_encode(['error' => 'cannot_leave_opsienerskap']);
         exit;

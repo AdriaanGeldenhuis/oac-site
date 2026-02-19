@@ -118,6 +118,20 @@ function createAdminNotification($userId, $type, $data = []) {
                 $notifType = 'success';
                 break;
 
+            case 'appointment_cancelled':
+                $fromName = $data['from_name'] ?? 'Iemand';
+                $date = $data['date'] ?? '';
+                $time = $data['time'] ?? '';
+                $titleKey = 'notif_appointment_cancelled';
+                $messageKey = 'notif_appointment_cancelled_msg';
+                $params = ['name' => $fromName, 'date' => $date, 'time' => $time];
+                $title = '❌ Afspraak Gekanselleer';
+                $message = "{$fromName} het jou afspraak op {$date} om {$time} gekanselleer.";
+                $link = '/calendar/calendar.php';
+                $icon = '❌';
+                $notifType = 'appointment';
+                break;
+
             case 'ampte_change':
                 $newAmp = $data['new_amp'] ?? 'Unknown';
                 $titleKey = 'notif_ampte_change';
