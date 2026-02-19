@@ -20,6 +20,14 @@ function t(string $key): string {
     return __t($key, $pageLang);
 }
 function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+
+// Check if user is an officer (amp 1-6) for admin features
+$userAmpId = 999;
+if (isset($pdo) && $pdo instanceof PDO) {
+    $ampStmt = $pdo->prepare("SELECT amp_id FROM users WHERE id = ? LIMIT 1");
+    $ampStmt->execute([(int)($_SESSION['user_id'] ?? 0)]);
+    $userAmpId = (int)($ampStmt->fetchColumn() ?: 999);
+}
 ?><!doctype html>
 <html lang="<?= $pageLang ?>">
 <head>
@@ -74,12 +82,14 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
           <span class="notif-btn-text"><?= esc(t('mark_all_read')) ?></span>
         </button>
 
+        <?php if ($userAmpId <= 6): ?>
         <a href="/admin/fcm-debug.php" class="notif-btn notif-btn-secondary" style="text-decoration:none;">
           <svg class="notif-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span class="notif-btn-text">FCM Debug</span>
         </a>
+        <?php endif; ?>
 
         <button class="notif-btn notif-btn-secondary" id="filterToggle">
           <svg class="notif-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -120,6 +130,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
 
   <script>
     window.LANG = '<?= $pageLang ?>';
+    window.USER_ID = '<?= (int)($_SESSION['user_id'] ?? 0) ?>';
     window.T = {
       noNotifications: '<?= esc(t('no_notifications')) ?>',
       markRead: '<?= esc(t('mark_as_read')) ?>',

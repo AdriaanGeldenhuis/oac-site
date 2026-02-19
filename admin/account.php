@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../security/auth_gate.php';
 require_once __DIR__ . '/../includes/languages.php';
+require_once __DIR__ . '/api/notifications/helper.php';
 
 $lang = $_SESSION['language'] ?? 'af';
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
@@ -177,11 +178,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $reqStmt = $pdo->prepare("INSERT INTO spouse_requests (requester_id, receiver_id, status) VALUES (?, ?, 'pending')");
                 $reqStmt->execute([$userId, $newSpouseId]);
                 
-                $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, type, payload) VALUES (?, 'spouse_request', ?)");
-                $notifStmt->execute([$newSpouseId, json_encode([
-                    'from_id' => $userId,
+                createAdminNotification($newSpouseId, 'spouse_request', [
                     'from_name' => trim($currentUser['name'] . ' ' . $currentUser['surname'])
-                ])]);
+                ]);
                 
                 $notice = t('spouse_request_sent');
             }

@@ -254,11 +254,6 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage(),
-        'debug' => [
-            'data_dir' => isset($dataDir) ? $dataDir : 'not set',
-            'db_path' => isset($dbPath) ? $dbPath : 'not set',
-            'user_id' => $_SESSION['user_id'] ?? 'not set'
-        ]
+        'error' => 'Failed to load notifications'
     ]);
 }

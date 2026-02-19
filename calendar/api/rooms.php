@@ -33,8 +33,19 @@ try {
     $rooms = [];
     
     // Get rooms based on permissions
-    if ($ampId >= 1 && $ampId <= 5) {
-        // Amp 1-5: Opsienerskap rooms
+    if ($ampId === 1) {
+        // Apostle: All opsienerskap rooms they are a member of
+        $stmt = $pdo->prepare("
+            SELECT r.id, r.name, r.type, r.town_id
+            FROM rooms r
+            JOIN room_memberships rm ON rm.room_id = r.id AND rm.user_id = ?
+            WHERE r.type = 'opsienerskap'
+            ORDER BY r.name
+        ");
+        $stmt->execute([$userId]);
+        $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } elseif ($ampId >= 2 && $ampId <= 5) {
+        // Amp 2-5: Own town opsienerskap rooms
         $stmt = $pdo->prepare("
             SELECT r.id, r.name, r.type, r.town_id
             FROM rooms r
@@ -74,6 +85,12 @@ try {
         $room['id'] = (int)$room['id'];
         $type = $room['type'] ?? '';
         $originalName = $room['name'] ?? '';
+        // Strip existing Afrikaans type prefix from room name to avoid duplication
+        $afPrefixes = ['gemeente' => 'Gemeente ', 'opsienerskap' => 'Opsienerskap ', 'jeug' => 'Jeug ', 'sondagskool' => 'Sondagskool '];
+        $tLower = strtolower($type);
+        if (isset($afPrefixes[$tLower]) && stripos($originalName, $afPrefixes[$tLower]) === 0) {
+            $originalName = substr($originalName, strlen($afPrefixes[$tLower]));
+        }
         if ($type === 'jeug') {
             $room['name'] = __t('youth', $pageLang) . ' ' . $originalName;
         } elseif ($type === 'sondagskool') {

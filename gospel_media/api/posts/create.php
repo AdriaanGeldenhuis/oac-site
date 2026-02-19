@@ -205,11 +205,12 @@ try {
         $authorStmt->execute([$userId]);
         $authorName = $authorStmt->fetchColumn() ?: 'Someone';
 
-        // Get room members based on room type (implicit membership)
+        // Get room members based on room type
+        // Use room_memberships + implicit membership to find all recipients
         $members = [];
 
         if ($roomType === 'gemeente' && $roomGemeenteId > 0) {
-            // Gemeente: all users in that congregation
+            // Gemeente: all approved users in that congregation
             $membersStmt = $pdo->prepare("
                 SELECT id FROM users
                 WHERE congregation_id = ? AND id != ? AND status = 'approved'
@@ -218,21 +219,29 @@ try {
             $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
 
         } elseif ($roomType === 'opsienerskap' && $roomTownId > 0) {
-            // Opsienerskap: users in town with amp_id 1-5
+            // Opsienerskap: all approved users in town + any Apostel who joined via room_memberships
             $membersStmt = $pdo->prepare("
-                SELECT id FROM users
-                WHERE town_id = ? AND amp_id <= 5 AND id != ? AND status = 'approved'
+                SELECT DISTINCT u.id FROM users u
+                WHERE u.id != ? AND u.status = 'approved'
+                  AND (
+                    u.town_id = ?
+                    OR u.id IN (SELECT rm.user_id FROM room_memberships rm WHERE rm.room_id = ?)
+                  )
             ");
-            $membersStmt->execute([$roomTownId, $userId]);
+            $membersStmt->execute([$userId, $roomTownId, $roomId]);
             $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
 
         } elseif (in_array($roomType, ['jeug', 'sondagskool']) && $roomTownId > 0) {
-            // Jeug/Sondagskool: users in town (simplified - could add age check)
+            // Jeug/Sondagskool: auto-enrolled members + manually joined members
             $membersStmt = $pdo->prepare("
-                SELECT id FROM users
-                WHERE town_id = ? AND id != ? AND status = 'approved'
+                SELECT DISTINCT u.id FROM users u
+                WHERE u.id != ? AND u.status = 'approved'
+                  AND (
+                    u.town_id = ?
+                    OR u.id IN (SELECT rm.user_id FROM room_memberships rm WHERE rm.room_id = ?)
+                  )
             ");
-            $membersStmt->execute([$roomTownId, $userId]);
+            $membersStmt->execute([$userId, $roomTownId, $roomId]);
             $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
         }
 

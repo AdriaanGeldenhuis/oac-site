@@ -348,9 +348,13 @@ html {
   50% { box-shadow: var(--shadow-lg), 0 0 30px rgba(192, 192, 192, 0.5); }
 }
 
-[data-theme="light"] @keyframes icon-pulse {
+@keyframes icon-pulse-light {
   0%, 100% { box-shadow: var(--shadow-sm), var(--glow-silver); }
   50% { box-shadow: var(--shadow-md), 0 0 20px rgba(106, 106, 106, 0.5); }
+}
+
+[data-theme="light"] .notif-icon-wrapper {
+  animation-name: icon-pulse-light;
 }
 
 .notif-icon-wrapper::before {

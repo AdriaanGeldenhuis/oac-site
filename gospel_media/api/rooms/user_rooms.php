@@ -17,6 +17,11 @@ $pageLang = $_SESSION['language'] ?? 'af';
 // Helper to format room display name
 function formatRoomName(string $type, string $name, string $lang): string {
     $t = strtolower($type);
+    // Strip existing Afrikaans type prefix from room name to avoid duplication
+    $afPrefixes = ['gemeente' => 'Gemeente ', 'opsienerskap' => 'Opsienerskap ', 'jeug' => 'Jeug ', 'sondagskool' => 'Sondagskool '];
+    if (isset($afPrefixes[$t]) && stripos($name, $afPrefixes[$t]) === 0) {
+        $name = substr($name, strlen($afPrefixes[$t]));
+    }
     if ($t === 'gemeente') return __t('congregation', $lang) . ' ' . $name;
     if ($t === 'opsienerskap') return __t('oversight', $lang) . ' ' . $name;
     if ($t === 'jeug') return __t('youth', $lang) . ' ' . $name;

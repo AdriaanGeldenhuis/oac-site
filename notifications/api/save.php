@@ -46,7 +46,10 @@ try {
             is_read INTEGER DEFAULT 0,
             created_at TEXT DEFAULT (datetime('now')),
             link TEXT,
-            icon TEXT
+            icon TEXT,
+            title_key TEXT,
+            message_key TEXT,
+            params TEXT
         )
     ");
     
@@ -61,24 +64,36 @@ try {
     $type = $data['type'] ?? 'info';
     $link = $data['link'] ?? null;
     $icon = $data['icon'] ?? null;
-    
+    $titleKey = $data['titleKey'] ?? null;
+    $messageKey = $data['messageKey'] ?? null;
+    $params = isset($data['params']) ? json_encode($data['params']) : null;
+
+    // Validate type
+    $validTypes = ['info', 'success', 'warning', 'error', 'reminder', 'calendar', 'gospel', 'account', 'spouse', 'ampte', 'appointment', 'birthday'];
+    if (!in_array($type, $validTypes)) {
+        $type = 'info';
+    }
+
     if (empty($title) || empty($body)) {
         throw new Exception('Title and body are required');
     }
-    
+
     // Insert notification
     $stmt = $db->prepare("
-        INSERT INTO notifications (user_id, title, message, type, is_read, created_at, link, icon)
-        VALUES (:user_id, :title, :message, :type, 0, datetime('now'), :link, :icon)
+        INSERT INTO notifications (user_id, title, message, type, is_read, created_at, link, icon, title_key, message_key, params)
+        VALUES (:user_id, :title, :message, :type, 0, datetime('now'), :link, :icon, :title_key, :message_key, :params)
     ");
-    
+
     $stmt->execute([
         ':user_id' => $userId,
         ':title' => $title,
         ':message' => $body,
         ':type' => $type,
         ':link' => $link,
-        ':icon' => $icon
+        ':icon' => $icon,
+        ':title_key' => $titleKey,
+        ':message_key' => $messageKey,
+        ':params' => $params
     ]);
     
     $insertedId = $db->lastInsertId();

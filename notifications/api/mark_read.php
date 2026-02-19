@@ -37,7 +37,10 @@ try {
             is_read INTEGER DEFAULT 0,
             created_at TEXT DEFAULT (datetime('now')),
             link TEXT,
-            icon TEXT
+            icon TEXT,
+            title_key TEXT,
+            message_key TEXT,
+            params TEXT
         )
     ");
     

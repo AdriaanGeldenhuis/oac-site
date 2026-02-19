@@ -17,6 +17,11 @@ function t(string $key): string {
 function formatRoomDisplayName(string $type, string $name): string {
     global $pageLang;
     $t = strtolower($type);
+    // Strip existing Afrikaans type prefix from room name to avoid duplication
+    $afPrefixes = ['gemeente' => 'Gemeente ', 'opsienerskap' => 'Opsienerskap ', 'jeug' => 'Jeug ', 'sondagskool' => 'Sondagskool '];
+    if (isset($afPrefixes[$t]) && stripos($name, $afPrefixes[$t]) === 0) {
+        $name = substr($name, strlen($afPrefixes[$t]));
+    }
     if ($t === 'gemeente') return __t('congregation', $pageLang) . ' ' . $name;
     if ($t === 'opsienerskap') return __t('oversight', $pageLang) . ' ' . $name;
     if ($t === 'jeug') return __t('youth', $pageLang) . ' ' . $name;
@@ -103,7 +108,7 @@ try {
     if ($isApostel) {
         $sql = "SELECT r.*, 
                        t.name AS town_name,
-                       CONCAT('Opsienerskap ', t.name) AS display_name,
+                       t.name AS display_name,
                        EXISTS(SELECT 1 FROM room_memberships rm WHERE rm.room_id = r.id AND rm.user_id = ?) AS is_member
                 FROM rooms r
                 LEFT JOIN towns t ON t.id = r.town_id
@@ -132,7 +137,7 @@ try {
             $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
         }
         
-        $sql = "SELECT r.*, t.name AS town_name, CONCAT('Opsienerskap ', t.name) AS display_name
+        $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                 FROM rooms r
                 LEFT JOIN towns t ON t.id = r.town_id
                 WHERE r.type = 'opsienerskap' AND r.town_id = ?";
@@ -141,7 +146,7 @@ try {
         $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
         
         if ($age > 0 && $age < 16) {
-            $sql = "SELECT r.*, t.name AS town_name, CONCAT('Sondagskool ', t.name) AS display_name
+            $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
                     WHERE r.type = 'sondagskool' AND r.town_id = ?";
@@ -151,7 +156,7 @@ try {
         }
         
         if ($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud') {
-            $sql = "SELECT r.*, t.name AS town_name, CONCAT('Jeug ', t.name) AS display_name
+            $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
                     WHERE r.type = 'jeug' AND r.town_id = ?";
@@ -162,11 +167,7 @@ try {
         
         $sql = "SELECT r.*, 
                        t.name AS town_name,
-                       CASE 
-                           WHEN r.type = 'jeug' THEN CONCAT('Jeug ', t.name)
-                           WHEN r.type = 'sondagskool' THEN CONCAT('Sondagskool ', t.name)
-                           ELSE r.name
-                       END AS display_name
+                       COALESCE(t.name, r.name) AS display_name
                 FROM room_memberships rm
                 JOIN rooms r ON r.id = rm.room_id
                 LEFT JOIN towns t ON t.id = r.town_id
@@ -189,7 +190,7 @@ try {
             $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
         }
         
-        $sql = "SELECT r.*, t.name AS town_name, CONCAT('Opsienerskap ', t.name) AS display_name
+        $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                 FROM rooms r
                 LEFT JOIN towns t ON t.id = r.town_id
                 WHERE r.type = 'opsienerskap' AND r.town_id = ?";
@@ -198,7 +199,7 @@ try {
         $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
         
         if ($age > 0 && $age < 16) {
-            $sql = "SELECT r.*, t.name AS town_name, CONCAT('Sondagskool ', t.name) AS display_name
+            $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
                     WHERE r.type = 'sondagskool' AND r.town_id = ?";
@@ -208,7 +209,7 @@ try {
         }
         
         if ($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud') {
-            $sql = "SELECT r.*, t.name AS town_name, CONCAT('Jeug ', t.name) AS display_name
+            $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
                     WHERE r.type = 'jeug' AND r.town_id = ?";
@@ -249,11 +250,7 @@ try {
             $placeholders = implode(',', array_fill(0, count($jeugTypes), '?'));
             $sql = "SELECT r.*, 
                            t.name AS town_name,
-                           CASE 
-                               WHEN r.type = 'jeug' THEN CONCAT('Jeug ', t.name)
-                               WHEN r.type = 'sondagskool' THEN CONCAT('Sondagskool ', t.name)
-                               ELSE r.name
-                           END AS display_name,
+                           COALESCE(t.name, r.name) AS display_name,
                            EXISTS(SELECT 1 FROM room_memberships rm WHERE rm.room_id = r.id AND rm.user_id = ?) AS is_member
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
@@ -283,7 +280,7 @@ try {
             $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
         }
         
-        $sql = "SELECT r.*, t.name AS town_name, CONCAT('Opsienerskap ', t.name) AS display_name
+        $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                 FROM rooms r
                 LEFT JOIN towns t ON t.id = r.town_id
                 WHERE r.type = 'opsienerskap' AND r.town_id = ?";
@@ -292,7 +289,7 @@ try {
         $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
         
         if ($age > 0 && $age < 16) {
-            $sql = "SELECT r.*, t.name AS town_name, CONCAT('Sondagskool ', t.name) AS display_name
+            $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
                     WHERE r.type = 'sondagskool' AND r.town_id = ?";
@@ -302,7 +299,7 @@ try {
         }
         
         if ($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud') {
-            $sql = "SELECT r.*, t.name AS town_name, CONCAT('Jeug ', t.name) AS display_name
+            $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
                     WHERE r.type = 'jeug' AND r.town_id = ?";
@@ -319,11 +316,7 @@ try {
             $placeholders = implode(',', array_fill(0, count($jeugTypes), '?'));
             $sql = "SELECT r.*, 
                            t.name AS town_name,
-                           CASE 
-                               WHEN r.type = 'jeug' THEN CONCAT('Jeug ', t.name)
-                               WHEN r.type = 'sondagskool' THEN CONCAT('Sondagskool ', t.name)
-                               ELSE r.name
-                           END AS display_name,
+                           COALESCE(t.name, r.name) AS display_name,
                            EXISTS(SELECT 1 FROM room_memberships rm WHERE rm.room_id = r.id AND rm.user_id = ?) AS is_member
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
@@ -512,6 +505,7 @@ $VER = time();
                                 <button class="rm-btn rm-btn-leave"
                                         data-action="leave"
                                         data-room-id="<?= $roomId ?>"
+                                        data-room-type="<?= htmlspecialchars($roomType) ?>"
                                         data-room-name="<?= htmlspecialchars($r['display_name']) ?>">
                                     <?= t('leave') ?>
                                 </button>
@@ -604,7 +598,8 @@ $VER = time();
         const roomName = btn.dataset.roomName;
         
         if (action === 'leave') {
-            const confirmMsg = roomName.toLowerCase().includes('gemeente')
+            const roomType = btn.dataset.roomType || '';
+            const confirmMsg = roomType === 'gemeente'
                 ? `<?= t('confirm_leave_congregation') ?>`
                 : `<?= t('confirm_leave_room') ?> "${roomName}"?`;
 

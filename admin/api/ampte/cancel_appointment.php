@@ -2,6 +2,7 @@
 declare(strict_types=1);
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once __DIR__ . '/../notifications/helper.php';
 
 $userId = $_SESSION['user_id'] ?? null;
 $appointmentId = isset($_POST['appointment_id']) && is_numeric($_POST['appointment_id']) ? (int)$_POST['appointment_id'] : 0;
@@ -56,14 +57,11 @@ try {
     $userStmt->execute([$userId]);
     $user = $userStmt->fetch(PDO::FETCH_ASSOC);
     
-    $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, type, payload) VALUES (?, 'appointment_cancelled', ?)");
-    $notifStmt->execute([$otherId, json_encode([
-        'from_id' => $userId,
+    createAdminNotification($otherId, 'appointment_cancelled', [
         'from_name' => trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? '')),
-        'appointment_id' => $appointmentId,
         'date' => $appointment['appointment_date'],
         'time' => $appointment['appointment_time']
-    ])]);
+    ]);
     
     echo json_encode(['success' => true]);
 } catch (Throwable $e) {

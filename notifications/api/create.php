@@ -27,18 +27,22 @@ try {
             is_read INTEGER DEFAULT 0,
             created_at TEXT DEFAULT (datetime('now')),
             link TEXT,
-            icon TEXT
+            icon TEXT,
+            title_key TEXT,
+            message_key TEXT,
+            params TEXT
         )
     ");
-    
-    $userId = trim($_POST['user_id'] ?? '');
+
+    // Use session user_id for security — prevent creating notifications for other users
+    $userId = (int)($_SESSION['user_id'] ?? 0);
     $title = trim($_POST['title'] ?? '');
     $message = trim($_POST['message'] ?? '');
     $type = trim($_POST['type'] ?? 'info');
     $link = trim($_POST['link'] ?? '');
     $icon = trim($_POST['icon'] ?? '');
     
-    if (empty($userId) || empty($title)) {
+    if (!$userId || empty($title)) {
         echo json_encode(['success' => false, 'error' => 'User ID and title required']);
         exit;
     }
