@@ -63,23 +63,8 @@ $userName = $user ? trim($user['name'] . ' ' . $user['surname']) : 'User';
 <body class="diary-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <!-- Hero Section -->
-  <div class="diary-hero">
-    <div class="diary-hero-glow"></div>
-    <div class="diary-hero-content">
-      <h1 class="diary-hero-title"><?= esc(t('my_diary')) ?></h1>
-      <p class="diary-hero-subtitle"><?= esc(t('preserve_thoughts')) ?></p>
-    </div>
-    <div class="diary-sparkles">
-      <span class="diary-sparkle" style="--delay: 0s; --x: 15%; --y: 25%;"></span>
-      <span class="diary-sparkle" style="--delay: 0.7s; --x: 80%; --y: 35%;"></span>
-      <span class="diary-sparkle" style="--delay: 1.3s; --x: 45%; --y: 65%;"></span>
-      <span class="diary-sparkle" style="--delay: 1.9s; --x: 25%; --y: 75%;"></span>
-      <span class="diary-sparkle" style="--delay: 2.5s; --x: 85%; --y: 80%;"></span>
-    </div>
-  </div>
-
   <main class="diary-main">
+    <h2 class="diary-page-title"><?= esc(t('my_diary')) ?></h2>
     
     <!-- Quick Stats -->
     <section class="diary-stats">
