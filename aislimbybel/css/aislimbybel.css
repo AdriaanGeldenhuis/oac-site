@@ -281,12 +281,27 @@ html {
 }
 
 /* ===== MAIN CONTAINER ===== */
+.sb-page-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 400;
+  color: var(--color-rosegold);
+  text-shadow: 0 0 8px rgba(183, 110, 121, 0.3);
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  transition: var(--transition);
+}
+
+[data-theme="light"] .sb-page-title {
+  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+}
+
 .sb-main {
   position: relative;
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px 80px;
+  padding: 20px 20px 80px;
 }
 
 /* ===== SECTIONS ===== */

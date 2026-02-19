@@ -440,6 +440,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
   <main class="sb-main">
     <!-- Search Section -->
     <section class="sb-section sb-search-section">
+      <h2 class="sb-page-title">AI Slimbybel</h2>
       <div class="sb-section-header">
         <div class="sb-icon-wrapper">
           <svg class="sb-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
