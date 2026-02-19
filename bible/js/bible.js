@@ -118,7 +118,7 @@
     'Handelinge': 'Acts',
     'Romeine': 'Romans',
     '1 Korinthiërs': '1 Corinthians',
-    '2 Korinthiers': '2 Corinthians',
+    '2 Korinthiërs': '2 Corinthians',
     'Galasiers': 'Galatians',
     'Efesiers': 'Ephesians',
     'Filippense': 'Philippians',
@@ -436,11 +436,14 @@
   }
 
   function parseRef(ref) {
-    const parts = ref.split('-');
+    if (!ref || typeof ref !== 'string') return { bookEN: '', chapter: 0, verse: 0 };
+    const lastDash = ref.lastIndexOf('-');
+    const secondLastDash = ref.lastIndexOf('-', lastDash - 1);
+    if (lastDash === -1 || secondLastDash === -1) return { bookEN: '', chapter: 0, verse: 0 };
     return {
-      bookEN: parts[0],
-      chapter: parseInt(parts[1], 10),
-      verse: parseInt(parts[2], 10)
+      bookEN: ref.substring(0, secondLastDash),
+      chapter: parseInt(ref.substring(secondLastDash + 1, lastDash), 10) || 0,
+      verse: parseInt(ref.substring(lastDash + 1), 10) || 0
     };
   }
 
@@ -736,8 +739,11 @@
   }
 
   // ===== DUAL SCROLL SYNC =====
+  let dualScrollSyncInitialized = false;
   function setupDualScrollSync() {
     if (!els.leftColumn || !els.rightColumn) return;
+    if (dualScrollSyncInitialized) return;
+    dualScrollSyncInitialized = true;
 
     let syncTimeout = null;
 
@@ -972,7 +978,7 @@
       item.className = 'bible-bookmark-item';
       item.innerHTML = `
         <div class="bible-bookmark-ref">${esc(displayName)} ${parsed.chapter}:${parsed.verse}</div>
-        <div class="bible-bookmark-text">${esc(bookmark.text.substring(0, 100))}...</div>
+        <div class="bible-bookmark-text">${esc(bookmark.text.substring(0, 100))}${bookmark.text.length > 100 ? '...' : ''}</div>
       `;
       
       item.addEventListener('click', () => {
@@ -1035,6 +1041,7 @@
 
   function goToReference(ref) {
     const parsed = parseRef(ref);
+    if (!parsed.bookEN || !parsed.chapter) return;
 
     const bookIdx = state.booksEN.indexOf(parsed.bookEN);
     if (bookIdx === -1) return;
@@ -1064,7 +1071,7 @@
 
     // Scroll to the specific verse
     setTimeout(() => {
-      const verseEl = document.querySelector(`[data-ref="${ref}"]`);
+      const verseEl = els.leftContent.querySelector(`.bible-verse[data-ref="${CSS.escape(ref)}"]`);
       if (verseEl) {
         verseEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         verseEl.classList.add('bible-verse-flash');
@@ -1349,15 +1356,18 @@
 
     setTimeout(() => {
       const results = [];
+      const searchData = state.lang === 'af' ? state.dataAF : state.dataEN;
+      const searchBooks = state.lang === 'af' ? state.booksAF : state.booksEN;
 
-      state.booksAF.forEach((bookAF, idx) => {
+      searchBooks.forEach((bookName, idx) => {
         const bookEN = state.booksEN[idx];
-        const chapterCount = getChapterCount(state.dataAF, bookAF);
-        
+        const bookAF = state.booksAF[idx];
+        const chapterCount = getChapterCount(searchData, bookName);
+
         for (let ch = 1; ch <= chapterCount; ch++) {
-          const verses = getChapter(state.dataAF, bookAF, ch);
+          const verses = getChapter(searchData, bookName, ch);
           let verseNum = 0;
-          
+
           verses.forEach(v => {
             const parsed = parseVerse(v);
             if (parsed.type === 'verse') {
@@ -1445,8 +1455,7 @@
       const data = await res.json();
 
       if (data.success) {
-        // Format the answer with proper line breaks
-        const formattedAnswer = data.answer.replace(/\n/g, '<br>');
+        const formattedAnswer = esc(data.answer).replace(/\n/g, '<br>');
         els.aiOutput.innerHTML = `
           <div class="bible-ai-response">
             <div class="bible-ai-verse-ref">${esc(verseRef)}</div>
@@ -1648,10 +1657,11 @@
   function refreshVerseDisplay() {
     document.querySelectorAll('.bible-verse').forEach(verse => {
       const ref = verse.dataset.ref;
-      
+      const wasBound = verse.classList.contains('bound');
+
       verse.className = 'bible-verse';
-      if (verse.classList.contains('bound')) verse.classList.add('bound');
-      
+      if (wasBound) verse.classList.add('bound');
+
       if (state.highlights[ref]) {
         verse.classList.add(`bible-highlight-${state.highlights[ref]}`);
       }
@@ -1832,13 +1842,17 @@
 
       els.quickNavModal?.classList.add('bible-modal-hidden');
 
+      let progressAF = 0, progressEN = 0;
+      const updateCombinedProgress = () => {
+        const combined = 10 + ((progressAF + progressEN) / 2) * 0.7;
+        const label = progressAF < 100
+          ? (state.lang === 'af' ? 'Laai Afrikaans...' : 'Loading Afrikaans...')
+          : (state.lang === 'af' ? 'Laai Engels...' : 'Loading English...');
+        updateLoadingProgress(combined, '', label);
+      };
       const [dataAF, dataEN] = await Promise.all([
-        loadJSON(state.paths.af, (p) => {
-          updateLoadingProgress(10 + (p * 0.35), '', state.lang === 'af' ? 'Laai Afrikaans...' : 'Loading Afrikaans...');
-        }),
-        loadJSON(state.paths.en, (p) => {
-          updateLoadingProgress(10 + (p * 0.35), '', state.lang === 'af' ? 'Laai Engels...' : 'Loading English...');
-        })
+        loadJSON(state.paths.af, (p) => { progressAF = p; updateCombinedProgress(); }),
+        loadJSON(state.paths.en, (p) => { progressEN = p; updateCombinedProgress(); })
       ]);
 
       state.dataAF = dataAF;

@@ -27,7 +27,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/bible/css/bible.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="/bible/css/bible.css?v=<?= filemtime(__DIR__ . '/css/bible.css') ?>">
 </head>
 <body class="bible-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
@@ -322,7 +322,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
       userId: <?= (int)($_SESSION['user_id'] ?? 0) ?>
     };
   </script>
-  <script type="module" src="/bible/js/bible.js?v=<?= time() ?>"></script>
+  <script type="module" src="/bible/js/bible.js?v=<?= filemtime(__DIR__ . '/js/bible.js') ?>"></script>
 
 </body>
 </html>

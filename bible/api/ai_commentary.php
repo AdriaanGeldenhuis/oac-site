@@ -17,17 +17,24 @@ set_error_handler(function($severity, $message, $file, $line) {
 set_exception_handler(function($e) {
     header('Content-Type: application/json');
     http_response_code(500);
+    error_log("Bible AI exception: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage(),
-        'file' => basename($e->getFile()),
-        'line' => $e->getLine()
+        'error' => 'An internal error occurred'
     ]);
     exit;
 });
 
 require_once __DIR__ . '/../../security/auth_gate.php';
-require_once __DIR__ . '/../config.php';
+
+$configPath = __DIR__ . '/../config.php';
+if (!file_exists($configPath)) {
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'AI commentary not configured. Copy config.example.php to config.php.']);
+    exit;
+}
+require_once $configPath;
 
 header('Content-Type: application/json');
 
@@ -95,7 +102,7 @@ function getSurroundingVerses(array $bible, string $bookEN, int $chapter, int $v
         'Haggai' => 'Haggai', 'Zechariah' => 'Sagaria', 'Malachi' => 'Maleagi',
         'Matthew' => 'Matteus', 'Mark' => 'Markus', 'Luke' => 'Lukas',
         'John' => 'Johannes', 'Acts' => 'Handelinge', 'Romans' => 'Romeine',
-        '1 Corinthians' => '1 Korinthiërs', '2 Corinthians' => '2 Korinthiers',
+        '1 Corinthians' => '1 Korinthiërs', '2 Corinthians' => '2 Korinthiërs',
         'Galatians' => 'Galasiers', 'Ephesians' => 'Efesiers', 'Philippians' => 'Filippense',
         'Colossians' => 'Kolossense', '1 Thessalonians' => '1 Thessalonisense',
         '2 Thessalonians' => '2 Thessalonisense', '1 Timothy' => '1 Timotheus',
@@ -253,6 +260,34 @@ Describe ONLY what HAPPENS here (no meanings):
 }
 
 try {
+    // Check rate limits
+    if (defined('AI_RATE_LIMIT_HOUR') && $pdo) {
+        $stmt = $pdo->prepare('
+            SELECT COUNT(*) as cnt FROM bible_ai_commentary
+            WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
+        ');
+        $stmt->execute([$userId]);
+        $hourCount = (int)($stmt->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
+        if ($hourCount >= AI_RATE_LIMIT_HOUR) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'error' => $lang === 'af' ? 'Te veel versoeke. Probeer later weer.' : 'Too many requests. Please try again later.']);
+            exit;
+        }
+    }
+    if (defined('AI_RATE_LIMIT_DAY') && $pdo) {
+        $stmt = $pdo->prepare('
+            SELECT COUNT(*) as cnt FROM bible_ai_commentary
+            WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)
+        ');
+        $stmt->execute([$userId]);
+        $dayCount = (int)($stmt->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
+        if ($dayCount >= AI_RATE_LIMIT_DAY) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'error' => $lang === 'af' ? 'Daaglikse limiet bereik. Probeer more weer.' : 'Daily limit reached. Please try again tomorrow.']);
+            exit;
+        }
+    }
+
     // Load the Bible in the user's language
     $bible = loadBible($lang);
 

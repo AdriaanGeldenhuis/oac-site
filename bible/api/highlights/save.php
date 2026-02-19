@@ -31,6 +31,12 @@ if (!$input || !isset($input['verse_ref']) || !isset($input['color'])) {
 $verseRef = $input['verse_ref'];
 $color = (int)$input['color'];
 
+if (strlen($verseRef) > 100) {
+  http_response_code(400);
+  echo json_encode(['success' => false, 'error' => 'Invalid verse_ref']);
+  exit;
+}
+
 try {
   if ($color === 0) {
     // Remove highlight
@@ -52,5 +58,5 @@ try {
 } catch (Exception $e) {
   error_log("Highlight save error: " . $e->getMessage());
   http_response_code(500);
-  echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+  echo json_encode(['success' => false, 'error' => 'Database error']);
 }

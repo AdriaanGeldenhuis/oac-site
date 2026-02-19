@@ -27,6 +27,17 @@ if (!$input || !isset($input['verse_ref'])) {
 $verseRef = $input['verse_ref'];
 $noteText = trim($input['note_text'] ?? '');
 
+if (strlen($verseRef) > 100) {
+  http_response_code(400);
+  echo json_encode(['success' => false, 'error' => 'Invalid verse_ref']);
+  exit;
+}
+if (strlen($noteText) > 10000) {
+  http_response_code(400);
+  echo json_encode(['success' => false, 'error' => 'Note too long (max 10000 characters)']);
+  exit;
+}
+
 try {
   if (empty($noteText)) {
     // Delete note
