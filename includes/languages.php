@@ -65,7 +65,7 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Bem-vindo'
     ],
     'welcome_title' => [
-        'af' => 'Welkom by Die Ou Aposteliese Kerk',
+        'af' => 'Welkom by Die Ou Apostoliese Kerk',
         'en' => 'Welcome to The Old Apostolic Church',
         'zu' => 'Siyakwamukela eBandleni Elidala Labapostoli',
         'xh' => 'Wamkelekile kwiCawe yamaDala amaPostile',
