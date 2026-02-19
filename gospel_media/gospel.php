@@ -182,83 +182,26 @@ $VER = '2.1.0';
         <div class="gm-hero-glow"></div>
         <div class="gm-hero-content">
             <h1 class="gm-hero-title"><?= htmlspecialchars($roomTitle) ?></h1>
-            <button id="open-rooms-menu" class="gm-rooms-btn" type="button">
-                <svg class="gm-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                <span><?= t('rooms') ?></span>
-            </button>
+            <div class="gm-hero-actions">
+                <?php if ($allowPost): ?>
+                <button id="open-composer" class="gm-rooms-btn" type="button">
+                    <svg class="gm-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span><?= t('new_post') ?></span>
+                </button>
+                <?php endif; ?>
+                <button id="open-rooms-menu" class="gm-rooms-btn" type="button">
+                    <svg class="gm-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span><?= t('rooms') ?></span>
+                </button>
+            </div>
         </div>
     </div>
     
     <main class="gm-main">
-        <!-- Composer Section -->
-        <?php if ($allowPost): ?>
-        <section class="gm-section gm-composer-section">
-            <div class="gm-section-header">
-                <div class="gm-icon-wrapper">
-                    <svg class="gm-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                </div>
-                <h2 class="gm-section-title"><?= t('new_post') ?></h2>
-            </div>
-            
-            <div class="composer-tabs">
-                <button id="composer-type-post" class="composer-tab active" type="button">
-                    <?= t('post') ?>
-                </button>
-                <button id="composer-type-event" class="composer-tab" type="button">
-                    <?= t('event') ?>
-                </button>
-            </div>
-            
-            <div class="composer-body">
-                <textarea id="composer-text" class="composer-textarea" 
-                          placeholder="<?= t('what_share') ?>"></textarea>
-                
-                <div id="composer-event-fields" class="composer-event-fields hide">
-                    <input id="composer-event-at" type="datetime-local" 
-                           class="composer-input" 
-                           placeholder="<?= t('date_time_short') ?>" />
-                    <input id="composer-event-place" type="text" 
-                           class="composer-input" 
-                           placeholder="<?= t('place') ?>" />
-                </div>
-                
-                <input id="composer-image" type="file" accept="image/*" multiple style="display:none;" />
-                <div id="composer-preview" class="composer-preview"></div>
-                
-                <div class="composer-actions">
-                    <button id="btn-choose-image" type="button" class="composer-attach">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" 
-                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span><?= t('photo') ?></span>
-                    </button>
-                    <button id="composer-submit" type="button" class="composer-submit">
-                        <span class="sb-btn-shine"></span>
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span><?= t('post') ?></span>
-                    </button>
-                </div>
-            </div>
-        </section>
-        <?php else: ?>
-        <section class="gm-section gm-info-section">
-            <div class="gm-info-content">
-                <svg class="gm-info-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M12 16v.01M12 8v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-                <p><?= t('no_posting_rights') ?></p>
-            </div>
-        </section>
-        <?php endif; ?>
-        
         <!-- Feed Section -->
         <section class="gm-section gm-feed-section">
             <div class="gm-section-header">

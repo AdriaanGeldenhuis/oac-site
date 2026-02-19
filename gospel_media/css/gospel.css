@@ -234,6 +234,13 @@ html {
   animation: none;
 }
 
+.gm-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .gm-rooms-btn {
   position: relative;
   padding: 14px 30px;
@@ -245,7 +252,6 @@ html {
   font-size: 16px;
   font-weight: 300;
   cursor: pointer;
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -722,6 +728,86 @@ html {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
+}
+
+/* ===== COMPOSER OVERLAY ===== */
+.composer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15000;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+  animation: fade-in 0.2s ease-out;
+  overflow-y: auto;
+}
+
+[data-theme="light"] .composer-overlay {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.composer-overlay-panel {
+  width: 100%;
+  max-width: 600px;
+  background: linear-gradient(135deg, var(--section-bg-start) 0%, var(--section-bg-end) 100%);
+  border: 1px solid var(--section-border);
+  border-radius: 16px;
+  padding: 30px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), var(--glow-rosegold);
+  animation: fade-in-up 0.3s ease-out;
+  margin: 0 16px 40px;
+}
+
+[data-theme="light"] .composer-overlay-panel {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), var(--glow-rosegold);
+}
+
+.composer-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.composer-overlay-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 400;
+  color: var(--color-rosegold);
+  text-shadow: 0 0 8px rgba(183, 110, 121, 0.3);
+}
+
+.composer-overlay-close {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--btn-border);
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  color: var(--text-primary);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.composer-overlay-close:hover {
+  border-color: var(--color-rosegold);
+  box-shadow: var(--glow-rosegold);
+}
+
+@media (max-width: 768px) {
+  .composer-overlay {
+    padding-top: 60px;
+  }
+
+  .composer-overlay-panel {
+    margin: 0 10px 30px;
+    padding: 24px 16px;
+  }
 }
 
 /* ===== FEED ===== */

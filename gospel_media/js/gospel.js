@@ -100,124 +100,134 @@
     }
   };
 
-  // ===== COMPOSER =====
-  function showEventFields(show) {
-    const box = $('#composer-event-fields');
-    if (box) box.classList.toggle('hide', !show);
-  }
-
-  function bindComposerTabs() {
-    const postTab = $('#composer-type-post');
-    const evtTab = $('#composer-type-event');
-    
-    if (postTab) {
-      postTab.addEventListener('click', (e) => {
-        e.preventDefault();
-        activeType = 'post';
-        postTab.classList.add('active');
-        if (evtTab) evtTab.classList.remove('active');
-        showEventFields(false);
-      });
-    }
-    
-    if (evtTab) {
-      evtTab.addEventListener('click', (e) => {
-        e.preventDefault();
-        activeType = 'event';
-        evtTab.classList.add('active');
-        if (postTab) postTab.classList.remove('active');
-        showEventFields(true);
-      });
-    }
-  }
-
-  function bindComposer() {
-    const choose = $('#btn-choose-image');
-    const file = $('#composer-image');
-    const prev = $('#composer-preview');
-    
-    if (choose && file && !choose.dataset.gmBound) {
-      choose.dataset.gmBound = '1';
-      choose.addEventListener('click', () => file.click());
-      
-      file.addEventListener('change', () => {
-        if (!prev) return;
-        prev.innerHTML = '';
-        Array.from(file.files || []).forEach(f => {
-          const img = ce('img', { class: 'composer-preview-img' });
-          img.src = URL.createObjectURL(f);
-          prev.appendChild(img);
-        });
-      });
-    }
-    
-    const submit = $('#composer-submit');
-    if (submit && !submit.dataset.gmBound) {
-      submit.dataset.gmBound = '1';
-      submit.addEventListener('click', submitPost);
-    }
-  }
-
-  async function submitPost() {
+  // ===== COMPOSER OVERLAY =====
+  function openComposerOverlay() {
     if (!window.CAN_POST) return;
-    
-    const text = ($('#composer-text')?.value || '').trim();
-    if (!text) {
-      alert(T('type_message'));
-      return;
-    }
-    
-    const fd = new FormData();
-    fd.append('room_id', ROOM_ID);
-    fd.append('text', text);
-    fd.append('type', activeType === 'event' ? 'event' : 'post');
-    
-    if (activeType === 'event') {
-      const at = $('#composer-event-at')?.value || '';
-      const place = $('#composer-event-place')?.value || '';
-      if (at) fd.append('event_at', at);
-      if (place) fd.append('event_place', place);
-    }
-    
-    const file = $('#composer-image');
-    if (file && file.files && file.files.length) {
-      Array.from(file.files).forEach(f => fd.append('images[]', f));
-    }
-    
-    const submit = $('#composer-submit');
-    if (submit) {
-      submit.disabled = true;
-      submit.textContent = T('posting');
-    }
-    
-    const j = await fetchJSON('/gospel_media/api/posts/create.php', { method: 'POST', body: fd });
-    
-    if (submit) {
-      submit.disabled = false;
-      submit.innerHTML = `<span class="sb-btn-shine"></span>
+
+    const existing = $('.composer-overlay');
+    if (existing) existing.remove();
+
+    activeType = 'post';
+
+    const backdrop = ce('div', { class: 'composer-overlay' });
+    const panel = ce('div', { class: 'composer-overlay-panel' });
+
+    // Header
+    const header = ce('div', { class: 'composer-overlay-header' });
+    const title = ce('span', { class: 'composer-overlay-title', text: T('post') });
+    const closeBtn = ce('button', { class: 'composer-overlay-close', type: 'button', text: '\u00d7' });
+    header.append(title, closeBtn);
+
+    function closeOverlay() { backdrop.remove(); }
+    closeBtn.addEventListener('click', closeOverlay);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeOverlay(); });
+
+    // Tabs
+    const tabs = ce('div', { class: 'composer-tabs' });
+    const postTab = ce('button', { class: 'composer-tab active', type: 'button', text: T('post') });
+    const evtTab = ce('button', { class: 'composer-tab', type: 'button', text: T('datetime') });
+    tabs.append(postTab, evtTab);
+
+    if (ROOM_TYPE === 'gemeenskap') evtTab.style.display = 'none';
+
+    // Event fields
+    const evtFields = ce('div', { class: 'composer-event-fields hide' });
+    const evtAt = ce('input', { type: 'datetime-local', class: 'composer-input' });
+    const evtPlace = ce('input', { type: 'text', class: 'composer-input', placeholder: T('place') });
+    evtFields.append(evtAt, evtPlace);
+
+    postTab.addEventListener('click', () => {
+      activeType = 'post';
+      postTab.classList.add('active');
+      evtTab.classList.remove('active');
+      evtFields.classList.add('hide');
+    });
+    evtTab.addEventListener('click', () => {
+      activeType = 'event';
+      evtTab.classList.add('active');
+      postTab.classList.remove('active');
+      evtFields.classList.remove('hide');
+    });
+
+    // Textarea
+    const ta = ce('textarea', { class: 'composer-textarea', placeholder: T('type_message') });
+
+    // File input + preview
+    const fileInput = ce('input', { type: 'file', accept: 'image/*', multiple: 'multiple' });
+    fileInput.style.display = 'none';
+    const preview = ce('div', { class: 'composer-preview' });
+
+    fileInput.addEventListener('change', () => {
+      preview.innerHTML = '';
+      Array.from(fileInput.files || []).forEach(f => {
+        const img = ce('img', { class: 'composer-preview-img' });
+        img.src = URL.createObjectURL(f);
+        preview.appendChild(img);
+      });
+    });
+
+    // Actions
+    const actions = ce('div', { class: 'composer-actions' });
+
+    const attachBtn = ce('button', { type: 'button', class: 'composer-attach' });
+    attachBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg><span>${T('add_photo')}</span>`;
+    attachBtn.addEventListener('click', () => fileInput.click());
+
+    const submitBtn = ce('button', { type: 'button', class: 'composer-submit' });
+    submitBtn.innerHTML = `<span class="sb-btn-shine"></span>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg><span>${T('post')}</span>`;
+
+    submitBtn.addEventListener('click', async () => {
+      const text = (ta.value || '').trim();
+      if (!text) { alert(T('type_message')); return; }
+
+      const fd = new FormData();
+      fd.append('room_id', ROOM_ID);
+      fd.append('text', text);
+      fd.append('type', activeType === 'event' ? 'event' : 'post');
+
+      if (activeType === 'event') {
+        if (evtAt.value) fd.append('event_at', evtAt.value);
+        if (evtPlace.value) fd.append('event_place', evtPlace.value);
+      }
+
+      if (fileInput.files && fileInput.files.length) {
+        Array.from(fileInput.files).forEach(f => fd.append('images[]', f));
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = T('posting');
+
+      const j = await fetchJSON('/gospel_media/api/posts/create.php', { method: 'POST', body: fd });
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span class="sb-btn-shine"></span>
         <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>${T('post')}</span>`;
-    }
-    
-    if (!(j && (j.ok || j.success))) {
-      alert(j && j.error ? j.error : T('error_posting'));
-      return;
-    }
-    
-    const area = $('#composer-text');
-    if (area) area.value = '';
-    if (file) {
-      file.value = '';
-      const prev = $('#composer-preview');
-      if (prev) prev.innerHTML = '';
-    }
+        </svg><span>${T('post')}</span>`;
 
-    // Reload feed to show new post at top (resets scroll position to latest)
-    feedLastId = null;
-    feedDone = false;
-    await loadFeed(ROOM_ID, true);
+      if (!(j && (j.ok || j.success))) {
+        alert(j && j.error ? j.error : T('error_posting'));
+        return;
+      }
+
+      closeOverlay();
+      feedLastId = null;
+      feedDone = false;
+      await loadFeed(ROOM_ID, true);
+    });
+
+    actions.append(attachBtn, submitBtn);
+
+    panel.append(header, tabs, ta, evtFields, fileInput, preview, actions);
+    backdrop.appendChild(panel);
+    document.body.appendChild(backdrop);
+    ta.focus();
   }
 
   // ===== REACTIONS =====
@@ -969,17 +979,13 @@
     } catch (e) {
       console.error('Failed to load user info:', e);
     }
-    
-    const evtTab = $('#composer-type-event');
-    if (evtTab && ROOM_TYPE === 'gemeenskap') {
-      evtTab.style.display = 'none';
-      showEventFields(false);
+
+    // Wire up the "New Post" hero button
+    const composerBtn = $('#open-composer');
+    if (composerBtn) {
+      composerBtn.addEventListener('click', openComposerOverlay);
     }
-    
-    showEventFields(false);
-    bindComposerTabs();
-    bindComposer();
-    
+
     await loadFeed(ROOM_ID);
   }
 
