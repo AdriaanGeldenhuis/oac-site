@@ -1,6 +1,14 @@
 <?php
 require_once __DIR__ . '/../../security/auth_gate.php';
-require_once __DIR__ . '/../config.php';
+
+$configPath = __DIR__ . '/../config.php';
+if (!file_exists($configPath)) {
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Reading plan not configured. Copy config.example.php to config.php.']);
+    exit;
+}
+require_once $configPath;
 
 header('Content-Type: application/json');
 

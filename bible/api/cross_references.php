@@ -32,5 +32,5 @@ try {
 } catch (Exception $e) {
   error_log("Cross-ref error: " . $e->getMessage());
   http_response_code(500);
-  echo json_encode(['error' => 'Database error', 'details' => $e->getMessage()]);
+  echo json_encode(['error' => 'Database error']);
 }

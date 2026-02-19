@@ -17,17 +17,24 @@ set_error_handler(function($severity, $message, $file, $line) {
 set_exception_handler(function($e) {
     header('Content-Type: application/json');
     http_response_code(500);
+    error_log("Bible AI exception: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage(),
-        'file' => basename($e->getFile()),
-        'line' => $e->getLine()
+        'error' => 'An internal error occurred'
     ]);
     exit;
 });
 
 require_once __DIR__ . '/../../security/auth_gate.php';
-require_once __DIR__ . '/../config.php';
+
+$configPath = __DIR__ . '/../config.php';
+if (!file_exists($configPath)) {
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'AI commentary not configured. Copy config.example.php to config.php.']);
+    exit;
+}
+require_once $configPath;
 
 header('Content-Type: application/json');
 
@@ -179,80 +186,96 @@ function buildPrompt(string $verseRef, string $verseText, array $context, string
         $rules = file_get_contents(AI_RULES_FILE);
     }
 
-    // System prompt - STRICT: only events, NO meanings
+    // System prompt - concise and powerful Bible context
     $systemPrompt = $lang === 'af'
-        ? "Jy is 'n Bybel-verslaggewer. Jy beskryf NET wat GEBEUR in die teks - soos 'n nuusverslaggewer.
+        ? "Jy gee KORT, KRAGTIGE konteks rondom 'n Bybelvers.
+           Mense lees 1 vers en weet nie wat voor of na gebeur nie. Jy vertel hulle - bondig.
 
-           STRENG VERBODE:
-           - GEEN betekenis of interpretasie
-           - GEEN 'dit beteken...' of 'die les is...'
-           - GEEN geestelike toepassings
-           - GEEN teologiese verduidelikings
+           REËLS:
+           - NET wat in die Bybel staan - moenie byvoeg nie
+           - NOOIT betekenis, interpretasie, lesse, of teologie nie
+           - KORT EN KRAGTIG - elke seksie 2-4 sinne, nie paragrawe nie
+           - Haal direk aan uit die verse
 
-           JY MAG SLEGS:
-           - Beskryf WIE daar is
-           - Beskryf WAT hulle doen/sê
-           - Beskryf WAAR dit gebeur
-           - Beskryf wat VOOR en NA gebeur
-
-           Gebruik die presiese formaat in die reëls.
+           4 seksies: DIE TONEEL, WAT VOOR GEBEUR, HIERDIE VERS, WAT DAARNA GEBEUR.
 
            {$rules}"
-        : "You are a Bible reporter. You describe ONLY what HAPPENS in the text - like a news reporter.
+        : "You give SHORT, POWERFUL context around a Bible verse.
+           People read 1 verse and don't know what happened before or after. You tell them - concisely.
 
-           STRICTLY FORBIDDEN:
-           - NO meanings or interpretations
-           - NO 'this means...' or 'the lesson is...'
-           - NO spiritual applications
-           - NO theological explanations
+           RULES:
+           - ONLY what the Bible text says - don't add anything
+           - NEVER meanings, interpretations, lessons, or theology
+           - SHORT AND PUNCHY - each section 2-4 sentences, not paragraphs
+           - Quote directly from the verses
 
-           YOU MAY ONLY:
-           - Describe WHO is there
-           - Describe WHAT they do/say
-           - Describe WHERE it happens
-           - Describe what happens BEFORE and AFTER
-
-           Use the exact format in the rules.
+           4 sections: THE SCENE, WHAT HAPPENED BEFORE, THIS VERSE, WHAT HAPPENS AFTER.
 
            {$rules}";
 
     // Build context string
     $contextText = implode("\n", $context);
 
-    // User prompt - ask for events only
+    // User prompt - concise context request
     $userPrompt = $lang === 'af'
-        ? "GESELEKTEERDE VERS: {$verseRef}
+        ? "VERS: {$verseRef}
 \"{$verseText}\"
 
 OMLIGGENDE VERSE:
 {$contextText}
 
-Beskryf NET wat hier GEBEUR (geen betekenis nie):
+Gee kort, kragtige konteks. Elke seksie 2-4 sinne. Haal aan uit die Bybel.
 
-**PLEK:** Waar gebeur dit?
-**WIE:** Wie is daar? Wie praat?
-**WAT GEBEUR VOOR:** Wat het net voor dit gebeur?
-**WAT GEBEUR NOU:** Wat gebeur/word gesê in hierdie vers?
-**WAT GEBEUR DAARNA:** Wat gebeur daarna?"
+**DIE TONEEL:** Waar en wie?
+**WAT VOOR GEBEUR:** Die storie van die ~10 verse voor.
+**HIERDIE VERS:** Wat gebeur presies hier? Haal aan.
+**WAT DAARNA GEBEUR:** Die storie van die ~10 verse na."
 
-        : "SELECTED VERSE: {$verseRef}
+        : "VERSE: {$verseRef}
 \"{$verseText}\"
 
 SURROUNDING VERSES:
 {$contextText}
 
-Describe ONLY what HAPPENS here (no meanings):
+Give short, powerful context. Each section 2-4 sentences. Quote from the Bible.
 
-**PLACE:** Where does this happen?
-**WHO:** Who is there? Who is speaking?
-**BEFORE:** What happened just before this?
-**NOW:** What happens/is said in this verse?
-**AFTER:** What happens next?";
+**THE SCENE:** Where and who?
+**WHAT HAPPENED BEFORE:** The story of the ~10 verses before.
+**THIS VERSE:** What exactly happens here? Quote it.
+**WHAT HAPPENS AFTER:** The story of the ~10 verses after.";
 
     return [$systemPrompt, $userPrompt];
 }
 
 try {
+    // Check rate limits
+    if (defined('AI_RATE_LIMIT_HOUR') && $pdo) {
+        $stmt = $pdo->prepare('
+            SELECT COUNT(*) as cnt FROM bible_ai_commentary
+            WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
+        ');
+        $stmt->execute([$userId]);
+        $hourCount = (int)($stmt->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
+        if ($hourCount >= AI_RATE_LIMIT_HOUR) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'error' => $lang === 'af' ? 'Te veel versoeke. Probeer later weer.' : 'Too many requests. Please try again later.']);
+            exit;
+        }
+    }
+    if (defined('AI_RATE_LIMIT_DAY') && $pdo) {
+        $stmt = $pdo->prepare('
+            SELECT COUNT(*) as cnt FROM bible_ai_commentary
+            WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)
+        ');
+        $stmt->execute([$userId]);
+        $dayCount = (int)($stmt->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
+        if ($dayCount >= AI_RATE_LIMIT_DAY) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'error' => $lang === 'af' ? 'Daaglikse limiet bereik. Probeer more weer.' : 'Daily limit reached. Please try again tomorrow.']);
+            exit;
+        }
+    }
+
     // Load the Bible in the user's language
     $bible = loadBible($lang);
 

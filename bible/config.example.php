@@ -24,8 +24,8 @@ define('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions');
 // Model to use (gpt-4o-mini is fast and affordable, gpt-4o for better quality)
 define('OPENAI_MODEL', 'gpt-4o-mini');
 
-// Maximum tokens for AI responses
-define('OPENAI_MAX_TOKENS', 600);
+// Maximum tokens for AI responses (800 for concise but rich context)
+define('OPENAI_MAX_TOKENS', 800);
 
 // Temperature (0.0-2.0, lower = more focused, higher = more creative)
 define('OPENAI_TEMPERATURE', 0.3);
@@ -58,8 +58,9 @@ define('BIBLE_VERSIONS', [
 // =============================================================================
 
 // Number of verses before and after to include for AI context
-define('AI_CONTEXT_VERSES_BEFORE', 5);
-define('AI_CONTEXT_VERSES_AFTER', 5);
+// 10 verses gives rich story context (uses fewer if near chapter start/end)
+define('AI_CONTEXT_VERSES_BEFORE', 10);
+define('AI_CONTEXT_VERSES_AFTER', 10);
 
 // =============================================================================
 // RATE LIMITING
