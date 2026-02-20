@@ -24,15 +24,15 @@ $scopeFilter = '';
 $scopeParams = [];
 
 if ($myAmpId === 1) {
-  $canSeeAmps = [2,3,4];
+  $canSeeAmps = [2,3,4,5];
 } elseif (in_array($myAmpId, [2,3,4])) {
-  $canSeeAmps = [1,5,6,7,8,9,10];
+  $canSeeAmps = [1,2,3,4,5,6,7,8,9,10];
   if ($myTownId) {
     $scopeFilter = 'AND u.town_id = :town_id';
     $scopeParams[':town_id'] = $myTownId;
   }
 } elseif ($myAmpId === 5) {
-  $canSeeAmps = [2,3,4,6,7,8,9,10];
+  $canSeeAmps = [1,2,3,4,5,6,7,8,9,10];
   if ($myTownId) {
     $scopeFilter = 'AND u.town_id = :town_id';
     $scopeParams[':town_id'] = $myTownId;
