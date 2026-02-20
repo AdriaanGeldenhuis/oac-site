@@ -65,7 +65,7 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Bem-vindo'
     ],
     'welcome_title' => [
-        'af' => 'Welkom by Die Ou Aposteliese Kerk',
+        'af' => 'Welkom by Die Ou Apostoliese Kerk',
         'en' => 'Welcome to The Old Apostolic Church',
         'zu' => 'Siyakwamukela eBandleni Elidala Labapostoli',
         'xh' => 'Wamkelekile kwiCawe yamaDala amaPostile',
@@ -3698,6 +3698,155 @@ define('UI_TRANSLATIONS', [
         'zu' => 'Kujoyinwe',
         'xh' => 'Kujoyinwe',
         'pt' => 'Inscrita'
+    ],
+
+    // DAILY THOUGHT TRANSLATIONS
+    'thought_of_day' => [
+        'af' => 'Gedagte van die Dag',
+        'en' => 'Thought of the Day',
+        'zu' => 'Umcabango Wosuku',
+        'xh' => 'Ingcinga Yosuku',
+        'pt' => 'Pensamento do Dia'
+    ],
+    'daily_thought' => [
+        'af' => 'Daaglikse Gedagte',
+        'en' => 'Daily Thought',
+        'zu' => 'Umcabango Wansuku Zonke',
+        'xh' => 'Ingcinga Yemihla Ngemihla',
+        'pt' => 'Pensamento Diário'
+    ],
+    'thought_content' => [
+        'af' => 'Gedagte inhoud',
+        'en' => 'Thought content',
+        'zu' => 'Okuqukethwe komcabango',
+        'xh' => 'Umxholo wengcinga',
+        'pt' => 'Conteúdo do pensamento'
+    ],
+    'thought_author' => [
+        'af' => 'Outeur (opsioneel)',
+        'en' => 'Author (optional)',
+        'zu' => 'Umbhali (ukukhetha)',
+        'xh' => 'Umbhali (ukhetho)',
+        'pt' => 'Autor (opcional)'
+    ],
+    'thought_date' => [
+        'af' => 'Datum om te wys',
+        'en' => 'Date to display',
+        'zu' => 'Usuku lokubonisa',
+        'xh' => 'Umhla wokubonisa',
+        'pt' => 'Data para exibir'
+    ],
+    'save_thought' => [
+        'af' => 'Stoor Gedagte',
+        'en' => 'Save Thought',
+        'zu' => 'Gcina Umcabango',
+        'xh' => 'Gcina Ingcinga',
+        'pt' => 'Salvar Pensamento'
+    ],
+    'thought_saved' => [
+        'af' => 'Gedagte gestoor!',
+        'en' => 'Thought saved!',
+        'zu' => 'Umcabango ugcinwe!',
+        'xh' => 'Ingcinga igcinwe!',
+        'pt' => 'Pensamento salvo!'
+    ],
+    'thought_deleted' => [
+        'af' => 'Gedagte verwyder!',
+        'en' => 'Thought deleted!',
+        'zu' => 'Umcabango ususiwe!',
+        'xh' => 'Ingcinga isusiwe!',
+        'pt' => 'Pensamento excluído!'
+    ],
+    'no_thought_today' => [
+        'af' => 'Geen gedagte vir vandag nie',
+        'en' => 'No thought for today',
+        'zu' => 'Akukho mcabango wanamuhla',
+        'xh' => 'Akukho ngcinga yanamhlanje',
+        'pt' => 'Nenhum pensamento para hoje'
+    ],
+    'manage_thoughts' => [
+        'af' => 'Bestuur Daaglikse Gedagtes',
+        'en' => 'Manage Daily Thoughts',
+        'zu' => 'Phatha Imicabango Yansuku Zonke',
+        'xh' => 'Lawula Iingcinga Zemihla Ngemihla',
+        'pt' => 'Gerenciar Pensamentos Diários'
+    ],
+    'upcoming_thoughts' => [
+        'af' => 'Komende Gedagtes',
+        'en' => 'Upcoming Thoughts',
+        'zu' => 'Imicabango Ezayo',
+        'xh' => 'Iingcinga Ezizayo',
+        'pt' => 'Pensamentos Próximos'
+    ],
+    'no_upcoming' => [
+        'af' => 'Geen komende gedagtes nie',
+        'en' => 'No upcoming thoughts',
+        'zu' => 'Akukho micabango ezayo',
+        'xh' => 'Akukho ngcinga zizayo',
+        'pt' => 'Nenhum pensamento próximo'
+    ],
+    'delete' => [
+        'af' => 'Verwyder',
+        'en' => 'Delete',
+        'zu' => 'Susa',
+        'xh' => 'Cima',
+        'pt' => 'Excluir'
+    ],
+    'confirm_delete_thought' => [
+        'af' => 'Is jy seker jy wil hierdie gedagte verwyder?',
+        'en' => 'Are you sure you want to delete this thought?',
+        'zu' => 'Uqinisekile ukuthi ufuna ukususa lo mcabango?',
+        'xh' => 'Uqinisekile ukuba ufuna ukucima le ngcinga?',
+        'pt' => 'Tem certeza de que deseja excluir este pensamento?'
+    ],
+    'thought_time' => [
+        'af' => 'Tyd om te wys',
+        'en' => 'Time to display',
+        'zu' => 'Isikhathi sokubonisa',
+        'xh' => 'Ixesha lokubonisa',
+        'pt' => 'Hora para exibir'
+    ],
+    'notif_sent' => [
+        'af' => 'Gestuur',
+        'en' => 'Sent',
+        'zu' => 'Ithunyelwe',
+        'xh' => 'Ithunyelwe',
+        'pt' => 'Enviado'
+    ],
+    'notif_pending' => [
+        'af' => 'Wag',
+        'en' => 'Pending',
+        'zu' => 'Ilindile',
+        'xh' => 'Ilindile',
+        'pt' => 'Pendente'
+    ],
+    'thought_history' => [
+        'af' => 'Gedagtes',
+        'en' => 'Thoughts',
+        'zu' => 'Imicabango',
+        'xh' => 'Iingcinga',
+        'pt' => 'Pensamentos'
+    ],
+    'thought_history_title' => [
+        'af' => 'Gedagtes van die Afgelope 30 Dae',
+        'en' => 'Thoughts from the Past 30 Days',
+        'zu' => 'Imicabango Yezinsuku Ezingu-30 Ezedlule',
+        'xh' => 'Iingcinga Zeentsuku Ezingama-30 Ezidlulileyo',
+        'pt' => 'Pensamentos dos Últimos 30 Dias'
+    ],
+    'no_thoughts_yet' => [
+        'af' => 'Nog geen gedagtes nie',
+        'en' => 'No thoughts yet',
+        'zu' => 'Akukho micabango okwamanje',
+        'xh' => 'Akukho ngcinga okwangoku',
+        'pt' => 'Nenhum pensamento ainda'
+    ],
+    'notif_thought_title' => [
+        'af' => 'Gedagte van die Dag',
+        'en' => 'Thought of the Day',
+        'zu' => 'Umcabango Wosuku',
+        'xh' => 'Ingcinga Yosuku',
+        'pt' => 'Pensamento do Dia'
     ]
 ]);
 

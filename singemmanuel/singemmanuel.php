@@ -101,25 +101,10 @@ $VER = time();
 <body class="singemmanuel-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <!-- Hero Section -->
-  <div class="se-hero">
-    <div class="se-hero-glow"></div>
-    <div class="se-hero-content">
-      <h1 class="se-hero-title">Sing Emmanuel</h1>
-      <p class="se-hero-subtitle"><?= t('praise_lord_song') ?></p>
-    </div>
-    <div class="se-sparkles">
-      <span class="se-sparkle" style="--delay: 0s; --x: 10%; --y: 20%;"></span>
-      <span class="se-sparkle" style="--delay: 0.5s; --x: 85%; --y: 30%;"></span>
-      <span class="se-sparkle" style="--delay: 1s; --x: 50%; --y: 60%;"></span>
-      <span class="se-sparkle" style="--delay: 1.5s; --x: 20%; --y: 80%;"></span>
-      <span class="se-sparkle" style="--delay: 2s; --x: 90%; --y: 70%;"></span>
-    </div>
-  </div>
-
   <main class="se-main">
     <!-- Language & Search Section -->
     <section class="se-section se-controls-section">
+      <h2 class="se-page-title">Sing Emmanuel</h2>
       <div class="se-section-header">
         <div class="se-icon-wrapper">
           <svg class="se-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

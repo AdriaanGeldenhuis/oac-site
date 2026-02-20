@@ -1,0 +1,150 @@
+/* ===== Thought History Page ===== */
+
+.gedagtes-body {
+  min-height: 100vh;
+  padding-top: 70px;
+  background: var(--bg-base, #0a0a0a);
+  color: var(--text-primary, #f5ebe6);
+  font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+.gedagtes-main {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 24px 80px;
+}
+
+.gedagtes-header {
+  margin-bottom: 32px;
+}
+
+.gedagtes-title {
+  font-family: var(--font-display, 'Parisienne', cursive);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 400;
+  color: var(--rose-gold, #e8b4a8);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.gedagtes-subtitle {
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--text-muted, #7a7570);
+}
+
+/* ===== Thought Cards ===== */
+.gedagtes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gedagtes-card {
+  background: linear-gradient(135deg, var(--bg-card, #161616) 0%, var(--bg-surface, #1c1c1c) 100%);
+  border: 1px solid var(--border, rgba(232, 180, 168, 0.15));
+  border-radius: var(--radius, 16px);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-sm, 0 4px 16px rgba(0, 0, 0, 0.6));
+  transition: all 0.3s ease;
+}
+
+.gedagtes-card--today {
+  border-color: var(--rose-gold, #e8b4a8);
+}
+
+.gedagtes-card-date {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rose-gold, #e8b4a8);
+  margin-bottom: 12px;
+}
+
+.gedagtes-card-content {
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.8;
+  color: var(--text-primary, #f5ebe6);
+}
+
+.gedagtes-card-author {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--rose-gold-dark, #c99485);
+}
+
+/* ===== Empty State ===== */
+.gedagtes-empty {
+  text-align: center;
+  padding: 60px 24px;
+}
+
+.gedagtes-empty svg {
+  width: 48px;
+  height: 48px;
+  color: var(--text-muted, #7a7570);
+  fill: currentColor;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.gedagtes-empty p {
+  color: var(--text-muted, #7a7570);
+  font-size: 0.95rem;
+}
+
+/* ===== Loading State ===== */
+.gedagtes-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted, #7a7570);
+  font-size: 0.9rem;
+}
+
+/* ===== Back Link ===== */
+.gedagtes-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--rose-gold-dark, #c99485);
+  text-decoration: none;
+  margin-bottom: 20px;
+  transition: color 0.3s ease;
+}
+
+.gedagtes-back:hover {
+  color: var(--rose-gold, #e8b4a8);
+}
+
+.gedagtes-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 640px) {
+  .gedagtes-body {
+    padding-top: 60px;
+  }
+
+  .gedagtes-main {
+    padding: 16px 16px 60px;
+  }
+
+  .gedagtes-card {
+    padding: 20px;
+  }
+}

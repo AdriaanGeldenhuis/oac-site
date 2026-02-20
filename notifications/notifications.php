@@ -53,25 +53,10 @@ if (isset($pdo) && $pdo instanceof PDO) {
 <body class="notif-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <!-- Hero Section -->
-  <div class="notif-hero">
-    <div class="notif-hero-glow"></div>
-    <div class="notif-hero-content">
-      <h1 class="notif-hero-title"><?= esc(t('ai_notifications')) ?></h1>
-      <p class="notif-hero-subtitle"><?= esc(t('stay_updated')) ?></p>
-    </div>
-    <div class="notif-sparkles">
-      <span class="notif-sparkle" style="--delay: 0s; --x: 10%; --y: 20%;"></span>
-      <span class="notif-sparkle" style="--delay: 0.5s; --x: 85%; --y: 30%;"></span>
-      <span class="notif-sparkle" style="--delay: 1s; --x: 50%; --y: 60%;"></span>
-      <span class="notif-sparkle" style="--delay: 1.5s; --x: 20%; --y: 80%;"></span>
-      <span class="notif-sparkle" style="--delay: 2s; --x: 90%; --y: 70%;"></span>
-    </div>
-  </div>
-
   <main class="notif-main">
     <!-- Actions Section -->
     <section class="notif-section">
+      <h2 class="notif-page-title">Kennisgewings</h2>
       <div class="notif-actions">
         <button class="notif-btn notif-btn-primary" id="markAllRead">
           <span class="notif-btn-shine"></span>

@@ -421,25 +421,10 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
 <body class="aislimbybel-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <!-- Hero Section -->
-  <div class="sb-hero">
-    <div class="sb-hero-glow"></div>
-    <div class="sb-hero-content">
-      <h1 class="sb-hero-title"><?= esc(t('ai_slimbybel')) ?></h1>
-      <p class="sb-hero-subtitle"><?= esc(t('spiritual_wisdom_ai')) ?></p>
-    </div>
-    <div class="sb-sparkles">
-      <span class="sb-sparkle" style="--delay: 0s; --x: 10%; --y: 20%;"></span>
-      <span class="sb-sparkle" style="--delay: 0.5s; --x: 85%; --y: 30%;"></span>
-      <span class="sb-sparkle" style="--delay: 1s; --x: 50%; --y: 60%;"></span>
-      <span class="sb-sparkle" style="--delay: 1.5s; --x: 20%; --y: 80%;"></span>
-      <span class="sb-sparkle" style="--delay: 2s; --x: 90%; --y: 70%;"></span>
-    </div>
-  </div>
-
   <main class="sb-main">
     <!-- Search Section -->
     <section class="sb-section sb-search-section">
+      <h2 class="sb-page-title">AI Slimbybel</h2>
       <div class="sb-section-header">
         <div class="sb-icon-wrapper">
           <svg class="sb-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
