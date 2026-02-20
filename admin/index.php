@@ -71,14 +71,6 @@ $VER = time();
 <body class="admin-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <div class="admin-hero">
-    <div class="admin-hero-glow"></div>
-    <div class="admin-hero-content">
-      <h1 class="admin-hero-title"><?= t('admin_dashboard') ?></h1>
-      <p class="admin-hero-subtitle"><?= t('admin_subtitle') ?></p>
-    </div>
-  </div>
-
   <main class="admin-main">
     <nav class="admin-tabs">
       <a href="?tab=profile" class="admin-tab <?= $activeTab === 'profile' ? 'active' : '' ?>">
