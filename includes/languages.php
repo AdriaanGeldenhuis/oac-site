@@ -2218,11 +2218,11 @@ define('UI_TRANSLATIONS', [
 
     // ==================== PRAYERS ====================
     'prayers_testimonies' => [
-        'af' => 'Gebede & Getuienisse',
-        'en' => 'Prayers & Testimonies',
-        'zu' => 'Imithandazo & Ubufakazi',
-        'xh' => 'Imithandazo & Ubungqina',
-        'pt' => 'Orações e Testemunhos'
+        'af' => 'Gebede',
+        'en' => 'Prayers',
+        'zu' => 'Imithandazo',
+        'xh' => 'Imithandazo',
+        'pt' => 'Orações'
     ],
     'share_heart_pray' => [
         'af' => 'Deel jou hart, bid saam, vier saam',
@@ -2232,11 +2232,11 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Compartilhe seu coração, ore junto, celebre junto'
     ],
     'share_prayer_testimony' => [
-        'af' => 'Deel jou gebedsnood of getuienis',
-        'en' => 'Share your prayer need or testimony',
-        'zu' => 'Yabelana ngesidingo sakho somthandazo noma ubufakazi',
-        'xh' => 'Yabelana ngesidingo sakho somthandazo okanye ubungqina',
-        'pt' => 'Compartilhe sua necessidade de oração ou testemunho'
+        'af' => 'Deel jou gebedsnood',
+        'en' => 'Share your prayer need',
+        'zu' => 'Yabelana ngesidingo sakho somthandazo',
+        'xh' => 'Yabelana ngesidingo sakho somthandazo',
+        'pt' => 'Compartilhe sua necessidade de oração'
     ],
     'prayer' => [
         'af' => 'Gebed',
@@ -2297,11 +2297,11 @@ define('UI_TRANSLATIONS', [
 
     // ==================== PRAYERS EXTRA ====================
     'prayers_subtitle' => [
-        'af' => 'Deel jou hart, bid saam, vier saam',
-        'en' => 'Share your heart, pray together, celebrate together',
-        'zu' => 'Yabelana ngenhliziyo yakho, thandaza ndawonye, gubha ndawonye',
-        'xh' => 'Yabelana ngentliziyo yakho, thandaza kunye, bhiyozela kunye',
-        'pt' => 'Compartilhe seu coração, ore junto, celebre junto'
+        'af' => 'Deel jou hart, bid saam',
+        'en' => 'Share your heart, pray together',
+        'zu' => 'Yabelana ngenhliziyo yakho, thandaza ndawonye',
+        'xh' => 'Yabelana ngentliziyo yakho, thandaza kunye',
+        'pt' => 'Compartilhe seu coração, ore junto'
     ],
     'share_heart_placeholder' => [
         'af' => 'Deel jou hart hier...',

@@ -13,14 +13,9 @@ if (!$userId) {
   exit;
 }
 
-$kind = $_POST['kind'] ?? 'prayer';
+$kind = 'prayer';
 $text = trim($_POST['text'] ?? '');
 $visibility = $_POST['visibility'] ?? 'opsienerskap';
-
-if (!in_array($kind, ['prayer', 'testimony'])) {
-  echo json_encode(['success' => false, 'error' => 'Invalid kind']);
-  exit;
-}
 
 if (empty($text)) {
   echo json_encode(['success' => false, 'error' => 'Text required']);

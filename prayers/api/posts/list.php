@@ -42,7 +42,7 @@ try {
     FROM prayers_posts p
     JOIN users u ON p.user_id = u.id
     LEFT JOIN towns t ON p.town_id = t.id
-    WHERE 1=1
+    WHERE p.kind = 'prayer'
   ";
 
   $params = [$userId, $userId];

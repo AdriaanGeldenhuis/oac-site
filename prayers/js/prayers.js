@@ -56,23 +56,6 @@
           </button>
         </div>
         <form id="composerForm" class="pr-form" enctype="multipart/form-data">
-          ${!isEdit ? `
-          <div class="pr-tabs">
-            <button type="button" class="pr-tab ${currentKind === 'prayer' ? 'active' : ''}" data-kind="prayer">
-              <svg class="pr-tab-icon" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="currentColor" opacity="0.3"/>
-              </svg>
-              <span>${T('prayer')}</span>
-            </button>
-            <button type="button" class="pr-tab ${currentKind === 'testimony' ? 'active' : ''}" data-kind="testimony">
-              <svg class="pr-tab-icon" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" opacity="0.3"/>
-              </svg>
-              <span>${T('testimony')}</span>
-            </button>
-          </div>
-          ` : ''}
-
           <textarea id="overlayPostText" name="text" class="pr-textarea" placeholder="${T('prayer')}" rows="4" required>${isEdit ? escapeHtml(editText || '') : ''}</textarea>
 
           ${photoPreviewHTML}
@@ -114,15 +97,6 @@
       if (e.key === 'Escape') { closeComposerOverlay(); document.removeEventListener('keydown', onEsc); }
     };
     document.addEventListener('keydown', onEsc);
-
-    // Wire tabs
-    overlay.querySelectorAll('.pr-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        overlay.querySelectorAll('.pr-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentKind = tab.dataset.kind;
-      });
-    });
 
     // Wire file input
     const fileInput = overlay.querySelector('#overlayPhotoInput');
@@ -337,10 +311,6 @@
   // In /prayers/js/prayers.js - UPDATE renderPost function
 
 function renderPost(post) {
-  const kindLabel = post.kind === 'prayer' 
-    ? T('prayer') 
-    : T('testimony');
-  
   const photoHTML = post.photo_url 
     ? `<img src="${post.photo_url}" alt="Post photo" class="pr-post-photo">` 
     : '';
@@ -379,7 +349,6 @@ function renderPost(post) {
           <div class="pr-post-user">${post.username}</div>
           <div class="pr-post-date">${post.created_at}${post.town_name ? ' • ' + post.town_name : ''}</div>
         </div>
-        <span class="pr-post-kind-badge ${post.kind}">${kindLabel}</span>
       </div>
       ${photoHTML}
       <div class="pr-post-body">
