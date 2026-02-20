@@ -41,7 +41,7 @@ $canApprove = ($ampId >= 1 && $ampId <= 6);
 $canManageAmpte = ($ampId >= 1 && $ampId <= 9);
 
 $activeTab = $_GET['tab'] ?? 'profile';
-$validTabs = ['profile', 'teaching', 'gedagte', 'settings', 'approvals'];
+$validTabs = ['profile', 'teaching', 'gedagte', 'afsprake', 'settings', 'approvals'];
 if (!in_array($activeTab, $validTabs)) {
     $activeTab = 'profile';
 }
@@ -95,6 +95,16 @@ $VER = time();
       </a>
       <?php endif; ?>
 
+      <?php if ($canManageAmpte): ?>
+      <a href="?tab=afsprake" class="admin-tab <?= $activeTab === 'afsprake' ? 'active' : '' ?>">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+          <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <span><?= t('appointments') ?></span>
+      </a>
+      <?php endif; ?>
+
       <a href="?tab=settings" class="admin-tab <?= $activeTab === 'settings' ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
@@ -125,6 +135,9 @@ $VER = time();
           break;
         case 'gedagte':
           if ($isElder) require __DIR__ . '/tabs/gedagte.php';
+          break;
+        case 'afsprake':
+          if ($canManageAmpte) require __DIR__ . '/tabs/afsprake.php';
           break;
         case 'settings':
           require __DIR__ . '/tabs/settings.php';
