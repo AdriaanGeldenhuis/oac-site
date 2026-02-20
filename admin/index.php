@@ -41,7 +41,7 @@ $canApprove = ($ampId >= 1 && $ampId <= 6);
 $canManageAmpte = ($ampId >= 1 && $ampId <= 9);
 
 $activeTab = $_GET['tab'] ?? 'profile';
-$validTabs = ['profile', 'accounts', 'teaching', 'gedagte', 'amptes', 'afsprake', 'settings', 'approvals'];
+$validTabs = ['profile', 'teaching', 'gedagte', 'afsprake', 'settings', 'approvals'];
 if (!in_array($activeTab, $validTabs)) {
     $activeTab = 'profile';
 }
@@ -71,14 +71,6 @@ $VER = time();
 <body class="admin-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <div class="admin-hero">
-    <div class="admin-hero-glow"></div>
-    <div class="admin-hero-content">
-      <h1 class="admin-hero-title"><?= t('admin_dashboard') ?></h1>
-      <p class="admin-hero-subtitle"><?= t('admin_subtitle') ?></p>
-    </div>
-  </div>
-
   <main class="admin-main">
     <nav class="admin-tabs">
       <a href="?tab=profile" class="admin-tab <?= $activeTab === 'profile' ? 'active' : '' ?>">
@@ -86,13 +78,6 @@ $VER = time();
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
         </svg>
         <span><?= t('profile') ?></span>
-      </a>
-
-      <a href="?tab=accounts" class="admin-tab <?= $activeTab === 'accounts' ? 'active' : '' ?>">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        <span><?= t('accounts') ?></span>
       </a>
 
       <?php if ($isElder): ?>
@@ -111,13 +96,6 @@ $VER = time();
       <?php endif; ?>
 
       <?php if ($canManageAmpte): ?>
-      <a href="?tab=amptes" class="admin-tab <?= $activeTab === 'amptes' ? 'active' : '' ?>">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        <span><?= t('offices') ?></span>
-      </a>
-
       <a href="?tab=afsprake" class="admin-tab <?= $activeTab === 'afsprake' ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
@@ -152,17 +130,11 @@ $VER = time();
         case 'profile':
           require __DIR__ . '/tabs/profile.php';
           break;
-        case 'accounts':
-          require __DIR__ . '/tabs/accounts.php';
-          break;
         case 'teaching':
           if ($isElder) require __DIR__ . '/tabs/teaching.php';
           break;
         case 'gedagte':
           if ($isElder) require __DIR__ . '/tabs/gedagte.php';
-          break;
-        case 'amptes':
-          if ($canManageAmpte) require __DIR__ . '/tabs/amptes.php';
           break;
         case 'afsprake':
           if ($canManageAmpte) require __DIR__ . '/tabs/afsprake.php';

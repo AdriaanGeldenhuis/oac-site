@@ -24,15 +24,15 @@ $scopeFilter = '';
 $scopeParams = [];
 
 if ($myAmpId === 1) {
-  $canSeeAmps = [2,3,4];
+  $canSeeAmps = [2,3,4,5];
 } elseif (in_array($myAmpId, [2,3,4])) {
-  $canSeeAmps = [1,5,6,7,8,9,10];
+  $canSeeAmps = [1,2,3,4,5,6,7,8,9,10];
   if ($myTownId) {
     $scopeFilter = 'AND u.town_id = :town_id';
     $scopeParams[':town_id'] = $myTownId;
   }
 } elseif ($myAmpId === 5) {
-  $canSeeAmps = [2,3,4,6,7,8,9,10];
+  $canSeeAmps = [1,2,3,4,5,6,7,8,9,10];
   if ($myTownId) {
     $scopeFilter = 'AND u.town_id = :town_id';
     $scopeParams[':town_id'] = $myTownId;
@@ -215,12 +215,6 @@ try {
             <a href="/profile/?u=<?= (int)$amp['id'] ?>" class="afsprake-btn-icon" title="<?= t('profile') ?>">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
-              </svg>
-            </a>
-            <a href="/calendar/view.php?u=<?= (int)$amp['id'] ?>" class="afsprake-btn-icon afsprake-btn-calendar" title="<?= t('view_calendar') ?>">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
               </svg>
             </a>
             <button type="button" class="afsprake-btn-icon afsprake-btn-appointment btn-make-appointment" data-id="<?= (int)$amp['id'] ?>" data-name="<?= esc($amp['name'] . ' ' . $amp['surname']) ?>" title="<?= t('make_appointment') ?>">
