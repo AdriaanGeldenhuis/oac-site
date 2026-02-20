@@ -41,7 +41,7 @@ $canApprove = ($ampId >= 1 && $ampId <= 6);
 $canManageAmpte = ($ampId >= 1 && $ampId <= 9);
 
 $activeTab = $_GET['tab'] ?? 'profile';
-$validTabs = ['profile', 'accounts', 'teaching', 'gedagte', 'amptes', 'afsprake', 'settings', 'approvals'];
+$validTabs = ['profile', 'teaching', 'gedagte', 'amptes', 'afsprake', 'settings', 'approvals'];
 if (!in_array($activeTab, $validTabs)) {
     $activeTab = 'profile';
 }
@@ -86,13 +86,6 @@ $VER = time();
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
         </svg>
         <span><?= t('profile') ?></span>
-      </a>
-
-      <a href="?tab=accounts" class="admin-tab <?= $activeTab === 'accounts' ? 'active' : '' ?>">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        <span><?= t('accounts') ?></span>
       </a>
 
       <?php if ($isElder): ?>
@@ -151,9 +144,6 @@ $VER = time();
       switch ($activeTab) {
         case 'profile':
           require __DIR__ . '/tabs/profile.php';
-          break;
-        case 'accounts':
-          require __DIR__ . '/tabs/accounts.php';
           break;
         case 'teaching':
           if ($isElder) require __DIR__ . '/tabs/teaching.php';
