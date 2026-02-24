@@ -137,7 +137,7 @@ try {
                 'title' => $title,
                 'message' => $pushBody,
                 'type' => 'info',
-                'link' => '/notifications/notifications.php',
+                'link' => '/gedagtes/gedagtes.php',
                 'icon' => '',
                 'title_key' => 'notif_thought_title',
                 'message_key' => null,
@@ -151,7 +151,7 @@ try {
         try {
             sendPushToUser($userId, $title, $pushBody, [
                 'type' => 'thought',
-                'link' => '/notifications/notifications.php',
+                'link' => '/gedagtes/gedagtes.php',
                 'titleKey' => 'notif_thought_title'
             ]);
             $results['sent']++;
