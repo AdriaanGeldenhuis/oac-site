@@ -116,8 +116,12 @@ try {
     ]);
 
     // --- Immediately send notifications if thought is for today and time has passed ---
-    $today = date('Y-m-d');
-    $now = date('H:i:s');
+    // Use MySQL CURDATE()/CURTIME() to match the same timezone as gedagtes/api/list.php
+    // (PHP date() may use a different timezone than MySQL, causing notifications to be skipped
+    //  even when the thought is already visible on the gedagtes page)
+    $nowRow = $pdo->query("SELECT CURDATE() AS today, CURTIME() AS now_time")->fetch(PDO::FETCH_ASSOC);
+    $today = $nowRow['today'];
+    $now = $nowRow['now_time'];
     $timeValue = $displayTime !== '' ? $displayTime . ':00' : null;
     $shouldNotify = ($displayDate === $today) && ($timeValue === null || $timeValue <= $now);
 
