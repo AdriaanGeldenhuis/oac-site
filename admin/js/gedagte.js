@@ -7,9 +7,13 @@
   var timeInput = document.getElementById('thoughtTime');
   var lang = window.GEDAGTE_LANG || {};
 
-  // Default date to today
+  // Default date to today (local date, not UTC)
   if (dateInput) {
-    dateInput.value = new Date().toISOString().split('T')[0];
+    var d = new Date();
+    var yyyy = d.getFullYear();
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    dateInput.value = yyyy + '-' + mm + '-' + dd;
   }
 
   // Load existing thoughts
@@ -33,7 +37,10 @@
         if (data.success) {
           alert(lang.saved || 'Saved!');
           form.reset();
-          if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+          if (dateInput) {
+            var now = new Date();
+            dateInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+          }
           if (timeInput) timeInput.value = '07:00';
           loadThoughts();
         } else {
