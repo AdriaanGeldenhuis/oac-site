@@ -5,6 +5,12 @@
 
 require_once __DIR__ . '/../../security/auth_gate.php';
 
+// Auto-cron: check for pending thought notifications (throttled to once per 5 min)
+require_once __DIR__ . '/../../cron/auto_thought_cron.php';
+if (isset($pdo)) {
+    runThoughtAutoCron($pdo);
+}
+
 header('Content-Type: application/json; charset=utf-8');
 
 try {
