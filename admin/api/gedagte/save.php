@@ -115,6 +115,104 @@ try {
         $userId
     ]);
 
+    // --- Immediately send notifications if thought is for today and time has passed ---
+    $today = date('Y-m-d');
+    $now = date('H:i:s');
+    $timeValue = $displayTime !== '' ? $displayTime . ':00' : null;
+    $shouldNotify = ($displayDate === $today) && ($timeValue === null || $timeValue <= $now);
+
+    if ($shouldNotify) {
+        try {
+            require_once dirname(__DIR__, 2) . '/config/fcm_config.php';
+            require_once dirname(__DIR__, 3) . '/includes/languages.php';
+
+            // Get creator's town_id for scoping
+            $townStmt = $pdo->prepare('SELECT town_id FROM users WHERE id = ? LIMIT 1');
+            $townStmt->execute([$userId]);
+            $creatorTown = $townStmt->fetch(PDO::FETCH_ASSOC);
+            $creatorTownId = $creatorTown ? (int)($creatorTown['town_id'] ?? 0) : 0;
+
+            // Get approved users in the same town
+            if ($creatorTownId) {
+                $userStmt = $pdo->prepare("SELECT id, language FROM users WHERE status = 'approved' AND town_id = ?");
+                $userStmt->execute([$creatorTownId]);
+            } else {
+                $userStmt = $pdo->prepare("SELECT id, language FROM users WHERE status = 'approved'");
+                $userStmt->execute();
+            }
+            $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // SQLite notification database
+            $notifDb = new PDO('sqlite:' . dirname(__DIR__, 3) . '/data/notifications.db');
+            $notifDb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $notifDb->exec("
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    message TEXT,
+                    type TEXT DEFAULT 'info',
+                    is_read INTEGER DEFAULT 0,
+                    created_at TEXT DEFAULT (datetime('now')),
+                    link TEXT,
+                    icon TEXT,
+                    title_key TEXT,
+                    message_key TEXT,
+                    params TEXT
+                )
+            ");
+
+            $pushBody = mb_strlen($content) > 200 ? mb_substr($content, 0, 197) . '...' : $content;
+            $pushBody = strip_tags($pushBody);
+
+            $insertNotif = $notifDb->prepare("
+                INSERT INTO notifications (user_id, title, message, type, link, icon, title_key, message_key, params)
+                VALUES (:user_id, :title, :message, :type, :link, :icon, :title_key, :message_key, :params)
+            ");
+
+            foreach ($users as $u) {
+                $uid = (int)$u['id'];
+                $uLang = $u['language'] ?? 'af';
+                $title = __t('notif_thought_title', $uLang) ?: 'Gedagte van die Dag';
+
+                // In-app notification
+                try {
+                    $insertNotif->execute([
+                        'user_id' => $uid,
+                        'title' => $title,
+                        'message' => $pushBody,
+                        'type' => 'info',
+                        'link' => '/gedagtes/gedagtes.php',
+                        'icon' => '',
+                        'title_key' => 'notif_thought_title',
+                        'message_key' => null,
+                        'params' => json_encode(['content' => $pushBody])
+                    ]);
+                } catch (Throwable $e) {
+                    error_log("Thought save notif insert error user $uid: " . $e->getMessage());
+                }
+
+                // FCM push notification
+                try {
+                    sendPushToUser($uid, $title, $pushBody, [
+                        'type' => 'thought',
+                        'link' => '/gedagtes/gedagtes.php',
+                        'titleKey' => 'notif_thought_title'
+                    ]);
+                } catch (Throwable $e) {
+                    error_log("Thought save FCM error user $uid: " . $e->getMessage());
+                }
+            }
+
+            // Mark notification as sent
+            $pdo->prepare("UPDATE daily_thoughts SET notification_sent = 1 WHERE display_date = ?")->execute([$displayDate]);
+
+        } catch (Throwable $e) {
+            error_log('Thought save notification error: ' . $e->getMessage());
+            // Don't fail the save if notifications fail
+        }
+    }
+
     ob_end_clean();
     echo json_encode(['success' => true]);
 } catch (Throwable $e) {

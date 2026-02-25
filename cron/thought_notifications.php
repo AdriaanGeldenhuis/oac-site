@@ -9,7 +9,8 @@
  * https://oacapp.co.za/cron/thought_notifications.php?key=YOUR_SECRET_KEY
  *
  * Checks if today's thought has reached its display_time and sends
- * push notifications to all users in their preferred language.
+ * push notifications to users in the same town (opsienerskap) as the
+ * thought creator, in their preferred language.
  */
 
 declare(strict_types=1);
@@ -42,12 +43,14 @@ try {
     } catch (Throwable $e) { /* already exists */ }
 
     // Find today's thought that is ready to display but notification not yet sent
+    // Join with users to get the creator's town_id for scoping
     $stmt = $pdo->prepare("
-        SELECT id, content, author
-        FROM daily_thoughts
-        WHERE display_date = CURDATE()
-          AND notification_sent = 0
-          AND (display_time IS NULL OR display_time <= CURTIME())
+        SELECT dt.id, dt.content, dt.author, dt.created_by, u.town_id
+        FROM daily_thoughts dt
+        LEFT JOIN users u ON u.id = dt.created_by
+        WHERE dt.display_date = CURDATE()
+          AND dt.notification_sent = 0
+          AND (dt.display_time IS NULL OR dt.display_time <= CURTIME())
         LIMIT 1
     ");
     $stmt->execute();
@@ -65,13 +68,27 @@ try {
     $updateStmt = $pdo->prepare("UPDATE daily_thoughts SET notification_sent = 1 WHERE id = ?");
     $updateStmt->execute([$thought['id']]);
 
-    // Get all approved users
-    $userStmt = $pdo->prepare("
-        SELECT id, name, language
-        FROM users
-        WHERE status = 'approved'
-    ");
-    $userStmt->execute();
+    // Get the creator's town_id to scope notifications
+    $creatorTownId = $thought['town_id'] ? (int)$thought['town_id'] : null;
+
+    // Get approved users in the same town (opsienerskap/town scoping)
+    if ($creatorTownId) {
+        $userStmt = $pdo->prepare("
+            SELECT id, name, language
+            FROM users
+            WHERE status = 'approved'
+              AND town_id = ?
+        ");
+        $userStmt->execute([$creatorTownId]);
+    } else {
+        // Fallback: if no town_id on creator, send to all approved users
+        $userStmt = $pdo->prepare("
+            SELECT id, name, language
+            FROM users
+            WHERE status = 'approved'
+        ");
+        $userStmt->execute();
+    }
     $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
 
     // SQLite notification database
@@ -120,7 +137,7 @@ try {
                 'title' => $title,
                 'message' => $pushBody,
                 'type' => 'info',
-                'link' => '/welcome.php',
+                'link' => '/gedagtes/gedagtes.php',
                 'icon' => '',
                 'title_key' => 'notif_thought_title',
                 'message_key' => null,
@@ -134,7 +151,7 @@ try {
         try {
             sendPushToUser($userId, $title, $pushBody, [
                 'type' => 'thought',
-                'link' => '/welcome.php',
+                'link' => '/gedagtes/gedagtes.php',
                 'titleKey' => 'notif_thought_title'
             ]);
             $results['sent']++;
@@ -146,6 +163,8 @@ try {
 
     $results['message'] = 'Thought notifications sent successfully';
     $results['thought_id'] = $thought['id'];
+    $results['town_id'] = $creatorTownId;
+    $results['user_count'] = count($users);
 
 } catch (Throwable $e) {
     $results['error'] = $e->getMessage();

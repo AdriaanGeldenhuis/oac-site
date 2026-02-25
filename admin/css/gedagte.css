@@ -108,6 +108,7 @@
   line-height: 1.6;
   color: var(--text-primary, #f5d5c8);
   margin-bottom: 4px;
+  white-space: pre-wrap;
 }
 
 .gedagte-item-author {

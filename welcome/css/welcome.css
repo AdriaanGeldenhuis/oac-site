@@ -220,6 +220,7 @@ html {
   font-style: italic;
   line-height: 1.8;
   color: var(--text-primary);
+  white-space: pre-wrap;
   transition: color 0.3s ease;
 }
 

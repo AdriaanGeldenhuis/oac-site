@@ -75,6 +75,7 @@
   font-style: italic;
   line-height: 1.8;
   color: var(--text-primary, #f5ebe6);
+  white-space: pre-wrap;
 }
 
 .gedagtes-card-author {
