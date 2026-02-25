@@ -115,15 +115,13 @@ try {
         $userId
     ]);
 
-    // --- Immediately send notifications if thought is for today and time has passed ---
-    // Use MySQL CURDATE()/CURTIME() to match the same timezone as gedagtes/api/list.php
-    // (PHP date() may use a different timezone than MySQL, causing notifications to be skipped
-    //  even when the thought is already visible on the gedagtes page)
-    $nowRow = $pdo->query("SELECT CURDATE() AS today, CURTIME() AS now_time")->fetch(PDO::FETCH_ASSOC);
+    // --- Immediately send notifications when thought is saved for today ---
+    // Always notify when the admin saves for today — the admin is actively publishing.
+    // display_time only controls when the thought appears on the gedagtes page,
+    // not when the notification goes out. The cron remains as fallback for edge cases.
+    $nowRow = $pdo->query("SELECT CURDATE() AS today")->fetch(PDO::FETCH_ASSOC);
     $today = $nowRow['today'];
-    $now = $nowRow['now_time'];
-    $timeValue = $displayTime !== '' ? $displayTime . ':00' : null;
-    $shouldNotify = ($displayDate === $today) && ($timeValue === null || $timeValue <= $now);
+    $shouldNotify = ($displayDate === $today);
 
     if ($shouldNotify) {
         try {
