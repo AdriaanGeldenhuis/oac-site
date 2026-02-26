@@ -8,7 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.KeyEvent
+import androidx.activity.OnBackPressedCallback
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
@@ -113,6 +113,23 @@ class MainActivity : ComponentActivity() {
             webView.restoreState(savedInstanceState)
         }
 
+        // Handle back button: navigate within WebView instead of exiting app.
+        // onKeyDown(KEYCODE_BACK) is ignored on API 33+ / predictive back;
+        // OnBackPressedDispatcher is the modern replacement.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else if (webView.url != baseUrl) {
+                    webView.loadUrl(baseUrl)
+                } else {
+                    // Already on home page — let the system exit the app
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+
         askNotificationPermission()
     }
 
@@ -150,17 +167,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (webView.canGoBack()) {
-                webView.goBack()
-                return true
-            }
-            if (webView.url != baseUrl) {
-                webView.loadUrl(baseUrl)
-                return true
-            }
-        }
-        return super.onKeyDown(keyCode, event)
-    }
 }
