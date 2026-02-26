@@ -9,7 +9,7 @@ function t_ftr(string $key): string {
 <!-- Global Notification Badge - Bottom Right -->
 <div class="global-notif-badge" id="globalNotifBadge" style="
   position: fixed;
-  bottom: 30px;
+  bottom: calc(30px + var(--safe-area-inset-bottom, 0px));
   right: 30px;
   z-index: 999;
   width: 60px;
@@ -61,12 +61,12 @@ function t_ftr(string $key): string {
 
 @media (max-width: 768px) {
   .global-notif-badge {
-    bottom: 20px;
+    bottom: calc(20px + var(--safe-area-inset-bottom, 0px));
     right: 20px;
     width: 56px;
     height: 56px;
   }
-  
+
   .global-notif-badge svg {
     width: 24px;
     height: 24px;
@@ -104,7 +104,7 @@ function t_ftr(string $key): string {
 <!-- Global Back Button - Bottom Left -->
 <button class="global-back-btn" onclick="window.history.back()" style="
   position: fixed;
-  bottom: 30px;
+  bottom: calc(30px + var(--safe-area-inset-bottom, 0px));
   left: 30px;
   z-index: 999;
   width: 60px;
@@ -137,12 +137,12 @@ function t_ftr(string $key): string {
 
 @media (max-width: 768px) {
   .global-back-btn {
-    bottom: 20px;
+    bottom: calc(20px + var(--safe-area-inset-bottom, 0px));
     left: 20px;
     width: 56px;
     height: 56px;
   }
-  
+
   .global-back-btn svg {
     width: 24px;
     height: 24px;
