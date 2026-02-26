@@ -18,9 +18,6 @@ import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.messaging.FirebaseMessaging
 import za.co.oacapp.oacapp.MyFirebaseMessagingService.Companion.EXTRA_NOTIFICATION_LINK
@@ -48,24 +45,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.d("MainActivity", "onCreate called")
 
-        // Edge-to-edge: let the app draw behind system bars
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
+        // Let the system handle insets — the WebView will be placed
+        // below the status bar and above the navigation bar automatically.
+        // The status/nav bar backgrounds use the windowBackground (black).
         setContentView(R.layout.activity_main)
         webView = findViewById(R.id.webView)
 
-        // Black background shows through padding areas (behind status/nav bars)
         webView.setBackgroundColor(Color.BLACK)
-
-        // Apply system bar insets as WebView padding so web content
-        // starts below the status bar and ends above the navigation bar.
-        // setPadding uses physical pixels — same unit as getInsets() — so
-        // no density conversion is needed.
-        ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-            insets
-        }
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
