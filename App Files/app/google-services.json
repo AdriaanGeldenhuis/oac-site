@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "545029913226",
+    "project_id": "oac-app-5728d",
+    "storage_bucket": "oac-app-5728d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:545029913226:android:f318a57a56632d7ca84b73",
+        "android_client_info": {
+          "package_name": "za.co.oacapp.oacapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDt0ZJqlSnVLBE-r111eH1g0GBfa7X60zY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
