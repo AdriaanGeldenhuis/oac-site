@@ -30,7 +30,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
     private val baseUrl = "https://oacapp.co.za/"
-    private var lastInsets: WindowInsetsCompat? = null
 
     private val fileChooserLauncher = registerForActivityResult(
         ActivityResultContracts.GetMultipleContents()
@@ -49,22 +48,25 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.d("MainActivity", "onCreate called")
 
-        // 1. Set up edge-to-edge display
+        // Edge-to-edge: let the app draw behind system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
+
         setContentView(R.layout.activity_main)
         webView = findViewById(R.id.webView)
-        
-        // Make WebView background transparent to prevent white flash
-        webView.setBackgroundColor(Color.TRANSPARENT)
 
-        // 2. Listen for insets changes
-        ViewCompat.setOnApplyWindowInsetsListener(webView) { _, insets ->
-            lastInsets = insets
-            applyInsetsToWebView() // Apply insets whenever they change
+        // Black background shows through padding areas (behind status/nav bars)
+        webView.setBackgroundColor(Color.BLACK)
+
+        // Apply system bar insets as WebView padding so web content
+        // starts below the status bar and ends above the navigation bar.
+        // setPadding uses physical pixels — same unit as getInsets() — so
+        // no density conversion is needed.
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
-        
+
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.allowFileAccess = true
@@ -103,12 +105,6 @@ class MainActivity : ComponentActivity() {
                 }
                 return true
             }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                // 3. Apply insets after page has loaded
-                applyInsetsToWebView()
-            }
         }
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -133,40 +129,6 @@ class MainActivity : ComponentActivity() {
 
         askNotificationPermission()
     }
-
-    private fun applyInsetsToWebView() {
-        lastInsets?.let {
-            val systemBars = it.getInsets(WindowInsetsCompat.Type.systemBars())
-            
-            // Use raw pixel values, which is what CSS `px` units expect.
-            val top = systemBars.top
-            val bottom = systemBars.bottom
-            val left = systemBars.left
-            val right = systemBars.right
-
-            val script = """
-                (function() {
-                    const styleId = 'android-insets-style';
-                    let styleElement = document.getElementById(styleId);
-                    if (!styleElement) {
-                        styleElement = document.createElement('style');
-                        styleElement.id = styleId;
-                        document.head.appendChild(styleElement);
-                    }
-                    styleElement.innerHTML = `
-                        :root {
-                            --safe-area-inset-top: ${top}px;
-                            --safe-area-inset-bottom: ${bottom}px;
-                            --safe-area-inset-left: ${left}px;
-                            --safe-area-inset-right: ${right}px;
-                        }
-                    `;
-                })();
-            """.trimIndent()
-            webView.evaluateJavascript(script, null)
-        }
-    }
-
 
     override fun onPause() {
         super.onPause()
