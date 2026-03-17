@@ -45,15 +45,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
 
+        val id = notificationId.incrementAndGet()
+
         val pendingIntent = PendingIntent.getActivity(
             this,
-            notificationId.incrementAndGet(), // Unique request code for each notification
+            id,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        
+
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
@@ -64,9 +66,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        
-        // Use unique ID for each notification
-        notificationManager.notify(notificationId.incrementAndGet(), notificationBuilder.build())
+        notificationManager.notify(id, notificationBuilder.build())
     }
 
     companion object {

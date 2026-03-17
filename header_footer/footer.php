@@ -66,7 +66,7 @@ function t_ftr(string $key): string {
     width: 56px;
     height: 56px;
   }
-  
+
   .global-notif-badge svg {
     width: 24px;
     height: 24px;
@@ -142,7 +142,7 @@ function t_ftr(string $key): string {
     width: 56px;
     height: 56px;
   }
-  
+
   .global-back-btn svg {
     width: 24px;
     height: 24px;

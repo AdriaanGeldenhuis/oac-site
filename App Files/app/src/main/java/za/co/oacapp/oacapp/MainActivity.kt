@@ -8,7 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.KeyEvent
+import androidx.activity.OnBackPressedCallback
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
@@ -18,9 +18,6 @@ import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.messaging.FirebaseMessaging
 import za.co.oacapp.oacapp.MyFirebaseMessagingService.Companion.EXTRA_NOTIFICATION_LINK
@@ -30,7 +27,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
     private val baseUrl = "https://oacapp.co.za/"
-    private var lastInsets: WindowInsetsCompat? = null
 
     private val fileChooserLauncher = registerForActivityResult(
         ActivityResultContracts.GetMultipleContents()
@@ -49,22 +45,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.d("MainActivity", "onCreate called")
 
-        // 1. Set up edge-to-edge display
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        
+        // Let the system handle insets — the WebView will be placed
+        // below the status bar and above the navigation bar automatically.
+        // The status/nav bar backgrounds use the windowBackground (black).
         setContentView(R.layout.activity_main)
         webView = findViewById(R.id.webView)
-        
-        // Make WebView background transparent to prevent white flash
-        webView.setBackgroundColor(Color.TRANSPARENT)
 
-        // 2. Listen for insets changes
-        ViewCompat.setOnApplyWindowInsetsListener(webView) { _, insets ->
-            lastInsets = insets
-            applyInsetsToWebView() // Apply insets whenever they change
-            insets
-        }
-        
+        webView.setBackgroundColor(Color.BLACK)
+
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.allowFileAccess = true
@@ -103,12 +91,6 @@ class MainActivity : ComponentActivity() {
                 }
                 return true
             }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                // 3. Apply insets after page has loaded
-                applyInsetsToWebView()
-            }
         }
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -131,42 +113,25 @@ class MainActivity : ComponentActivity() {
             webView.restoreState(savedInstanceState)
         }
 
+        // Handle back button: navigate within WebView instead of exiting app.
+        // onKeyDown(KEYCODE_BACK) is ignored on API 33+ / predictive back;
+        // OnBackPressedDispatcher is the modern replacement.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else if (webView.url != baseUrl) {
+                    webView.loadUrl(baseUrl)
+                } else {
+                    // Already on home page — let the system exit the app
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+
         askNotificationPermission()
     }
-
-    private fun applyInsetsToWebView() {
-        lastInsets?.let {
-            val systemBars = it.getInsets(WindowInsetsCompat.Type.systemBars())
-            
-            // Use raw pixel values, which is what CSS `px` units expect.
-            val top = systemBars.top
-            val bottom = systemBars.bottom
-            val left = systemBars.left
-            val right = systemBars.right
-
-            val script = """
-                (function() {
-                    const styleId = 'android-insets-style';
-                    let styleElement = document.getElementById(styleId);
-                    if (!styleElement) {
-                        styleElement = document.createElement('style');
-                        styleElement.id = styleId;
-                        document.head.appendChild(styleElement);
-                    }
-                    styleElement.innerHTML = `
-                        :root {
-                            --safe-area-inset-top: ${top}px;
-                            --safe-area-inset-bottom: ${bottom}px;
-                            --safe-area-inset-left: ${left}px;
-                            --safe-area-inset-right: ${right}px;
-                        }
-                    `;
-                })();
-            """.trimIndent()
-            webView.evaluateJavascript(script, null)
-        }
-    }
-
 
     override fun onPause() {
         super.onPause()
@@ -202,17 +167,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (webView.canGoBack()) {
-                webView.goBack()
-                return true
-            }
-            if (webView.url != baseUrl) {
-                webView.loadUrl(baseUrl)
-                return true
-            }
-        }
-        return super.onKeyDown(keyCode, event)
-    }
 }

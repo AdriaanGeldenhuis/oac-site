@@ -157,7 +157,7 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
             'message' => [
                 'token' => $token,
                 'android' => [
-                    'priority' => 'high'
+                    'priority' => 'HIGH'
                 ],
                 'data' => array_map('strval', array_merge($data, [
                     'title' => $title,

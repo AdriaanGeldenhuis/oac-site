@@ -6,9 +6,7 @@ plugins {
 
 android {
     namespace = "za.co.oacapp.oacapp"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "za.co.oacapp.oacapp"
