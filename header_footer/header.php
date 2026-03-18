@@ -51,6 +51,8 @@ if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !
   $pageTitle = t_hdr('sing_emmanuel');
 } elseif (strpos($reqPath, '/gedagtes/gedagtes.php') !== false) {
   $pageTitle = t_hdr('thought_history');
+} elseif (strpos($reqPath, '/policy') !== false) {
+  $pageTitle = t_hdr('privacy_policy');
 }
 
 // Navigation links with translation keys
@@ -66,6 +68,7 @@ $navLinks = [
   ['/notifications/notifications.php', 'notifications'],
   ['/gedagtes/gedagtes.php', 'thought_history'],
   ['/admin/index.php', 'admin'],
+  ['/policy/', 'privacy_policy'],
   ['/logout.php', 'logout']
 ];
 
