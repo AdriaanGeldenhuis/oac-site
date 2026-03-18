@@ -338,7 +338,9 @@ $allVerses
 
     'xh' => 'UMYALELO ONGQONGQO: KUFUNEKA ubhale zonke iimpendulo ngesi-XHOSA KUPHELA. Sebenzisa i-King James Version (KJV) Bible njengoko inikezelwe ngentla. UNGAZE usebenzise amagama ngesiNgesi.',
 
-    'pt' => 'INSTRUÇÃO ESTRITA: Você DEVE escrever todas as respostas em PORTUGUÊS PURO apenas. Use a versão King James (KJV) da Bíblia conforme fornecido acima. NUNCA use palavras em inglês.'
+    'pt' => 'INSTRUÇÃO ESTRITA: Você DEVE escrever todas as respostas em PORTUGUÊS PURO apenas. Use a versão King James (KJV) da Bíblia conforme fornecido acima. NUNCA use palavras em inglês.',
+
+    'st' => 'TAELO E TIILENG: O TLAMEHA ho ngola likarabo tsohle ka SESOTHO SE HLOEKILENG feela. Sebelisa King James Version (KJV) ea Bibele joalo ka ha e fanoe ka holimo. O SE KE OA sebelisa mantsoe a Senyesemane.'
   ];
 
   $langInstruction = $langInstructions[$pageLang] ?? $langInstructions['en'];

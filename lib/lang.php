@@ -1,6 +1,6 @@
 <?php
 function set_lang(string $lang): void {
-  $_SESSION['lang'] = in_array($lang,['af','en'], true) ? $lang : 'af';
+  $_SESSION['lang'] = in_array($lang,['af','en','zu','xh','pt','st'], true) ? $lang : 'af';
 }
 function get_lang(): string { return $_SESSION['lang'] ?? 'af'; }
 function lang_bootstrap(): void {
@@ -17,8 +17,14 @@ function lang_bootstrap(): void {
   }
 }
 function t(string $key): string {
-  static $af = ['sign_in'=>'Teken in','email'=>'E-pos','password'=>'Wagwoord','remember'=>'Onthou my'];
-  static $en = ['sign_in'=>'Sign in','email'=>'Email','password'=>'Password','remember'=>'Remember me'];
-  $L = get_lang()==='en' ? $en : $af;
+  static $strings = [
+    'af' => ['sign_in'=>'Teken in','email'=>'E-pos','password'=>'Wagwoord','remember'=>'Onthou my'],
+    'en' => ['sign_in'=>'Sign in','email'=>'Email','password'=>'Password','remember'=>'Remember me'],
+    'zu' => ['sign_in'=>'Ngena','email'=>'I-imeyili','password'=>'Iphasiwedi','remember'=>'Ngikhumbule'],
+    'xh' => ['sign_in'=>'Ngena','email'=>'I-imeyile','password'=>'Iphasiwedi','remember'=>'Ndikhumbule'],
+    'pt' => ['sign_in'=>'Entrar','email'=>'E-mail','password'=>'Senha','remember'=>'Lembrar-me'],
+    'st' => ['sign_in'=>'Kena','email'=>'Imeile','password'=>'Phasewete','remember'=>'Nkgopole']
+  ];
+  $L = $strings[get_lang()] ?? $strings['en'];
   return $L[$key] ?? $key;
 }

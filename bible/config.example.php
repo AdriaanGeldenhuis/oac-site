@@ -50,7 +50,8 @@ define('BIBLE_VERSIONS', [
     'en' => 'en_kjv1611.json',      // King James Version
     'zu' => 'zu_dummy.json',        // isiZulu (placeholder)
     'xh' => 'xh_dummy.json',        // isiXhosa (placeholder)
-    'pt' => 'pt_dummy.json'         // Portuguese (placeholder)
+    'pt' => 'pt_dummy.json',        // Portuguese (placeholder)
+    'st' => 'st_dummy.json'         // Sesotho (placeholder)
 ]);
 
 // =============================================================================
