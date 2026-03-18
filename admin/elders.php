@@ -58,13 +58,14 @@ if (!is_dir($baseDir)) {
     @mkdir($baseDir, 0755, true);
 }
 
-// File paths for all 5 languages
+// File paths for all 6 languages
 $contentFiles = [
     'af' => $baseDir . '/lering_content.html',
     'en' => $baseDir . '/teaching_content.en.html',
     'zu' => $baseDir . '/teaching_content.zu.html',
     'xh' => $baseDir . '/teaching_content.xh.html',
-    'pt' => $baseDir . '/teaching_content.pt.html'
+    'pt' => $baseDir . '/teaching_content.pt.html',
+    'st' => $baseDir . '/teaching_content.st.html'
 ];
 
 // Backwards compatibility
@@ -79,7 +80,8 @@ $defaultContent = [
     'en' => '<p>Start typing here...</p>',
     'zu' => '<p>Qala ukuthayipha lapha...</p>',
     'xh' => '<p>Qala ukuchwetheza apha...</p>',
-    'pt' => '<p>Comece a digitar aqui...</p>'
+    'pt' => '<p>Comece a digitar aqui...</p>',
+    'st' => '<p>Qala ho thaepa mona...</p>'
 ];
 
 foreach (SUPPORTED_LANGS as $code) {

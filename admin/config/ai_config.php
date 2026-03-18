@@ -47,7 +47,8 @@ define('BIBLE_VERSIONS', [
     'en' => 'en_kjv1611.json',
     'zu' => 'zu_dummy.json',
     'xh' => 'xh_dummy.json',
-    'pt' => 'pt_dummy.json'
+    'pt' => 'pt_dummy.json',
+    'st' => 'st_dummy.json'
 ]);
 
 // =============================================================================
