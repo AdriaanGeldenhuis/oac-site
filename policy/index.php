@@ -29,6 +29,10 @@ function t(string $key): string {
 <title><?= htmlspecialchars(t('privacy_policy'), ENT_QUOTES, 'UTF-8') ?> — Old Apostolic Church</title>
 <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 <style>
+body {
+  background-color: var(--ghf-bg);
+  color: var(--ghf-text);
+}
 .policy-wrap {
   max-width: 800px;
   margin: 30px auto;
