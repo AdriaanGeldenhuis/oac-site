@@ -25,7 +25,7 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $ampId = (int)($user['amp_id'] ?? 0);
-    if ($ampId < 1 || $ampId > 5) {
+    if ($ampId !== 0 && ($ampId < 1 || $ampId > 5)) {
         ob_end_clean();
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);

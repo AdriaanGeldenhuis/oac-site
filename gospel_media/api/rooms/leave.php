@@ -48,6 +48,14 @@ try {
     $roomType = strtolower($room['type'] ?? '');
     $roomGemeenteId = (int)($room['gemeente_id'] ?? 0);
     
+    // Admin can leave any room
+    if ($ampId === 0) {
+        $del = $pdo->prepare("DELETE FROM room_memberships WHERE room_id=? AND user_id=?");
+        $del->execute([$roomId, $userId]);
+        echo json_encode(['ok' => 1, 'success' => true]);
+        exit;
+    }
+
     // RULE 1: Cannot leave opsienerskap rooms (auto-membership) — except Apostle (amp 1) who manually joins
     if ($roomType === 'opsienerskap' && $ampId !== 1) {
         http_response_code(403);

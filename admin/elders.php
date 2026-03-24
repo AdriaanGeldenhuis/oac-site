@@ -17,7 +17,7 @@ $stmt = $pdo->prepare('SELECT amp_id, town_id FROM users WHERE id = ? LIMIT 1');
 $stmt->execute([$userId]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$user || (int)($user['amp_id'] ?? 0) < 1 || (int)($user['amp_id'] ?? 0) > 5) {
+if (!$user || ((int)($user['amp_id'] ?? 0) !== 0 && ((int)($user['amp_id'] ?? 0) < 1 || (int)($user['amp_id'] ?? 0) > 5))) {
     header('Location: /admin/index.php');
     exit;
 }

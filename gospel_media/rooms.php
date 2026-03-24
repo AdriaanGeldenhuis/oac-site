@@ -76,6 +76,7 @@ if ($townId <= 0) {
 }
 
 // Determine user capabilities
+$isAdmin = ($ampId === 0);
 $isApostel = ($ampId === 1);
 $isPrivileged = ($ampId >= 2 && $ampId <= 6);
 $isRestricted = ($ampId >= 8);
@@ -105,7 +106,68 @@ $availableRooms = [];
 $joinedRooms = [];
 
 try {
-    if ($isApostel) {
+    if ($isAdmin) {
+        // Admin: auto-access to ALL rooms in own town
+        if ($congId > 0) {
+            $sql = "SELECT r.*, c.name AS congregation_name, c.name AS display_name
+                    FROM rooms r
+                    LEFT JOIN congregations c ON c.id = r.gemeente_id
+                    WHERE r.type = 'gemeente' AND r.gemeente_id = ?";
+            $st = $pdo->prepare($sql);
+            $st->execute([$congId]);
+            $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+        }
+
+        $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
+                FROM rooms r
+                LEFT JOIN towns t ON t.id = r.town_id
+                WHERE r.type = 'opsienerskap' AND r.town_id = ?";
+        $st = $pdo->prepare($sql);
+        $st->execute([$townId]);
+        $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+
+        $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
+                FROM rooms r
+                LEFT JOIN towns t ON t.id = r.town_id
+                WHERE r.type = 'sondagskool' AND r.town_id = ?";
+        $st = $pdo->prepare($sql);
+        $st->execute([$townId]);
+        $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+
+        $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
+                FROM rooms r
+                LEFT JOIN towns t ON t.id = r.town_id
+                WHERE r.type = 'jeug' AND r.town_id = ?";
+        $st = $pdo->prepare($sql);
+        $st->execute([$townId]);
+        $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+
+        // Other gemeentes in own town (joinable)
+        $sql = "SELECT r.*,
+                       c.name AS congregation_name,
+                       c.name AS display_name,
+                       t.name AS town_name,
+                       EXISTS(SELECT 1 FROM room_memberships rm WHERE rm.room_id = r.id AND rm.user_id = ?) AS is_member
+                FROM rooms r
+                LEFT JOIN congregations c ON c.id = r.gemeente_id
+                LEFT JOIN towns t ON t.id = (SELECT town_id FROM congregations WHERE id = r.gemeente_id)
+                WHERE r.type = 'gemeente'
+                  AND r.gemeente_id != ?
+                  AND (SELECT town_id FROM congregations WHERE id = r.gemeente_id) = ?
+                ORDER BY c.name";
+        $st = $pdo->prepare($sql);
+        $st->execute([$userId, $congId, $townId]);
+        $gemeentes = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($gemeentes as $room) {
+            if ((int)$room['is_member'] === 1) {
+                $joinedRooms[] = $room;
+            } else {
+                $availableRooms[] = $room;
+            }
+        }
+
+    } elseif ($isApostel) {
         $sql = "SELECT r.*, 
                        t.name AS town_name,
                        t.name AS display_name,
@@ -423,7 +485,8 @@ $VER = time();
             <p><strong><?= t('amp_level') ?>:</strong> 
                 <span class="highlight">
                     <?php
-                    if ($isApostel) echo t('apostle_desc');
+                    if ($isAdmin) echo t('admin_desc');
+                    elseif ($isApostel) echo t('apostle_desc');
                     elseif ($isPrivileged) echo t('amp_2_6_desc');
                     elseif ($isRestricted) echo t('amp_8_desc');
                     else echo t('amp_7_desc');

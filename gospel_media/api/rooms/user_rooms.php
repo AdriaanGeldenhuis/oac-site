@@ -57,8 +57,76 @@ try {
     $autoRooms = [];
     $joinedRooms = [];
     
+    // Admin (amp 0): all rooms in own town are auto
+    if ($ampId === 0) {
+        if ($congId > 0) {
+            $sql = "SELECT r.id, r.type, r.name, c.name AS congregation_name
+                    FROM rooms r
+                    LEFT JOIN congregations c ON c.id = r.gemeente_id
+                    WHERE r.type = 'gemeente' AND r.gemeente_id = ?";
+            $st = $pdo->prepare($sql);
+            $st->execute([$congId]);
+            $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+        }
+
+        if ($townId > 0) {
+            $sql = "SELECT r.id, r.type, r.name, t.name AS town_name
+                    FROM rooms r
+                    LEFT JOIN towns t ON t.id = r.town_id
+                    WHERE r.type = 'opsienerskap' AND r.town_id = ?";
+            $st = $pdo->prepare($sql);
+            $st->execute([$townId]);
+            $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+
+            $sql = "SELECT r.id, r.type, r.name, t.name AS town_name
+                    FROM rooms r
+                    LEFT JOIN towns t ON t.id = r.town_id
+                    WHERE r.type = 'sondagskool' AND r.town_id = ?";
+            $st = $pdo->prepare($sql);
+            $st->execute([$townId]);
+            $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+
+            $sql = "SELECT r.id, r.type, r.name, t.name AS town_name
+                    FROM rooms r
+                    LEFT JOIN towns t ON t.id = r.town_id
+                    WHERE r.type = 'jeug' AND r.town_id = ?";
+            $st = $pdo->prepare($sql);
+            $st->execute([$townId]);
+            $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+        }
+
+        // Joined rooms (explicitly joined via memberships, excluding auto)
+        $autoIds = array_map(function($r) { return (int)$r['id']; }, $autoRooms);
+        if ($autoIds) {
+            $placeholders = implode(',', array_fill(0, count($autoIds), '?'));
+            $sql = "SELECT r.id, r.type, r.name,
+                           t.name AS town_name,
+                           c.name AS congregation_name
+                    FROM room_memberships rm
+                    JOIN rooms r ON r.id = rm.room_id
+                    LEFT JOIN towns t ON t.id = r.town_id
+                    LEFT JOIN congregations c ON c.id = r.gemeente_id
+                    WHERE rm.user_id = ? AND r.id NOT IN ($placeholders)
+                    ORDER BY r.type, r.name";
+            $st = $pdo->prepare($sql);
+            $st->execute(array_merge([$userId], $autoIds));
+        } else {
+            $sql = "SELECT r.id, r.type, r.name,
+                           t.name AS town_name,
+                           c.name AS congregation_name
+                    FROM room_memberships rm
+                    JOIN rooms r ON r.id = rm.room_id
+                    LEFT JOIN towns t ON t.id = r.town_id
+                    LEFT JOIN congregations c ON c.id = r.gemeente_id
+                    WHERE rm.user_id = ?
+                    ORDER BY r.type, r.name";
+            $st = $pdo->prepare($sql);
+            $st->execute([$userId]);
+        }
+        $joinedRooms = $st->fetchAll(PDO::FETCH_ASSOC);
+
+    } elseif ($ampId === 1) {
     // Apostel: Only opsienerskappe (all joined ones)
-    if ($ampId === 1) {
         $sql = "SELECT r.id, r.type, r.name, t.name AS town_name
                 FROM room_memberships rm
                 JOIN rooms r ON r.id = rm.room_id

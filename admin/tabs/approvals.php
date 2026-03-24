@@ -7,7 +7,13 @@ $roleFilter = '';
 $scopeFilter = '';
 $params = [];
 
-if ($ampId === 6) {
+if ($ampId === 0) {
+    // Admin sees all pending users in own town
+    if ($townId) {
+        $scopeFilter = 'AND u.town_id = :tid';
+        $params[':tid'] = $townId;
+    }
+} elseif ($ampId === 6) {
     $roleFilter = 'AND u.amp_id IN (7,8,9,10)';
     if ($congId) {
         $scopeFilter = 'AND u.congregation_id = :cid';
@@ -30,7 +36,7 @@ if ($ampId === 6) {
 }
 
 $pending = [];
-if ($roleFilter) {
+if ($ampId === 0 || $roleFilter) {
     try {
         $sql = "SELECT u.id, u.name, u.surname, u.email, 
                 CASE WHEN u.gender='vrou' THEN a.female_name ELSE a.male_name END AS amp,

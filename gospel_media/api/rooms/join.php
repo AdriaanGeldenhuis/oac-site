@@ -55,6 +55,20 @@ try {
     $roomType = strtolower($room['type'] ?? '');
     $roomTownId = (int)($room['room_town_id'] ?? 0);
     
+    // RULE 0: Admin can join any room in own town
+    if ($ampId === 0) {
+        if ($roomTownId > 0 && $roomTownId !== $townId) {
+            http_response_code(403);
+            echo json_encode(['error' => 'wrong_town']);
+            exit;
+        }
+        // Admin bypasses all other rules — proceed to insert
+        $ins = $pdo->prepare("INSERT IGNORE INTO room_memberships (room_id, user_id, joined_at) VALUES (?, ?, NOW())");
+        $ins->execute([$roomId, $userId]);
+        echo json_encode(['ok' => 1, 'success' => true]);
+        exit;
+    }
+
     // RULE 1: Apostel can ONLY join opsienerskappe (nothing else)
     if ($ampId === 1) {
         if ($roomType !== 'opsienerskap') {

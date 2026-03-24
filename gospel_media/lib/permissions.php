@@ -35,10 +35,22 @@ function user_has_access_to_room(PDO $pdo, int $userId, array $room): bool {
     $roomType = strtolower($room['type'] ?? '');
     $roomTownId = (int)($room['town_id'] ?? 0);
     $roomGemeenteId = (int)($room['gemeente_id'] ?? 0);
-    
+
+    // Admin (amp 0): full access to all rooms in own town
+    if ($ampId === 0) {
+        if ($roomType === 'gemeenskap') return true;
+        if ($roomTownId === $townId) return true;
+        if ($roomType === 'gemeente' && $roomGemeenteId > 0) {
+            $ct = $pdo->prepare("SELECT town_id FROM congregations WHERE id = ?");
+            $ct->execute([$roomGemeenteId]);
+            if ((int)$ct->fetchColumn() === $townId) return true;
+        }
+        return false;
+    }
+
     // Gemeenskap - everyone
     if ($roomType === 'gemeenskap') return true;
-    
+
     // Apostel - only opsienerskappe
     if ($ampId === 1) {
         if ($roomType === 'opsienerskap') {
@@ -127,6 +139,9 @@ function user_can_post_in_room(PDO $pdo, int $userId, array $room): bool {
     
     $roomType = strtolower($room['type'] ?? '');
     
+    // Admin can post anywhere they have access
+    if ($ampId === 0) return true;
+
     // Posting rights by room type
     switch ($roomType) {
         case 'opsienerskap':
@@ -172,7 +187,10 @@ function user_can_edit_post(PDO $pdo, int $userId, array $post, ?array $room = n
     $ampId = (int)($st->fetchColumn() ?: 999);
     
     $roomType = strtolower($room['type'] ?? '');
-    
+
+    // Admin can edit/delete any post
+    if ($ampId === 0) return true;
+
     // Room-based edit rights (officers can moderate)
     switch ($roomType) {
         case 'opsienerskap':
@@ -223,7 +241,10 @@ function user_can_edit_comment(PDO $pdo, int $userId, array $comment, int $postI
     $ampId = (int)($st->fetchColumn() ?: 999);
     
     $roomType = strtolower($room['type'] ?? '');
-    
+
+    // Admin can edit/delete any comment
+    if ($ampId === 0) return true;
+
     // Same rules as post editing
     switch ($roomType) {
         case 'opsienerskap':

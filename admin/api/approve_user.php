@@ -24,7 +24,7 @@ if (!$approver) {
 }
 
 $ampId = (int)($approver['amp_id'] ?? 0);
-$canApprove = ($ampId >= 1 && $ampId <= 6);
+$canApprove = ($ampId === 0 || ($ampId >= 1 && $ampId <= 6));
 
 if (!$canApprove) {
     http_response_code(403);
@@ -55,7 +55,9 @@ if (!$target) {
 $targetAmpId = (int)($target['amp_id'] ?? 0);
 $hasJurisdiction = false;
 
-if ($ampId === 6) { // Priester
+if ($ampId === 0) { // Admin - all in own town
+    $hasJurisdiction = ($target['town_id'] === $approver['town_id']);
+} elseif ($ampId === 6) { // Priester
     $hasJurisdiction = in_array($targetAmpId, [7,8,9,10], true) 
         && $target['congregation_id'] === $approver['congregation_id'];
 } elseif ($ampId === 5) { // Oudste

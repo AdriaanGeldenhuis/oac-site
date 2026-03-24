@@ -31,6 +31,7 @@ define('BIBLE_FILES', [
 // Office/Amp ID to translation key mapping
 // Maps amp_id to [male_key, female_key]
 define('AMP_TRANSLATION_KEYS', [
+    0  => ['admin', 'admin'],
     1  => ['apostle', 'apostle_sister'],
     2  => ['overseer', 'overseer_sister'],
     3  => ['evangelist', 'evangelist_sister'],
@@ -2792,6 +2793,14 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Izinga Le-Amp',
         'pt' => 'Nível do Cargo',
         'st' => 'Boemo ba Amp'
+    ],
+    'admin_desc' => [
+        'af' => 'Admin (Volle toegang tot alle kamers in eie dorp)',
+        'en' => 'Admin (Full access to all rooms in own town)',
+        'zu' => 'Admin (Ukufinyelela okugcwele kuwo wonke amagumbi edolobheni lakho)',
+        'xh' => 'Admin (Ukufikelela okupheleleyo kuwo onke amagumbi edolophini yakho)',
+        'pt' => 'Admin (Acesso total a todas as salas na sua cidade)',
+        'st' => 'Admin (Phihlello e felletseng ho likamore tsohle toropong ea hau)'
     ],
     'apostle_desc' => [
         'af' => 'Apostel (Kan slegs opsienerskappe kies)',

@@ -36,9 +36,9 @@ if (!$currentUser) {
 }
 
 $ampId = (int)($currentUser['amp_id'] ?? 0);
-$isElder = ($ampId >= 1 && $ampId <= 5);
-$canApprove = ($ampId >= 1 && $ampId <= 6);
-$canManageAmpte = ($ampId >= 1 && $ampId <= 9);
+$isElder = ($ampId === 0 || ($ampId >= 1 && $ampId <= 5));
+$canApprove = ($ampId === 0 || ($ampId >= 1 && $ampId <= 6));
+$canManageAmpte = ($ampId === 0 || ($ampId >= 1 && $ampId <= 9));
 
 $activeTab = $_GET['tab'] ?? 'profile';
 $validTabs = ['profile', 'teaching', 'gedagte', 'afsprake', 'settings', 'approvals'];
