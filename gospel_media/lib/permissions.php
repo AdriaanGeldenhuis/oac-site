@@ -72,8 +72,9 @@ function user_has_access_to_room(PDO $pdo, int $userId, array $room): bool {
         if ($roomTownId === $townId) return true;
     }
     
-    // Sondagskool - auto-access if under 16 and in same town
+    // Sondagskool - auto-access if under 16 and in same town, or amp 2-5 in same town
     if ($roomType === 'sondagskool') {
+        if ($ampId >= 2 && $ampId <= 5 && $roomTownId === $townId) return true;
         if ($age > 0 && $age < 16 && $roomTownId === $townId) return true;
         
         // Amp 8, 9, 10 need explicit membership
@@ -89,8 +90,9 @@ function user_has_access_to_room(PDO $pdo, int $userId, array $room): bool {
         return (bool)$ms->fetchColumn();
     }
     
-    // Jeug - auto-access if 16-25, unmarried, and in same town
+    // Jeug - auto-access if 16-25 unmarried and in same town, or amp 2-5 in same town
     if ($roomType === 'jeug') {
+        if ($ampId >= 2 && $ampId <= 5 && $roomTownId === $townId) return true;
         if ($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud' && $roomTownId === $townId) return true;
         
         // Amp 8, 9, 10 need explicit membership

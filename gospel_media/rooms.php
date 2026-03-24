@@ -189,7 +189,7 @@ try {
             $st->execute([$congId]);
             $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
         }
-        
+
         $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                 FROM rooms r
                 LEFT JOIN towns t ON t.id = r.town_id
@@ -197,8 +197,9 @@ try {
         $st = $pdo->prepare($sql);
         $st->execute([$townId]);
         $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
-        
-        if ($age > 0 && $age < 16) {
+
+        // Amp 2-5: auto-access to ALL sondagskool and jeug in own town
+        if ($ampId >= 2 && $ampId <= 5) {
             $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
@@ -206,9 +207,7 @@ try {
             $st = $pdo->prepare($sql);
             $st->execute([$townId]);
             $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
-        }
-        
-        if ($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud') {
+
             $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
@@ -216,9 +215,30 @@ try {
             $st = $pdo->prepare($sql);
             $st->execute([$townId]);
             $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+        } else {
+            // Amp 6: age-based auto-access only
+            if ($age > 0 && $age < 16) {
+                $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
+                        FROM rooms r
+                        LEFT JOIN towns t ON t.id = r.town_id
+                        WHERE r.type = 'sondagskool' AND r.town_id = ?";
+                $st = $pdo->prepare($sql);
+                $st->execute([$townId]);
+                $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+            }
+
+            if ($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud') {
+                $sql = "SELECT r.*, t.name AS town_name, t.name AS display_name
+                        FROM rooms r
+                        LEFT JOIN towns t ON t.id = r.town_id
+                        WHERE r.type = 'jeug' AND r.town_id = ?";
+                $st = $pdo->prepare($sql);
+                $st->execute([$townId]);
+                $autoRooms = array_merge($autoRooms, $st->fetchAll(PDO::FETCH_ASSOC));
+            }
         }
-        
-        $sql = "SELECT r.*, 
+
+        $sql = "SELECT r.*,
                        c.name AS congregation_name,
                        c.name AS display_name,
                        t.name AS town_name,
@@ -226,14 +246,14 @@ try {
                 FROM rooms r
                 LEFT JOIN congregations c ON c.id = r.gemeente_id
                 LEFT JOIN towns t ON t.id = (SELECT town_id FROM congregations WHERE id = r.gemeente_id)
-                WHERE r.type = 'gemeente' 
+                WHERE r.type = 'gemeente'
                   AND r.gemeente_id != ?
                   AND (SELECT town_id FROM congregations WHERE id = r.gemeente_id) = ?
                 ORDER BY c.name";
         $st = $pdo->prepare($sql);
         $st->execute([$userId, $congId, $townId]);
         $gemeentes = $st->fetchAll(PDO::FETCH_ASSOC);
-        
+
         foreach ($gemeentes as $room) {
             if ((int)$room['is_member'] === 1) {
                 $joinedRooms[] = $room;
@@ -241,30 +261,33 @@ try {
                 $availableRooms[] = $room;
             }
         }
-        
-        $jeugTypes = [];
-        if (!($age > 0 && $age < 16)) $jeugTypes[] = 'sondagskool';
-        if (!($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud')) $jeugTypes[] = 'jeug';
-        
-        if ($jeugTypes) {
-            $placeholders = implode(',', array_fill(0, count($jeugTypes), '?'));
-            $sql = "SELECT r.*, 
-                           t.name AS town_name,
-                           COALESCE(t.name, r.name) AS display_name,
-                           EXISTS(SELECT 1 FROM room_memberships rm WHERE rm.room_id = r.id AND rm.user_id = ?) AS is_member
-                    FROM rooms r
-                    LEFT JOIN towns t ON t.id = r.town_id
-                    WHERE r.type IN ($placeholders) AND r.town_id = ?
-                    ORDER BY r.type";
-            $st = $pdo->prepare($sql);
-            $st->execute(array_merge([$userId], $jeugTypes, [$townId]));
-            $youth = $st->fetchAll(PDO::FETCH_ASSOC);
-            
-            foreach ($youth as $room) {
-                if ((int)$room['is_member'] === 1) {
-                    $joinedRooms[] = $room;
-                } else {
-                    $availableRooms[] = $room;
+
+        // Amp 6: show joinable jeug/sondagskool (amp 2-5 already have auto-access)
+        if ($ampId === 6) {
+            $jeugTypes = [];
+            if (!($age > 0 && $age < 16)) $jeugTypes[] = 'sondagskool';
+            if (!($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud')) $jeugTypes[] = 'jeug';
+
+            if ($jeugTypes) {
+                $placeholders = implode(',', array_fill(0, count($jeugTypes), '?'));
+                $sql = "SELECT r.*,
+                               t.name AS town_name,
+                               COALESCE(t.name, r.name) AS display_name,
+                               EXISTS(SELECT 1 FROM room_memberships rm WHERE rm.room_id = r.id AND rm.user_id = ?) AS is_member
+                        FROM rooms r
+                        LEFT JOIN towns t ON t.id = r.town_id
+                        WHERE r.type IN ($placeholders) AND r.town_id = ?
+                        ORDER BY r.type";
+                $st = $pdo->prepare($sql);
+                $st->execute(array_merge([$userId], $jeugTypes, [$townId]));
+                $youth = $st->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($youth as $room) {
+                    if ((int)$room['is_member'] === 1) {
+                        $joinedRooms[] = $room;
+                    } else {
+                        $availableRooms[] = $room;
+                    }
                 }
             }
         }

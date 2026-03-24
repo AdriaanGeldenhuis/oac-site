@@ -94,8 +94,8 @@ try {
             $autoRooms = array_merge($autoRooms, $opsRooms);
         }
         
-        // Sondagskool (auto if under 16)
-        if ($age > 0 && $age < 16 && $townId > 0) {
+        // Sondagskool (auto if amp 2-5 in same town, or under 16)
+        if ((($ampId >= 2 && $ampId <= 5) || ($age > 0 && $age < 16)) && $townId > 0) {
             $sql = "SELECT r.id, r.type, r.name, t.name AS town_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
@@ -105,9 +105,9 @@ try {
             $ssRooms = $st->fetchAll(PDO::FETCH_ASSOC);
             $autoRooms = array_merge($autoRooms, $ssRooms);
         }
-        
-        // Jeug (auto if 16-25 and unmarried)
-        if ($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud' && $townId > 0) {
+
+        // Jeug (auto if amp 2-5 in same town, or 16-25 unmarried)
+        if ((($ampId >= 2 && $ampId <= 5) || ($age >= 16 && $age <= 25 && $maritalStatus === 'ongetroud')) && $townId > 0) {
             $sql = "SELECT r.id, r.type, r.name, t.name AS town_name
                     FROM rooms r
                     LEFT JOIN towns t ON t.id = r.town_id
