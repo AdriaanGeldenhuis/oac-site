@@ -362,7 +362,7 @@ $allVerses
   $messages[] = ['role' => 'user', 'content' => $q];
 
   $payload = json_encode([
-    'model'      => 'gpt-4o-mini',
+    'model'      => 'gpt-4o',
     'messages'   => $messages,
     'temperature'=> 0.2,
     'stream'     => true,
