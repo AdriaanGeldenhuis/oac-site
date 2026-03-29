@@ -325,7 +325,10 @@ $allVerses
 2. Wanneer jy Bybelverse aanhaal, gebruik SLEGS die 1933/1953 Afrikaanse vertaling WOORD-VIR-WOORD soos hierbo verskaf.
 3. As \'n vers nie hierbo verskaf is nie, moet jy dit presies uit die 1933/1953 vertaling aanhaal - GEEN ander vertalings nie.
 4. MOENIE verse parafraseer of in jou eie woorde stel nie - gebruik die presiese Bybelteks.
-5. Elke woord in jou antwoord moet Afrikaans wees.',
+5. Elke woord in jou antwoord moet Afrikaans wees.
+6. MOENIE OOIT woorde afsny, verkort of saamsmelt nie. Elke woord moet VOLLEDIG uitgeskryf word. Bv. skryf "Korintiërs" NIE "Korië" nie, skryf "afsonderlik lede" NIE "aflikde" nie, skryf "Gees" NIE "Ge" nie.
+7. MOENIE twee woorde aanmekaar skryf sonder spasie nie (bv. "afsonderlikEfesiërs" is VERKEERD, moet wees "afsonderlik. Efesiërs").
+8. Skryf Bybelboekname ALTYD volledig uit: "Korintiërs" nie "Kor" nie, "Efesiërs" nie "Ef" nie, "Tessalonisense" nie "Tess" nie, "Romeine" nie "Rom" nie.',
 
     'en' => 'STRICT INSTRUCTION:
 1. You MUST write all answers in PURE ENGLISH only - no other languages.
