@@ -359,7 +359,7 @@ $allVerses
   $messages[] = ['role' => 'user', 'content' => $q];
 
   $payload = json_encode([
-    'model'      => 'gpt-4o-mini',
+    'model'      => 'gpt-5.4-mini',
     'messages'   => $messages,
     'temperature'=> 0.2,
     'stream'     => true,
@@ -374,9 +374,13 @@ $allVerses
   curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
   curl_setopt($ch, CURLOPT_TIMEOUT, 0);
-  curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch, $chunk) use ($sse) {
-    $lines = preg_split("/\r?\n/", $chunk);
-    foreach ($lines as $line) {
+  $sseBuffer = '';
+  curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch, $chunk) use ($sse, &$sseBuffer) {
+    $sseBuffer .= $chunk;
+    // Only process complete lines (ending with \n)
+    while (($pos = strpos($sseBuffer, "\n")) !== false) {
+      $line = rtrim(substr($sseBuffer, 0, $pos), "\r");
+      $sseBuffer = substr($sseBuffer, $pos + 1);
       if (strpos($line, 'data: ') === 0) {
         $json = trim(substr($line, 6));
         if ($json === '[DONE]') { $sse('done', 'end'); continue; }
