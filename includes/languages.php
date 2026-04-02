@@ -3465,6 +3465,22 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Sua conta foi rejeitada. Entre em contato com o administrador para mais informações.',
         'st' => 'Akhaonto ea hao e haniloe. Ikopanye le motsamaisi bakeng sa lintlha tse ling.'
     ],
+    'notif_pending_approval' => [
+        'af' => '👤 Nuwe Goedkeuring',
+        'en' => '👤 New Approval',
+        'zu' => '👤 Ukugunyazwa Okusha',
+        'xh' => '👤 Ukuvunywa Okutsha',
+        'pt' => '👤 Nova Aprovação',
+        'st' => '👤 Tumello e Ncha'
+    ],
+    'notif_pending_approval_msg' => [
+        'af' => '{name} wag vir goedkeuring.',
+        'en' => '{name} is waiting for approval.',
+        'zu' => '{name} ulindele ukugunyazwa.',
+        'xh' => '{name} ulindele ukuvunywa.',
+        'pt' => '{name} está aguardando aprovação.',
+        'st' => '{name} o emetse tumello.'
+    ],
     'notif_spouse_request' => [
         'af' => '💍 Eggenoot Versoek',
         'en' => '💍 Spouse Request',

@@ -144,6 +144,18 @@ function createAdminNotification($userId, $type, $data = []) {
                 $notifType = 'ampte';
                 break;
 
+            case 'pending_approval':
+                $userName = $data['name'] ?? 'Someone';
+                $titleKey = 'notif_pending_approval';
+                $messageKey = 'notif_pending_approval_msg';
+                $params = ['name' => $userName];
+                $title = '👤 Nuwe Goedkeuring';
+                $message = "{$userName} wag vir goedkeuring.";
+                $link = '/admin/index.php?tab=approvals';
+                $icon = '👤';
+                $notifType = 'account';
+                break;
+
             default:
                 $title = $data['title'] ?? 'Notification';
                 $message = $data['message'] ?? '';

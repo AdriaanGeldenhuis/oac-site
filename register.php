@@ -61,6 +61,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $amp ?: null, $prov ?: null, $town ?: null, $cong ?: null, $language
         ]);
         $success = true;
+
+        // Notify relevant admins about the pending approval
+        try {
+            require_once __DIR__ . '/admin/api/notifications/helper.php';
+            $fullName = trim("$name $surname");
+
+            // Find admins who have jurisdiction over this new user
+            $adminQuery = null;
+            if ($amp >= 7 && $amp <= 10) {
+                // Priester (amp_id=6) in same congregation
+                $adminQuery = $pdo->prepare("SELECT id FROM users WHERE amp_id = 6 AND congregation_id = ? AND status = 'approved'");
+                $adminQuery->execute([$cong ?: null]);
+            } elseif ($amp === 5 || $amp === 6) {
+                // Oudste (amp_id=5) in same town
+                $adminQuery = $pdo->prepare("SELECT id FROM users WHERE amp_id = 5 AND town_id = ? AND status = 'approved'");
+                $adminQuery->execute([$town ?: null]);
+            } elseif ($amp >= 2 && $amp <= 4) {
+                // Vierfout (amp_id 2-4) in same town
+                $adminQuery = $pdo->prepare("SELECT id FROM users WHERE amp_id IN (2,3,4) AND town_id = ? AND status = 'approved'");
+                $adminQuery->execute([$town ?: null]);
+            } elseif ($amp === 1) {
+                // Apostel (amp_id=1)
+                $adminQuery = $pdo->prepare("SELECT id FROM users WHERE amp_id = 1 AND status = 'approved'");
+                $adminQuery->execute();
+            }
+
+            if ($adminQuery) {
+                $admins = $adminQuery->fetchAll(PDO::FETCH_COLUMN);
+                foreach ($admins as $adminId) {
+                    createAdminNotification((int)$adminId, 'pending_approval', ['name' => $fullName]);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Registration admin notification error: ' . $e->getMessage());
+        }
     }
 }
 
