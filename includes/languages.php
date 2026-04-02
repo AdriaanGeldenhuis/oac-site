@@ -3465,6 +3465,22 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Sua conta foi rejeitada. Entre em contato com o administrador para mais informações.',
         'st' => 'Akhaonto ea hao e haniloe. Ikopanye le motsamaisi bakeng sa lintlha tse ling.'
     ],
+    'notif_pending_approval' => [
+        'af' => '👤 Nuwe Goedkeuring',
+        'en' => '👤 New Approval',
+        'zu' => '👤 Ukugunyazwa Okusha',
+        'xh' => '👤 Ukuvunywa Okutsha',
+        'pt' => '👤 Nova Aprovação',
+        'st' => '👤 Tumello e Ncha'
+    ],
+    'notif_pending_approval_msg' => [
+        'af' => '{name} wag vir goedkeuring.',
+        'en' => '{name} is waiting for approval.',
+        'zu' => '{name} ulindele ukugunyazwa.',
+        'xh' => '{name} ulindele ukuvunywa.',
+        'pt' => '{name} está aguardando aprovação.',
+        'st' => '{name} o emetse tumello.'
+    ],
     'notif_spouse_request' => [
         'af' => '💍 Eggenoot Versoek',
         'en' => '💍 Spouse Request',
@@ -3496,6 +3512,22 @@ define('UI_TRANSLATIONS', [
         'xh' => '{name} wamkele isicelo sakho!',
         'pt' => '{name} aceitou seu pedido!',
         'st' => '{name} o amohetsoe kopo ea hao!'
+    ],
+    'notif_spouse_rejected' => [
+        'af' => '💔 Eggenoot Versoek Afgekeur',
+        'en' => '💔 Spouse Request Declined',
+        'zu' => '💔 Isicelo Somngani Senqatshiwe',
+        'xh' => '💔 Isicelo Somlingani Saliwe',
+        'pt' => '💔 Solicitação de Cônjuge Recusada',
+        'st' => '💔 Kopo ea Molekane e Haniloe'
+    ],
+    'notif_spouse_rejected_msg' => [
+        'af' => '{name} het jou eggenoot versoek afgekeur.',
+        'en' => '{name} declined your spouse request.',
+        'zu' => '{name} wenqabile isicelo sakho somngani.',
+        'xh' => '{name} walikhaba isicelo sakho somlingani.',
+        'pt' => '{name} recusou seu pedido de cônjuge.',
+        'st' => '{name} o hanne kopo ea hao ea molekane.'
     ],
     'notif_appointment_request' => [
         'af' => '📅 Afspraak Versoek',

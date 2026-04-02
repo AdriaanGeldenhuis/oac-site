@@ -66,8 +66,21 @@ function createAdminNotification($userId, $type, $data = []) {
                 $messageKey = 'notif_account_rejected_msg';
                 $title = '❌ Account Afgekeur';
                 $message = 'Jou rekening is afgekeur. Kontak admin vir meer inligting.';
+                $link = '/admin/account.php';
                 $icon = '❌';
                 $notifType = 'error';
+                break;
+
+            case 'spouse_rejected':
+                $fromName = $data['from_name'] ?? 'Iemand';
+                $titleKey = 'notif_spouse_rejected';
+                $messageKey = 'notif_spouse_rejected_msg';
+                $params = ['name' => $fromName];
+                $title = '💔 Eggenoot Versoek Afgekeur';
+                $message = "{$fromName} het jou eggenoot versoek afgekeur.";
+                $link = '/admin/account.php';
+                $icon = '💔';
+                $notifType = 'spouse';
                 break;
 
             case 'spouse_request':
@@ -142,6 +155,18 @@ function createAdminNotification($userId, $type, $data = []) {
                 $link = '/admin/index.php';
                 $icon = '⭐';
                 $notifType = 'ampte';
+                break;
+
+            case 'pending_approval':
+                $userName = $data['name'] ?? 'Someone';
+                $titleKey = 'notif_pending_approval';
+                $messageKey = 'notif_pending_approval_msg';
+                $params = ['name' => $userName];
+                $title = '👤 Nuwe Goedkeuring';
+                $message = "{$userName} wag vir goedkeuring.";
+                $link = '/admin/index.php?tab=approvals';
+                $icon = '👤';
+                $notifType = 'account';
                 break;
 
             default:

@@ -21,6 +21,7 @@
   function init() {
     loadNotifications();
     attachEventListeners();
+    setupCardClickDelegation();
     startAutoRefresh();
   }
 
@@ -111,13 +112,11 @@
       const timeAgo = getTimeAgo(notif.created_at);
 
       return `
-        <div class="notif-card ${isUnread ? 'unread' : ''}" data-id="${notif.id}">
+        <div class="notif-card ${isUnread ? 'unread' : ''}" data-id="${notif.id}" ${notif.link ? `data-link="${escapeHtml(notif.link)}" style="cursor:pointer;"` : ''}>
           <div class="notif-icon-type">${icon}</div>
           <div class="notif-content">
-            ${notif.link ? `<a href="${escapeHtml(notif.link)}" class="notif-link" style="text-decoration:none;color:inherit;display:block;">` : ''}
               <h3 class="notif-title">${escapeHtml(notif.title)}</h3>
               ${notif.message ? `<p class="notif-message">${escapeHtml(notif.message)}</p>` : ''}
-            ${notif.link ? `</a>` : ''}
             <span class="notif-time">${timeAgo}</span>
           </div>
           <div class="notif-actions-inline">
@@ -139,6 +138,42 @@
         </div>
       `;
     }).join('');
+  }
+
+  // ===== CLICK NOTIFICATION (event delegation on notifList) =====
+  function setupCardClickDelegation() {
+    if (!notifList) return;
+    // Use a single delegated listener (idempotent — only attached once)
+    if (notifList._notifClickBound) return;
+    notifList._notifClickBound = true;
+
+    notifList.addEventListener('click', function(event) {
+      // Don't trigger if clicking action buttons
+      if (event.target.closest('.notif-actions-inline')) return;
+
+      const card = event.target.closest('.notif-card[data-link]');
+      if (!card) return;
+
+      const id = card.dataset.id;
+      const link = card.dataset.link;
+
+      // Mark as read (fire-and-forget so navigation isn't delayed)
+      const notif = notifications.find(n => String(n.id) === String(id));
+      if (notif && (notif.is_read === '0' || notif.is_read === 0)) {
+        const body = new URLSearchParams({ id: id });
+        fetch('/notifications/api/mark_read.php', {
+          method: 'POST',
+          body: body,
+          keepalive: true
+        }).catch(() => {});
+        // Update local state immediately
+        notif.is_read = 1;
+        updateGlobalBadge();
+      }
+
+      // Navigate to the link
+      window.location.href = link;
+    });
   }
 
   // ===== MARK AS READ =====
