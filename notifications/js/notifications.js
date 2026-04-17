@@ -8,6 +8,7 @@
   // ===== STATE =====
   let notifications = [];
   let currentFilter = 'all';
+  let autoRefreshTimer = null;
 
   // ===== DOM ELEMENTS =====
   const notifList = document.getElementById('notifList');
@@ -80,13 +81,15 @@
 
     let filtered = notifications;
 
-    // Apply filter
+    // Apply filter. "reminder" covers time-bound notifications, "info" covers
+    // everything else (so account/spouse/ampte/appointment etc. aren't orphaned).
+    const reminderTypes = ['reminder', 'calendar', 'appointment', 'birthday'];
     if (currentFilter === 'unread') {
       filtered = notifications.filter(n => n.is_read === '0' || n.is_read === 0);
     } else if (currentFilter === 'reminder') {
-      filtered = notifications.filter(n => n.type === 'reminder' || n.type === 'calendar');
+      filtered = notifications.filter(n => reminderTypes.includes(n.type));
     } else if (currentFilter === 'info') {
-      filtered = notifications.filter(n => n.type === 'info' || n.type === 'gospel' || n.type === 'success');
+      filtered = notifications.filter(n => !reminderTypes.includes(n.type));
     }
 
     if (filtered.length === 0) {
@@ -269,9 +272,25 @@
   // ===== AUTO REFRESH =====
   function startAutoRefresh() {
     // Refresh every 30 seconds
-    setInterval(() => {
-      loadNotifications();
-    }, 30000);
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(loadNotifications, 30000);
+
+    // Stop polling when the page is backgrounded or unloaded.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+      } else if (!document.hidden && !autoRefreshTimer) {
+        autoRefreshTimer = setInterval(loadNotifications, 30000);
+        loadNotifications();
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+      }
+    });
   }
 
   // ===== GET NOTIFICATION ICON =====
@@ -336,11 +355,16 @@
   }
 
   // ===== HELPERS =====
+  // Escapes all five HTML-significant chars — textContent→innerHTML does not
+  // escape " or ', so values interpolated into attributes would break.
   function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    if (text === null || text === undefined || text === '') return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function showNotification(message, type = 'info') {

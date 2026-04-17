@@ -22,12 +22,10 @@ try {
         throw new Exception('Invalid JSON');
     }
     
-    // Ensure data directory exists
+    // Ensure data directory exists (tolerate concurrent creation)
     $dataDir = __DIR__ . '/../../data';
-    if (!is_dir($dataDir)) {
-        if (!mkdir($dataDir, 0775, true)) {
-            throw new Exception('Failed to create data directory');
-        }
+    if (!is_dir($dataDir) && !@mkdir($dataDir, 0775, true) && !is_dir($dataDir)) {
+        throw new Exception('Failed to create data directory');
     }
     
     $dbPath = $dataDir . '/notifications.db';
@@ -68,9 +66,9 @@ try {
     $messageKey = $data['messageKey'] ?? null;
     $params = isset($data['params']) ? json_encode($data['params']) : null;
 
-    // Validate type
-    $validTypes = ['info', 'success', 'warning', 'error', 'reminder', 'calendar', 'gospel', 'account', 'spouse', 'ampte', 'appointment', 'birthday'];
-    if (!in_array($type, $validTypes)) {
+    // Validate type — keep in sync with /notifications/api/create.php
+    $validTypes = ['info', 'success', 'warning', 'error', 'reminder', 'calendar', 'gospel', 'account', 'spouse', 'spouse_accepted', 'spouse_rejected', 'ampte', 'appointment', 'birthday', 'thought'];
+    if (!in_array($type, $validTypes, true)) {
         $type = 'info';
     }
 

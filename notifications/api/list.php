@@ -25,7 +25,8 @@ function translateNotification(string $text, ?string $key, ?string $paramsJson, 
                 $params = json_decode($paramsJson, true);
                 if (is_array($params)) {
                     foreach ($params as $placeholder => $value) {
-                        $translated = str_replace('{' . $placeholder . '}', $value, $translated);
+                        if (!is_scalar($value) && $value !== null) continue;
+                        $translated = str_replace('{' . $placeholder . '}', (string)$value, $translated);
                     }
                 }
             }
@@ -148,12 +149,10 @@ function translateLegacyMessage(string $message, string $lang): string {
 }
 
 try {
-    // Ensure data directory exists
+    // Ensure data directory exists (tolerate concurrent creation)
     $dataDir = __DIR__ . '/../../data';
-    if (!is_dir($dataDir)) {
-        if (!mkdir($dataDir, 0775, true)) {
-            throw new Exception('Failed to create data directory');
-        }
+    if (!is_dir($dataDir) && !@mkdir($dataDir, 0775, true) && !is_dir($dataDir)) {
+        throw new Exception('Failed to create data directory');
     }
 
     $dbPath = $dataDir . '/notifications.db';
