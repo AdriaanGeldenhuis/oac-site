@@ -33,6 +33,46 @@
     }
   }
 
+  // Resize + convert an image File to WebP in the browser so uploads stay small.
+  // Keeps originals untouched if the browser can't encode WebP or anything throws.
+  function compressImageToWebP(file, maxDim = 1920, quality = 0.85) {
+    return new Promise((resolve) => {
+      if (!file || !file.type || !file.type.startsWith('image/')) return resolve(file);
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const { width, height } = img;
+          const ratio = Math.min(1, maxDim / Math.max(width, height));
+          const w = Math.max(1, Math.round(width * ratio));
+          const h = Math.max(1, Math.round(height * ratio));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          canvas.toBlob((blob) => {
+            if (!blob) return resolve(file);
+            const base = (file.name || 'image').replace(/\.[^.]+$/, '');
+            resolve(new File([blob], base + '.webp', { type: 'image/webp', lastModified: Date.now() }));
+          }, 'image/webp', quality);
+        } catch {
+          URL.revokeObjectURL(url);
+          resolve(file);
+        }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+
+  async function compressImages(files) {
+    const out = [];
+    for (const f of files) out.push(await compressImageToWebP(f));
+    return out;
+  }
+
   // Use server-provided translations for all 5 languages
   const T = (key) => (window.JS_T && window.JS_T[key]) ? window.JS_T[key] : key;
 
@@ -196,12 +236,13 @@
         if (evtPlace.value) fd.append('event_place', evtPlace.value);
       }
 
-      if (fileInput.files && fileInput.files.length) {
-        Array.from(fileInput.files).forEach(f => fd.append('images[]', f));
-      }
-
       submitBtn.disabled = true;
       submitBtn.textContent = T('posting');
+
+      if (fileInput.files && fileInput.files.length) {
+        const compressed = await compressImages(Array.from(fileInput.files));
+        compressed.forEach(f => fd.append('images[]', f));
+      }
 
       const j = await fetchJSON('/gospel_media/api/posts/create.php', { method: 'POST', body: fd });
 
@@ -846,21 +887,22 @@
       const fd = new FormData();
       fd.append('post_id', p.id);
       fd.append('text', ta.value.trim());
-      
-      if (file && file.files && file.files.length) {
-        Array.from(file.files).forEach(f => fd.append('images[]', f));
-      }
-      
+
       if (evtInput && evtInput.value) {
         fd.append('event_at', evtInput.value);
       }
-      
+
       if (placeInput) {
         fd.append('event_place', placeInput.value.trim());
       }
-      
+
       save.disabled = true;
       save.textContent = T('saving');
+
+      if (file && file.files && file.files.length) {
+        const compressed = await compressImages(Array.from(file.files));
+        compressed.forEach(f => fd.append('images[]', f));
+      }
       
       const j = await fetchJSON('/gospel_media/api/posts/update.php', { method: 'POST', body: fd });
       
