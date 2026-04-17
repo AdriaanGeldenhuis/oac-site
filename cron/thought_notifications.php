@@ -3,10 +3,10 @@
  * Daily Thought Push Notification Cron Job
  *
  * Run this script every 15 minutes via cron:
- * */15 * * * * php /path/to/oac-site/cron/thought_notifications.php
+ *   0,15,30,45 * * * * php /path/to/oac-site/cron/thought_notifications.php
  *
  * Or via URL (with cron service like cron-job.org):
- * https://oacapp.co.za/cron/thought_notifications.php?key=YOUR_SECRET_KEY
+ *   https://oacapp.co.za/cron/thought_notifications.php?key=YOUR_SECRET_KEY
  *
  * Checks if today's thought has reached its display_time and sends
  * push notifications to users in the same town (opsienerskap) as the
