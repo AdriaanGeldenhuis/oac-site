@@ -47,9 +47,9 @@ try {
         exit;
     }
     
-    // Validate type
-    $validTypes = ['info', 'success', 'warning', 'error', 'reminder', 'calendar', 'gospel', 'account', 'spouse', 'ampte', 'appointment'];
-    if (!in_array($type, $validTypes)) {
+    // Validate type — keep in sync with /notifications/api/save.php
+    $validTypes = ['info', 'success', 'warning', 'error', 'reminder', 'calendar', 'gospel', 'account', 'spouse', 'spouse_accepted', 'spouse_rejected', 'ampte', 'appointment', 'birthday', 'thought'];
+    if (!in_array($type, $validTypes, true)) {
         $type = 'info';
     }
     

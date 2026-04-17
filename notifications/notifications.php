@@ -56,7 +56,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
   <main class="notif-main">
     <!-- Actions Section -->
     <section class="notif-section">
-      <h2 class="notif-page-title">Kennisgewings</h2>
+      <h2 class="notif-page-title"><?= esc(t('ai_notifications')) ?></h2>
       <div class="notif-actions">
         <button class="notif-btn notif-btn-primary" id="markAllRead">
           <span class="notif-btn-shine"></span>

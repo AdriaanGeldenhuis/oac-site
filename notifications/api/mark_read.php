@@ -13,12 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    // Ensure data directory exists
+    // Ensure data directory exists (tolerate concurrent creation)
     $dataDir = __DIR__ . '/../../data';
-    if (!is_dir($dataDir)) {
-        if (!mkdir($dataDir, 0775, true)) {
-            throw new Exception('Failed to create data directory');
-        }
+    if (!is_dir($dataDir) && !@mkdir($dataDir, 0775, true) && !is_dir($dataDir)) {
+        throw new Exception('Failed to create data directory');
     }
     
     $dbPath = $dataDir . '/notifications.db';
