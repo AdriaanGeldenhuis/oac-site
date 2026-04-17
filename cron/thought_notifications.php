@@ -30,7 +30,11 @@ require_once __DIR__ . '/../lib/db.php';
 require_once __DIR__ . '/../admin/config/fcm_config.php';
 require_once __DIR__ . '/../includes/languages.php';
 
+// Evaluate CURDATE()/CURTIME() in South African local time so scheduled
+// display_time values match what admins see in the UI.
+date_default_timezone_set('Africa/Johannesburg');
 $pdo = db();
+try { $pdo->exec("SET time_zone = '+02:00'"); } catch (Throwable $e) { /* ignore */ }
 $results = ['sent' => 0, 'errors' => 0, 'skipped' => false];
 
 try {

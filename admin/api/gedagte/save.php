@@ -5,6 +5,11 @@ require_once dirname(__DIR__, 3) . '/security/config.php';
 require_once dirname(__DIR__, 3) . '/security/session.php';
 require_once dirname(__DIR__, 3) . '/security/auth.php';
 
+// Align date/time comparisons with South African local time (SAST, UTC+2)
+// regardless of MySQL server timezone, so manual saves aren't deferred for hours.
+date_default_timezone_set('Africa/Johannesburg');
+try { $pdo->exec("SET time_zone = '+02:00'"); } catch (Throwable $e) { /* ignore */ }
+
 ob_start();
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -115,14 +120,13 @@ try {
         $userId
     ]);
 
-    // --- Send notifications immediately if thought is for today and time has passed ---
-    // Use MySQL CURDATE()/CURTIME() to match the same timezone as gedagtes/api/list.php.
-    // For future dates/times, the auto-cron (cron/thought_notifications.php) handles it.
-    $nowRow = $pdo->query("SELECT CURDATE() AS today, CURTIME() AS now_time")->fetch(PDO::FETCH_ASSOC);
+    // --- Send notifications immediately for today's (or past) thoughts ---
+    // A manual save from the admin UI is an explicit "publish now" action, so we
+    // fire the push as soon as the record is stored. display_time is only used
+    // for future-dated thoughts, which the cron picks up on the scheduled day.
+    $nowRow = $pdo->query("SELECT CURDATE() AS today")->fetch(PDO::FETCH_ASSOC);
     $today = $nowRow['today'];
-    $now = $nowRow['now_time'];
-    $timeValue = $displayTime !== '' ? $displayTime . ':00' : null;
-    $shouldNotify = ($displayDate === $today) && ($timeValue === null || $timeValue <= $now);
+    $shouldNotify = ($displayDate <= $today);
 
     if ($shouldNotify) {
         try {

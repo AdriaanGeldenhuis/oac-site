@@ -12,6 +12,11 @@ declare(strict_types=1);
 
 function runThoughtAutoCron(PDO $pdo): void
 {
+    // Evaluate CURDATE()/CURTIME() in South African local time so scheduled
+    // display_time values match what admins see in the UI.
+    date_default_timezone_set('Africa/Johannesburg');
+    try { $pdo->exec("SET time_zone = '+02:00'"); } catch (Throwable $e) { /* ignore */ }
+
     // Lock file to throttle: only run once every 5 minutes
     $lockFile = __DIR__ . '/../data/.thought_cron_last';
     $now = time();
