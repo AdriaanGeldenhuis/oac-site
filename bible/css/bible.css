@@ -320,39 +320,127 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 10px;
+  gap: 6px;
+  padding: 8px 10px;
   z-index: 1000;
   backdrop-filter: blur(15px);
 }
 
 .bible-tool-btn {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: var(--text-muted);
+  padding: 8px 10px;
+  min-width: 54px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(232, 180, 168, 0.10) 0%, rgba(232, 180, 168, 0.03) 55%, transparent 100%),
+    linear-gradient(160deg, var(--bg-card) 0%, var(--bg-surface) 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   font-size: 0.7rem;
-  font-weight: 300;
+  font-weight: 400;
   cursor: pointer;
-  transition: all 0.3s ease;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.3s ease,
+    box-shadow 0.4s ease,
+    color 0.3s ease,
+    background 0.4s ease;
+}
+
+.bible-tool-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.10) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  transition: left 0.7s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bible-tool-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(120% 60% at 50% -20%, rgba(232, 180, 168, 0.14) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0.8;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+
+.bible-tool-btn > * {
+  position: relative;
+  z-index: 2;
 }
 
 .bible-tool-btn:hover,
-.bible-tool-btn:focus {
-  color: var(--rose-gold);
-  background: rgba(232, 180, 168, 0.15);
+.bible-tool-btn:focus-visible {
+  outline: none;
+  color: var(--rose-gold-light);
+  border-color: var(--rose-gold-dark);
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.55),
+    0 0 18px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.bible-tool-btn:hover::before {
+  left: 130%;
+}
+
+.bible-tool-btn:hover::after {
+  opacity: 1;
+}
+
+.bible-tool-btn:active {
+  transform: translateY(-1px);
+  transition-duration: 0.1s;
 }
 
 .bible-tool-btn.active,
 .bible-tool-btn.bible-tool-btn-primary {
   color: var(--rose-gold);
-  background: rgba(232, 180, 168, 0.2);
-  box-shadow: inset 0 0 0 1px rgba(232, 180, 168, 0.3);
+  border-color: var(--rose-gold);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(232, 180, 168, 0.25) 0%, rgba(232, 180, 168, 0.10) 55%, rgba(232, 180, 168, 0.04) 100%),
+    linear-gradient(160deg, var(--bg-card) 0%, var(--bg-surface) 100%);
+  box-shadow:
+    0 0 18px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.bible-tool-btn.active::after,
+.bible-tool-btn.bible-tool-btn-primary::after {
+  opacity: 1;
+}
+
+[data-theme="light"] .bible-tool-btn {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="light"] .bible-tool-btn:hover {
+  box-shadow:
+    0 8px 20px rgba(169, 104, 96, 0.15),
+    0 0 18px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .bible-tool-btn svg {
@@ -361,6 +449,11 @@ html {
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.bible-tool-btn:hover svg {
+  transform: scale(1.08);
 }
 
 /* ===== MODAL ===== */
@@ -427,24 +520,94 @@ html {
   text-shadow: none;
 }
 
-.bible-modal-close {
+.bible-modal-close,
+.bible-panel-close {
+  position: relative;
   width: 40px;
   height: 40px;
-  background: rgba(232, 180, 168, 0.2);
-  border: 1px solid var(--border);
   border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(232, 180, 168, 0.20) 0%, rgba(232, 180, 168, 0.08) 55%, rgba(232, 180, 168, 0.03) 100%),
+    linear-gradient(160deg, var(--bg-card) 0%, var(--bg-surface) 100%);
+  border: 1px solid rgba(232, 180, 168, 0.45);
   color: var(--rose-gold);
   font-size: 1.5rem;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.45),
+    0 0 14px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.3s ease,
+    box-shadow 0.4s ease,
+    color 0.3s ease,
+    background 0.4s ease;
 }
 
-.bible-modal-close:hover {
-  background: rgba(232, 180, 168, 0.4);
-  transform: rotate(90deg);
+.bible-modal-close::before,
+.bible-panel-close::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.14) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  transition: left 0.7s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bible-modal-close > *,
+.bible-panel-close > * {
+  position: relative;
+  z-index: 2;
+}
+
+.bible-modal-close:hover,
+.bible-panel-close:hover {
+  border-color: var(--rose-gold);
+  color: var(--rose-gold-light);
+  transform: translateY(-2px) rotate(90deg);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.6),
+    0 0 24px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.bible-modal-close:hover::before,
+.bible-panel-close:hover::before {
+  left: 130%;
+}
+
+.bible-modal-close:active,
+.bible-panel-close:active {
+  transform: translateY(0) rotate(90deg);
+  transition-duration: 0.1s;
+}
+
+[data-theme="light"] .bible-modal-close,
+[data-theme="light"] .bible-panel-close {
+  box-shadow:
+    0 4px 14px rgba(169, 104, 96, 0.14),
+    0 0 14px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .bible-modal-close:hover,
+[data-theme="light"] .bible-panel-close:hover {
+  box-shadow:
+    0 10px 24px rgba(169, 104, 96, 0.22),
+    0 0 22px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .bible-modal-body {
@@ -584,26 +747,6 @@ html {
 
 [data-theme="light"] .bible-panel-title {
   text-shadow: none;
-}
-
-.bible-panel-close {
-  width: 36px;
-  height: 36px;
-  background: rgba(232, 180, 168, 0.2);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  color: var(--rose-gold);
-  font-size: 1.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.bible-panel-close:hover {
-  background: rgba(232, 180, 168, 0.4);
-  transform: rotate(90deg);
 }
 
 .bible-panel-body {
