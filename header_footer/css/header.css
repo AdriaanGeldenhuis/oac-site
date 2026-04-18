@@ -189,6 +189,68 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+/* ===== ROUND PILL VARIANT =====
+   Hamburger + theme toggle styled identically to the footer floating
+   buttons (.global-notif-badge, .global-back-btn): circular, stronger
+   rose-gold border/glow, deeper shadow, bigger hover lift.
+   =================================  */
+.ghf-hamburger,
+.ghf-theme-toggle {
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(183, 110, 121, 0.18) 0%,
+      rgba(183, 110, 121, 0.08) 55%,
+      rgba(183, 110, 121, 0.03) 100%
+    ),
+    linear-gradient(160deg, var(--ghf-bg-card) 0%, var(--ghf-bg) 100%);
+  border: 1px solid rgba(183, 110, 121, 0.45);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(183, 110, 121, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .ghf-hamburger,
+[data-theme="light"] .ghf-theme-toggle {
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(183, 110, 121, 0.14) 0%,
+      rgba(183, 110, 121, 0.06) 55%,
+      rgba(183, 110, 121, 0.02) 100%
+    ),
+    linear-gradient(160deg, var(--ghf-bg-card) 0%, var(--ghf-bg) 100%);
+  border-color: rgba(183, 110, 121, 0.45);
+  box-shadow:
+    0 8px 24px rgba(169, 104, 96, 0.14),
+    0 0 18px rgba(183, 110, 121, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.ghf-hamburger:hover,
+.ghf-theme-toggle:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.65),
+    0 0 28px rgba(183, 110, 121, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+[data-theme="light"] .ghf-hamburger:hover,
+[data-theme="light"] .ghf-theme-toggle:hover {
+  box-shadow:
+    0 14px 30px rgba(169, 104, 96, 0.22),
+    0 0 26px rgba(183, 110, 121, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.ghf-hamburger:active,
+.ghf-theme-toggle:active {
+  transform: translateY(-2px);
+}
+
 .ghf-hamburger::before,
 .ghf-theme-toggle::before,
 .ghf-view-toggle::before,
