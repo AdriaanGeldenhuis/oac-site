@@ -184,9 +184,10 @@ $VER = time();
       </div>
       <div class="se-overlay-grid" id="songPickerGrid">
         <?php foreach ($allSongNumbers as $songNumber): ?>
-          <button class="se-song-btn" data-song="<?= htmlspecialchars($songNumber) ?>">
+          <?php $songNumberStr = (string)$songNumber; ?>
+          <button class="se-song-btn" data-song="<?= htmlspecialchars($songNumberStr) ?>">
             <span class="se-btn-shine"></span>
-            <span><?= htmlspecialchars($songNumber) ?></span>
+            <span><?= htmlspecialchars($songNumberStr) ?></span>
           </button>
         <?php endforeach; ?>
       </div>

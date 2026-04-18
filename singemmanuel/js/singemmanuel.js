@@ -129,7 +129,15 @@
   }, observerOptions);
 
   document.querySelectorAll('.se-section').forEach(section => {
+    section.style.opacity = '0';
     observer.observe(section);
   });
+
+  // ===== PREVENT ACCIDENTAL OVERLAY OPENING =====
+  setTimeout(function() {
+    if (overlay && !overlay.hidden) {
+      closeOverlay();
+    }
+  }, 100);
 
 })();
