@@ -1346,74 +1346,268 @@
   }
 
   // ===== SEARCH =====
-  function handleSearch() {
-    const q = (els.searchInput?.value || '').trim().toLowerCase();
-    if (!q) return;
+  // ---------- SEARCH HELPERS ----------
+  function normalizeSearch(s) {
+    return (s || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\u2018\u2019\u02BC']/g, '')
+      .replace(/[^\w\s:]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
 
-    if (!els.searchResults) return;
-    
-    els.searchResults.innerHTML = '<div class="bible-loading">Soek...</div>';
+  function escapeRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
 
-    setTimeout(() => {
-      const results = [];
-      const searchData = state.lang === 'af' ? state.dataAF : state.dataEN;
-      const searchBooks = state.lang === 'af' ? state.booksAF : state.booksEN;
+  function highlightMatches(text, terms) {
+    const safe = esc(text);
+    if (!terms || !terms.length) return safe;
+    const parts = terms.filter(Boolean).map(escapeRegex);
+    if (!parts.length) return safe;
+    const re = new RegExp(`(${parts.join('|')})`, 'gi');
+    return safe.replace(re, '<mark class="bible-search-hl">$1</mark>');
+  }
 
-      searchBooks.forEach((bookName, idx) => {
-        const bookEN = state.booksEN[idx];
-        const bookAF = state.booksAF[idx];
-        const chapterCount = getChapterCount(searchData, bookName);
+  // Build a compact snippet centered around the first match so you
+  // don't just see the start of long verses.
+  function makeSnippet(text, terms, radius = 80) {
+    if (!text) return '';
+    if (!terms.length) return text.substring(0, 160) + (text.length > 160 ? '…' : '');
+    const normText = normalizeSearch(text);
+    let firstIdx = -1;
+    for (const t of terms) {
+      const n = normalizeSearch(t);
+      if (!n) continue;
+      const i = normText.indexOf(n);
+      if (i !== -1 && (firstIdx === -1 || i < firstIdx)) firstIdx = i;
+    }
+    if (firstIdx === -1) {
+      return text.substring(0, 160) + (text.length > 160 ? '…' : '');
+    }
+    // Map the normalized index back to the raw string roughly by
+    // scaling — close enough for snippet windowing.
+    const ratio = firstIdx / Math.max(normText.length, 1);
+    const rawCenter = Math.round(ratio * text.length);
+    const start = Math.max(0, rawCenter - radius);
+    const end = Math.min(text.length, rawCenter + radius + 40);
+    let snippet = text.substring(start, end);
+    if (start > 0) snippet = '…' + snippet;
+    if (end < text.length) snippet = snippet + '…';
+    return snippet;
+  }
 
-        for (let ch = 1; ch <= chapterCount; ch++) {
-          const verses = getChapter(searchData, bookName, ch);
-          let verseNum = 0;
+  // Parse "joh 3:16", "genesis 1", "1 kor 13:4", "psalm 23", etc.
+  function parseReference(q) {
+    const norm = normalizeSearch(q);
+    // book chapter[:verse]
+    const m = norm.match(/^(\d?\s*[a-z]+(?:\s+[a-z]+)?)\s+(\d+)(?:\s*[:\.]\s*(\d+))?$/);
+    if (!m) return null;
+    const bookGuess = m[1].replace(/\s+/g, ' ').trim();
+    const chapter = parseInt(m[2], 10);
+    const verse = m[3] ? parseInt(m[3], 10) : null;
+    if (!chapter) return null;
 
-          verses.forEach(v => {
-            const parsed = parseVerse(v);
-            if (parsed.type === 'verse') {
-              verseNum++;
-              if (parsed.text.toLowerCase().includes(q)) {
-                results.push({
-                  bookEN,
-                  bookAF,
-                  chapter: ch,
-                  verse: verseNum,
-                  text: parsed.text
-                });
-              }
-            }
-          });
-        }
-      });
-
-      if (!results.length) {
-        els.searchResults.innerHTML = `<p class="bible-empty-state">${state.lang === 'en' ? 'No results found.' : 'Geen resultate gevind nie.'}</p>`;
-        return;
+    const candidates = [];
+    for (let i = 0; i < state.booksAF.length; i++) {
+      const af = normalizeSearch(state.booksAF[i]);
+      const en = normalizeSearch(state.booksEN[i]);
+      let score = 0;
+      if (af === bookGuess || en === bookGuess) score = 100;
+      else if (af.startsWith(bookGuess) || en.startsWith(bookGuess)) score = 80;
+      else if (af.includes(bookGuess) || en.includes(bookGuess)) score = 50;
+      else {
+        // token prefix match: "1 kor" vs "1 korintiers"
+        const gTokens = bookGuess.split(' ');
+        const afTokens = af.split(' ');
+        const enTokens = en.split(' ');
+        const matches = (tokens) => gTokens.every((g, idx) =>
+          tokens[idx] && tokens[idx].startsWith(g));
+        if (matches(afTokens) || matches(enTokens)) score = 70;
       }
+      if (score > 0) candidates.push({ idx: i, score });
+    }
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => b.score - a.score);
+    return { bookIndex: candidates[0].idx, chapter, verse };
+  }
 
-      const frag = document.createDocumentFragment();
-      
-      results.slice(0, 50).forEach(hit => {
-        const displayName = state.lang === 'af' ? hit.bookAF : hit.bookEN;
-        const row = document.createElement('div');
-        row.className = 'bible-search-result-item';
-        row.innerHTML = `
-          <div class="bible-search-result-ref">${esc(displayName)} ${hit.chapter}:${hit.verse}</div>
-          <div class="bible-search-result-text">${esc(hit.text.substring(0, 150))}...</div>
-        `;
-        
-        row.addEventListener('click', () => {
-          const ref = makeRef(hit.bookEN, hit.chapter, hit.verse);
-          goToReference(ref);
-          hidePanel(els.searchPanel);
-        });
-        
-        frag.appendChild(row);
-      });
+  function renderEmptyState(msg) {
+    els.searchResults.innerHTML = `<p class="bible-empty-state">${esc(msg)}</p>`;
+  }
 
+  function renderReferenceHit(parsed) {
+    const bookEN = state.booksEN[parsed.bookIndex];
+    const bookAF = state.booksAF[parsed.bookIndex];
+    const displayName = state.lang === 'af' ? bookAF : bookEN;
+    const verse = parsed.verse || 1;
+    const refLabel = `${displayName} ${parsed.chapter}${parsed.verse ? ':' + parsed.verse : ''}`;
+    const hint = state.lang === 'en'
+      ? 'Jump straight to this passage'
+      : 'Spring direk na hierdie gedeelte';
+
+    const frag = document.createDocumentFragment();
+
+    const countRow = document.createElement('div');
+    countRow.className = 'bible-search-count';
+    countRow.textContent = state.lang === 'en' ? 'Reference match' : 'Verwysing gevind';
+    frag.appendChild(countRow);
+
+    const row = document.createElement('div');
+    row.className = 'bible-search-result-item bible-search-ref-hit';
+    row.innerHTML = `
+      <div class="bible-search-result-ref">${esc(refLabel)}</div>
+      <div class="bible-search-result-text">${esc(hint)}</div>
+    `;
+    row.addEventListener('click', () => {
+      const ref = makeRef(bookEN, parsed.chapter, verse);
+      goToReference(ref);
+      hidePanel(els.searchPanel);
+    });
+    frag.appendChild(row);
+
+    els.searchResults.innerHTML = '';
+    els.searchResults.appendChild(frag);
+  }
+
+  function runFullTextSearch(rawQuery) {
+    const normQuery = normalizeSearch(rawQuery);
+    if (!normQuery) {
       els.searchResults.innerHTML = '';
-      els.searchResults.appendChild(frag);
-    }, 100);
+      return;
+    }
+
+    // Tokenise — require ALL words to appear (any order)
+    const terms = normQuery.split(' ').filter(t => t.length >= 2);
+    if (!terms.length) {
+      renderEmptyState(state.lang === 'en'
+        ? 'Type at least 2 characters.'
+        : 'Tik ten minste 2 karakters.');
+      return;
+    }
+
+    const searchData = state.lang === 'af' ? state.dataAF : state.dataEN;
+    const searchBooks = state.lang === 'af' ? state.booksAF : state.booksEN;
+    const HARD_LIMIT = 300;
+    const results = [];
+
+    outer:
+    for (let idx = 0; idx < searchBooks.length; idx++) {
+      const bookName = searchBooks[idx];
+      const bookEN = state.booksEN[idx];
+      const bookAF = state.booksAF[idx];
+      const chapterCount = getChapterCount(searchData, bookName);
+
+      for (let ch = 1; ch <= chapterCount; ch++) {
+        const verses = getChapter(searchData, bookName, ch);
+        let verseNum = 0;
+
+        for (let v = 0; v < verses.length; v++) {
+          const parsed = parseVerse(verses[v]);
+          if (parsed.type !== 'verse') continue;
+          verseNum++;
+
+          const normText = normalizeSearch(parsed.text);
+          // AND across all terms
+          let allMatch = true;
+          for (const t of terms) {
+            if (!normText.includes(t)) { allMatch = false; break; }
+          }
+          if (!allMatch) continue;
+
+          // Score: exact phrase match wins, then number of distinct terms
+          let score = 0;
+          if (normText.includes(normQuery)) score += 100;
+          score += terms.length * 10;
+
+          results.push({
+            bookEN, bookAF, chapter: ch, verse: verseNum,
+            text: parsed.text, score
+          });
+
+          if (results.length >= HARD_LIMIT) break outer;
+        }
+      }
+    }
+
+    if (!results.length) {
+      renderEmptyState(state.lang === 'en'
+        ? 'No results found.'
+        : 'Geen resultate gevind nie.');
+      return;
+    }
+
+    results.sort((a, b) => b.score - a.score);
+    const DISPLAY_LIMIT = 100;
+    const shown = results.slice(0, DISPLAY_LIMIT);
+
+    const frag = document.createDocumentFragment();
+
+    const countRow = document.createElement('div');
+    countRow.className = 'bible-search-count';
+    const countMsg = state.lang === 'en'
+      ? `${results.length}${results.length >= HARD_LIMIT ? '+' : ''} result${results.length === 1 ? '' : 's'}`
+        + (shown.length < results.length ? ` — showing first ${shown.length}` : '')
+      : `${results.length}${results.length >= HARD_LIMIT ? '+' : ''} resultaat${results.length === 1 ? '' : 'e'}`
+        + (shown.length < results.length ? ` — wys eerste ${shown.length}` : '');
+    countRow.textContent = countMsg;
+    frag.appendChild(countRow);
+
+    shown.forEach(hit => {
+      const displayName = state.lang === 'af' ? hit.bookAF : hit.bookEN;
+      const snippet = makeSnippet(hit.text, terms, 80);
+      const row = document.createElement('div');
+      row.className = 'bible-search-result-item';
+      row.innerHTML = `
+        <div class="bible-search-result-ref">${esc(displayName)} ${hit.chapter}:${hit.verse}</div>
+        <div class="bible-search-result-text">${highlightMatches(snippet, terms)}</div>
+      `;
+      row.addEventListener('click', () => {
+        const ref = makeRef(hit.bookEN, hit.chapter, hit.verse);
+        goToReference(ref);
+        hidePanel(els.searchPanel);
+      });
+      frag.appendChild(row);
+    });
+
+    els.searchResults.innerHTML = '';
+    els.searchResults.appendChild(frag);
+  }
+
+  let searchDebounceTimer = null;
+
+  function handleSearch() {
+    if (!els.searchResults) return;
+    const raw = (els.searchInput?.value || '').trim();
+    if (!raw) { els.searchResults.innerHTML = ''; return; }
+
+    // Try reference parsing first — typing "joh 3:16" jumps straight in
+    const ref = parseReference(raw);
+    if (ref) {
+      renderReferenceHit(ref);
+      return;
+    }
+
+    // Fall back to full-text search
+    runFullTextSearch(raw);
+  }
+
+  function handleSearchLive() {
+    clearTimeout(searchDebounceTimer);
+    const raw = (els.searchInput?.value || '').trim();
+    if (!els.searchResults) return;
+    if (!raw) { els.searchResults.innerHTML = ''; return; }
+    if (raw.length < 2) {
+      renderEmptyState(state.lang === 'en'
+        ? 'Keep typing…'
+        : 'Tik aan…');
+      return;
+    }
+    els.searchResults.innerHTML = `<div class="bible-loading">${esc(state.lang === 'en' ? 'Searching…' : 'Soek…')}</div>`;
+    searchDebounceTimer = setTimeout(() => handleSearch(), 180);
   }
 
   // ===== AI & CROSS REFS =====
@@ -1809,8 +2003,13 @@
 
     els.searchBtn?.addEventListener('click', handleSearch);
     els.searchInput?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') handleSearch();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        clearTimeout(searchDebounceTimer);
+        handleSearch();
+      }
     });
+    els.searchInput?.addEventListener('input', handleSearchLive);
 
     els.saveNoteBtn?.addEventListener('click', saveNote);
     els.cancelNoteBtn?.addEventListener('click', cancelNote);

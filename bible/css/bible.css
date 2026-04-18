@@ -1275,6 +1275,53 @@ html {
   line-height: 1.6;
 }
 
+/* Match highlight inside snippets */
+.bible-search-hl {
+  background: rgba(232, 180, 168, 0.28);
+  color: var(--rose-gold-light);
+  padding: 0 3px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(232, 180, 168, 0.25);
+  font-weight: 600;
+}
+
+[data-theme="light"] .bible-search-hl {
+  background: rgba(201, 132, 122, 0.22);
+  color: var(--rose-gold-dark);
+  box-shadow: 0 0 0 1px rgba(201, 132, 122, 0.3);
+}
+
+/* Result-count header line */
+.bible-search-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 2px 4px 8px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 4px;
+}
+
+/* Reference-match card gets a stronger rose-gold accent */
+.bible-search-ref-hit {
+  border-color: var(--rose-gold) !important;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.4),
+    0 0 22px var(--glow-rose) !important;
+}
+
+.bible-search-ref-hit .bible-search-result-ref {
+  font-size: 1rem;
+  color: var(--rose-gold-light);
+}
+
+[data-theme="light"] .bible-search-ref-hit {
+  box-shadow:
+    0 4px 14px rgba(169, 104, 96, 0.16),
+    0 0 22px var(--glow-rose) !important;
+}
+
 /* ===== NOTES & BOOKMARKS ===== */
 .bible-notes-list,
 .bible-bookmarks-list {

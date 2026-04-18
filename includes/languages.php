@@ -1595,12 +1595,12 @@ define('UI_TRANSLATIONS', [
         'st' => 'Batla Bibeleng'
     ],
     'type_search_term' => [
-        'af' => 'Tik soekwoord...',
-        'en' => 'Type search term...',
-        'zu' => 'Thayipha igama lokusesha...',
-        'xh' => 'Chwetheza igama lokukhangela...',
-        'pt' => 'Digite termo de pesquisa...',
-        'st' => 'Thaepa lentsoe la ho batla...'
+        'af' => 'Soek woorde of tik verwysing (bv. Joh 3:16)…',
+        'en' => 'Search words or type a reference (e.g. John 3:16)…',
+        'zu' => 'Sesha amagama noma thayipha inkomba (isib. Joh 3:16)…',
+        'xh' => 'Khangela amagama okanye chwetheza isalathi (umz. Joh 3:16)…',
+        'pt' => 'Pesquise palavras ou digite referência (ex. Jo 3:16)…',
+        'st' => 'Batla mantsoe kapa thaepa referense (mohl. Joh 3:16)…'
     ],
     'no_notes_yet' => [
         'af' => 'Geen notas nog nie. Klik op \'n vers om \'n nota by te voeg!',
