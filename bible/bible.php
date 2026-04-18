@@ -32,52 +32,52 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
 <body class="bible-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <main class="bible-main">
+  <!-- Quick Navigation Modal (Fullscreen) -->
+  <div class="bible-modal bible-modal-hidden" id="quickNavModal">
+    <div class="bible-modal-overlay" id="quickNavOverlay"></div>
+    <div class="bible-modal-content">
+      <div class="bible-modal-header">
+        <h2 class="bible-modal-title"><?= esc(t('quick_navigation')) ?></h2>
+        <button class="bible-modal-close" id="quickNavClose">×</button>
+      </div>
+      <div class="bible-modal-body">
 
-    <!-- Quick Navigation Modal (Fullscreen) -->
-    <div class="bible-modal bible-modal-hidden" id="quickNavModal">
-      <div class="bible-modal-overlay" id="quickNavOverlay"></div>
-      <div class="bible-modal-content">
-        <div class="bible-modal-header">
-          <h2 class="bible-modal-title"><?= esc(t('quick_navigation')) ?></h2>
-          <button class="bible-modal-close" id="quickNavClose">×</button>
+        <!-- Step 1: Testament Selection -->
+        <div class="bible-nav-step" id="navStepTestament">
+          <h3 class="bible-nav-step-title"><?= esc(t('choose_testament')) ?></h3>
+          <div class="bible-nav-grid">
+            <button class="bible-nav-card" data-testament="old">
+              <div class="bible-nav-card-icon">📖</div>
+              <div class="bible-nav-card-title"><?= esc(t('old_testament')) ?></div>
+              <div class="bible-nav-card-subtitle"><?= esc(t('genesis_malachi')) ?></div>
+            </button>
+            <button class="bible-nav-card" data-testament="new">
+              <div class="bible-nav-card-icon">✨</div>
+              <div class="bible-nav-card-title"><?= esc(t('new_testament')) ?></div>
+              <div class="bible-nav-card-subtitle"><?= esc(t('matthew_revelation')) ?></div>
+            </button>
+          </div>
         </div>
-        <div class="bible-modal-body">
-          
-          <!-- Step 1: Testament Selection -->
-          <div class="bible-nav-step" id="navStepTestament">
-            <h3 class="bible-nav-step-title"><?= esc(t('choose_testament')) ?></h3>
-            <div class="bible-nav-grid">
-              <button class="bible-nav-card" data-testament="old">
-                <div class="bible-nav-card-icon">📖</div>
-                <div class="bible-nav-card-title"><?= esc(t('old_testament')) ?></div>
-                <div class="bible-nav-card-subtitle"><?= esc(t('genesis_malachi')) ?></div>
-              </button>
-              <button class="bible-nav-card" data-testament="new">
-                <div class="bible-nav-card-icon">✨</div>
-                <div class="bible-nav-card-title"><?= esc(t('new_testament')) ?></div>
-                <div class="bible-nav-card-subtitle"><?= esc(t('matthew_revelation')) ?></div>
-              </button>
-            </div>
-          </div>
 
-          <!-- Step 2: Book Selection -->
-          <div class="bible-nav-step bible-nav-hidden" id="navStepBook">
-            <button class="bible-nav-back" id="navBackToTestament">← <?= esc(t('back')) ?></button>
-            <h3 class="bible-nav-step-title" id="navBookTitle"><?= esc(t('choose_book')) ?></h3>
-            <div class="bible-nav-grid" id="navBookGrid"></div>
-          </div>
-
-          <!-- Step 3: Chapter Selection -->
-          <div class="bible-nav-step bible-nav-hidden" id="navStepChapter">
-            <button class="bible-nav-back" id="navBackToBook">← <?= esc(t('back')) ?></button>
-            <h3 class="bible-nav-step-title" id="navChapterTitle"><?= esc(t('choose_chapter')) ?></h3>
-            <div class="bible-nav-grid bible-nav-grid-small" id="navChapterGrid"></div>
-          </div>
-
+        <!-- Step 2: Book Selection -->
+        <div class="bible-nav-step bible-nav-hidden" id="navStepBook">
+          <button class="bible-nav-back" id="navBackToTestament">← <?= esc(t('back')) ?></button>
+          <h3 class="bible-nav-step-title" id="navBookTitle"><?= esc(t('choose_book')) ?></h3>
+          <div class="bible-nav-grid" id="navBookGrid"></div>
         </div>
+
+        <!-- Step 3: Chapter Selection -->
+        <div class="bible-nav-step bible-nav-hidden" id="navStepChapter">
+          <button class="bible-nav-back" id="navBackToBook">← <?= esc(t('back')) ?></button>
+          <h3 class="bible-nav-step-title" id="navChapterTitle"><?= esc(t('choose_chapter')) ?></h3>
+          <div class="bible-nav-grid bible-nav-grid-small" id="navChapterGrid"></div>
+        </div>
+
       </div>
     </div>
+  </div>
+
+  <main class="bible-main">
 
     <!-- Search Panel -->
     <section class="bible-panel bible-panel-hidden" id="searchPanel">
