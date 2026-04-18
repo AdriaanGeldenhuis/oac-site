@@ -32,52 +32,52 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
 <body class="bible-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <main class="bible-main">
+  <!-- Quick Navigation Modal (Fullscreen) -->
+  <div class="bible-modal bible-modal-hidden" id="quickNavModal">
+    <div class="bible-modal-overlay" id="quickNavOverlay"></div>
+    <div class="bible-modal-content">
+      <div class="bible-modal-header">
+        <h2 class="bible-modal-title"><?= esc(t('quick_navigation')) ?></h2>
+        <button class="bible-modal-close" id="quickNavClose">×</button>
+      </div>
+      <div class="bible-modal-body">
 
-    <!-- Quick Navigation Modal (Fullscreen) -->
-    <div class="bible-modal bible-modal-hidden" id="quickNavModal">
-      <div class="bible-modal-overlay" id="quickNavOverlay"></div>
-      <div class="bible-modal-content">
-        <div class="bible-modal-header">
-          <h2 class="bible-modal-title"><?= esc(t('quick_navigation')) ?></h2>
-          <button class="bible-modal-close" id="quickNavClose">×</button>
+        <!-- Step 1: Testament Selection -->
+        <div class="bible-nav-step" id="navStepTestament">
+          <h3 class="bible-nav-step-title"><?= esc(t('choose_testament')) ?></h3>
+          <div class="bible-nav-grid">
+            <button class="bible-nav-card" data-testament="old">
+              <div class="bible-nav-card-icon">📖</div>
+              <div class="bible-nav-card-title"><?= esc(t('old_testament')) ?></div>
+              <div class="bible-nav-card-subtitle"><?= esc(t('genesis_malachi')) ?></div>
+            </button>
+            <button class="bible-nav-card" data-testament="new">
+              <div class="bible-nav-card-icon">✨</div>
+              <div class="bible-nav-card-title"><?= esc(t('new_testament')) ?></div>
+              <div class="bible-nav-card-subtitle"><?= esc(t('matthew_revelation')) ?></div>
+            </button>
+          </div>
         </div>
-        <div class="bible-modal-body">
-          
-          <!-- Step 1: Testament Selection -->
-          <div class="bible-nav-step" id="navStepTestament">
-            <h3 class="bible-nav-step-title"><?= esc(t('choose_testament')) ?></h3>
-            <div class="bible-nav-grid">
-              <button class="bible-nav-card" data-testament="old">
-                <div class="bible-nav-card-icon">📖</div>
-                <div class="bible-nav-card-title"><?= esc(t('old_testament')) ?></div>
-                <div class="bible-nav-card-subtitle"><?= esc(t('genesis_malachi')) ?></div>
-              </button>
-              <button class="bible-nav-card" data-testament="new">
-                <div class="bible-nav-card-icon">✨</div>
-                <div class="bible-nav-card-title"><?= esc(t('new_testament')) ?></div>
-                <div class="bible-nav-card-subtitle"><?= esc(t('matthew_revelation')) ?></div>
-              </button>
-            </div>
-          </div>
 
-          <!-- Step 2: Book Selection -->
-          <div class="bible-nav-step bible-nav-hidden" id="navStepBook">
-            <button class="bible-nav-back" id="navBackToTestament">← <?= esc(t('back')) ?></button>
-            <h3 class="bible-nav-step-title" id="navBookTitle"><?= esc(t('choose_book')) ?></h3>
-            <div class="bible-nav-grid" id="navBookGrid"></div>
-          </div>
-
-          <!-- Step 3: Chapter Selection -->
-          <div class="bible-nav-step bible-nav-hidden" id="navStepChapter">
-            <button class="bible-nav-back" id="navBackToBook">← <?= esc(t('back')) ?></button>
-            <h3 class="bible-nav-step-title" id="navChapterTitle"><?= esc(t('choose_chapter')) ?></h3>
-            <div class="bible-nav-grid bible-nav-grid-small" id="navChapterGrid"></div>
-          </div>
-
+        <!-- Step 2: Book Selection -->
+        <div class="bible-nav-step bible-nav-hidden" id="navStepBook">
+          <button class="bible-nav-back" id="navBackToTestament">← <?= esc(t('back')) ?></button>
+          <h3 class="bible-nav-step-title" id="navBookTitle"><?= esc(t('choose_book')) ?></h3>
+          <div class="bible-nav-grid" id="navBookGrid"></div>
         </div>
+
+        <!-- Step 3: Chapter Selection -->
+        <div class="bible-nav-step bible-nav-hidden" id="navStepChapter">
+          <button class="bible-nav-back" id="navBackToBook">← <?= esc(t('back')) ?></button>
+          <h3 class="bible-nav-step-title" id="navChapterTitle"><?= esc(t('choose_chapter')) ?></h3>
+          <div class="bible-nav-grid bible-nav-grid-small" id="navChapterGrid"></div>
+        </div>
+
       </div>
     </div>
+  </div>
+
+  <main class="bible-main">
 
     <!-- Search Panel -->
     <section class="bible-panel bible-panel-hidden" id="searchPanel">
@@ -244,51 +244,37 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
 
   <!-- Fixed Footer Toolbar -->
   <section class="bible-toolbar">
-    <button class="bible-tool-btn bible-tool-btn-primary" id="quickNavToggle">
+    <button class="bible-tool-btn bible-tool-btn-primary" id="quickNavToggle" title="<?= esc(t('navigate')) ?>" aria-label="<?= esc(t('navigate')) ?>">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2"/>
-        <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
       </svg>
-      <span><?= esc(t('navigate')) ?></span>
     </button>
 
-    <button class="bible-tool-btn" id="searchToggle">
+    <button class="bible-tool-btn" id="searchToggle" title="<?= esc(t('search')) ?>" aria-label="<?= esc(t('search')) ?>">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
         <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <span><?= esc(t('search')) ?></span>
     </button>
 
-    <button class="bible-tool-btn" id="notesToggle">
+    <button class="bible-tool-btn" id="notesToggle" title="<?= esc(t('notes')) ?>" aria-label="<?= esc(t('notes')) ?>">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2"/>
       </svg>
-      <span><?= esc(t('notes')) ?></span>
     </button>
 
-    <button class="bible-tool-btn" id="bookmarksToggle">
+    <button class="bible-tool-btn" id="bookmarksToggle" title="<?= esc(t('bookmarks')) ?>" aria-label="<?= esc(t('bookmarks')) ?>">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
       </svg>
-      <span><?= esc(t('bookmarks')) ?></span>
     </button>
 
-    <button class="bible-tool-btn" id="fontSizeDecrease" title="<?= esc(t('decrease')) ?>">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 7V4h16v3M9 20h6M12 4v16" stroke="currentColor" stroke-width="2"/>
-        <circle cx="18" cy="18" r="4" fill="currentColor"/>
-        <path d="M16 18h4" stroke="white" stroke-width="1.5"/>
-      </svg>
+    <button class="bible-tool-btn bible-tool-btn-text" id="fontSizeDecrease" title="<?= esc(t('decrease')) ?>" aria-label="<?= esc(t('decrease')) ?>">
       <span>A-</span>
     </button>
 
-    <button class="bible-tool-btn" id="fontSizeIncrease" title="<?= esc(t('increase')) ?>">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 7V4h16v3M9 20h6M12 4v16" stroke="currentColor" stroke-width="2"/>
-        <circle cx="18" cy="18" r="4" fill="currentColor"/>
-        <path d="M16 18h4M18 16v4" stroke="white" stroke-width="1.5"/>
-      </svg>
+    <button class="bible-tool-btn bible-tool-btn-text" id="fontSizeIncrease" title="<?= esc(t('increase')) ?>" aria-label="<?= esc(t('increase')) ?>">
       <span>A+</span>
     </button>
   </section>

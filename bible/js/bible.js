@@ -1984,6 +1984,22 @@
       }
     });
 
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.bible-panel') || e.target.closest('.bible-tool-btn') || e.target.closest('.bible-context-menu')) {
+        return;
+      }
+      const openPanels = [
+        els.searchPanel,
+        els.notesPanel,
+        els.bookmarksPanel,
+        els.aiPanel,
+        els.crossRefPanel
+      ].filter(p => p && !p.classList.contains('bible-panel-hidden'));
+      if (openPanels.length > 0) {
+        hideAllPanels();
+      }
+    });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         hideAllPanels();
