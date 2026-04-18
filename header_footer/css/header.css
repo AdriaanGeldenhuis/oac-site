@@ -124,12 +124,23 @@ body {
   gap: 20px;
 }
 
+/* ===== RIGHT-SIDE ACTION GROUP =====
+   Keeps the theme/view/language buttons as a tight pair next to each
+   other, separated from the title by the flex container's gap.
+   =====================================  */
+.ghf-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 /* ===== SHARED GLOSSY BUTTON BASE =====
    Mirrors the welcome-page nav-card treatment:
-   - Soft rose-gold overlay + card gradient
-   - Inner top radial highlight (::after)
-   - Hover-triggered shine sweep (::before)
-   - Rose-gold glow lift on hover
+   - Peach/rose-gold tinted background with inner icon glow
+   - Hover-triggered shine sweep
+   - Soft radial top highlight
+   - Rose-gold border + lift on hover
    =====================================  */
 .ghf-hamburger,
 .ghf-theme-toggle,
@@ -137,13 +148,19 @@ body {
 .ghf-lang-btn {
   position: relative;
   background:
-    linear-gradient(135deg, rgba(183, 110, 121, 0.10) 0%, rgba(183, 110, 121, 0) 55%),
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(245, 213, 200, 0.18) 0%,
+      rgba(232, 180, 168, 0.08) 55%,
+      rgba(232, 180, 168, 0.02) 100%
+    ),
     linear-gradient(160deg, var(--ghf-bg-card) 0%, var(--ghf-bg) 100%);
-  border: 1px solid var(--ghf-border);
+  border: 1px solid rgba(183, 110, 121, 0.30);
   border-radius: 14px;
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 2px 10px rgba(0, 0, 0, 0.40),
+    0 0 14px rgba(183, 110, 121, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transition:
     transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
     border-color 0.3s ease,
@@ -158,11 +175,18 @@ body {
 [data-theme="light"] .ghf-view-toggle,
 [data-theme="light"] .ghf-lang-btn {
   background:
-    linear-gradient(135deg, rgba(183, 110, 121, 0.06) 0%, rgba(183, 110, 121, 0) 55%),
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(201, 132, 122, 0.14) 0%,
+      rgba(201, 132, 122, 0.06) 55%,
+      rgba(201, 132, 122, 0.02) 100%
+    ),
     linear-gradient(160deg, var(--ghf-bg-card) 0%, var(--ghf-bg) 100%);
+  border-color: rgba(183, 110, 121, 0.28);
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 2px 10px rgba(0, 0, 0, 0.08),
+    0 0 14px rgba(183, 110, 121, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .ghf-hamburger::before,
@@ -358,7 +382,6 @@ body {
   justify-content: center;
   padding: 0;
   flex-shrink: 0;
-  margin-right: 10px;
 }
 
 .ghf-theme-icon {
@@ -417,7 +440,6 @@ body {
   justify-content: center;
   padding: 0;
   flex-shrink: 0;
-  margin-right: 10px;
 }
 
 .ghf-view-icon {

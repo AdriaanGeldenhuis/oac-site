@@ -92,51 +92,56 @@ function isActive($url, $currentPath) {
     <!-- Page Title -->
     <h1 class="ghf-title"><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
 
-    <!-- Bible View Toggle (only on Bible page) -->
-    <?php if ($isBiblePage): ?>
-    <button class="ghf-view-toggle" id="ghfViewToggle" type="button" title="<?= t_hdr('toggle_view') ?>">
-      <svg class="ghf-view-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="3" y="3" width="8" height="18" stroke="currentColor" stroke-width="1.5" rx="1"/>
-        <rect x="13" y="3" width="8" height="18" stroke="currentColor" stroke-width="1.5" rx="1"/>
-      </svg>
-      <span class="ghf-view-shine"></span>
-    </button>
-    <?php endif; ?>
+    <!-- Right-side actions -->
+    <div class="ghf-actions">
 
-    <!-- Theme Toggle (Dark/Light) -->
-    <button class="ghf-theme-toggle" id="ghfThemeToggle" type="button" title="<?= t_hdr('toggle_theme') ?>">
-      <svg class="ghf-theme-icon ghf-theme-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.5"/>
-        <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      <svg class="ghf-theme-icon ghf-theme-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span class="ghf-theme-shine"></span>
-    </button>
-
-    <!-- Language Dropdown -->
-    <div class="ghf-lang-wrapper">
-      <button class="ghf-lang-btn" id="ghfLangBtn" type="button" aria-expanded="false">
-        <svg class="ghf-lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="currentColor" stroke-width="1.5"/>
+      <!-- Bible View Toggle (only on Bible page) -->
+      <?php if ($isBiblePage): ?>
+      <button class="ghf-view-toggle" id="ghfViewToggle" type="button" title="<?= t_hdr('toggle_view') ?>">
+        <svg class="ghf-view-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="8" height="18" stroke="currentColor" stroke-width="1.5" rx="1"/>
+          <rect x="13" y="3" width="8" height="18" stroke="currentColor" stroke-width="1.5" rx="1"/>
         </svg>
-        <span class="ghf-lang-text"><?= strtoupper($hdrLang) ?></span>
-        <span class="ghf-lang-shine"></span>
+        <span class="ghf-view-shine"></span>
       </button>
-      <ul class="ghf-lang-menu" id="ghfLangMenu" hidden>
-        <?php foreach (SUPPORTED_LANGS as $code): ?>
-        <li><a href="#" data-lang="<?= $code ?>" class="<?= $hdrLang === $code ? 'active' : '' ?>"><?= htmlspecialchars(LANG_NAMES[$code]) ?></a></li>
-        <?php endforeach; ?>
-      </ul>
+      <?php endif; ?>
+
+      <!-- Theme Toggle (Dark/Light) -->
+      <button class="ghf-theme-toggle" id="ghfThemeToggle" type="button" title="<?= t_hdr('toggle_theme') ?>">
+        <svg class="ghf-theme-icon ghf-theme-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <svg class="ghf-theme-icon ghf-theme-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="ghf-theme-shine"></span>
+      </button>
+
+      <!-- Language Dropdown -->
+      <div class="ghf-lang-wrapper">
+        <button class="ghf-lang-btn" id="ghfLangBtn" type="button" aria-expanded="false">
+          <svg class="ghf-lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <span class="ghf-lang-text"><?= strtoupper($hdrLang) ?></span>
+          <span class="ghf-lang-shine"></span>
+        </button>
+        <ul class="ghf-lang-menu" id="ghfLangMenu" hidden>
+          <?php foreach (SUPPORTED_LANGS as $code): ?>
+          <li><a href="#" data-lang="<?= $code ?>" class="<?= $hdrLang === $code ? 'active' : '' ?>"><?= htmlspecialchars(LANG_NAMES[$code]) ?></a></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+
     </div>
 
   </div>
