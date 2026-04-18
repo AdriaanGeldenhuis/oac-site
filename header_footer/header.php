@@ -161,7 +161,7 @@ function isActive($url, $currentPath) {
       <li>
         <a href="<?= htmlspecialchars($link[0], ENT_QUOTES, 'UTF-8') ?>" class="ghf-nav-link<?= $active ?>">
           <span class="ghf-nav-shine"></span>
-          <?= htmlspecialchars(t_hdr($link[1]), ENT_QUOTES, 'UTF-8') ?>
+          <span class="ghf-nav-text"><?= htmlspecialchars(t_hdr($link[1]), ENT_QUOTES, 'UTF-8') ?></span>
         </a>
       </li>
     <?php endforeach; ?>
