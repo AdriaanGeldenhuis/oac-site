@@ -187,7 +187,9 @@ $navItems = [
       <div class="wc-nav-grid">
         <?php foreach ($navItems as $item): ?>
           <a href="<?= $item['href'] ?>" class="wc-nav-card">
-            <svg class="wc-nav-icon" viewBox="0 0 24 24" fill="currentColor"><?= $item['icon'] ?></svg>
+            <span class="wc-nav-icon-wrap">
+              <svg class="wc-nav-icon" viewBox="0 0 24 24" fill="currentColor"><?= $item['icon'] ?></svg>
+            </span>
             <span class="wc-nav-label"><?= t($item['key']) ?></span>
           </a>
         <?php endforeach; ?>
