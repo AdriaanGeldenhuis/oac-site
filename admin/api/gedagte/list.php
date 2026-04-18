@@ -48,7 +48,7 @@ try {
         FROM daily_thoughts dt
         LEFT JOIN users u ON u.id = dt.created_by
         WHERE dt.display_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        ORDER BY dt.display_date ASC
+        ORDER BY dt.display_date DESC
         LIMIT 30
     ');
     $stmt->execute();
