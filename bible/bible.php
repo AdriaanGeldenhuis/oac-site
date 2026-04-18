@@ -160,17 +160,6 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
       </div>
     </section>
 
-    <!-- Reading Plan Panel -->
-    <section class="bible-panel bible-panel-hidden" id="readingPlanPanel">
-      <div class="bible-panel-header">
-        <h3 class="bible-panel-title"><?= esc(t('reading_plan')) ?></h3>
-        <button class="bible-panel-close" id="readingPlanClose">×</button>
-      </div>
-      <div class="bible-panel-body">
-        <div id="readingPlanContent"></div>
-      </div>
-    </section>
-
     <!-- Main Reading View (Dual Columns) -->
     <section class="bible-reading-section">
       <div class="bible-dual-container">
@@ -283,14 +272,6 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>
       </svg>
       <span><?= esc(t('bookmarks')) ?></span>
-    </button>
-
-    <button class="bible-tool-btn" id="readingPlanToggle">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
-      </svg>
-      <span><?= esc(t('plan')) ?></span>
     </button>
 
     <button class="bible-tool-btn" id="fontSizeDecrease" title="<?= esc(t('decrease')) ?>">

@@ -231,7 +231,6 @@
     searchToggle: $('searchToggle'),
     notesToggle: $('notesToggle'),
     bookmarksToggle: $('bookmarksToggle'),
-    readingPlanToggle: $('readingPlanToggle'),
     searchPanel: $('searchPanel'),
     searchClose: $('searchClose'),
     searchInput: $('searchInput'),
@@ -254,9 +253,6 @@
     crossRefPanel: $('crossRefPanel'),
     crossRefClose: $('crossRefClose'),
     crossRefList: $('crossRefList'),
-    readingPlanPanel: $('readingPlanPanel'),
-    readingPlanClose: $('readingPlanClose'),
-    readingPlanContent: $('readingPlanContent'),
     leftContent: $('leftContent'),
     rightContent: $('rightContent'),
     leftColumn: $('leftColumn'),
@@ -1757,52 +1753,6 @@
     showPanel(els.crossRefPanel);
   }
 
-  function showReadingPlan() {
-    if (!els.readingPlanPanel || !els.readingPlanContent) return;
-    
-    const plans = [
-      { 
-        id: 'year', 
-        name: state.lang === 'af' ? 'Bybel in \'n Jaar' : 'Bible in a Year',
-        desc: state.lang === 'af' ? '365 dae' : '365 days'
-      },
-      { 
-        id: 'nt_month', 
-        name: state.lang === 'af' ? 'NT in \'n Maand' : 'NT in a Month',
-        desc: state.lang === 'af' ? '30 dae' : '30 days'
-      },
-      { 
-        id: 'psalms', 
-        name: state.lang === 'af' ? 'Psalms in \'n Maand' : 'Psalms in a Month',
-        desc: state.lang === 'af' ? '30 dae' : '30 days'
-      }
-    ];
-    
-    let html = '<div class="bible-plan-options">';
-    
-    plans.forEach(plan => {
-      html += `
-        <button class="bible-plan-option" data-plan="${plan.id}">
-          <div class="bible-plan-name">${esc(plan.name)}</div>
-          <div class="bible-plan-desc">${esc(plan.desc)}</div>
-        </button>
-      `;
-    });
-    
-    html += '</div>';
-    
-    els.readingPlanContent.innerHTML = html;
-    
-    els.readingPlanContent.querySelectorAll('.bible-plan-option').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const planId = btn.dataset.plan;
-        alert(`${state.lang === 'af' ? 'Begin leesplan' : 'Starting reading plan'}: ${planId}`);
-      });
-    });
-    
-    showPanel(els.readingPlanPanel);
-  }
-
   // ===== UTILITIES =====
   function copyVerse() {
     if (!state.selectedVerse) return;
@@ -1955,8 +1905,7 @@
       els.notesPanel,
       els.bookmarksPanel,
       els.aiPanel,
-      els.crossRefPanel,
-      els.readingPlanPanel
+      els.crossRefPanel
     ];
     
     panels.forEach(panel => {
@@ -1992,14 +1941,12 @@
       togglePanel(els.bookmarksPanel);
       renderBookmarksList();
     });
-    els.readingPlanToggle?.addEventListener('click', showReadingPlan);
 
     els.searchClose?.addEventListener('click', () => hidePanel(els.searchPanel));
     els.notesClose?.addEventListener('click', () => hidePanel(els.notesPanel));
     els.bookmarksClose?.addEventListener('click', () => hidePanel(els.bookmarksPanel));
     els.aiClose?.addEventListener('click', () => hidePanel(els.aiPanel));
     els.crossRefClose?.addEventListener('click', () => hidePanel(els.crossRefPanel));
-    els.readingPlanClose?.addEventListener('click', () => hidePanel(els.readingPlanPanel));
 
     els.searchBtn?.addEventListener('click', handleSearch);
     els.searchInput?.addEventListener('keydown', (e) => {

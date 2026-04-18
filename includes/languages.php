@@ -1666,14 +1666,6 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Selecione um versículo para ver referências cruzadas.',
         'st' => 'Khetha temana ho bona litšupiso tse fapaneng.'
     ],
-    'reading_plan' => [
-        'af' => 'Leesplan',
-        'en' => 'Reading Plan',
-        'zu' => 'Uhlelo Lokufunda',
-        'xh' => 'Isicwangciso Sokufunda',
-        'pt' => 'Plano de Leitura',
-        'st' => 'Morero oa ho Bala'
-    ],
     'choose_color' => [
         'af' => 'Kies Kleur',
         'en' => 'Choose Color',
@@ -1801,14 +1793,6 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Yandisa',
         'pt' => 'Aumentar',
         'st' => 'Eketsa'
-    ],
-    'plan' => [
-        'af' => 'Plan',
-        'en' => 'Plan',
-        'zu' => 'Uhlelo',
-        'xh' => 'Isicwangciso',
-        'pt' => 'Plano',
-        'st' => 'Morero'
     ],
     'remove' => [
         'af' => 'Verwyder',
