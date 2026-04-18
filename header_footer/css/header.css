@@ -197,6 +197,7 @@ body {
    =================================  */
 .ghf-hamburger,
 .ghf-theme-toggle,
+.ghf-view-toggle,
 .ghf-lang-btn {
   border-radius: 50%;
   background:
@@ -216,6 +217,7 @@ body {
 
 [data-theme="light"] .ghf-hamburger,
 [data-theme="light"] .ghf-theme-toggle,
+[data-theme="light"] .ghf-view-toggle,
 [data-theme="light"] .ghf-lang-btn {
   background:
     radial-gradient(
@@ -234,6 +236,7 @@ body {
 
 .ghf-hamburger:hover,
 .ghf-theme-toggle:hover,
+.ghf-view-toggle:hover,
 .ghf-lang-btn:hover {
   transform: translateY(-4px);
   box-shadow:
@@ -244,6 +247,7 @@ body {
 
 [data-theme="light"] .ghf-hamburger:hover,
 [data-theme="light"] .ghf-theme-toggle:hover,
+[data-theme="light"] .ghf-view-toggle:hover,
 [data-theme="light"] .ghf-lang-btn:hover {
   box-shadow:
     0 14px 30px rgba(169, 104, 96, 0.22),
@@ -253,6 +257,7 @@ body {
 
 .ghf-hamburger:active,
 .ghf-theme-toggle:active,
+.ghf-view-toggle:active,
 .ghf-lang-btn:active {
   transform: translateY(-2px);
 }
