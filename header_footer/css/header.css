@@ -190,12 +190,14 @@ body {
 }
 
 /* ===== ROUND PILL VARIANT =====
-   Hamburger + theme toggle styled identically to the footer floating
-   buttons (.global-notif-badge, .global-back-btn): circular, stronger
-   rose-gold border/glow, deeper shadow, bigger hover lift.
+   Hamburger, theme toggle, and language button styled identically to
+   the footer floating buttons (.global-notif-badge, .global-back-btn):
+   circular, stronger rose-gold border/glow, deeper shadow, bigger
+   hover lift.
    =================================  */
 .ghf-hamburger,
-.ghf-theme-toggle {
+.ghf-theme-toggle,
+.ghf-lang-btn {
   border-radius: 50%;
   background:
     radial-gradient(
@@ -213,7 +215,8 @@ body {
 }
 
 [data-theme="light"] .ghf-hamburger,
-[data-theme="light"] .ghf-theme-toggle {
+[data-theme="light"] .ghf-theme-toggle,
+[data-theme="light"] .ghf-lang-btn {
   background:
     radial-gradient(
       circle at 30% 30%,
@@ -230,7 +233,8 @@ body {
 }
 
 .ghf-hamburger:hover,
-.ghf-theme-toggle:hover {
+.ghf-theme-toggle:hover,
+.ghf-lang-btn:hover {
   transform: translateY(-4px);
   box-shadow:
     0 14px 36px rgba(0, 0, 0, 0.65),
@@ -239,7 +243,8 @@ body {
 }
 
 [data-theme="light"] .ghf-hamburger:hover,
-[data-theme="light"] .ghf-theme-toggle:hover {
+[data-theme="light"] .ghf-theme-toggle:hover,
+[data-theme="light"] .ghf-lang-btn:hover {
   box-shadow:
     0 14px 30px rgba(169, 104, 96, 0.22),
     0 0 26px rgba(183, 110, 121, 0.30),
@@ -247,7 +252,8 @@ body {
 }
 
 .ghf-hamburger:active,
-.ghf-theme-toggle:active {
+.ghf-theme-toggle:active,
+.ghf-lang-btn:active {
   transform: translateY(-2px);
 }
 
@@ -538,31 +544,25 @@ body {
 }
 
 .ghf-lang-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  justify-content: center;
   cursor: pointer;
   color: var(--ghf-text);
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
-.ghf-lang-icon {
-  width: 18px;
-  height: 18px;
-  stroke: var(--ghf-silver);
-  filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.5));
-  position: relative;
-  z-index: 2;
-  transition: stroke 0.3s ease;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
 }
 
 .ghf-lang-text {
   position: relative;
   z-index: 2;
+  line-height: 1;
 }
 
 /* Legacy shine element — retained for markup compat; made inert */
@@ -572,10 +572,6 @@ body {
 
 .ghf-lang-btn:hover {
   color: var(--ghf-text-rose);
-}
-
-.ghf-lang-btn:hover .ghf-lang-icon {
-  stroke: var(--ghf-text-rose);
 }
 
 /* ===== LANGUAGE MENU ===== */
@@ -1197,7 +1193,8 @@ body.ghf-open .ghf-drawer {
 
   .ghf-hamburger,
   .ghf-theme-toggle,
-  .ghf-view-toggle {
+  .ghf-view-toggle,
+  .ghf-lang-btn {
     width: 40px;
     height: 40px;
   }
@@ -1212,7 +1209,6 @@ body.ghf-open .ghf-drawer {
   }
 
   .ghf-lang-btn {
-    padding: 8px 12px;
     font-size: 12px;
   }
 

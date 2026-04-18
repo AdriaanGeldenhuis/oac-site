@@ -127,11 +127,7 @@ function isActive($url, $currentPath) {
 
       <!-- Language Dropdown -->
       <div class="ghf-lang-wrapper">
-        <button class="ghf-lang-btn" id="ghfLangBtn" type="button" aria-expanded="false">
-          <svg class="ghf-lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
+        <button class="ghf-lang-btn" id="ghfLangBtn" type="button" aria-expanded="false" aria-label="<?= t_hdr('language') ?>">
           <span class="ghf-lang-text"><?= strtoupper($hdrLang) ?></span>
           <span class="ghf-lang-shine"></span>
         </button>
