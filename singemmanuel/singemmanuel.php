@@ -39,6 +39,14 @@ if (file_exists($songsPathAf)) {
 $songs = ($lang === 'en') ? $songsEn : $songsAf;
 $altSongs = ($lang === 'en') ? $songsAf : $songsEn;
 
+// Build union of song numbers from both languages so every hymn appears
+// in the picker, even if it only exists in one language.
+$allSongNumbers = [];
+foreach ($songsEn as $s) { $allSongNumbers[(string)$s['number']] = true; }
+foreach ($songsAf as $s) { $allSongNumbers[(string)$s['number']] = true; }
+$allSongNumbers = array_keys($allSongNumbers);
+usort($allSongNumbers, fn($a, $b) => (int)$a <=> (int)$b);
+
 // Select song
 $songParam = null;
 if (isset($_GET['song']) && preg_match('/^[0-9]+$/', $_GET['song'])) {
@@ -105,14 +113,6 @@ $VER = time();
     <!-- Language & Search Section -->
     <section class="se-section se-controls-section">
       <h2 class="se-page-title">Sing Emmanuel</h2>
-      <div class="se-section-header">
-        <div class="se-icon-wrapper">
-          <svg class="se-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-          </svg>
-        </div>
-        <h2 class="se-section-title"><?= t('choose_song') ?></h2>
-      </div>
 
       <div class="se-controls-grid">
         <div class="se-language-toggle">
@@ -142,19 +142,6 @@ $VER = time();
 
     <!-- Song Display Section -->
     <section class="se-section se-song-section">
-      <div class="se-section-header">
-        <div class="se-icon-wrapper">
-          <svg class="se-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 1H5c-1.1 0-2 .9-2 2v18l7-3 7 3V3c0-1.1-.9-2-2-2z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M12 6v6M9 9h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h2 class="se-section-title">
-          <?= t('hymn') ?> 
-          <?= htmlspecialchars($selectedSong ? (string)$selectedSong['number'] : '1') ?>
-        </h2>
-      </div>
-
       <div class="se-song-content" id="songContent">
         <?php if ($languageFallback): ?>
           <div class="se-language-notice">
@@ -196,10 +183,11 @@ $VER = time();
         </button>
       </div>
       <div class="se-overlay-grid" id="songPickerGrid">
-        <?php foreach ($songs as $song): ?>
-          <button class="se-song-btn" data-song="<?= htmlspecialchars((string)$song['number']) ?>">
+        <?php foreach ($allSongNumbers as $songNumber): ?>
+          <?php $songNumberStr = (string)$songNumber; ?>
+          <button class="se-song-btn" data-song="<?= htmlspecialchars($songNumberStr) ?>">
             <span class="se-btn-shine"></span>
-            <span><?= htmlspecialchars((string)$song['number']) ?></span>
+            <span><?= htmlspecialchars($songNumberStr) ?></span>
           </button>
         <?php endforeach; ?>
       </div>
