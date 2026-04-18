@@ -14,6 +14,11 @@ ob_start();
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
+// Keep running after the response is flushed so notifications can finish
+// in the background without the admin UI waiting on them.
+ignore_user_abort(true);
+@set_time_limit(0);
+
 if (!auth_logged_in()) {
     ob_end_clean();
     http_response_code(401);
@@ -128,6 +133,19 @@ try {
     $today = $nowRow['today'];
     $shouldNotify = ($displayDate <= $today);
 
+    // Respond to the browser before fanning out FCM pushes: each push is a
+    // blocking HTTPS call, so with many recipients the UI would otherwise sit
+    // on a pending request until PHP or the client timed out, even though the
+    // thought is already saved.
+    ob_end_clean();
+    echo json_encode(['success' => true]);
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } else {
+        if (ob_get_level() > 0) ob_end_flush();
+        flush();
+    }
+
     if ($shouldNotify) {
         try {
             require_once dirname(__DIR__, 2) . '/config/fcm_config.php';
@@ -220,11 +238,9 @@ try {
         }
     }
 
-    ob_end_clean();
-    echo json_encode(['success' => true]);
 } catch (Throwable $e) {
     error_log('Daily thought save error: ' . $e->getMessage());
-    ob_end_clean();
+    if (ob_get_level() > 0) ob_end_clean();
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Failed to save']);
 }
