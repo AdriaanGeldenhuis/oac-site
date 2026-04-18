@@ -925,14 +925,22 @@ html {
 
 /* ===== CONTEXT MENU ===== */
 .bible-context-menu {
-  position: fixed;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%);
+  width: min(calc(100vw - 32px), 380px);
+  max-height: 80vh;
+  overflow-y: auto;
   background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface) 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow), 0 0 20px var(--glow-rose);
-  padding: 15px;
+  padding: 18px;
   z-index: 10000;
-  min-width: 250px;
+  min-width: 0;
   backdrop-filter: blur(15px);
 }
 
@@ -1678,7 +1686,7 @@ html {
   }
 
   .bible-context-menu {
-    min-width: 220px;
+    padding: 16px;
   }
 }
 
