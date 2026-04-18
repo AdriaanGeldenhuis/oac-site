@@ -39,6 +39,14 @@ if (file_exists($songsPathAf)) {
 $songs = ($lang === 'en') ? $songsEn : $songsAf;
 $altSongs = ($lang === 'en') ? $songsAf : $songsEn;
 
+// Build union of song numbers from both languages so every hymn appears
+// in the picker, even if it only exists in one language.
+$allSongNumbers = [];
+foreach ($songsEn as $s) { $allSongNumbers[(string)$s['number']] = true; }
+foreach ($songsAf as $s) { $allSongNumbers[(string)$s['number']] = true; }
+$allSongNumbers = array_keys($allSongNumbers);
+usort($allSongNumbers, fn($a, $b) => (int)$a <=> (int)$b);
+
 // Select song
 $songParam = null;
 if (isset($_GET['song']) && preg_match('/^[0-9]+$/', $_GET['song'])) {
@@ -175,10 +183,10 @@ $VER = time();
         </button>
       </div>
       <div class="se-overlay-grid" id="songPickerGrid">
-        <?php foreach ($songs as $song): ?>
-          <button class="se-song-btn" data-song="<?= htmlspecialchars((string)$song['number']) ?>">
+        <?php foreach ($allSongNumbers as $songNumber): ?>
+          <button class="se-song-btn" data-song="<?= htmlspecialchars($songNumber) ?>">
             <span class="se-btn-shine"></span>
-            <span><?= htmlspecialchars((string)$song['number']) ?></span>
+            <span><?= htmlspecialchars($songNumber) ?></span>
           </button>
         <?php endforeach; ?>
       </div>
