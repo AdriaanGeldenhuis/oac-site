@@ -774,7 +774,7 @@ body.ghf-open .ghf-drawer {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-evenly;
   gap: min(8px, 1vh);
   overflow-y: auto;
   max-height: calc(100vh - 100px);
@@ -1251,7 +1251,7 @@ body.ghf-open .ghf-drawer {
     max-height: calc(100dvh - 80px);
     padding: 10px 15px;
     gap: min(6px, 0.8vh);
-    justify-content: flex-start;
+    justify-content: space-evenly;
   }
 }
 
@@ -1279,7 +1279,7 @@ body.ghf-open .ghf-drawer {
     max-height: calc(100dvh - 70px);
     padding: 8px 12px;
     gap: min(5px, 0.6vh);
-    justify-content: flex-start;
+    justify-content: space-evenly;
   }
 }
 
