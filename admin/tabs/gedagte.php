@@ -14,7 +14,7 @@
   <form id="gedagteForm" class="gedagte-form">
     <div class="gedagte-field">
       <label for="thoughtContent"><?= t('thought_content') ?></label>
-      <textarea id="thoughtContent" name="content" rows="4" required placeholder="<?= esc(t('thought_content')) ?>"></textarea>
+      <textarea id="thoughtContent" name="content" rows="10" required placeholder="<?= esc(t('thought_content')) ?>"></textarea>
     </div>
 
     <div class="gedagte-row">
