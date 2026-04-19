@@ -1104,9 +1104,27 @@ body.ghf-open .ghf-drawer {
 }
 
 /* Positioning */
-.global-notif-badge {
+.global-notif-wrap {
+  position: fixed;
+  bottom: 30px;
   right: 30px;
+  z-index: 999;
+  width: 60px;
+  height: 60px;
   animation: float-badge 3s ease-in-out infinite;
+}
+
+.global-notif-wrap:hover {
+  animation-play-state: paused;
+}
+
+.global-notif-badge {
+  position: relative;
+  bottom: auto;
+  right: auto;
+  width: 100%;
+  height: 100%;
+  animation: none;
 }
 
 .global-back-btn {
@@ -1116,10 +1134,6 @@ body.ghf-open .ghf-drawer {
 @keyframes float-badge {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-8px); }
-}
-
-.global-notif-badge:hover {
-  animation-play-state: paused;
 }
 
 /* Count pill */
@@ -1145,15 +1159,19 @@ body.ghf-open .ghf-drawer {
 }
 
 @media (max-width: 768px) {
-  .global-notif-badge,
+  .global-notif-wrap {
+    width: 56px;
+    height: 56px;
+    bottom: 20px;
+    right: 20px;
+  }
+
   .global-back-btn {
     width: 56px;
     height: 56px;
     bottom: 20px;
+    left: 20px;
   }
-
-  .global-notif-badge { right: 20px; }
-  .global-back-btn   { left: 20px; }
 
   .global-notif-badge svg,
   .global-back-btn svg {
@@ -1163,7 +1181,7 @@ body.ghf-open .ghf-drawer {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .global-notif-badge {
+  .global-notif-wrap {
     animation: none;
   }
 }
