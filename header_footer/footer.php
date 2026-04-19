@@ -7,10 +7,12 @@ function t_ftr(string $key): string {
 }
 ?>
 <!-- Global Notification Badge - Bottom Right -->
-<div class="global-notif-badge" id="globalNotifBadge" onclick="window.location.href='/notifications/notifications.php'">
-  <svg class="global-notif-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
+<div class="global-notif-wrap" id="globalNotifWrap">
+  <div class="global-notif-badge" id="globalNotifBadge" onclick="window.location.href='/notifications/notifications.php'">
+    <svg class="global-notif-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
   <span class="global-notif-count" id="globalNotifCount" hidden>0</span>
 </div>
 
