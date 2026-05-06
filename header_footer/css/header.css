@@ -1228,7 +1228,7 @@ body.ghf-open .ghf-drawer {
 
   .ghf-title {
     font-size: 1.2rem;
-    max-width: 150px;
+    max-width: 220px;
   }
 
   .ghf-lang-btn {
@@ -1275,8 +1275,8 @@ body.ghf-open .ghf-drawer {
 
 @media (max-width: 480px) {
   .ghf-title {
-    font-size: 1.1rem;
-    max-width: 120px;
+    font-size: 1.05rem;
+    max-width: 180px;
   }
 
   .ghf-nav-link {

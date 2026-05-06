@@ -448,19 +448,33 @@
     const headerTitle = document.querySelector('.ghf-title');
     if (!headerTitle) return;
 
-    const verses = document.querySelectorAll('.bible-verse[data-verse]');
+    // Only consider verses inside the left (native-language) column.
+    // The right column may contain English duplicates that can confuse
+    // the "top visible verse" detection, especially on mobile where the
+    // right column is hidden via display:none but still part of the DOM.
+    const leftColumn = els.leftColumn;
+    if (!leftColumn) return;
+
+    const verses = leftColumn.querySelectorAll('.bible-verse[data-verse]');
     if (!verses.length) {
       headerTitle.textContent = state.lang === 'en' ? 'Bible' : 'Bybel';
       return;
     }
+
+    const colRect = leftColumn.getBoundingClientRect();
+    // Anchor reference point a bit below the top of the visible column
+    const anchorY = colRect.top + 80;
+    const colBottom = colRect.bottom;
 
     let topVerse = null;
     let minDist = Infinity;
 
     verses.forEach(v => {
       const rect = v.getBoundingClientRect();
-      const dist = Math.abs(rect.top - 150);
-      if (rect.top > 70 && rect.top < window.innerHeight && dist < minDist) {
+      // Verse must be within the column's visible bounds
+      if (rect.bottom <= colRect.top || rect.top >= colBottom) return;
+      const dist = Math.abs(rect.top - anchorY);
+      if (dist < minDist) {
         minDist = dist;
         topVerse = v;
       }
@@ -470,7 +484,7 @@
       const bookEN = topVerse.dataset.booken;
       const chapter = topVerse.dataset.chapter;
       const verse = topVerse.dataset.verse;
-      
+
       const displayName = state.lang === 'af' ? EN_TO_AF_BOOKS[bookEN] || bookEN : bookEN;
       headerTitle.textContent = `${displayName} ${chapter}:${verse}`;
     } else {
@@ -1065,6 +1079,16 @@
     bindVerseInteractions();
     applyFontSize();
 
+    // Set header directly from the known target — don't wait for scroll
+    // detection, which can mis-fire while the smooth scroll is in progress.
+    const headerTitle = document.querySelector('.ghf-title');
+    if (headerTitle) {
+      const displayName = state.lang === 'af'
+        ? (EN_TO_AF_BOOKS[parsed.bookEN] || parsed.bookEN)
+        : parsed.bookEN;
+      headerTitle.textContent = `${displayName} ${parsed.chapter}:${parsed.verse || 1}`;
+    }
+
     // Scroll to the specific verse
     setTimeout(() => {
       const verseEl = els.leftContent.querySelector(`.bible-verse[data-ref="${CSS.escape(ref)}"]`);
@@ -1076,7 +1100,9 @@
         els.leftColumn.scrollTop = 0;
         if (els.rightColumn) els.rightColumn.scrollTop = 0;
       }
-      updateHeaderRef();
+      // Refresh after the smooth scroll has settled so the title matches
+      // wherever the user actually landed (in case scroll snaps elsewhere).
+      setTimeout(updateHeaderRef, 700);
     }, 100);
   }
 

@@ -199,10 +199,11 @@ html {
   font-family: var(--font-display);
   font-size: clamp(1.5rem, 4vw, 1.8rem);
   font-weight: 200;
+  line-height: 1.4;
   color: var(--rose-gold);
   text-align: center;
   margin-bottom: 15px;
-  padding: 8px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border);
   text-shadow: 0 0 15px var(--glow-rose);
 }
@@ -512,6 +513,8 @@ html {
 .bible-modal-title {
   font-family: var(--font-display);
   font-size: 2rem;
+  line-height: 1.4;
+  padding-top: 4px;
   color: var(--rose-gold);
   text-shadow: 0 0 20px var(--glow-rose);
 }
@@ -626,6 +629,8 @@ html {
 .bible-nav-step-title {
   font-family: var(--font-display);
   font-size: 1.8rem;
+  line-height: 1.4;
+  padding: 6px 0;
   color: var(--rose-gold);
   text-align: center;
   margin-bottom: 30px;
@@ -909,6 +914,8 @@ html {
 .bible-panel-title {
   font-family: var(--font-display);
   font-size: 1.5rem;
+  line-height: 1.4;
+  padding-top: 4px;
   color: var(--rose-gold);
   text-shadow: 0 0 15px var(--glow-rose);
 }
