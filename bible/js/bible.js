@@ -1079,6 +1079,16 @@
     bindVerseInteractions();
     applyFontSize();
 
+    // Set header directly from the known target — don't wait for scroll
+    // detection, which can mis-fire while the smooth scroll is in progress.
+    const headerTitle = document.querySelector('.ghf-title');
+    if (headerTitle) {
+      const displayName = state.lang === 'af'
+        ? (EN_TO_AF_BOOKS[parsed.bookEN] || parsed.bookEN)
+        : parsed.bookEN;
+      headerTitle.textContent = `${displayName} ${parsed.chapter}:${parsed.verse || 1}`;
+    }
+
     // Scroll to the specific verse
     setTimeout(() => {
       const verseEl = els.leftContent.querySelector(`.bible-verse[data-ref="${CSS.escape(ref)}"]`);
@@ -1090,10 +1100,9 @@
         els.leftColumn.scrollTop = 0;
         if (els.rightColumn) els.rightColumn.scrollTop = 0;
       }
-      updateHeaderRef();
-      // Smooth scroll is async — refresh the header again once the
-      // scroll has settled so the title matches the actual visible chapter.
-      setTimeout(updateHeaderRef, 600);
+      // Refresh after the smooth scroll has settled so the title matches
+      // wherever the user actually landed (in case scroll snaps elsewhere).
+      setTimeout(updateHeaderRef, 700);
     }, 100);
   }
 
