@@ -39,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strlen($pass) < 8) {
         $errors[] = 'Password must be at least 8 characters.';
     }
+    if ($amp <= 0) {
+        $errors[] = 'Please select an officer.';
+    }
 
     if (!$errors) {
         $chk = $pdo->prepare("SELECT 1 FROM users WHERE email = ? LIMIT 1");
@@ -167,7 +170,7 @@ $congregations = $pdo->query("SELECT * FROM congregations ORDER BY name")->fetch
 
     <div>
       <label>Gender<br>
-        <select name="gender" id="gender" onchange="updateAmptes()">
+        <select name="gender" id="gender" onchange="updateAmptes()" required>
           <option value="">Select...</option>
           <option value="man">Male</option>
           <option value="vrou">Female</option>
@@ -187,7 +190,7 @@ $congregations = $pdo->query("SELECT * FROM congregations ORDER BY name")->fetch
 
     <div>
       <label>Officer<br>
-        <select name="amp_id" id="amp_id" disabled>
+        <select name="amp_id" id="amp_id" disabled required>
           <option value="">Select gender first...</option>
         </select>
       </label>
