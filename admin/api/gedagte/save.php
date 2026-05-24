@@ -125,13 +125,23 @@ try {
         $userId
     ]);
 
-    // --- Send notifications immediately for today's (or past) thoughts ---
-    // A manual save from the admin UI is an explicit "publish now" action, so we
-    // fire the push as soon as the record is stored. display_time is only used
-    // for future-dated thoughts, which the cron picks up on the scheduled day.
-    $nowRow = $pdo->query("SELECT CURDATE() AS today")->fetch(PDO::FETCH_ASSOC);
+    // --- Send notifications only once the thought's display moment has arrived ---
+    // The push must coincide with the "tyd om te wys" (display_time) so users are
+    // not notified before the thought is actually visible (see gedagtes/api/list.php).
+    // If the scheduled moment is still in the future we leave notification_sent = 0
+    // and let the thought cron / auto-cron fire the push at display_time.
+    $nowRow = $pdo->query("SELECT CURDATE() AS today, CURTIME() AS now_time")->fetch(PDO::FETCH_ASSOC);
     $today = $nowRow['today'];
-    $shouldNotify = ($displayDate <= $today);
+    $nowTime = $nowRow['now_time'];
+    $displayTimeFull = $displayTime !== '' ? $displayTime . ':00' : null;
+
+    if ($displayDate < $today) {
+        $shouldNotify = true; // overdue: the display moment passed on an earlier day
+    } elseif ($displayDate === $today) {
+        $shouldNotify = ($displayTimeFull === null || $displayTimeFull <= $nowTime);
+    } else {
+        $shouldNotify = false; // future date: cron sends it on the scheduled day
+    }
 
     // Respond to the browser before fanning out FCM pushes: each push is a
     // blocking HTTPS call, so with many recipients the UI would otherwise sit
