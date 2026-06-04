@@ -87,7 +87,7 @@
     '1 Kronieke': '1 Chronicles',
     '2 Kronieke': '2 Chronicles',
     'Esra': 'Ezra',
-    'Nehemia': 'Nehemiah',
+    'Nehemía': 'Nehemiah',
     'Ester': 'Esther',
     'Job': 'Job',
     'Psalms': 'Psalms',
@@ -97,38 +97,38 @@
     'Jesaja': 'Isaiah',
     'Jeremia': 'Jeremiah',
     'Klaagliedere': 'Lamentations',
-    'Esegiel': 'Ezekiel',
+    'Eségiël': 'Ezekiel',
     'Daniël': 'Daniel',
-    'Hosea': 'Hosea',
-    'Joel': 'Joel',
+    'Hoséa': 'Hosea',
+    'Joël': 'Joel',
     'Amos': 'Amos',
-    'Obadja': 'Obadiah',
+    'Obádja': 'Obadiah',
     'Jona': 'Jonah',
     'Miga': 'Micah',
     'Nahum': 'Nahum',
-    'Habakuk': 'Habakkuk',
-    'Sefanja': 'Zephaniah',
+    'Hábakuk': 'Habakkuk',
+    'Sefánja': 'Zephaniah',
     'Haggai': 'Haggai',
-    'Sagaria': 'Zechariah',
-    'Maleagi': 'Malachi',
-    'Matteus': 'Matthew',
+    'Sagaría': 'Zechariah',
+    'Maleági': 'Malachi',
+    'Matthéüs': 'Matthew',
     'Markus': 'Mark',
     'Lukas': 'Luke',
     'Johannes': 'John',
     'Handelinge': 'Acts',
     'Romeine': 'Romans',
     '1 Korinthiërs': '1 Corinthians',
-    '2 Korinthiers': '2 Corinthians',
-    'Galasiers': 'Galatians',
-    'Efesiers': 'Ephesians',
+    '2 Korinthiërs': '2 Corinthians',
+    'Galásiërs': 'Galatians',
+    'Efésiërs': 'Ephesians',
     'Filippense': 'Philippians',
     'Kolossense': 'Colossians',
-    '1 Thessalonisense': '1 Thessalonians',
-    '2 Thessalonisense': '2 Thessalonians',
-    '1 Timotheus': '1 Timothy',
-    '2 Timotheus': '2 Timothy',
+    '1 Thessalonicense': '1 Thessalonians',
+    '2 Thessalonicense': '2 Thessalonians',
+    '1 Timótheüs': '1 Timothy',
+    '2 Timótheüs': '2 Timothy',
     'Titus': 'Titus',
-    'Filemon': 'Philemon',
+    'Filémon': 'Philemon',
     'Hebreërs': 'Hebrews',
     'Jakobus': 'James',
     '1 Petrus': '1 Peter',
@@ -308,7 +308,7 @@
 
   // ===== DATA LOADING =====
   async function loadJSON(url, onProgress) {
-    const cacheKey = `bible_v4_${url}`;
+    const cacheKey = `bible_v5_${url}`;
     
     const cached = await getFromDB(cacheKey);
     if (cached) {
@@ -373,13 +373,50 @@
     return [];
   }
 
+  // Normalize a book name for tolerant matching: strip diacritics, lowercase,
+  // collapse internal whitespace. Used only as a fallback so renamed/mismatched
+  // keys (e.g. 'Efesiers' vs 'Efésiërs') still resolve and never produce a
+  // spurious "Geen hoofstukke gevind nie."
+  function normalizeBookName(name) {
+    return (name || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Cache of normalized-key -> original-key maps, one per data object. WeakMap so
+  // the index is built once per loaded JSON and freed with the data object.
+  const _normKeyIndexCache = new WeakMap();
+  function getNormalizedKeyIndex(data) {
+    let index = _normKeyIndexCache.get(data);
+    if (index) return index;
+    index = Object.create(null);
+    for (const key of Object.keys(data)) {
+      const norm = normalizeBookName(key);
+      if (!(norm in index)) index[norm] = key; // first write wins, preserves order
+    }
+    _normKeyIndexCache.set(data, index);
+    return index;
+  }
+
   function getBook(data, bookName) {
     if (!data || !bookName) return null;
     if (Array.isArray(data.books)) {
       return data.books.find(b => (b.name || b.book) === bookName);
     }
-    if (typeof data[bookName] === 'object') {
+    // Fast path: exact object-key match (current behavior).
+    if (typeof data[bookName] === 'object' && data[bookName] !== null) {
       return data[bookName];
+    }
+    // Fallback: diacritic/case/space-tolerant match against the JSON keys.
+    if (typeof data === 'object') {
+      const matchedKey = getNormalizedKeyIndex(data)[normalizeBookName(bookName)];
+      if (matchedKey && typeof data[matchedKey] === 'object' && data[matchedKey] !== null) {
+        return data[matchedKey];
+      }
     }
     return null;
   }
@@ -556,12 +593,13 @@
       const bookEN = state.booksEN[bookIdx];
       const bookAF = state.booksAF[bookIdx];
       const bookForLeft = state.lang === 'af' ? bookAF : bookEN;
+      const bookENForLeft = state.lang === 'af' ? (AF_TO_EN_BOOKS[bookAF] || bookEN) : bookEN;
 
       const leftKey = `${bookEN}-${chapter}-left`;
       const rightKey = `${bookEN}-${chapter}-right`;
 
       if (!state.renderedChapters.has(leftKey)) {
-        const leftEl = createChapterElement(bookEN, bookForLeft, chapter, 'left');
+        const leftEl = createChapterElement(bookENForLeft, bookForLeft, chapter, 'left');
         const rightEl = createChapterElement(bookEN, bookEN, chapter, 'right');
         chapters.unshift({ leftEl, rightEl, leftKey, rightKey, bookIdx, chapter });
         loaded++;
@@ -1013,6 +1051,10 @@
       const bookEN = state.booksEN[bookIdx];
       const bookAF = state.booksAF[bookIdx];
       const bookForLeft = state.lang === 'af' ? bookAF : bookEN;
+      // Derive the English label from the AF book actually being rendered so
+      // dataset.booken (and thus the scroll header) always matches the displayed
+      // content, even if booksEN/booksAF ever drift in order or count.
+      const bookENForLeft = state.lang === 'af' ? (AF_TO_EN_BOOKS[bookAF] || bookEN) : bookEN;
       const dataForLeft = state.lang === 'af' ? state.dataAF : state.dataEN;
       const chapterCount = getChapterCount(dataForLeft, bookForLeft);
 
@@ -1026,7 +1068,7 @@
       const rightKey = `${bookEN}-${chapter}-right`;
 
       if (!state.renderedChapters.has(leftKey)) {
-        els.leftContent.appendChild(createChapterElement(bookEN, bookForLeft, chapter, 'left'));
+        els.leftContent.appendChild(createChapterElement(bookENForLeft, bookForLeft, chapter, 'left'));
         state.renderedChapters.add(leftKey);
       }
       if (!state.renderedChapters.has(rightKey)) {

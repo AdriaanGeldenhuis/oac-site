@@ -1547,7 +1547,7 @@ define('UI_TRANSLATIONS', [
         'st' => 'Testamente e Ncha'
     ],
     'genesis_malachi' => [
-        'af' => 'Genesis - Maleagi',
+        'af' => 'Genesis - Maleági',
         'en' => 'Genesis - Malachi',
         'zu' => 'UGenesisi - UMalaki',
         'xh' => 'IGenesis - UMalaki',
@@ -1555,7 +1555,7 @@ define('UI_TRANSLATIONS', [
         'st' => 'Genese - Malaki'
     ],
     'matthew_revelation' => [
-        'af' => 'Matteus - Openbaring',
+        'af' => 'Matthéüs - Openbaring',
         'en' => 'Matthew - Revelation',
         'zu' => 'UMathewu - ISambulo',
         'xh' => 'UMateyu - ISityhilelo',
