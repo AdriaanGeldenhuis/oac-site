@@ -282,6 +282,23 @@
         color: #f4a261;
         border: 1px solid #f4a261;
       }
+
+      #roommenu .rmx-unread {
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        margin-left: 10px;
+        border-radius: 11px;
+        background: #e63946;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        box-shadow: 0 0 8px rgba(230, 57, 70, 0.5);
+      }
       
       [data-theme="light"] #roommenu .rmx-badge.joined {
         background: rgba(244, 162, 97, 0.15);
@@ -363,6 +380,15 @@
     }
     // Fallback for legacy data
     return r.name || 'Room';
+  }
+
+  // Red unread-count badge (WhatsApp style), capped at 99+
+  function unreadBadge(r) {
+    const n = parseInt(r.unread, 10) || 0;
+    if (n <= 0) return null;
+    const b = ce('span', 'rmx-unread');
+    b.textContent = n > 99 ? '99+' : String(n);
+    return b;
   }
 
   async function fetchUserRooms() {
@@ -462,6 +488,8 @@
           const badge = ce('span', 'rmx-badge auto', T('auto'));
 
           row.appendChild(a);
+          const unread = unreadBadge(r);
+          if (unread) row.appendChild(unread);
           row.appendChild(badge);
           // Whole row is tappable, not just the text
           row.style.cursor = 'pointer';
@@ -493,6 +521,8 @@
           const badge = ce('span', 'rmx-badge joined', T('joined_badge'));
 
           row.appendChild(a);
+          const unread = unreadBadge(r);
+          if (unread) row.appendChild(unread);
           row.appendChild(badge);
           // Whole row is tappable, not just the text
           row.style.cursor = 'pointer';

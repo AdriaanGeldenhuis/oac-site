@@ -43,6 +43,29 @@ if (!$room || !user_has_access_to_room($pdo, $userId, $room)) {
     exit;
 }
 
+// Mark the room as seen on a real first-page load (peek=1 is the background
+// new-posts check and must not count as a visit). Unread badges in the room
+// menu are computed against last_seen_post_id.
+$isPeek = !empty($_GET['peek']);
+if ($afterId === null && !$isPeek) {
+    try {
+        $mx = $pdo->prepare("SELECT COALESCE(MAX(id), 0) FROM posts WHERE room_id = ?");
+        $mx->execute([$roomId]);
+        $maxPostId = (int)$mx->fetchColumn();
+
+        $pdo->prepare("
+            INSERT INTO room_visits (user_id, room_id, last_seen_post_id)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                last_seen_post_id = GREATEST(last_seen_post_id, VALUES(last_seen_post_id)),
+                visited_at = NOW()
+        ")->execute([$userId, $roomId, $maxPostId]);
+    } catch (Throwable $e) {
+        // Table may not exist yet - the feed must keep working regardless
+        error_log('room_visits upsert skipped: ' . $e->getMessage());
+    }
+}
+
 try {
     $sql = "SELECT p.*,
                    u.name AS user_name,
