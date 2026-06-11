@@ -762,6 +762,64 @@
     });
   }
 
+  // ===== EVENT HELPERS =====
+  // "in 3 days" / "oor 3 dae" in the user's language
+  function relTimeTo(dateStr) {
+    try {
+      const target = new Date(String(dateStr).replace(' ', 'T')).getTime();
+      if (isNaN(target)) return '';
+      const diffMs = target - Date.now();
+      const rtf = new Intl.RelativeTimeFormat(DATE_LOCALES, { numeric: 'auto' });
+      const absHours = Math.abs(diffMs) / 36e5;
+      if (absHours < 1) return rtf.format(Math.round(diffMs / 6e4), 'minute');
+      if (absHours < 24) return rtf.format(Math.round(diffMs / 36e5), 'hour');
+      return rtf.format(Math.round(diffMs / 864e5), 'day');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  // Build and download an .ics file so the event can land in any calendar app
+  function downloadEventICS(p) {
+    const start = new Date(String(p.event_at).replace(' ', 'T'));
+    if (isNaN(start.getTime())) return;
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    const fmtUTC = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const escICS = (s) => String(s || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,')
+      .replace(/\r?\n/g, '\\n');
+
+    const summary = (p.text || '').split('\n')[0].slice(0, 80) || 'Gospel Media';
+
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//OAC//Gospel Media//EN',
+      'BEGIN:VEVENT',
+      'UID:gm-post-' + p.id + '@oacapp.co.za',
+      'DTSTAMP:' + fmtUTC(new Date()),
+      'DTSTART:' + fmtUTC(start),
+      'DTEND:' + fmtUTC(end),
+      'SUMMARY:' + escICS(summary),
+      p.event_place ? 'LOCATION:' + escICS(p.event_place) : null,
+      'DESCRIPTION:' + escICS(p.text || ''),
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean);
+
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'event-' + p.id + '.ics';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   // ===== POST CARDS =====
   function renderCard(p) {
     // Key by string so lookups from data attributes always match,
@@ -806,6 +864,28 @@
     if ((p.type || '') === 'event' && p.event_at) {
       const whenH2 = ce('h2', { class: 'subheading event-when', text: fmtDT(p.event_at) });
       card.appendChild(whenH2);
+
+      const metaRow = ce('div', { class: 'event-meta-row' });
+
+      // Countdown chip: "over 3 dae" / "in 3 days", in the user's language
+      const rel = relTimeTo(p.event_at);
+      if (rel) {
+        const isPast = new Date(String(p.event_at).replace(' ', 'T')).getTime() < Date.now();
+        const chip = ce('span', { class: 'event-countdown' + (isPast ? ' past' : ''), text: '⏳ ' + rel });
+        metaRow.appendChild(chip);
+      }
+
+      // Add-to-calendar button for upcoming events
+      const isFuture = new Date(String(p.event_at).replace(' ', 'T')).getTime() > Date.now();
+      if (isFuture) {
+        const calBtn = ce('button', { type: 'button', class: 'event-cal-btn' });
+        calBtn.textContent = '📅 ' + T('add_to_calendar');
+        calBtn.addEventListener('click', () => downloadEventICS(p));
+        metaRow.appendChild(calBtn);
+      }
+
+      if (metaRow.children.length) card.appendChild(metaRow);
+
       if (p.event_place) {
         card.appendChild(ce('p', { class: 'muted', text: '📍 ' + p.event_place }));
       }

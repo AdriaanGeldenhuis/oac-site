@@ -1470,6 +1470,54 @@ html {
   text-decoration: underline;
 }
 
+/* ===== EVENT EXTRAS (countdown + add to calendar) ===== */
+.event-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.event-countdown {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2a9d8f;
+  background: rgba(42, 157, 143, 0.15);
+  border: 1px solid rgba(42, 157, 143, 0.5);
+}
+
+.event-countdown.past {
+  color: var(--text-muted);
+  background: rgba(128, 128, 128, 0.12);
+  border-color: rgba(128, 128, 128, 0.35);
+}
+
+.event-cal-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--btn-text);
+  background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--section-border);
+  transition: var(--transition);
+}
+
+.event-cal-btn:hover {
+  border-color: var(--color-rosegold);
+  color: var(--color-rosegold);
+  box-shadow: 0 2px 10px rgba(183, 110, 121, 0.3);
+}
+
 /* ===== COMMENTS SECTION ===== */
 .comments-section {
   margin-top: 20px;
