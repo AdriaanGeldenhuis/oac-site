@@ -48,7 +48,12 @@ try {
     }
     
     $pdo->beginTransaction();
-    
+
+    // Delete the comment's reactions (table may not exist yet)
+    try {
+        $pdo->prepare("DELETE FROM comment_reactions WHERE comment_id = ?")->execute([$commentId]);
+    } catch (Throwable $e) { /* comment_reactions table missing - nothing to clean */ }
+
     // Delete comment
     $delComment = $pdo->prepare("DELETE FROM comments WHERE id = ? LIMIT 1");
     $delComment->execute([$commentId]);

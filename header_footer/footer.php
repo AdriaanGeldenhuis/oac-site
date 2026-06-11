@@ -49,3 +49,17 @@ function t_ftr(string $key): string {
     <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 </button>
+
+<?php
+// Gospel Media new-post button: only on /gospel_media/ pages, and only when the
+// including page determined the user may post in the current room ($allowPost)
+$gmShowPostBtn = (strpos($_SERVER['SCRIPT_NAME'] ?? '', '/gospel_media/') === 0) && !empty($allowPost);
+?>
+<?php if ($gmShowPostBtn): ?>
+<!-- Gospel Media New Post Button - next to the notification badge -->
+<button class="global-back-btn global-post-btn" id="gm-fab" type="button" aria-label="<?= t_ftr('new_post') ?>" title="<?= t_ftr('new_post') ?>">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 5v14M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+<?php endif; ?>

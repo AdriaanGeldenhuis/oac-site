@@ -127,11 +127,18 @@
   }
 
   // ===== DATE FORMATTING =====
+  // Show weekday names in the user's chosen language (falls back to English
+  // if the browser doesn't ship that locale)
+  const LOCALE_MAP = { af: 'af-ZA', en: 'en-GB', zu: 'zu-ZA', xh: 'xh-ZA', pt: 'pt-PT', st: 'st-ZA' };
+  const DATE_LOCALES = [LOCALE_MAP[window.PAGE_LANG || 'af'] || 'af-ZA', 'en-GB'];
+
   const fmtDT = s => {
     try {
-      const d = new Date(s);
+      // MySQL "YYYY-MM-DD HH:MM:SS" is not parseable on Safari/iOS - normalise to ISO
+      const iso = (typeof s === 'string') ? s.replace(' ', 'T') : s;
+      const d = new Date(iso);
       if (isNaN(d.getTime())) return s || '';
-      const day = d.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
+      const day = d.toLocaleDateString(DATE_LOCALES, { weekday: 'short' }).toUpperCase();
       const date = d.toLocaleDateString('en-GB', { year: '2-digit', month: '2-digit', day: '2-digit' });
       const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
       return `${day} ${date}, ${time}`;
@@ -189,22 +196,46 @@
       evtFields.classList.remove('hide');
     });
 
-    // Textarea
+    // Textarea (restores any draft saved for this room, e.g. after an accidental close)
+    const DRAFT_KEY = 'gm_draft_' + ROOM_ID;
     const ta = ce('textarea', { class: 'composer-textarea', placeholder: T('type_message') });
+    try { ta.value = localStorage.getItem(DRAFT_KEY) || ''; } catch (e) { /* storage unavailable */ }
+    ta.addEventListener('input', () => {
+      try {
+        if (ta.value.trim()) localStorage.setItem(DRAFT_KEY, ta.value);
+        else localStorage.removeItem(DRAFT_KEY);
+      } catch (e) { /* storage unavailable */ }
+    });
 
-    // File input + preview
+    // File input + preview (each preview gets a remove button, like the edit modal)
     const fileInput = ce('input', { type: 'file', accept: 'image/*', multiple: 'multiple' });
     fileInput.style.display = 'none';
     const preview = ce('div', { class: 'composer-preview' });
 
-    fileInput.addEventListener('change', () => {
+    function renderPreviews() {
       preview.innerHTML = '';
-      Array.from(fileInput.files || []).forEach(f => {
+      Array.from(fileInput.files || []).forEach((f, idx) => {
+        const box = ce('div', { class: 'modal-img-box' });
+
         const img = ce('img', { class: 'composer-preview-img' });
         img.src = URL.createObjectURL(f);
-        preview.appendChild(img);
+
+        const x = ce('button', { type: 'button', class: 'modal-img-del', text: '×', title: T('remove') });
+        x.addEventListener('click', () => {
+          const dt = new DataTransfer();
+          Array.from(fileInput.files).forEach((f2, i2) => {
+            if (i2 !== idx) dt.items.add(f2);
+          });
+          fileInput.files = dt.files;
+          renderPreviews();
+        });
+
+        box.append(img, x);
+        preview.appendChild(box);
       });
-    });
+    }
+
+    fileInput.addEventListener('change', renderPreviews);
 
     // Actions
     const actions = ce('div', { class: 'composer-actions' });
@@ -224,7 +255,9 @@
 
     submitBtn.addEventListener('click', async () => {
       const text = (ta.value || '').trim();
-      if (!text) { alert(T('type_message')); return; }
+      const hasImages = fileInput.files && fileInput.files.length > 0;
+      // A post needs text or at least one photo
+      if (!text && !hasImages) { alert(T('type_message')); return; }
 
       const fd = new FormData();
       fd.append('room_id', ROOM_ID);
@@ -257,9 +290,8 @@
         return;
       }
 
+      try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* storage unavailable */ }
       closeOverlay();
-      feedLastId = null;
-      feedDone = false;
       await loadFeed(ROOM_ID, true);
     });
 
@@ -269,6 +301,8 @@
     backdrop.appendChild(panel);
     document.body.appendChild(backdrop);
     ta.focus();
+    // Put the cursor at the end of a restored draft
+    ta.setSelectionRange(ta.value.length, ta.value.length);
   }
 
   // ===== REACTIONS =====
@@ -279,17 +313,21 @@
     const bH = ce('button', { type: 'button', class: 'btn-react heart-btn' });
     if (myReacts.includes('heart')) bH.classList.add('reacted');
     const heartIcon = ce('img', { class: 'icon', src: '/assets/icons/heart.png', alt: 'heart' });
-    const heartCount = ce('span', { class: 'badge count-heart', text: (p.heart_count || 0) });
+    const heartCount = ce('span', { class: 'badge badge-clickable count-heart', text: (p.heart_count || 0), title: T('reactions') });
     bH.append(heartIcon, heartCount);
 
     const bP = ce('button', { type: 'button', class: 'btn-react pray-btn' });
     if (myReacts.includes('pray')) bP.classList.add('reacted');
     const prayIcon = ce('img', { class: 'icon', src: '/assets/icons/amen.png', alt: 'amen' });
-    const prayCount = ce('span', { class: 'badge count-pray', text: (p.pray_count || 0) });
+    const prayCount = ce('span', { class: 'badge badge-clickable count-pray', text: (p.pray_count || 0), title: T('reactions') });
     bP.append(prayIcon, prayCount);
 
     bH.addEventListener('click', () => toggleReact(p.id, 'heart', bH, bP));
     bP.addEventListener('click', () => toggleReact(p.id, 'pray', bH, bP));
+
+    // WhatsApp/FB style: tapping the count shows who reacted
+    heartCount.addEventListener('click', (e) => { e.stopPropagation(); openReactionsModal(p); });
+    prayCount.addEventListener('click', (e) => { e.stopPropagation(); openReactionsModal(p); });
 
     const bC = ce('button', { type: 'button', class: 'btn-react comments-btn' });
     bC.innerHTML = `
@@ -304,26 +342,177 @@
     card.appendChild(bar);
   }
 
+  const reactInFlight = new Set();
+
   async function toggleReact(post_id, type, bH, bP) {
+    const key = post_id + ':' + type;
+    if (reactInFlight.has(key)) return;
+    reactInFlight.add(key);
+
     const btn = type === 'heart' ? bH : bP;
-    btn.disabled = true;
+    const countEl = btn.querySelector('.badge');
+
+    // Optimistic update so the button feels instant; rolled back on failure
+    const wasReacted = btn.classList.contains('reacted');
+    const prevCount = parseInt(countEl.textContent || '0', 10);
+    btn.classList.toggle('reacted');
+    countEl.textContent = Math.max(0, prevCount + (wasReacted ? -1 : 1));
 
     const fd = new FormData();
     fd.append('post_id', post_id);
     fd.append('type', type);
 
     const j = await fetchJSON('/gospel_media/api/posts/react.php', { method: 'POST', body: fd });
-    btn.disabled = false;
-    if (!(j && j.ok)) return;
+    reactInFlight.delete(key);
 
-    // Toggle active state
-    btn.classList.toggle('reacted');
+    if (!(j && j.ok)) {
+      btn.classList.toggle('reacted');
+      countEl.textContent = prevCount;
+      return;
+    }
 
+    // Sync with the authoritative server counts
     if (bH && typeof j.heart_count !== 'undefined') {
       bH.querySelector('.count-heart').textContent = j.heart_count;
     }
     if (bP && typeof j.pray_count !== 'undefined') {
       bP.querySelector('.count-pray').textContent = j.pray_count;
+    }
+
+    // Keep the cached post in step for re-renders and the reactions modal
+    const p = POST_MAP.get(String(post_id));
+    if (p) {
+      if (typeof j.heart_count !== 'undefined') p.heart_count = j.heart_count;
+      if (typeof j.pray_count !== 'undefined') p.pray_count = j.pray_count;
+      const mine = Array.isArray(p.my_reactions) ? p.my_reactions : (p.my_reactions = []);
+      const idx = mine.indexOf(type);
+      if (wasReacted && idx !== -1) mine.splice(idx, 1);
+      if (!wasReacted && idx === -1) mine.push(type);
+    }
+  }
+
+  // ===== WHO REACTED (WhatsApp/FB style) =====
+  function openReactionsModal(p) {
+    openReactionsListModal('/gospel_media/api/posts/reactions.php?post_id=' + encodeURIComponent(p.id));
+  }
+
+  function openCommentReactionsModal(commentId) {
+    openReactionsListModal('/gospel_media/api/comments/reactions.php?comment_id=' + encodeURIComponent(commentId));
+  }
+
+  function openReactionsListModal(url) {
+    const back = ce('div', { class: 'modal-backdrop' });
+    back.addEventListener('click', (e) => { if (e.target === back) back.remove(); });
+
+    const panel = ce('div', { class: 'modal-panel reactions-panel' });
+    const title = ce('h2', { text: T('reactions') });
+
+    const tabs = ce('div', { class: 'reactions-tabs' });
+    const list = ce('div', { class: 'reactions-list' });
+    list.innerHTML = '<p class="muted">' + T('loading') + '</p>';
+
+    const actions = ce('div', { class: 'modal-actions' });
+    const closeBtn = ce('button', { class: 'modal-btn', type: 'button', text: T('back') });
+    closeBtn.addEventListener('click', () => back.remove());
+    actions.appendChild(closeBtn);
+
+    panel.append(title, tabs, list, actions);
+    back.appendChild(panel);
+    document.body.appendChild(back);
+
+    fetchJSON(url).then(j => {
+      const all = (j && j.ok && Array.isArray(j.reactions)) ? j.reactions : [];
+
+      if (!all.length) {
+        list.innerHTML = '<p class="muted">' + T('no_reactions') + '</p>';
+        return;
+      }
+
+      const hearts = all.filter(r => r.type === 'heart');
+      const prays = all.filter(r => r.type === 'pray');
+
+      function renderList(rows) {
+        list.innerHTML = '';
+        if (!rows.length) {
+          list.innerHTML = '<p class="muted">' + T('no_reactions') + '</p>';
+          return;
+        }
+        rows.forEach(r => {
+          const item = ce('div', { class: 'reaction-item' });
+
+          let avatar;
+          if (r.photo) {
+            avatar = ce('img', { class: 'comment-avatar', alt: 'avatar' });
+            avatar.src = r.photo;
+          } else {
+            avatar = ce('div', { class: 'comment-avatar gm-avatar-initials gm-avatar-initials-sm' });
+            avatar.textContent = r.initials || '??';
+          }
+
+          const name = ce('a', {
+            class: 'reaction-name',
+            href: '/profile/index.php?u=' + encodeURIComponent(r.user_id),
+            text: computeDisplayName(r)
+          });
+
+          const emoji = ce('span', { class: 'reaction-emoji', text: r.type === 'heart' ? '❤️' : '🙏' });
+
+          item.append(avatar, name, emoji);
+          list.appendChild(item);
+        });
+      }
+
+      function makeTab(label, rows) {
+        const b = ce('button', { type: 'button', class: 'reactions-tab', text: label });
+        b.addEventListener('click', () => {
+          $$('.reactions-tab', tabs).forEach(t => t.classList.remove('active'));
+          b.classList.add('active');
+          renderList(rows);
+        });
+        return b;
+      }
+
+      const tabAll = makeTab(T('all') + ' ' + all.length, all);
+      tabAll.classList.add('active');
+      tabs.appendChild(tabAll);
+      if (hearts.length) tabs.appendChild(makeTab('❤️ ' + hearts.length, hearts));
+      if (prays.length) tabs.appendChild(makeTab('🙏 ' + prays.length, prays));
+
+      renderList(all);
+    });
+  }
+
+  // ===== COMMENT HEARTS =====
+  const commentReactInFlight = new Set();
+
+  async function toggleCommentHeart(commentId, btn) {
+    if (commentReactInFlight.has(commentId)) return;
+    commentReactInFlight.add(commentId);
+
+    const countEl = btn.querySelector('.comment-like-count');
+    const wasReacted = btn.classList.contains('reacted');
+    const prevCount = parseInt(countEl.textContent || '0', 10);
+
+    // Optimistic update, rolled back on failure
+    btn.classList.toggle('reacted');
+    const nextCount = Math.max(0, prevCount + (wasReacted ? -1 : 1));
+    countEl.textContent = nextCount > 0 ? String(nextCount) : '';
+
+    const fd = new FormData();
+    fd.append('comment_id', commentId);
+    fd.append('type', 'heart');
+
+    const j = await fetchJSON('/gospel_media/api/comments/react.php', { method: 'POST', body: fd });
+    commentReactInFlight.delete(commentId);
+
+    if (!(j && j.ok)) {
+      btn.classList.toggle('reacted');
+      countEl.textContent = prevCount > 0 ? String(prevCount) : '';
+      return;
+    }
+
+    if (typeof j.heart_count !== 'undefined') {
+      countEl.textContent = j.heart_count > 0 ? String(j.heart_count) : '';
     }
   }
 
@@ -444,8 +633,15 @@
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
       });
+      // WhatsApp style: Enter sends, Shift+Enter makes a new line
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (submit && !submit.disabled) submit.click();
+        }
+      });
     }
-    
+
     await loadComments(postId, list);
     
     if (submit) {
@@ -541,17 +737,96 @@
       }
       
       const text = ce('div', { class: 'comment-text', text: c.text || '' });
-      
-      item.append(header, text);
+
+      // Heart on the comment; tapping the count shows who hearted it
+      const likeRow = ce('div', { class: 'comment-like-row' });
+      const likeBtn = ce('button', { type: 'button', class: 'comment-like-btn', title: T('reactions') });
+      if (c.my_heart) likeBtn.classList.add('reacted');
+      const likeIcon = ce('span', { class: 'comment-like-icon', text: '♥' });
+      const likeCount = ce('span', { class: 'comment-like-count', text: (c.heart_count > 0 ? String(c.heart_count) : '') });
+      likeBtn.append(likeIcon, likeCount);
+
+      likeBtn.addEventListener('click', () => toggleCommentHeart(c.id, likeBtn));
+      likeCount.addEventListener('click', (e) => {
+        const n = parseInt(likeCount.textContent || '0', 10);
+        if (n > 0) {
+          e.stopPropagation();
+          openCommentReactionsModal(c.id);
+        }
+      });
+
+      likeRow.appendChild(likeBtn);
+
+      item.append(header, text, likeRow);
       listEl.appendChild(item);
     });
   }
 
+  // ===== EVENT HELPERS =====
+  // "in 3 days" / "oor 3 dae" in the user's language
+  function relTimeTo(dateStr) {
+    try {
+      const target = new Date(String(dateStr).replace(' ', 'T')).getTime();
+      if (isNaN(target)) return '';
+      const diffMs = target - Date.now();
+      const rtf = new Intl.RelativeTimeFormat(DATE_LOCALES, { numeric: 'auto' });
+      const absHours = Math.abs(diffMs) / 36e5;
+      if (absHours < 1) return rtf.format(Math.round(diffMs / 6e4), 'minute');
+      if (absHours < 24) return rtf.format(Math.round(diffMs / 36e5), 'hour');
+      return rtf.format(Math.round(diffMs / 864e5), 'day');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  // Build and download an .ics file so the event can land in any calendar app
+  function downloadEventICS(p) {
+    const start = new Date(String(p.event_at).replace(' ', 'T'));
+    if (isNaN(start.getTime())) return;
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    const fmtUTC = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const escICS = (s) => String(s || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,')
+      .replace(/\r?\n/g, '\\n');
+
+    const summary = (p.text || '').split('\n')[0].slice(0, 80) || 'Gospel Media';
+
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//OAC//Gospel Media//EN',
+      'BEGIN:VEVENT',
+      'UID:gm-post-' + p.id + '@oacapp.co.za',
+      'DTSTAMP:' + fmtUTC(new Date()),
+      'DTSTART:' + fmtUTC(start),
+      'DTEND:' + fmtUTC(end),
+      'SUMMARY:' + escICS(summary),
+      p.event_place ? 'LOCATION:' + escICS(p.event_place) : null,
+      'DESCRIPTION:' + escICS(p.text || ''),
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean);
+
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'event-' + p.id + '.ics';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   // ===== POST CARDS =====
   function renderCard(p) {
-    POST_MAP.set(p.id, p);
-    
-    const card = ce('article', { class: 'post-card', 'data-post-id': String(p.id) });
+    // Key by string so lookups from data attributes always match,
+    // regardless of whether the API returned numeric or string ids
+    POST_MAP.set(String(p.id), p);
+
+    const card = ce('article', { class: 'post-card', id: 'post-' + p.id, 'data-post-id': String(p.id) });
     const header = ce('div', { class: 'post-header' });
     
     let avatar;
@@ -589,6 +864,28 @@
     if ((p.type || '') === 'event' && p.event_at) {
       const whenH2 = ce('h2', { class: 'subheading event-when', text: fmtDT(p.event_at) });
       card.appendChild(whenH2);
+
+      const metaRow = ce('div', { class: 'event-meta-row' });
+
+      // Countdown chip: "over 3 dae" / "in 3 days", in the user's language
+      const rel = relTimeTo(p.event_at);
+      if (rel) {
+        const isPast = new Date(String(p.event_at).replace(' ', 'T')).getTime() < Date.now();
+        const chip = ce('span', { class: 'event-countdown' + (isPast ? ' past' : ''), text: '⏳ ' + rel });
+        metaRow.appendChild(chip);
+      }
+
+      // Add-to-calendar button for upcoming events
+      const isFuture = new Date(String(p.event_at).replace(' ', 'T')).getTime() > Date.now();
+      if (isFuture) {
+        const calBtn = ce('button', { type: 'button', class: 'event-cal-btn' });
+        calBtn.textContent = '📅 ' + T('add_to_calendar');
+        calBtn.addEventListener('click', () => downloadEventICS(p));
+        metaRow.appendChild(calBtn);
+      }
+
+      if (metaRow.children.length) card.appendChild(metaRow);
+
       if (p.event_place) {
         card.appendChild(ce('p', { class: 'muted', text: '📍 ' + p.event_place }));
       }
@@ -685,6 +982,20 @@
     }
     document.addEventListener('keydown', onKey);
 
+    // Swipe left/right between photos on touch devices
+    let touchX = null;
+    backdrop.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) touchX = e.touches[0].clientX;
+    }, { passive: true });
+    backdrop.addEventListener('touchend', (e) => {
+      if (touchX === null || attachments.length < 2) { touchX = null; return; }
+      const dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) < 40) return;
+      if (dx < 0) show((idx + 1) % attachments.length);
+      else show((idx - 1 + attachments.length) % attachments.length);
+    }, { passive: true });
+
     document.body.appendChild(backdrop);
     show(startIdx);
   }
@@ -694,6 +1005,7 @@
   let feedLastId = null;
   let feedLoading = false;
   let feedDone = false;
+  let feedGen = 0;
   let scrollObserver = null;
   let sentinelEl = null;
 
@@ -705,14 +1017,19 @@
     const loading = $('#loadingIndicator');
 
     if (reset) {
+      // New generation: any in-flight response from before this reset is discarded
+      feedGen++;
       feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('loading_posts') + '</p></div>';
       POST_MAP.clear();
       feedLastId = null;
       feedDone = false;
+      feedLoading = false;
       if (scrollObserver) scrollObserver.disconnect();
+    } else if (feedLoading || feedDone) {
+      return;
     }
 
-    if (feedLoading || feedDone) return;
+    const gen = feedGen;
     feedLoading = true;
     if (loading) loading.hidden = false;
 
@@ -720,6 +1037,9 @@
     if (feedLastId) url += '&after_id=' + feedLastId;
 
     const j = await fetchJSON(url);
+
+    // A reset happened while this request was in flight - drop the stale response
+    if (gen !== feedGen) return;
 
     if (loading) loading.hidden = true;
     feedLoading = false;
@@ -738,6 +1058,9 @@
 
     if (rows.length < FEED_LIMIT) feedDone = true;
 
+    // Newest loaded post id, used to detect brand-new posts while the page is open
+    if (reset && rows.length) feedNewestId = Number(rows[0].id) || 0;
+
     rows.forEach(p => {
       feed.appendChild(renderCard(p));
       feedLastId = p.id;
@@ -746,6 +1069,35 @@
     // Set up infinite scroll sentinel
     setupScrollObserver(feed, roomId);
   }
+
+  // ===== NEW POSTS PILL (auto-check without reloading) =====
+  let feedNewestId = 0;
+  let newPostsPill = null;
+
+  function showNewPostsPill() {
+    if (newPostsPill) return;
+    newPostsPill = ce('button', { type: 'button', class: 'gm-new-posts-pill' });
+    newPostsPill.innerHTML = '&#8593; ' + esc(T('new_posts'));
+    newPostsPill.addEventListener('click', async () => {
+      newPostsPill.remove();
+      newPostsPill = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      await loadFeed(ROOM_ID, true);
+    });
+    document.body.appendChild(newPostsPill);
+  }
+
+  async function checkForNewPosts() {
+    if (document.hidden || feedLoading || !feedNewestId || newPostsPill) return;
+    try {
+      // peek=1 keeps this check from marking the room as read
+      const j = await fetchJSON('/gospel_media/api/posts/list.php?room_id=' + encodeURIComponent(ROOM_ID) + '&limit=1&peek=1');
+      const rows = Array.isArray(j) ? j : [];
+      if (rows.length && Number(rows[0].id) > feedNewestId) showNewPostsPill();
+    } catch (e) { /* network hiccup - try again next round */ }
+  }
+
+  setInterval(checkForNewPosts, 30000);
 
   function setupScrollObserver(feed, roomId) {
     if (scrollObserver) scrollObserver.disconnect();
@@ -1001,11 +1353,11 @@
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.post-menu-btn');
     if (!btn) return;
-    
+
     const card = btn.closest('[data-post-id]');
-    const id = card ? Number(card.getAttribute('data-post-id')) : null;
+    const id = card ? card.getAttribute('data-post-id') : null;
     const p = id ? POST_MAP.get(id) : null;
-    
+
     if (!p || !canEditPost(p)) return;
     openActionsModal(p);
   });
@@ -1028,7 +1380,17 @@
       composerBtn.addEventListener('click', openComposerOverlay);
     }
 
+    // Footer new-post button (rendered by footer.php on gospel_media pages)
+    const fab = $('#gm-fab');
+    if (fab) fab.addEventListener('click', openComposerOverlay);
+
     await loadFeed(ROOM_ID);
+
+    // Deep-link support: notifications link to #post-N
+    if (location.hash && /^#post-\d+$/.test(location.hash)) {
+      const target = document.getElementById(location.hash.slice(1));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   if (document.readyState === 'loading') {

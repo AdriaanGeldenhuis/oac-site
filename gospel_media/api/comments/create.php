@@ -3,6 +3,7 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/lib/permissions.php';
 require_once __DIR__ . '/../notifications/helper.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
@@ -42,7 +43,18 @@ try {
     
     $postOwnerId = (int)$post['user_id'];
     $roomId = (int)$post['room_id'];
-    
+
+    // Only users with access to the room may comment
+    $roomStmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ? LIMIT 1");
+    $roomStmt->execute([$roomId]);
+    $room = $roomStmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$room || !user_has_access_to_room($pdo, $userId, $room)) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'error' => 'forbidden']);
+        exit;
+    }
+
     // Insert comment
     $stmt = $pdo->prepare("INSERT INTO comments (post_id, user_id, text, created_at) VALUES (?, ?, ?, NOW())");
     $stmt->execute([$postId, $userId, $text]);

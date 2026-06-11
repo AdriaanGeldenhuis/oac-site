@@ -152,6 +152,33 @@ try {
         $joinedRooms = $st->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Unread post counts per room (since the user's last visit).
+    // Degrades gracefully if the room_visits table hasn't been created yet.
+    $unreadByRoom = [];
+    $allRoomIds = array_values(array_unique(array_map(
+        function ($r) { return (int)$r['id']; },
+        array_merge($autoRooms, $joinedRooms)
+    )));
+
+    if ($allRoomIds) {
+        try {
+            $ph = implode(',', array_fill(0, count($allRoomIds), '?'));
+            $uq = $pdo->prepare("
+                SELECT p.room_id, COUNT(*) AS unread
+                FROM posts p
+                LEFT JOIN room_visits rv ON rv.room_id = p.room_id AND rv.user_id = ?
+                WHERE p.room_id IN ($ph)
+                  AND p.id > COALESCE(rv.last_seen_post_id, 0)
+                  AND p.user_id != ?
+                GROUP BY p.room_id
+            ");
+            $uq->execute(array_merge([$userId], $allRoomIds, [$userId]));
+            $unreadByRoom = $uq->fetchAll(PDO::FETCH_KEY_PAIR);
+        } catch (Throwable $e) {
+            error_log('Unread counts skipped: ' . $e->getMessage());
+        }
+    }
+
     // Apply translations to room display names
     foreach ($autoRooms as &$room) {
         $type = strtolower($room['type'] ?? '');
@@ -162,6 +189,7 @@ try {
             $name = $room['town_name'] ?? $room['name'] ?? '';
         }
         $room['display_name'] = formatRoomName($room['type'] ?? '', $name, $pageLang);
+        $room['unread'] = (int)($unreadByRoom[(int)$room['id']] ?? 0);
     }
     unset($room);
 
@@ -174,6 +202,7 @@ try {
             $name = $room['town_name'] ?? $room['name'] ?? '';
         }
         $room['display_name'] = formatRoomName($room['type'] ?? '', $name, $pageLang);
+        $room['unread'] = (int)($unreadByRoom[(int)$room['id']] ?? 0);
     }
     unset($room);
 

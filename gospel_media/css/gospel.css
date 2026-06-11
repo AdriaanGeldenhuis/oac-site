@@ -578,6 +578,39 @@ html {
   display: none;
 }
 
+/* Generic hide utility (used by comments toggle and others) */
+.hide {
+  display: none !important;
+}
+
+/* ===== NEW POSTS PILL ===== */
+.gm-new-posts-pill {
+  position: fixed;
+  top: 86px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(183, 110, 121, 0.6);
+  background: linear-gradient(135deg, #b76e79 0%, #8a4f58 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 9500;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 14px rgba(183, 110, 121, 0.5);
+  animation: pill-in 0.25s ease-out;
+}
+
+.gm-new-posts-pill:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 20px rgba(183, 110, 121, 0.7);
+}
+
+@keyframes pill-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 .composer-input {
   flex: 1;
   min-width: 200px;
@@ -1077,13 +1110,11 @@ html {
   grid-template-rows: 240px 180px;
 }
 
+/* 5+ photos: only 4 cells are visible (the 4th carries the "+N" overlay),
+   so lay them out as a clean 2x2 grid */
 .photo-grid-5 {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 240px 180px;
-}
-
-.photo-grid-5 .photo-grid-cell:first-child {
-  grid-column: 1 / -1;
 }
 
 .photo-grid-cell {
@@ -1258,6 +1289,193 @@ html {
   min-width: 28px;
   text-align: center;
   transition: var(--transition);
+}
+
+/* Counts that open the "who reacted" list */
+.badge-clickable {
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.badge-clickable:hover {
+  background: rgba(183, 110, 121, 0.18);
+  color: var(--color-rosegold);
+  text-decoration: underline;
+}
+
+/* Pop animation when a reaction is switched on */
+.btn-react.reacted .icon {
+  animation: react-pop 0.3s ease;
+}
+
+@keyframes react-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+/* ===== WHO REACTED MODAL ===== */
+.reactions-panel {
+  max-width: 420px;
+}
+
+.reactions-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.reactions-tab {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--section-border);
+  border-radius: 20px;
+  color: var(--btn-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.reactions-tab:hover {
+  border-color: var(--color-rosegold);
+}
+
+.reactions-tab.active {
+  border-color: var(--color-rosegold);
+  background: rgba(183, 110, 121, 0.18);
+  color: var(--color-rosegold);
+}
+
+.reactions-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.reaction-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  transition: var(--transition);
+}
+
+.reaction-item:hover {
+  background: rgba(183, 110, 121, 0.1);
+}
+
+.reaction-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reaction-name:hover {
+  color: var(--color-rosegold);
+}
+
+.reaction-emoji {
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+
+/* ===== COMMENT HEARTS ===== */
+.comment-like-row {
+  margin-top: 6px;
+}
+
+.comment-like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  transition: var(--transition);
+}
+
+.comment-like-btn:hover {
+  color: var(--color-rosegold);
+  background: rgba(183, 110, 121, 0.12);
+}
+
+.comment-like-btn.reacted {
+  color: #e63946;
+}
+
+.comment-like-btn.reacted .comment-like-icon {
+  animation: react-pop 0.3s ease;
+}
+
+.comment-like-count {
+  min-width: 10px;
+  font-size: 13px;
+}
+
+.comment-like-btn .comment-like-count:hover {
+  text-decoration: underline;
+}
+
+/* ===== EVENT EXTRAS (countdown + add to calendar) ===== */
+.event-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.event-countdown {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2a9d8f;
+  background: rgba(42, 157, 143, 0.15);
+  border: 1px solid rgba(42, 157, 143, 0.5);
+}
+
+.event-countdown.past {
+  color: var(--text-muted);
+  background: rgba(128, 128, 128, 0.12);
+  border-color: rgba(128, 128, 128, 0.35);
+}
+
+.event-cal-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--btn-text);
+  background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--section-border);
+  transition: var(--transition);
+}
+
+.event-cal-btn:hover {
+  border-color: var(--color-rosegold);
+  color: var(--color-rosegold);
+  box-shadow: 0 2px 10px rgba(183, 110, 121, 0.3);
 }
 
 /* ===== COMMENTS SECTION ===== */

@@ -3,6 +3,7 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
 require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/lib/permissions.php';
 require_once __DIR__ . '/../notifications/helper.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
@@ -19,10 +20,38 @@ $roomId = (int)($_POST['room_id'] ?? 0);
 $type   = ($_POST['type'] ?? 'post') === 'event' ? 'event' : 'post';
 $text   = trim((string)($_POST['text'] ?? ''));
 
-if ($userId <= 0 || $roomId <= 0) { 
-    http_response_code(400); 
-    echo json_encode(['error'=>'bad_request']); 
-    exit; 
+if ($userId <= 0 || $roomId <= 0) {
+    http_response_code(400);
+    echo json_encode(['error'=>'bad_request']);
+    exit;
+}
+
+// Enforce the existing room posting rules server-side (the UI only hides the button)
+$roomStmt = $pdo->prepare("SELECT * FROM rooms WHERE id = ? LIMIT 1");
+$roomStmt->execute([$roomId]);
+$roomRow = $roomStmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$roomRow) {
+    http_response_code(404);
+    echo json_encode(['error'=>'room_not_found']);
+    exit;
+}
+
+if (!user_can_post_in_room($pdo, $userId, $roomRow)) {
+    http_response_code(403);
+    echo json_encode(['error'=>'forbidden']);
+    exit;
+}
+
+// A post must contain text or at least one image
+$hasImages = !empty($_FILES['images'])
+    && is_array($_FILES['images']['tmp_name'] ?? null)
+    && count(array_filter($_FILES['images']['tmp_name'])) > 0;
+
+if ($text === '' && !$hasImages) {
+    http_response_code(400);
+    echo json_encode(['error'=>'empty_post']);
+    exit;
 }
 
 function parse_event_at(?string $raw): ?string {
@@ -191,14 +220,11 @@ try {
 
     // Notify all room members about the new post (runs in background after response sent)
     try {
-        // Get room info
-        $roomStmt = $pdo->prepare("SELECT name, type, town_id, gemeente_id FROM rooms WHERE id = ?");
-        $roomStmt->execute([$roomId]);
-        $room = $roomStmt->fetch(PDO::FETCH_ASSOC);
-        $roomName = $room['name'] ?? 'Room';
-        $roomType = strtolower($room['type'] ?? '');
-        $roomTownId = (int)($room['town_id'] ?? 0);
-        $roomGemeenteId = (int)($room['gemeente_id'] ?? 0);
+        // Room info already loaded for the permission check above
+        $roomName = $roomRow['name'] ?? 'Room';
+        $roomType = strtolower($roomRow['type'] ?? '');
+        $roomTownId = (int)($roomRow['town_id'] ?? 0);
+        $roomGemeenteId = (int)($roomRow['gemeente_id'] ?? 0);
 
         // Get author name
         $authorStmt = $pdo->prepare("SELECT CONCAT(name, ' ', surname) AS full_name FROM users WHERE id = ?");

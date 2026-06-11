@@ -1180,6 +1180,20 @@ body.ghf-open .ghf-drawer {
   }
 }
 
+/* Gospel Media new-post button: same glossy circle, placed left of the
+   notification badge (inherits everything else from .global-back-btn) */
+.global-post-btn {
+  left: auto;
+  right: 105px;
+}
+
+@media (max-width: 768px) {
+  .global-post-btn {
+    left: auto;
+    right: 88px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .global-notif-wrap {
     animation: none;

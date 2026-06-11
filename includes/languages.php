@@ -3835,6 +3835,14 @@ define('UI_TRANSLATIONS', [
         'pt' => '{name} reagiu com {emoji} à sua publicação.',
         'st' => '{name} o arabile ka {emoji} posong ea hao.'
     ],
+    'notif_comment_reaction_msg' => [
+        'af' => '{name} het {emoji} op jou kommentaar gegee.',
+        'en' => '{name} reacted with {emoji} to your comment.',
+        'zu' => '{name} usabele ngo-{emoji} kumbono wakho.',
+        'xh' => '{name} usabele nge-{emoji} kuluvo lwakho.',
+        'pt' => '{name} reagiu com {emoji} ao seu comentário.',
+        'st' => '{name} o arabile ka {emoji} maikutlong a hao.'
+    ],
     'notif_tagged' => [
         'af' => '🏷️ Ge-tag',
         'en' => '🏷️ Tagged',
@@ -4441,6 +4449,46 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Kujoyinwe',
         'pt' => 'Inscrita',
         'st' => 'O kene'
+    ],
+    'js_reactions' => [
+        'af' => 'Reaksies',
+        'en' => 'Reactions',
+        'zu' => 'Ukusabela',
+        'xh' => 'Iimpendulo',
+        'pt' => 'Reações',
+        'st' => 'Likarabo'
+    ],
+    'js_no_reactions' => [
+        'af' => 'Nog geen reaksies nie',
+        'en' => 'No reactions yet',
+        'zu' => 'Akukho ukusabela okwamanje',
+        'xh' => 'Akukho zimpendulo okwangoku',
+        'pt' => 'Ainda não há reações',
+        'st' => 'Ha ho likarabo hajoale'
+    ],
+    'js_all' => [
+        'af' => 'Almal',
+        'en' => 'All',
+        'zu' => 'Konke',
+        'xh' => 'Zonke',
+        'pt' => 'Todos',
+        'st' => 'Tsohle'
+    ],
+    'js_new_posts' => [
+        'af' => 'Nuwe plasings',
+        'en' => 'New posts',
+        'zu' => 'Okuthunyelwe okusha',
+        'xh' => 'Izithuba ezintsha',
+        'pt' => 'Novas publicações',
+        'st' => 'Diphatlalatso tse ncha'
+    ],
+    'js_add_to_calendar' => [
+        'af' => 'Voeg by kalender',
+        'en' => 'Add to calendar',
+        'zu' => 'Engeza kukhalenda',
+        'xh' => 'Yongeza kwikhalenda',
+        'pt' => 'Adicionar ao calendário',
+        'st' => 'Kenya khalendareng'
     ],
 
     // DAILY THOUGHT TRANSLATIONS

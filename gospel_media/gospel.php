@@ -12,7 +12,7 @@ require_once dirname(__DIR__) . '/includes/languages.php';
 $pageLang = $_SESSION['language'] ?? 'af';
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     $_SESSION['language'] = $pageLang = $_GET['lang'];
-    header('Location: /gospel_media/gospel.php?room_id=' . ($_GET['room_id'] ?? ''));
+    header('Location: /gospel_media/gospel.php?room_id=' . (int)($_GET['room_id'] ?? 0));
     exit;
 }
 // Translation helper using central 5-language system
@@ -108,7 +108,7 @@ if (!$hasAccess) {
 // Check posting rights
 $allowPost = $roomObj ? user_can_post_in_room($pdo, $userId, $roomObj) : false;
 
-$VER = '2.1.0';
+$VER = '2.9.1';
 ?><!doctype html>
 <html lang="<?= $pageLang ?>">
 <head>
@@ -167,6 +167,11 @@ $VER = '2.1.0';
             datetime: <?= json_encode(__t('js_datetime', $pageLang)) ?>,
             place: <?= json_encode(__t('js_place', $pageLang)) ?>,
             remove: <?= json_encode(__t('js_remove', $pageLang)) ?>,
+            reactions: <?= json_encode(__t('js_reactions', $pageLang)) ?>,
+            no_reactions: <?= json_encode(__t('js_no_reactions', $pageLang)) ?>,
+            all: <?= json_encode(__t('js_all', $pageLang)) ?>,
+            new_posts: <?= json_encode(__t('js_new_posts', $pageLang)) ?>,
+            add_to_calendar: <?= json_encode(__t('js_add_to_calendar', $pageLang)) ?>,
             // Rooms menu translations
             rooms: <?= json_encode(__t('js_rooms', $pageLang)) ?>,
             manage_rooms: <?= json_encode(__t('js_manage_rooms', $pageLang)) ?>,

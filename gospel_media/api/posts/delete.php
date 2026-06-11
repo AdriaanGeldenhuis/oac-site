@@ -103,6 +103,11 @@ try {
 
     // Delete related records
     $pdo->prepare("DELETE FROM reactions WHERE post_id = ?")->execute([$postId]);
+    try {
+        $pdo->prepare("DELETE cr FROM comment_reactions cr
+                       JOIN comments c ON c.id = cr.comment_id
+                       WHERE c.post_id = ?")->execute([$postId]);
+    } catch (Throwable $e) { /* comment_reactions table missing - nothing to clean */ }
     $pdo->prepare("DELETE FROM comments WHERE post_id = ?")->execute([$postId]);
 
     // Delete post row
