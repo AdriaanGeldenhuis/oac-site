@@ -469,6 +469,33 @@ html {
   color: #fff;
 }
 
+/* Pending-count badge on a tab (mobile: pinned to the card corner) */
+.admin-tab-badge {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  background: linear-gradient(135deg, #b03e3a, #d9534f);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.66rem !important;
+  font-weight: 700;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(217, 83, 79, 0.35);
+}
+
+.admin-tab.active .admin-tab-badge {
+  background: #fff;
+  color: var(--rose-gold-dark);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 /* Desktop: one tidy row of pills with the icon next to the label */
 @media (min-width: 641px) {
   .admin-tabs {
@@ -490,6 +517,11 @@ html {
 
   .admin-tab span {
     font-size: 0.88rem;
+  }
+
+  .admin-tab-badge {
+    position: static;
+    margin-left: 2px;
   }
 }
 
@@ -1119,10 +1151,39 @@ p.admin-muted {
 .approve-btn:disabled,
 .reject-btn:disabled,
 .spouse-approve-btn:disabled,
-.spouse-reject-btn:disabled {
+.spouse-reject-btn:disabled,
+.spouse-unlink-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Unlink button - outline style with the broken-link icon */
+.spouse-unlink-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--error-border);
+  color: var(--error);
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+}
+
+.spouse-unlink-btn svg {
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  flex-shrink: 0;
+}
+
+.spouse-unlink-btn:hover {
+  background: var(--error-bg);
+  transform: translateY(-1px);
 }
 
 [data-theme="light"] .approve-btn:hover,

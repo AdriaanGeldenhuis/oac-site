@@ -42,14 +42,14 @@
         const data = await response.json();
         
         if (data.success) {
-          alert('Appointment request sent / Afspraak versoek gestuur');
+          OACUI.toast('Afspraak versoek gestuur', 'success');
           closeAppointmentModal();
           setTimeout(() => location.href = '/admin/index.php?tab=afsprake', 1000);
         } else {
-          alert(data.error || 'Error');
+          OACUI.toast(data.error || 'Error', 'error');
         }
       } catch (error) {
-        alert('Network error / Netwerkfout');
+        OACUI.toast('Netwerkfout', 'error');
         console.error('Appointment error:', error);
       }
     });
@@ -104,13 +104,13 @@
         const data = await response.json();
         
         if (data.success) {
-          alert('Appointment confirmed / Afspraak bevestig');
+          OACUI.toast('Afspraak bevestig', 'success');
           setTimeout(() => location.reload(), 1000);
         } else {
-          alert(data.error || 'Error');
+          OACUI.toast(data.error || 'Error', 'error');
         }
       } catch (error) {
-        alert('Network error / Netwerkfout');
+        OACUI.toast('Netwerkfout', 'error');
       }
     });
   });
@@ -119,7 +119,8 @@
     btn.addEventListener('click', async function() {
       const id = this.getAttribute('data-id');
       
-      if (!confirm('Cancel this appointment? / Kanselleer hierdie afspraak?')) return;
+      const sure = await OACUI.confirm('Kanselleer hierdie afspraak?', { danger: true });
+      if (!sure) return;
       
       try {
         const response = await fetch('/admin/api/ampte/cancel_appointment.php', {
@@ -131,13 +132,13 @@
         const data = await response.json();
         
         if (data.success) {
-          alert('Appointment cancelled / Afspraak gekanselleer');
+          OACUI.toast('Afspraak gekanselleer', 'success');
           setTimeout(() => location.reload(), 1000);
         } else {
-          alert(data.error || 'Error');
+          OACUI.toast(data.error || 'Error', 'error');
         }
       } catch (error) {
-        alert('Network error / Netwerkfout');
+        OACUI.toast('Netwerkfout', 'error');
       }
     });
   });

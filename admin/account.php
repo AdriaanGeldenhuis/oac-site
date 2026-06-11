@@ -202,6 +202,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $language = in_array($_POST['language'] ?? 'af', SUPPORTED_LANGS, true) ? $_POST['language'] : 'af';
         $birthdate = trim($_POST['birthdate'] ?? '');
         $marital_status = $_POST['marital_status'] ?? null;
+        if (!in_array($marital_status, ['getroud', 'ongetroud', 'wewenaar', 'weduwee'], true)) {
+            $marital_status = null;
+        }
         $province_id = isset($_POST['province']) && is_numeric($_POST['province']) ? (int)$_POST['province'] : null;
         $town_id = isset($_POST['town']) && is_numeric($_POST['town']) ? (int)$_POST['town'] : null;
         $congregation_id = isset($_POST['congregation']) && is_numeric($_POST['congregation']) ? (int)$_POST['congregation'] : null;
@@ -404,6 +407,7 @@ $VER = time();
   </style>
   
   <link rel="stylesheet" href="/admin/css/account.css?v=<?= $VER ?>">
+  <link rel="stylesheet" href="/admin/css/ui.css?v=<?= $VER ?>">
 </head>
 <body class="account-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
@@ -516,6 +520,8 @@ $VER = time();
               <option value=""><?= t('select') ?></option>
               <option value="getroud" <?= ($currentUser['marital_status'] ?? '') === 'getroud' ? 'selected' : '' ?>><?= t('married') ?></option>
               <option value="ongetroud" <?= ($currentUser['marital_status'] ?? '') === 'ongetroud' ? 'selected' : '' ?>><?= t('unmarried') ?></option>
+              <?php $widowValue = (strtolower($currentUser['gender'] ?? '') === 'vrou') ? 'weduwee' : 'wewenaar'; ?>
+              <option value="<?= $widowValue ?>" <?= in_array($currentUser['marital_status'] ?? '', ['weduwee', 'wewenaar'], true) ? 'selected' : '' ?>><?= t($widowValue) ?></option>
             </select>
           </div>
           <div class="account-field">
@@ -608,6 +614,13 @@ $VER = time();
     </div>
   </main>
 
+  <script>
+  window.OAC_UI_STRINGS = {
+    ok: <?= json_encode(t('confirm')) ?>,
+    cancel: <?= json_encode(t('cancel')) ?>
+  };
+  </script>
+  <script src="/admin/js/ui.js?v=<?= $VER ?>"></script>
   <script src="/admin/js/account.js?v=<?= $VER ?>"></script>
   <script>
   const townsByProvince = <?= json_encode($townsByProvince, JSON_UNESCAPED_UNICODE) ?>;
@@ -691,15 +704,15 @@ $VER = time();
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({request_id: requestId})
       });
-      
+
       const data = await response.json();
       if (data.success) {
         location.reload();
       } else {
-        alert(data.error || 'Error');
+        OACUI.toast(data.error || 'Error', 'error');
       }
     } catch (e) {
-      alert('Network error: ' + e.message);
+      OACUI.toast('Network error: ' + e.message, 'error');
     }
   }
   </script>

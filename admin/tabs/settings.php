@@ -43,12 +43,12 @@ document.getElementById('password-form').addEventListener('submit', async functi
   const confirm = document.getElementById('confirm_password').value;
 
   if (newPw !== confirm) {
-    alert('<?= t('passwords_no_match') ?>');
+    OACUI.toast(<?= json_encode(t('passwords_no_match')) ?>, 'error');
     return;
   }
 
   if (newPw.length < 6) {
-    alert('<?= t('password_min_length') ?>');
+    OACUI.toast(<?= json_encode(t('password_min_length')) ?>, 'error');
     return;
   }
 
@@ -64,13 +64,13 @@ document.getElementById('password-form').addEventListener('submit', async functi
 
     const data = await response.json();
     if (data.success) {
-      alert('<?= t('password_changed') ?>');
+      OACUI.toast(<?= json_encode(t('password_changed')) ?>, 'success');
       this.reset();
     } else {
-      alert(data.error || '<?= t('password_change_failed') ?>');
+      OACUI.toast(data.error || <?= json_encode(t('password_change_failed')) ?>, 'error');
     }
   } catch (error) {
-    alert('<?= t('network_error') ?>: ' + error.message);
+    OACUI.toast(<?= json_encode(t('network_error')) ?> + ': ' + error.message, 'error');
   }
 });
 </script>

@@ -6,6 +6,15 @@
 require_once __DIR__ . '/../security/auth_gate.php';
 require_once __DIR__ . '/config/fcm_config.php';
 
+// Office bearers only (amp 1-6) - this page exposes FCM config details
+$gateStmt = $pdo->prepare('SELECT amp_id FROM users WHERE id = ? LIMIT 1');
+$gateStmt->execute([(int)($_SESSION['user_id'] ?? 0)]);
+$gateAmp = (int)($gateStmt->fetchColumn() ?: 0);
+if ($gateAmp < 1 || $gateAmp > 6) {
+    header('Location: /admin/index.php');
+    exit;
+}
+
 $lang = $_SESSION['lang'] ?? 'af';
 $pageTitle = 'FCM Debug';
 

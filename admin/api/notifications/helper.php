@@ -107,6 +107,18 @@ function createAdminNotification($userId, $type, $data = []) {
                 $notifType = 'success';
                 break;
 
+            case 'spouse_unlinked':
+                $fromName = $data['from_name'] ?? 'Jou eggenoot';
+                $titleKey = 'notif_spouse_unlinked';
+                $messageKey = 'notif_spouse_unlinked_msg';
+                $params = ['name' => $fromName];
+                $title = '💔 Eggenoot Ontkoppel';
+                $message = "Jou eggenoot-koppeling met {$fromName} is deur 'n ampsdraer verwyder.";
+                $link = '/admin/account.php';
+                $icon = '💔';
+                $notifType = 'spouse';
+                break;
+
             case 'appointment_request':
                 $fromName = $data['from_name'] ?? 'Iemand';
                 $date = $data['date'] ?? '';

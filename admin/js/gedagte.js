@@ -35,7 +35,7 @@
         var data = await response.json();
 
         if (data.success) {
-          alert(lang.saved || 'Saved!');
+          OACUI.toast(lang.saved || 'Saved!', 'success');
           form.reset();
           if (dateInput) {
             var now = new Date();
@@ -44,10 +44,10 @@
           if (timeInput) timeInput.value = '07:00';
           loadThoughts();
         } else {
-          alert(data.error || 'Error');
+          OACUI.toast(data.error || 'Error', 'error');
         }
       } catch (err) {
-        alert('Network error: ' + err.message);
+        OACUI.toast('Network error: ' + err.message, 'error');
       }
       btn.disabled = false;
     });
@@ -106,7 +106,8 @@
   }
 
   async function deleteThought(id) {
-    if (!confirm(lang.confirmDelete || 'Delete this thought?')) return;
+    var sure = await OACUI.confirm(lang.confirmDelete || 'Delete this thought?', { danger: true });
+    if (!sure) return;
 
     try {
       var response = await fetch('/admin/api/gedagte/delete.php', {
@@ -124,10 +125,10 @@
           listEl.innerHTML = '<p class="gedagte-empty">' + (lang.noUpcoming || 'No upcoming thoughts') + '</p>';
         }
       } else {
-        alert(data.error || 'Error');
+        OACUI.toast(data.error || 'Error', 'error');
       }
     } catch (err) {
-      alert('Network error: ' + err.message);
+      OACUI.toast('Network error: ' + err.message, 'error');
     }
   }
 

@@ -568,6 +568,22 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Solteiro(a)',
         'st' => 'Ha o nyaloa'
     ],
+    'wewenaar' => [
+        'af' => 'Wewenaar',
+        'en' => 'Widower',
+        'zu' => 'Umfelwa',
+        'xh' => 'Umhlolo',
+        'pt' => 'Viúvo',
+        'st' => 'Mohlolo'
+    ],
+    'weduwee' => [
+        'af' => 'Weduwee',
+        'en' => 'Widow',
+        'zu' => 'Umfelokazi',
+        'xh' => 'Umhlolokazi',
+        'pt' => 'Viúva',
+        'st' => 'Mohlolohali'
+    ],
     'widowed' => [
         'af' => 'Wewenaar/Weduwee',
         'en' => 'Widowed',
@@ -1689,6 +1705,54 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Izicelo zomlingani ziyadityaniswa xa umamkeli evuma. Njengomphathi ungazivuma okanye uzale apha.',
         'pt' => 'Os pedidos de cônjuge são vinculados quando o destinatário aceita. Como portador de ofício, você também pode aprová-los ou rejeitá-los aqui.',
         'st' => 'Likopo tsa molekane li hokahanngoa ha moamoheli a amohela. Joaloka mo-ofisiri u ka boela ua li amohela kapa ua li hana mona.'
+    ],
+    'linked_spouses' => [
+        'af' => 'Gekoppelde Huweliksmaats',
+        'en' => 'Linked Spouses',
+        'zu' => 'Abalingani Abaxhunyiwe',
+        'xh' => 'Abalingani Abadityanisiweyo',
+        'pt' => 'Cônjuges Vinculados',
+        'st' => 'Balekane ba Hokahantsoeng'
+    ],
+    'no_linked_spouses' => [
+        'af' => 'Geen gekoppelde huweliksmaats in jou omvang nie.',
+        'en' => 'No linked spouses in your scope.',
+        'zu' => 'Abekho abalingani abaxhunyiwe endaweni yakho.',
+        'xh' => 'Abekho abalingani abadityanisiweyo kummandla wakho.',
+        'pt' => 'Nenhum cônjuge vinculado no seu escopo.',
+        'st' => 'Ha ho balekane ba hokahantsoeng sebakeng sa hao.'
+    ],
+    'unlink' => [
+        'af' => 'Ontkoppel',
+        'en' => 'Unlink',
+        'zu' => 'Hlukanisa',
+        'xh' => 'Yahlula',
+        'pt' => 'Desvincular',
+        'st' => 'Arola'
+    ],
+    'confirm_unlink_spouse' => [
+        'af' => 'Is jy seker jy wil hierdie huweliksmaats ontkoppel? Hulle kan later weer gekoppel word.',
+        'en' => 'Are you sure you want to unlink these spouses? They can be linked again later.',
+        'zu' => 'Uqinisekile ukuthi ufuna ukuhlukanisa laba balingani? Bangaxhunywa futhi kamuva.',
+        'xh' => 'Uqinisekile ufuna ukwahlula aba balingani? Bangadityaniswa kwakhona kamva.',
+        'pt' => 'Tem certeza de que deseja desvincular estes cônjuges? Eles podem ser vinculados novamente mais tarde.',
+        'st' => 'Na u na le bonnete ba hore u batla ho arola balekane bana? Ba ka hokahanngoa hape hamorao.'
+    ],
+    'notif_spouse_unlinked' => [
+        'af' => 'Eggenoot Ontkoppel',
+        'en' => 'Spouse Unlinked',
+        'zu' => 'Umlingani Uhlukanisiwe',
+        'xh' => 'Umlingani Wahlulwe',
+        'pt' => 'Cônjuge Desvinculado',
+        'st' => 'Molekane o Arotsoe'
+    ],
+    'notif_spouse_unlinked_msg' => [
+        'af' => 'Jou eggenoot-koppeling met {name} is deur \'n ampsdraer verwyder.',
+        'en' => 'Your spouse link with {name} was removed by an office bearer.',
+        'zu' => 'Ukuxhunywa kwakho nomlingani u-{name} kususwe umphathi.',
+        'xh' => 'Unxibelelwano lwakho nomlingani u-{name} lususwe ngumphathi.',
+        'pt' => 'Seu vínculo de cônjuge com {name} foi removido por um portador de ofício.',
+        'st' => 'Khokahano ea hao ea molekane le {name} e tlositsoe ke mo-ofisiri.'
     ],
 
     // ==================== TEACHING TAB ====================

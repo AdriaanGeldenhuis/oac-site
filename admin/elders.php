@@ -806,8 +806,44 @@ $highlightColors = [
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 20px; }
-            .toolbar { padding: 10px; }
-            .sep { display: none; }
+
+            /* Toolbars: one swipeable row each instead of a tall wrapped
+               block, so the editor stays right under your thumb */
+            .toolbar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-x: contain;
+                scrollbar-width: thin;
+                scrollbar-color: var(--primary-dark) transparent;
+                padding: 10px 12px;
+                gap: 8px;
+                margin-bottom: 10px;
+                scroll-snap-type: x proximity;
+            }
+            .toolbar::-webkit-scrollbar { height: 4px; }
+            .toolbar::-webkit-scrollbar-thumb {
+                background: var(--primary-dark);
+                border-radius: 2px;
+            }
+            .toolbar .tool-group {
+                flex-shrink: 0;
+                scroll-snap-align: start;
+            }
+            .toolbar .sep { flex-shrink: 0; }
+            /* Comfortable touch targets */
+            .toolbar .tool-btn {
+                min-width: 40px;
+                min-height: 40px;
+                flex-shrink: 0;
+            }
+            .toolbar .color-swatch {
+                width: 28px;
+                height: 28px;
+                flex-shrink: 0;
+            }
+            .btn-translate { min-width: 0; }
+
             .form-grid { grid-template-columns: 1fr; }
             .lang-tabs { flex-wrap: wrap; }
             .editor { padding: 20px; min-height: 400px; }

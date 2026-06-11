@@ -46,6 +46,77 @@ if (!in_array($activeTab, $validTabs)) {
     $activeTab = 'profile';
 }
 
+// Pending approvals count for the tab badge (same scope rules as the tab)
+$approvalCount = 0;
+if ($canApprove) {
+    $townId = $currentUser['town_id'] ?? null;
+    $congId = $currentUser['congregation_id'] ?? null;
+
+    $roleFilter = '';
+    $scopeFilter = '';
+    $countParams = [];
+
+    if ($ampId === 6) {
+        $roleFilter = 'AND u.amp_id IN (7,8,9,10)';
+        if ($congId) {
+            $scopeFilter = 'AND u.congregation_id = :cid';
+            $countParams[':cid'] = $congId;
+        }
+    } elseif ($ampId === 5) {
+        $roleFilter = 'AND u.amp_id IN (5,6)';
+        if ($townId) {
+            $scopeFilter = 'AND u.town_id = :tid';
+            $countParams[':tid'] = $townId;
+        }
+    } elseif ($ampId >= 2 && $ampId <= 4) {
+        $roleFilter = 'AND u.amp_id IN (2,3,4,5)';
+        if ($townId) {
+            $scopeFilter = 'AND u.town_id = :tid';
+            $countParams[':tid'] = $townId;
+        }
+    } elseif ($ampId === 1) {
+        $roleFilter = 'AND u.amp_id = 1';
+    }
+
+    if ($roleFilter) {
+        try {
+            $countStmt = $pdo->prepare("SELECT COUNT(*) FROM users u
+                WHERE u.status = 'pending' {$roleFilter} {$scopeFilter}");
+            $countStmt->execute($countParams);
+            $approvalCount += (int)$countStmt->fetchColumn();
+        } catch (Throwable $e) {
+            // badge is informational only
+        }
+    }
+
+    try {
+        if ($congId) {
+            $spouseScope = '(u1.congregation_id = :sa OR u2.congregation_id = :sb)';
+            $spouseParams = [':sa' => $congId, ':sb' => $congId];
+        } elseif ($townId) {
+            $spouseScope = '(u1.town_id = :sa OR u2.town_id = :sb)';
+            $spouseParams = [':sa' => $townId, ':sb' => $townId];
+        } else {
+            $spouseScope = '';
+            $spouseParams = [];
+        }
+
+        if ($spouseScope) {
+            $spouseCountStmt = $pdo->prepare("SELECT COUNT(*) FROM spouse_requests sr
+                JOIN users u1 ON u1.id = sr.requester_id
+                JOIN users u2 ON u2.id = sr.receiver_id
+                WHERE sr.status = 'pending'
+                AND {$spouseScope}
+                AND u1.spouse_user_id IS NULL
+                AND u2.spouse_user_id IS NULL");
+            $spouseCountStmt->execute($spouseParams);
+            $approvalCount += (int)$spouseCountStmt->fetchColumn();
+        }
+    } catch (Throwable $e) {
+        // badge is informational only
+    }
+}
+
 // Chip with the signed-in user's photo / initials
 $chipName = trim(($currentUser['name'] ?? '') . ' ' . ($currentUser['surname'] ?? ''));
 $chipInitials = '';
@@ -77,6 +148,7 @@ $VER = time();
   </style>
   
   <link rel="stylesheet" href="/admin/css/admin.css?v=<?= $VER ?>">
+  <link rel="stylesheet" href="/admin/css/ui.css?v=<?= $VER ?>">
 </head>
 <body class="admin-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
@@ -145,6 +217,9 @@ $VER = time();
           <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
         </svg>
         <span><?= t('approvals') ?></span>
+        <?php if ($approvalCount > 0): ?>
+        <span class="admin-tab-badge"><?= $approvalCount > 99 ? '99+' : $approvalCount ?></span>
+        <?php endif; ?>
       </a>
       <?php endif; ?>
     </nav>
@@ -177,6 +252,13 @@ $VER = time();
     </div>
   </main>
 
+  <script>
+  window.OAC_UI_STRINGS = {
+    ok: <?= json_encode(t('confirm')) ?>,
+    cancel: <?= json_encode(t('cancel')) ?>
+  };
+  </script>
+  <script src="/admin/js/ui.js?v=<?= $VER ?>"></script>
   <script src="/admin/js/admin.js?v=<?= $VER ?>"></script>
 
   <?php require_once __DIR__ . '/../header_footer/footer.php'; ?>

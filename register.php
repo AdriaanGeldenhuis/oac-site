@@ -184,6 +184,8 @@ $congregations = $pdo->query("SELECT * FROM congregations ORDER BY name")->fetch
           <option value="">Select...</option>
           <option value="getroud">Married</option>
           <option value="ongetroud">Single</option>
+          <option value="wewenaar">Widower</option>
+          <option value="weduwee">Widow</option>
         </select>
       </label>
     </div>
