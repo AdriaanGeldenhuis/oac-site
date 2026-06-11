@@ -63,6 +63,10 @@ try {
         ':device_info' => $deviceInfo
     ]);
 
+    // Remember this device's token so logout.php can unlink it — otherwise the
+    // phone keeps receiving the previous user's notifications after logout.
+    $_SESSION['fcm_token'] = $token;
+
     echo json_encode([
         'success' => true,
         'message' => 'Token registered'

@@ -68,9 +68,17 @@ try {
         exit;
     }
 
-    // Mark as sent immediately to prevent duplicate sends
-    $updateStmt = $pdo->prepare("UPDATE daily_thoughts SET notification_sent = 1 WHERE id = ?");
+    // Atomically claim the thought so a concurrent sender (e.g. the auto-cron)
+    // can never push the same thought twice.
+    $updateStmt = $pdo->prepare("UPDATE daily_thoughts SET notification_sent = 1 WHERE id = ? AND notification_sent = 0");
     $updateStmt->execute([$thought['id']]);
+    if ($updateStmt->rowCount() === 0) {
+        $results['skipped'] = true;
+        $results['message'] = 'Thought already claimed by another sender';
+        if (!$isCliMode) echo json_encode($results);
+        else echo "Thought already claimed by another sender.\n";
+        exit;
+    }
 
     // Get the creator's town_id to scope notifications
     $creatorTownId = $thought['town_id'] ? (int)$thought['town_id'] : null;
@@ -116,6 +124,18 @@ try {
         )
     ");
 
+    // Migrate older databases that pre-date the translation-key columns
+    $cols = $notifDb->query("PRAGMA table_info(notifications)")->fetchAll(PDO::FETCH_COLUMN, 1);
+    if (!in_array('title_key', $cols)) {
+        $notifDb->exec("ALTER TABLE notifications ADD COLUMN title_key TEXT");
+    }
+    if (!in_array('message_key', $cols)) {
+        $notifDb->exec("ALTER TABLE notifications ADD COLUMN message_key TEXT");
+    }
+    if (!in_array('params', $cols)) {
+        $notifDb->exec("ALTER TABLE notifications ADD COLUMN params TEXT");
+    }
+
     $thoughtContent = strip_tags($thought['content']);
     // Truncate for push notification body (max 200 chars)
     $pushBody = mb_strlen($thoughtContent) > 200
@@ -140,9 +160,9 @@ try {
                 'user_id' => $userId,
                 'title' => $title,
                 'message' => $pushBody,
-                'type' => 'info',
+                'type' => 'thought',
                 'link' => '/gedagtes/gedagtes.php',
-                'icon' => '',
+                'icon' => '💭',
                 'title_key' => 'notif_thought_title',
                 'message_key' => null,
                 'params' => json_encode(['content' => $pushBody])

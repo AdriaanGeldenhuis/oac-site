@@ -97,19 +97,14 @@ const FCMBridge = {
         // Small delay to ensure native side is ready
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Get and register token
+        // Get and register token.
+        // Always register (cheap POST): the server maps token -> logged-in user,
+        // so this keeps the mapping correct after logout/login or a user switch
+        // on a shared device, and restores tokens the server may have cleaned up.
         const token = this.getToken();
 
         if (token) {
-            const lastToken = localStorage.getItem('fcm_token');
-
-            // Only register if token changed or never registered
-            if (token !== lastToken) {
-                console.log('FCM Bridge: New token detected, registering...');
-                await this.registerToken(token);
-            } else {
-                console.log('FCM Bridge: Token already registered');
-            }
+            await this.registerToken(token);
         } else {
             console.log('FCM Bridge: No token available yet');
         }
