@@ -4,7 +4,7 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../../../security/auth_gate.php';
 require_once __DIR__ . '/../notifications/helper.php';
 
-$userId = $_SESSION['user_id'] ?? null;
+$userId = (int)($_SESSION['user_id'] ?? 0);
 $requestId = isset($_POST['request_id']) && is_numeric($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
 
 if (!$userId || !$requestId) {
@@ -14,18 +14,30 @@ if (!$userId || !$requestId) {
 }
 
 try {
-    // Get request - ONLY receiver can reject
-    $stmt = $pdo->prepare("SELECT * FROM spouse_requests WHERE id = ? AND receiver_id = ? AND status = 'pending' LIMIT 1");
-    $stmt->execute([$requestId, $userId]);
+    $stmt = $pdo->prepare("SELECT * FROM spouse_requests WHERE id = ? AND status = 'pending' LIMIT 1");
+    $stmt->execute([$requestId]);
     $request = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$request) {
         http_response_code(404);
         echo json_encode(['error' => 'Request not found or already processed']);
         exit;
     }
-    
+
     $requesterId = (int)$request['requester_id'];
+    $receiverId = (int)$request['receiver_id'];
+
+    // The receiver can reject; office bearers (amp 1-6) can reject too
+    $meStmt = $pdo->prepare('SELECT amp_id FROM users WHERE id = ? LIMIT 1');
+    $meStmt->execute([$userId]);
+    $myAmpId = (int)($meStmt->fetchColumn() ?: 0);
+    $isOfficeBearer = ($myAmpId >= 1 && $myAmpId <= 6);
+
+    if ($userId !== $receiverId && !$isOfficeBearer) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Not authorized']);
+        exit;
+    }
     
     // Update request status
     $stmt = $pdo->prepare("UPDATE spouse_requests SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = ?");

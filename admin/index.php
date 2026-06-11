@@ -46,6 +46,16 @@ if (!in_array($activeTab, $validTabs)) {
     $activeTab = 'profile';
 }
 
+// Chip with the signed-in user's photo / initials
+$chipName = trim(($currentUser['name'] ?? '') . ' ' . ($currentUser['surname'] ?? ''));
+$chipInitials = '';
+$chipParts = preg_split('/\s+/', $chipName);
+if (count($chipParts) >= 2) {
+    $chipInitials = strtoupper(mb_substr($chipParts[0], 0, 1) . mb_substr($chipParts[count($chipParts) - 1], 0, 1));
+} elseif (!empty($chipParts[0])) {
+    $chipInitials = strtoupper(mb_substr($chipParts[0], 0, 2));
+}
+
 $VER = time();
 ?><!doctype html>
 <html lang="<?= $lang ?>">
@@ -72,8 +82,23 @@ $VER = time();
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
   <main class="admin-main">
-    <nav class="admin-tabs">
-      <a href="?tab=profile" class="admin-tab <?= $activeTab === 'profile' ? 'active' : '' ?>">
+    <div class="admin-greeting">
+      <h2 class="admin-page-title"><?= t('admin_dashboard') ?></h2>
+      <div class="admin-user-chip">
+        <?php if (!empty($currentUser['photo'])): ?>
+        <img src="<?= esc($currentUser['photo']) ?>" alt="<?= esc($chipName) ?>">
+        <?php else: ?>
+        <span class="admin-chip-initials"><?= esc($chipInitials) ?></span>
+        <?php endif; ?>
+        <strong><?= esc($chipName) ?></strong>
+        <?php if (!empty($currentUser['amp_name'])): ?>
+        <span class="admin-chip-role"><?= esc($currentUser['amp_name']) ?></span>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <nav class="admin-tabs" aria-label="<?= esc(t('admin_dashboard')) ?>">
+      <a href="?tab=profile" class="admin-tab <?= $activeTab === 'profile' ? 'active' : '' ?>" <?= $activeTab === 'profile' ? 'aria-current="page"' : '' ?>>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
         </svg>
@@ -81,13 +106,13 @@ $VER = time();
       </a>
 
       <?php if ($isElder): ?>
-      <a href="?tab=teaching" class="admin-tab <?= $activeTab === 'teaching' ? 'active' : '' ?>">
+      <a href="?tab=teaching" class="admin-tab <?= $activeTab === 'teaching' ? 'active' : '' ?>" <?= $activeTab === 'teaching' ? 'aria-current="page"' : '' ?>>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 016.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" stroke="currentColor" stroke-width="2"/>
         </svg>
         <span><?= t('teaching') ?></span>
       </a>
-      <a href="?tab=gedagte" class="admin-tab <?= $activeTab === 'gedagte' ? 'active' : '' ?>">
+      <a href="?tab=gedagte" class="admin-tab <?= $activeTab === 'gedagte' ? 'active' : '' ?>" <?= $activeTab === 'gedagte' ? 'aria-current="page"' : '' ?>>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" stroke="currentColor" stroke-width="0" fill="currentColor"/>
         </svg>
@@ -96,7 +121,7 @@ $VER = time();
       <?php endif; ?>
 
       <?php if ($canManageAmpte): ?>
-      <a href="?tab=afsprake" class="admin-tab <?= $activeTab === 'afsprake' ? 'active' : '' ?>">
+      <a href="?tab=afsprake" class="admin-tab <?= $activeTab === 'afsprake' ? 'active' : '' ?>" <?= $activeTab === 'afsprake' ? 'aria-current="page"' : '' ?>>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
           <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
@@ -105,7 +130,7 @@ $VER = time();
       </a>
       <?php endif; ?>
 
-      <a href="?tab=settings" class="admin-tab <?= $activeTab === 'settings' ? 'active' : '' ?>">
+      <a href="?tab=settings" class="admin-tab <?= $activeTab === 'settings' ? 'active' : '' ?>" <?= $activeTab === 'settings' ? 'aria-current="page"' : '' ?>>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
           <path d="M12 1v6m0 6v6M23 12h-6m-6 0H1" stroke="currentColor" stroke-width="2"/>
@@ -114,7 +139,7 @@ $VER = time();
       </a>
 
       <?php if ($canApprove): ?>
-      <a href="?tab=approvals" class="admin-tab <?= $activeTab === 'approvals' ? 'active' : '' ?>">
+      <a href="?tab=approvals" class="admin-tab <?= $activeTab === 'approvals' ? 'active' : '' ?>" <?= $activeTab === 'approvals' ? 'aria-current="page"' : '' ?>>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" stroke-width="2"/>
           <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>

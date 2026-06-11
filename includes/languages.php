@@ -352,6 +352,22 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Pedido de cônjuge enviado. Aguardando aprovação.',
         'st' => 'Kopo ea molekane e rometsoe. E emetse tumello.'
     ],
+    'spouse_request_already_pending' => [
+        'af' => 'Daar is reeds \'n hangende eggenoot versoek. Wag vir \'n antwoord of kanselleer dit eers.',
+        'en' => 'There is already a pending spouse request. Wait for a response or cancel it first.',
+        'zu' => 'Sekuvele kunesicelo somshado esilindile. Linda impendulo noma usikhansele kuqala.',
+        'xh' => 'Sele kukho isicelo somyeni esilindileyo. Linda impendulo okanye usirhoxise kuqala.',
+        'pt' => 'Já existe um pedido de cônjuge pendente. Aguarde uma resposta ou cancele-o primeiro.',
+        'st' => 'Ho se ho na le kopo ea molekane e emetseng. Ema karabo kapa u e hlakole pele.'
+    ],
+    'cancel_request' => [
+        'af' => 'Kanselleer Versoek',
+        'en' => 'Cancel Request',
+        'zu' => 'Khansela Isicelo',
+        'xh' => 'Rhoxisa Isicelo',
+        'pt' => 'Cancelar Pedido',
+        'st' => 'Hlakola Kopo'
+    ],
     'profile_updated' => [
         'af' => 'Profiel suksesvol opgedateer',
         'en' => 'Profile updated successfully',
@@ -1667,12 +1683,12 @@ define('UI_TRANSLATIONS', [
         'st' => 'E emetse'
     ],
     'spouse_auto_approve_note' => [
-        'af' => 'Eggenoot versoeke word outomaties goedgekeur wanneer beide partye aanvaar.',
-        'en' => 'Spouse requests are automatically approved when both parties accept.',
-        'zu' => 'Izicelo zomlingani zivunywa ngokuzenzakalela uma zonke izinhlangothi zivuma.',
-        'xh' => 'Izicelo zomlingani ziyavunywa ngokuzenzekelayo xa zonke iiqela ziyavuma.',
-        'pt' => 'Os pedidos de cônjuge são aprovados automaticamente quando ambas as partes aceitam.',
-        'st' => 'Likopo tsa molekane li amoheloa ka bo tsona ha mahlakore a mabeli a amohela.'
+        'af' => 'Eggenoot versoeke word gekoppel sodra die ontvanger aanvaar. As ampsdraer kan jy dit ook hier goedkeur of afwys.',
+        'en' => 'Spouse requests are linked once the receiver accepts. As an office bearer you can also approve or reject them here.',
+        'zu' => 'Izicelo zomlingani ziyaxhunywa uma umamukeli evuma. Njengomphathi ungazivuma noma uzinqabe lapha.',
+        'xh' => 'Izicelo zomlingani ziyadityaniswa xa umamkeli evuma. Njengomphathi ungazivuma okanye uzale apha.',
+        'pt' => 'Os pedidos de cônjuge são vinculados quando o destinatário aceita. Como portador de ofício, você também pode aprová-los ou rejeitá-los aqui.',
+        'st' => 'Likopo tsa molekane li hokahanngoa ha moamoheli a amohela. Joaloka mo-ofisiri u ka boela ua li amohela kapa ua li hana mona.'
     ],
 
     // ==================== TEACHING TAB ====================

@@ -106,15 +106,15 @@ try {
         <tbody>
           <?php foreach ($pending as $user): ?>
           <tr id="row-<?= (int)$user['id'] ?>">
-            <td><?= htmlspecialchars(trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''))) ?></td>
-            <td><?= htmlspecialchars($user['amp'] ?? '') ?></td>
-            <td><?= htmlspecialchars($user['congregation'] ?? '') ?></td>
-            <td>
+            <td data-label="<?= esc(t('name')) ?>"><?= htmlspecialchars(trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''))) ?></td>
+            <td data-label="<?= esc(t('role')) ?>"><?= htmlspecialchars($user['amp'] ?? '') ?></td>
+            <td data-label="<?= esc(t('congregation')) ?>"><?= htmlspecialchars($user['congregation'] ?? '') ?></td>
+            <td data-label="">
               <div class="approval-actions">
-                <button class="admin-btn approve-btn" data-id="<?= (int)$user['id'] ?>">
+                <button class="approve-btn" data-id="<?= (int)$user['id'] ?>" title="<?= esc(t('approve')) ?>">
                   ✓
                 </button>
-                <button class="admin-btn reject-btn" data-id="<?= (int)$user['id'] ?>">
+                <button class="reject-btn" data-id="<?= (int)$user['id'] ?>" title="<?= esc(t('reject')) ?>">
                   ✗
                 </button>
               </div>
@@ -135,16 +135,23 @@ try {
         <tr>
           <th><?= t('requester') ?></th>
           <th><?= t('receiver') ?></th>
-          <th><?= t('status') ?></th>
+          <th><?= t('actions') ?></th>
         </tr>
       </thead>
       <tbody>
         <?php foreach ($spouseRequests as $req): ?>
-        <tr>
-          <td><?= htmlspecialchars($req['req_name'] . ' ' . $req['req_surname']) ?></td>
-          <td><?= htmlspecialchars($req['rec_name'] . ' ' . $req['rec_surname']) ?></td>
-          <td>
-            <span class="admin-badge admin-badge-warning"><?= t('pending') ?></span>
+        <tr id="spouse-row-<?= (int)$req['id'] ?>">
+          <td data-label="<?= esc(t('requester')) ?>"><?= htmlspecialchars($req['req_name'] . ' ' . $req['req_surname']) ?></td>
+          <td data-label="<?= esc(t('receiver')) ?>"><?= htmlspecialchars($req['rec_name'] . ' ' . $req['rec_surname']) ?></td>
+          <td data-label="">
+            <div class="approval-actions">
+              <button class="spouse-approve-btn" data-id="<?= (int)$req['id'] ?>" title="<?= esc(t('approve')) ?>">
+                ✓
+              </button>
+              <button class="spouse-reject-btn" data-id="<?= (int)$req['id'] ?>" title="<?= esc(t('reject')) ?>">
+                ✗
+              </button>
+            </div>
           </td>
         </tr>
         <?php endforeach; ?>
@@ -156,31 +163,3 @@ try {
   </p>
   <?php endif; ?>
 </div>
-
-<style>
-.approval-subtitle {
-  font-size: 1.4rem;
-  color: var(--color-rosegold-light);
-  margin-bottom: 20px;
-  font-weight: 400;
-}
-
-.approval-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.admin-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.admin-badge-warning {
-  background: rgba(255, 193, 7, 0.2);
-  border: 1px solid rgba(255, 193, 7, 0.5);
-  color: #ffc107;
-}
-</style>
