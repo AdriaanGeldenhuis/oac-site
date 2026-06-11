@@ -75,6 +75,18 @@ try {
         )
     ");
 
+    // Migrate older databases that pre-date the translation-key columns
+    $cols = $notifDb->query("PRAGMA table_info(notifications)")->fetchAll(PDO::FETCH_COLUMN, 1);
+    if (!in_array('title_key', $cols)) {
+        $notifDb->exec("ALTER TABLE notifications ADD COLUMN title_key TEXT");
+    }
+    if (!in_array('message_key', $cols)) {
+        $notifDb->exec("ALTER TABLE notifications ADD COLUMN message_key TEXT");
+    }
+    if (!in_array('params', $cols)) {
+        $notifDb->exec("ALTER TABLE notifications ADD COLUMN params TEXT");
+    }
+
     foreach ($birthdayUsers as $birthdayUser) {
         $birthdayUserId = (int)$birthdayUser['id'];
         $birthdayName = trim($birthdayUser['name'] . ' ' . $birthdayUser['surname']);
@@ -123,11 +135,13 @@ try {
             'params' => json_encode(['age' => $age])
         ]);
 
-        // Send FCM push to birthday person
+        // Send FCM push to birthday person (translated title)
         try {
-            sendPushToUser($birthdayUserId, "Happy Birthday!", $selfMessage, [
+            sendPushToUser($birthdayUserId, $selfTitle, $selfMessage, [
                 'type' => 'birthday',
-                'link' => '/profile/index.php'
+                'link' => '/profile/index.php',
+                'titleKey' => 'happy_birthday',
+                'messageKey' => 'birthday_self_msg'
             ]);
             $results['sent']++;
         } catch (Exception $e) {
@@ -165,11 +179,13 @@ try {
                 'params' => json_encode(['name' => $birthdayName, 'age' => $age, 'user_id' => $birthdayUserId])
             ]);
 
-            // Send FCM push notification
+            // Send FCM push notification (translated title)
             try {
-                sendPushToUser($recipientId, "Birthday Today", $notifyMessage, [
+                sendPushToUser($recipientId, $notifyTitle, $notifyMessage, [
                     'type' => 'birthday',
-                    'link' => '/profile/index.php?user_id=' . $birthdayUserId
+                    'link' => '/profile/index.php?user_id=' . $birthdayUserId,
+                    'titleKey' => 'birthday_notification',
+                    'messageKey' => 'birthday_notification_msg'
                 ]);
                 $results['sent']++;
             } catch (Exception $e) {

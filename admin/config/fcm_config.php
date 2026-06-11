@@ -116,6 +116,11 @@ function getFcmAccessToken(): ?string {
 /**
  * Send push notification via FCM V1 API
  *
+ * Sends DATA-ONLY messages (no notification block) so onMessageReceived is
+ * ALWAYS called in the Android app, even in the background. Tokens are sent
+ * in parallel batches so large fan-outs (e.g. the daily thought) reach every
+ * phone within seconds instead of one-by-one.
+ *
  * @param string|array $tokens FCM token(s) to send to
  * @param string $title Notification title
  * @param string $body Notification body
@@ -129,7 +134,7 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
         return ['success' => false, 'error' => 'Failed to get FCM access token'];
     }
 
-    $tokens = is_array($tokens) ? $tokens : [$tokens];
+    $tokens = is_array($tokens) ? array_values(array_unique(array_filter($tokens))) : [$tokens];
 
     if (empty($tokens)) {
         return ['success' => false, 'error' => 'No tokens provided'];
@@ -140,6 +145,7 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
     $results = [];
     $successCount = 0;
     $failureCount = 0;
+    $invalidTokens = [];
 
     // Build deep link URL if link is provided in data
     $clickUrl = FCM_SITE_URL;
@@ -147,68 +153,126 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
         $clickUrl = FCM_SITE_URL . $data['link'];
     }
 
-    // V1 API requires sending one message at a time
-    foreach ($tokens as $token) {
-        // Send DATA-ONLY message (no notification block)
-        // This ensures onMessageReceived is ALWAYS called in the Android app,
-        // even when the app is in the background. The app then creates the
-        // notification with the correct PendingIntent for deep linking.
-        $message = [
-            'message' => [
-                'token' => $token,
-                'android' => [
-                    'priority' => 'HIGH'
+    // FCM data payload values must be strings; arrays/objects (e.g. translation
+    // params) become JSON instead of the literal "Array".
+    $payload = [];
+    foreach (array_merge($data, ['title' => $title, 'body' => $body, 'click_url' => $clickUrl]) as $key => $value) {
+        $payload[$key] = (is_scalar($value) || $value === null)
+            ? (string)$value
+            : (string)json_encode($value, JSON_UNESCAPED_UNICODE);
+    }
+
+    // V1 API requires one request per token — run them in parallel batches.
+    foreach (array_chunk($tokens, 25) as $chunk) {
+        $multi = curl_multi_init();
+        $handles = [];
+
+        foreach ($chunk as $token) {
+            $message = [
+                'message' => [
+                    'token' => $token,
+                    'android' => [
+                        'priority' => 'HIGH'
+                    ],
+                    'data' => $payload
+                ]
+            ];
+
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $accessToken,
+                    'Content-Type: application/json'
                 ],
-                'data' => array_map('strval', array_merge($data, [
-                    'title' => $title,
-                    'body' => $body,
-                    'click_url' => $clickUrl
-                ]))
-            ]
-        ];
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Authorization: Bearer ' . $accessToken,
-                'Content-Type: application/json'
-            ],
-            CURLOPT_POSTFIELDS => json_encode($message),
-            CURLOPT_TIMEOUT => 30
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($error) {
-            error_log('FCM curl error: ' . $error);
-            $results[] = ['token' => $token, 'success' => false, 'error' => $error];
-            $failureCount++;
-            continue;
+                CURLOPT_POSTFIELDS => json_encode($message),
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT => 30
+            ]);
+            curl_multi_add_handle($multi, $ch);
+            $handles[] = ['ch' => $ch, 'token' => $token];
         }
 
-        $result = json_decode($response, true);
+        do {
+            $status = curl_multi_exec($multi, $active);
+            if ($active && curl_multi_select($multi, 1.0) === -1) {
+                usleep(10000); // select not supported: avoid a busy loop
+            }
+        } while ($active && $status === CURLM_OK);
 
-        if ($httpCode === 200) {
-            $results[] = ['token' => $token, 'success' => true, 'message_id' => $result['name'] ?? null];
-            $successCount++;
-        } else {
-            error_log('FCM error for token ' . substr($token, 0, 20) . '...: ' . $response);
-            $results[] = ['token' => $token, 'success' => false, 'error' => $result['error']['message'] ?? 'Unknown error'];
-            $failureCount++;
+        foreach ($handles as $h) {
+            $ch = $h['ch'];
+            $token = $h['token'];
+            $response = curl_multi_getcontent($ch);
+            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_multi_remove_handle($multi, $ch);
+            curl_close($ch);
+
+            if ($error) {
+                error_log('FCM curl error: ' . $error);
+                $results[] = ['token' => $token, 'success' => false, 'error' => $error];
+                $failureCount++;
+                continue;
+            }
+
+            $result = json_decode((string)$response, true);
+
+            if ($httpCode === 200) {
+                $results[] = ['token' => $token, 'success' => true, 'message_id' => $result['name'] ?? null];
+                $successCount++;
+            } else {
+                $errStatus = $result['error']['status'] ?? '';
+                $errMsg = $result['error']['message'] ?? 'Unknown error';
+                error_log('FCM error for token ' . substr($token, 0, 20) . '...: ' . $response);
+                $results[] = ['token' => $token, 'success' => false, 'error' => $errMsg];
+                $failureCount++;
+
+                // Token no longer valid (app uninstalled / token rotated):
+                // flag it for removal so future sends stay fast and clean.
+                if ($errStatus === 'UNREGISTERED' || $httpCode === 404
+                    || ($errStatus === 'INVALID_ARGUMENT' && stripos($errMsg, 'registration token') !== false)) {
+                    $invalidTokens[] = $token;
+                }
+            }
         }
+
+        curl_multi_close($multi);
+    }
+
+    if (!empty($invalidTokens)) {
+        fcmRemoveDeadTokens($invalidTokens);
     }
 
     return [
         'success' => $successCount > 0,
         'success_count' => $successCount,
         'failure_count' => $failureCount,
+        'removed_tokens' => count($invalidTokens),
         'results' => $results
     ];
+}
+
+/**
+ * Delete tokens FCM reported as invalid/unregistered from fcm_tokens.
+ */
+function fcmRemoveDeadTokens(array $tokens): void {
+    global $pdo;
+
+    if (!($pdo instanceof PDO)) {
+        return;
+    }
+
+    try {
+        $stmt = $pdo->prepare('DELETE FROM fcm_tokens WHERE token = ?');
+        foreach ($tokens as $token) {
+            $stmt->execute([$token]);
+        }
+        error_log('FCM: Removed ' . count($tokens) . ' dead token(s)');
+    } catch (Throwable $e) {
+        error_log('FCM dead token cleanup error: ' . $e->getMessage());
+    }
 }
 
 /**

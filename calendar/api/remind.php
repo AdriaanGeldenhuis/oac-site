@@ -10,9 +10,14 @@
 
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/../../session.php';
-require_once __DIR__ . '/../../app/db_connect.php';
+require_once __DIR__ . '/../../security/auth_gate.php';
 require_once __DIR__ . '/../../includes/languages.php';
+
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'db_unavailable']);
+    exit;
+}
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);

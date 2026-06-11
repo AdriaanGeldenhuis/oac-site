@@ -322,7 +322,11 @@
       
       // Bible
       'bible': '📖',
-      'prayer': '🙏'
+      'prayer': '🙏',
+
+      // Daily thought & birthdays
+      'thought': '💭',
+      'birthday': '🎂'
     };
     
     return icons[type] || '🔔';

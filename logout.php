@@ -13,6 +13,17 @@ if (!empty($_SESSION['user_id'])) {
     }
 }
 
+// Unlink this device's FCM token so the phone stops receiving this user's
+// push notifications after logout. It is re-registered on the next login.
+if (!empty($_SESSION['fcm_token'])) {
+    try {
+        $stmt = $pdo->prepare("DELETE FROM fcm_tokens WHERE token = ?");
+        $stmt->execute([$_SESSION['fcm_token']]);
+    } catch (Throwable $e) {
+        error_log('Logout FCM token cleanup failed: ' . $e->getMessage());
+    }
+}
+
 // Destroy session
 $_SESSION = [];
 

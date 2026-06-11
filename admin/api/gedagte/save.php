@@ -158,6 +158,15 @@ try {
 
     if ($shouldNotify) {
         try {
+            // Atomically claim the thought BEFORE fanning out, so the cron /
+            // auto-cron can never send the same push a second time while this
+            // request is still busy sending.
+            $claim = $pdo->prepare("UPDATE daily_thoughts SET notification_sent = 1 WHERE display_date = ? AND notification_sent = 0");
+            $claim->execute([$displayDate]);
+            if ($claim->rowCount() === 0) {
+                exit; // another sender already claimed it
+            }
+
             require_once dirname(__DIR__, 2) . '/config/fcm_config.php';
             require_once dirname(__DIR__, 3) . '/includes/languages.php';
 
@@ -197,8 +206,21 @@ try {
                 )
             ");
 
-            $pushBody = mb_strlen($content) > 200 ? mb_substr($content, 0, 197) . '...' : $content;
-            $pushBody = strip_tags($pushBody);
+            // Migrate older databases that pre-date the translation-key columns
+            $cols = $notifDb->query("PRAGMA table_info(notifications)")->fetchAll(PDO::FETCH_COLUMN, 1);
+            if (!in_array('title_key', $cols)) {
+                $notifDb->exec("ALTER TABLE notifications ADD COLUMN title_key TEXT");
+            }
+            if (!in_array('message_key', $cols)) {
+                $notifDb->exec("ALTER TABLE notifications ADD COLUMN message_key TEXT");
+            }
+            if (!in_array('params', $cols)) {
+                $notifDb->exec("ALTER TABLE notifications ADD COLUMN params TEXT");
+            }
+
+            // Strip tags BEFORE truncating so the cut can't land inside a tag
+            $pushBody = strip_tags($content);
+            $pushBody = mb_strlen($pushBody) > 200 ? mb_substr($pushBody, 0, 197) . '...' : $pushBody;
 
             $insertNotif = $notifDb->prepare("
                 INSERT INTO notifications (user_id, title, message, type, link, icon, title_key, message_key, params)
@@ -216,9 +238,9 @@ try {
                         'user_id' => $uid,
                         'title' => $title,
                         'message' => $pushBody,
-                        'type' => 'info',
+                        'type' => 'thought',
                         'link' => '/gedagtes/gedagtes.php',
-                        'icon' => '',
+                        'icon' => '💭',
                         'title_key' => 'notif_thought_title',
                         'message_key' => null,
                         'params' => json_encode(['content' => $pushBody])
@@ -238,9 +260,6 @@ try {
                     error_log("Thought save FCM error user $uid: " . $e->getMessage());
                 }
             }
-
-            // Mark notification as sent
-            $pdo->prepare("UPDATE daily_thoughts SET notification_sent = 1 WHERE display_date = ?")->execute([$displayDate]);
 
         } catch (Throwable $e) {
             error_log('Thought save notification error: ' . $e->getMessage());

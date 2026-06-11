@@ -4,12 +4,7 @@
 // =====================================================================
 
 require_once __DIR__ . '/../../security/auth_gate.php';
-
-// Auto-cron: check for pending thought notifications (throttled to once per 5 min)
 require_once __DIR__ . '/../../cron/auto_thought_cron.php';
-if (isset($pdo)) {
-    runThoughtAutoCron($pdo);
-}
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -57,12 +52,25 @@ try {
     
     $stmt->execute(['user_id' => $userId]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     echo json_encode([
         'success' => true,
         'count' => (int)$result['count']
     ]);
-    
+
+    // Auto-cron: check for pending thought notifications AFTER the response has
+    // been flushed, so the polling request never blocks on the FCM fan-out.
+    if (isset($pdo)) {
+        ignore_user_abort(true);
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            if (ob_get_level() > 0) ob_end_flush();
+            flush();
+        }
+        runThoughtAutoCron($pdo);
+    }
+
 } catch (Exception $e) {
     error_log('Notification count error: ' . $e->getMessage());
     http_response_code(500);

@@ -6,9 +6,13 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.util.Log
+import android.webkit.CookieManager
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.concurrent.atomic.AtomicInteger
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -28,15 +32,47 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d(TAG, "Refreshed token: $token")
-        // TODO: If you want to send messages to this application instance or
-        // manage this apps subscriptions on the server side, send the
-        // FCM registration token to your app server.
         sendRegistrationToServer(token)
     }
 
+    /**
+     * Register the (rotated) FCM token with the server immediately, using the
+     * WebView's session cookie for authentication. Without this, a token
+     * rotation would silently stop push delivery until the user next opens
+     * the app (when the web bridge re-registers it).
+     */
     private fun sendRegistrationToServer(token: String?) {
-        // Implement this method to send token to your app server.
-        Log.d(TAG, "sendRegistrationTokenToServer($token)")
+        if (token.isNullOrEmpty()) return
+
+        Thread {
+            try {
+                val cookies = CookieManager.getInstance().getCookie(SITE_URL)
+                if (cookies.isNullOrEmpty()) {
+                    Log.d(TAG, "No session cookie yet; web bridge will register the token on next app open")
+                    return@Thread
+                }
+
+                val url = URL("$SITE_URL/admin/api/fcm/register_token.php")
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.setRequestProperty("Cookie", cookies)
+                conn.connectTimeout = 15000
+                conn.readTimeout = 15000
+                conn.doOutput = true
+
+                val body = JSONObject()
+                    .put("token", token)
+                    .put("device_info", "Android App (token refresh)")
+                    .toString()
+
+                conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+                Log.d(TAG, "Token registration response: ${conn.responseCode}")
+                conn.disconnect()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to register token with server", e)
+            }
+        }.start()
     }
 
     private fun showNotification(title: String, body: String, link: String) {
@@ -60,6 +96,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(body)
+            // Expandable so long bodies (e.g. the daily thought) are fully readable
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -71,6 +109,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "MyFirebaseMsgService"
+        private const val SITE_URL = "https://oacapp.co.za"
         const val CHANNEL_ID = "oac_notifications"
         private const val KEY_TITLE = "title"
         private const val KEY_BODY = "body"
