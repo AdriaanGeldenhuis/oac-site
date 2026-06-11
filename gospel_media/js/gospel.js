@@ -1380,19 +1380,9 @@
       composerBtn.addEventListener('click', openComposerOverlay);
     }
 
-    // Floating action button: appears once the hero button scrolls out of view
+    // Footer new-post button (rendered by footer.php on gospel_media pages)
     const fab = $('#gm-fab');
-    if (fab) {
-      fab.addEventListener('click', openComposerOverlay);
-      const hero = $('.gm-hero');
-      if (hero && 'IntersectionObserver' in window) {
-        new IntersectionObserver((entries) => {
-          fab.hidden = entries[0].isIntersecting;
-        }, { threshold: 0 }).observe(hero);
-      } else {
-        fab.hidden = false;
-      }
-    }
+    if (fab) fab.addEventListener('click', openComposerOverlay);
 
     await loadFeed(ROOM_ID);
 

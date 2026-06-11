@@ -108,7 +108,7 @@ if (!$hasAccess) {
 // Check posting rights
 $allowPost = $roomObj ? user_can_post_in_room($pdo, $userId, $roomObj) : false;
 
-$VER = '2.9.0';
+$VER = '2.9.1';
 ?><!doctype html>
 <html lang="<?= $pageLang ?>">
 <head>
@@ -240,14 +240,6 @@ $VER = '2.9.0';
         </section>
     </main>
     
-    <?php if ($allowPost): ?>
-    <button id="gm-fab" class="gm-fab" type="button" aria-label="<?= htmlspecialchars(t('new_post')) ?>" title="<?= htmlspecialchars(t('new_post')) ?>" hidden>
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-        </svg>
-    </button>
-    <?php endif; ?>
-
     <script defer src="/gospel_media/js/roommenu.js?v=<?= $VER ?>"></script>
     <script defer src="/gospel_media/js/gospel.js?v=<?= $VER ?>"></script>
     
