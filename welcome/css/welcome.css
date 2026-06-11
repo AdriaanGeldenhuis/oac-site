@@ -42,15 +42,15 @@
   --radius-sm: 14px;
 }
 
-/* ===== LIGHT THEME - WARM IVORY & LINEN (no stark white) ===== */
+/* ===== LIGHT THEME - CLEAN & AIRY (crisp white cards, neutral canvas) ===== */
 [data-theme="light"] {
-  --bg-base: #efe5db;
-  --bg-elevated: #fbf6ef;
-  --bg-card: #fdfaf4;
-  --bg-surface: #f5eee5;
+  --bg-base: #f3f1ee;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-surface: #f7f5f2;
 
-  --rose-gold: #b05f52;
-  --rose-gold-light: #c98273;
+  --rose-gold: #b06054;
+  --rose-gold-light: #cb8276;
   --rose-gold-dark: #8f4a3f;
   --peach: #1a1816;
   --peach-light: #2a2826;
@@ -58,20 +58,20 @@
   --silver: #4a4a4a;
   --silver-dark: #6a6a6a;
 
-  --text-primary: #2e231d;
-  --text-secondary: #51423a;
-  --text-muted: #8a7468;
+  --text-primary: #23201d;
+  --text-secondary: #4b463f;
+  --text-muted: #8b847b;
 
-  --border: rgba(143, 74, 63, 0.26);
-  --border-light: rgba(110, 70, 55, 0.16);
-  --border-strong: rgba(143, 74, 63, 0.46);
-  --glow-rose: rgba(176, 95, 82, 0.20);
-  --glow-peach: rgba(176, 95, 82, 0.12);
-  --shadow: 0 12px 36px rgba(92, 56, 42, 0.18);
-  --shadow-sm: 0 2px 4px rgba(92, 56, 42, 0.07), 0 10px 24px rgba(92, 56, 42, 0.11);
+  --border: rgba(143, 74, 63, 0.18);
+  --border-light: rgba(20, 16, 12, 0.08);
+  --border-strong: rgba(143, 74, 63, 0.38);
+  --glow-rose: rgba(176, 96, 84, 0.16);
+  --glow-peach: rgba(176, 96, 84, 0.10);
+  --shadow: 0 24px 60px rgba(28, 22, 16, 0.12);
+  --shadow-sm: 0 2px 6px rgba(28, 22, 16, 0.05), 0 16px 40px rgba(28, 22, 16, 0.09);
 
-  --ambient-1: rgba(176, 95, 82, 0.08);
-  --ambient-2: rgba(214, 146, 106, 0.10);
+  --ambient-1: rgba(176, 96, 84, 0.05);
+  --ambient-2: rgba(160, 150, 140, 0.06);
 }
 
 /* ===== BASE ===== */
@@ -283,6 +283,7 @@ html {
   gap: 12px;
   padding: 24px 12px 20px;
   background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 40%),
     linear-gradient(135deg, rgba(232, 180, 168, 0.07) 0%, rgba(232, 180, 168, 0) 55%),
     linear-gradient(160deg, var(--bg-card) 0%, var(--bg-surface) 100%);
   border: 1px solid var(--border-light);
@@ -290,8 +291,10 @@ html {
   text-decoration: none;
   overflow: hidden;
   box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 4px 10px rgba(0, 0, 0, 0.35),
+    0 12px 28px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.28);
   transition:
     transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
     border-color 0.3s ease,
@@ -351,9 +354,19 @@ html {
   opacity: 1;
 }
 
+/* Real button press - sinks in with an inner shadow */
 .wc-nav-card:active {
-  transform: translateY(-1px);
-  transition-duration: 0.1s;
+  transform: translateY(1px) scale(0.99);
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.4),
+    inset 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition-duration: 0.08s;
+}
+
+[data-theme="light"] .wc-nav-card:active {
+  box-shadow:
+    0 1px 3px rgba(23, 20, 16, 0.10),
+    inset 0 2px 6px rgba(23, 20, 16, 0.08);
 }
 
 .wc-nav-card:focus-visible {
@@ -364,7 +377,7 @@ html {
     0 10px 28px rgba(0, 0, 0, 0.55);
 }
 
-/* Icon pill - rose-gold circle behind the glyph */
+/* Icon tile - glossy rose-gold with a glass sheen and a floating glow */
 .wc-nav-icon-wrap {
   position: relative;
   z-index: 1;
@@ -373,47 +386,71 @@ html {
   justify-content: center;
   width: 54px;
   height: 54px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(245, 213, 200, 0.22) 0%,
-    rgba(232, 180, 168, 0.10) 55%,
-    rgba(232, 180, 168, 0.04) 100%
-  );
-  border: 1px solid rgba(232, 180, 168, 0.22);
+  border-radius: 17px;
+  background: linear-gradient(160deg, #dba08f 0%, #c08471 50%, #9d5f4e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 2px 10px rgba(0, 0, 0, 0.25);
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 -2px 6px rgba(60, 28, 20, 0.35),
+    0 8px 20px rgba(0, 0, 0, 0.35);
   transition:
     transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-    background 0.35s ease,
-    border-color 0.35s ease,
     box-shadow 0.35s ease;
 }
 
-.wc-nav-card:hover .wc-nav-icon-wrap {
-  transform: scale(1.08);
-  border-color: var(--rose-gold);
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(245, 213, 200, 0.35) 0%,
-    rgba(232, 180, 168, 0.18) 55%,
-    rgba(232, 180, 168, 0.08) 100%
+/* Blurred colored reflection underneath - makes the tile float */
+.wc-nav-icon-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  filter: blur(14px);
+  opacity: 0.55;
+  transform: translateY(9px) scale(0.88);
+  z-index: -1;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* Glass sheen across the top */
+.wc-nav-icon-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    157deg,
+    rgba(255, 255, 255, 0.50) 0%,
+    rgba(255, 255, 255, 0.14) 28%,
+    rgba(255, 255, 255, 0) 54%
   );
+  pointer-events: none;
+}
+
+.wc-nav-card:hover .wc-nav-icon-wrap {
+  transform: scale(1.07) translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 4px 16px var(--glow-rose);
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 -2px 6px rgba(60, 28, 20, 0.3),
+    0 12px 26px rgba(0, 0, 0, 0.4),
+    0 0 22px var(--glow-rose);
+}
+
+.wc-nav-card:hover .wc-nav-icon-wrap::before {
+  opacity: 0.8;
+  transform: translateY(11px) scale(0.92);
 }
 
 .wc-nav-icon {
   width: 26px;
   height: 26px;
-  color: var(--rose-gold);
+  color: #fff8f4;
+  filter: drop-shadow(0 1px 2px rgba(70, 30, 22, 0.45));
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
 .wc-nav-card:hover .wc-nav-icon {
-  color: var(--rose-gold-light);
+  color: #ffffff;
 }
 
 .wc-nav-label {
@@ -432,58 +469,56 @@ html {
   color: var(--rose-gold-light);
 }
 
-/* Light theme adjustments - crisp ivory cards, filled rose-gold icons */
+/* Light theme - clean white glossy buttons with big soft shadows */
 [data-theme="light"] .wc-nav-card {
-  background: linear-gradient(160deg, #fffdf9 0%, var(--bg-card) 60%, var(--bg-surface) 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fdfcfa 55%, #f4f1ed 100%);
   border-color: var(--border-light);
   box-shadow:
-    0 1px 2px rgba(92, 56, 42, 0.06),
-    0 6px 16px rgba(92, 56, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    0 1px 2px rgba(23, 20, 16, 0.05),
+    0 16px 36px rgba(23, 20, 16, 0.08),
+    inset 0 1.5px 0 #ffffff,
+    inset 0 -2px 5px rgba(23, 20, 16, 0.04);
 }
 
 [data-theme="light"] .wc-nav-card:hover {
-  border-color: var(--rose-gold-light);
+  border-color: rgba(176, 96, 84, 0.35);
   box-shadow:
-    0 14px 30px rgba(143, 74, 63, 0.20),
-    0 0 22px var(--glow-rose),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 20px 44px rgba(23, 20, 16, 0.12),
+    0 0 24px var(--glow-rose),
+    inset 0 1.5px 0 #ffffff;
 }
 
 [data-theme="light"] .wc-nav-card:hover .wc-nav-label {
   color: var(--rose-gold-dark);
 }
 
-/* Filled rose-gold circle with a cream icon - the anchor of each card */
+/* Slightly deeper rose-gold tile so it pops on white */
 [data-theme="light"] .wc-nav-icon-wrap {
-  background: linear-gradient(135deg, #cd8a7a 0%, #a85a4e 100%);
-  border-color: rgba(143, 74, 63, 0.40);
+  background: linear-gradient(160deg, #cf8d7c 0%, #b46a59 55%, #964d41 100%);
+  border-color: rgba(255, 255, 255, 0.35);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 4px 12px rgba(143, 74, 63, 0.28);
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 -2px 6px rgba(80, 35, 28, 0.30),
+    0 8px 20px rgba(143, 74, 63, 0.30);
 }
 
-[data-theme="light"] .wc-nav-icon {
-  color: #fdf3ec;
+[data-theme="light"] .wc-nav-icon-wrap::before {
+  opacity: 0.45;
 }
 
 [data-theme="light"] .wc-nav-card:hover .wc-nav-icon-wrap {
-  background: linear-gradient(135deg, #d8968a 0%, #b05f52 100%);
-  border-color: var(--rose-gold);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 6px 18px rgba(143, 74, 63, 0.38);
-}
-
-[data-theme="light"] .wc-nav-card:hover .wc-nav-icon {
-  color: #ffffff;
+    inset 0 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 -2px 6px rgba(80, 35, 28, 0.25),
+    0 12px 26px rgba(143, 74, 63, 0.35),
+    0 0 22px var(--glow-rose);
 }
 
 [data-theme="light"] .wc-nav-card::after {
   background: radial-gradient(
     120% 60% at 50% -20%,
-    rgba(176, 95, 82, 0.07) 0%,
-    transparent 70%
+    rgba(255, 255, 255, 0.9) 0%,
+    transparent 65%
   );
 }
 
@@ -491,7 +526,7 @@ html {
   background: linear-gradient(
     115deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0.65) 50%,
     transparent 100%
   );
 }
@@ -992,6 +1027,7 @@ html {
   .wc-nav-icon-wrap {
     width: 46px;
     height: 46px;
+    border-radius: 14px;
   }
 
   .wc-nav-icon {
