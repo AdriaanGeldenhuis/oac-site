@@ -27,14 +27,21 @@ if (file_exists($secretsFile)) {
 
 define('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions');
 
-// GPT-4o - Better translations
-define('OPENAI_MODEL', 'gpt-4o');
+// gpt-5.4-mini: newer and better than gpt-4o for translation, and roughly
+// 3x cheaper ($0.75/$4.50 per 1M tokens vs $2.50/$10.00 for gpt-4o)
+define('OPENAI_MODEL', 'gpt-5.4-mini');
 
-// Max tokens - reduced to speed up response
-define('OPENAI_MAX_TOKENS', 8000);
+// Generous output budget so long teachings are never cut off mid-translation
+// (only tokens actually generated are billed)
+define('OPENAI_MAX_TOKENS', 16000);
 
-// Temperature (lower = more accurate)
+// Temperature (lower = more accurate) - only used by legacy models;
+// gpt-5 family models do not accept a temperature parameter
 define('OPENAI_TEMPERATURE', 0.2);
+
+// Reasoning effort for gpt-5 family models. 'none' = fast and cheap,
+// which is right for translation/editing (no reasoning tokens billed)
+define('OPENAI_REASONING_EFFORT', 'none');
 
 // =============================================================================
 // BIBLE CONFIGURATION
@@ -58,12 +65,25 @@ define('BIBLE_VERSIONS', [
 function openai_chat(array $messages): array {
     error_log('openai_chat: Starting API call with ' . OPENAI_MODEL);
 
-    $payload = json_encode([
+    $body = [
         'model' => OPENAI_MODEL,
-        'messages' => $messages,
-        'max_tokens' => OPENAI_MAX_TOKENS,
-        'temperature' => OPENAI_TEMPERATURE
-    ], JSON_UNESCAPED_UNICODE);
+        'messages' => $messages
+    ];
+
+    // gpt-5 family / o-series are reasoning models: they require
+    // max_completion_tokens, reject temperature, and accept reasoning_effort.
+    // Legacy models (gpt-4o, gpt-4.1, ...) use max_tokens + temperature.
+    if (preg_match('/^(gpt-5|o\d)/', OPENAI_MODEL)) {
+        $body['max_completion_tokens'] = OPENAI_MAX_TOKENS;
+        if (defined('OPENAI_REASONING_EFFORT') && OPENAI_REASONING_EFFORT !== '') {
+            $body['reasoning_effort'] = OPENAI_REASONING_EFFORT;
+        }
+    } else {
+        $body['max_tokens'] = OPENAI_MAX_TOKENS;
+        $body['temperature'] = OPENAI_TEMPERATURE;
+    }
+
+    $payload = json_encode($body, JSON_UNESCAPED_UNICODE);
 
     error_log('openai_chat: Payload size: ' . strlen($payload) . ' bytes');
 
@@ -111,8 +131,48 @@ function openai_chat(array $messages): array {
         throw new Exception('Invalid API response');
     }
 
+    if (($data['choices'][0]['finish_reason'] ?? '') === 'length') {
+        error_log('openai_chat: WARNING - output hit the token limit and may be truncated');
+    }
+
     error_log('openai_chat: Success! Response length: ' . strlen($data['choices'][0]['message']['content']));
     return $data;
+}
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+/**
+ * Check whether a user holds an Elder-or-higher office (amp_id 1-5).
+ * Used to gate the AI endpoints so only elders can spend API credits.
+ */
+function ai_user_is_elder(PDO $pdo, ?int $userId): bool {
+    if (!$userId) {
+        return false;
+    }
+    try {
+        $stmt = $pdo->prepare('SELECT amp_id FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $ampId = (int)($row['amp_id'] ?? 0);
+        return $ampId >= 1 && $ampId <= 5;
+    } catch (Throwable $e) {
+        error_log('ai_user_is_elder: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Strip markdown code fences (```html ... ```) that models sometimes
+ * wrap around HTML output.
+ */
+function ai_clean_html_output(string $html): string {
+    $html = trim($html);
+    if (preg_match('/^```[a-z]*\s*(.*?)\s*```$/is', $html, $m)) {
+        $html = $m[1];
+    }
+    return trim($html);
 }
 
 // =============================================================================

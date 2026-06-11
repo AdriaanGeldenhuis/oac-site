@@ -1118,6 +1118,214 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Adicionar Versículo Bíblico',
         'st' => 'Eketsa Temana ea Bibele'
     ],
+    'unsaved_changes' => [
+        'af' => 'Ongestoorde veranderinge',
+        'en' => 'Unsaved changes',
+        'zu' => 'Izinguquko ezingagciniwe',
+        'xh' => 'Iinguqu ezingagcinwanga',
+        'pt' => 'Alterações não salvas',
+        'st' => 'Liphetoho tse sa bolokoang'
+    ],
+    'saving' => [
+        'af' => 'Stoor tans...',
+        'en' => 'Saving...',
+        'zu' => 'Iyagcina...',
+        'xh' => 'Iyagcina...',
+        'pt' => 'Salvando...',
+        'st' => 'E a boloka...'
+    ],
+    'saved' => [
+        'af' => 'Gestoor!',
+        'en' => 'Saved!',
+        'zu' => 'Kugciniwe!',
+        'xh' => 'Igciniwe!',
+        'pt' => 'Salvo!',
+        'st' => 'E bolokiloe!'
+    ],
+    'save_failed' => [
+        'af' => 'Stoor het misluk',
+        'en' => 'Save failed',
+        'zu' => 'Ukugcina kuhlulekile',
+        'xh' => 'Ukugcina akuphumelelanga',
+        'pt' => 'Falha ao salvar',
+        'st' => 'Ho boloka ho hlolehile'
+    ],
+    'translate_confirm' => [
+        'af' => 'Dit sal die inhoud van al die ander tale vervang met nuwe vertalings van hierdie blad. Alles word daarna outomaties gestoor. Gaan voort?',
+        'en' => 'This will replace the content of all other languages with new translations from this tab. Everything will be saved automatically afterwards. Continue?',
+        'zu' => 'Lokhu kuzothatha indawo yokuqukethwe kwazo zonke ezinye izilimi ngezinguqulo ezintsha ezivela kuleli thebhu. Konke kuzogcinwa ngokuzenzakalela ngemva kwalokho. Qhubeka?',
+        'xh' => 'Oku kuya kutshintsha umxholo wazo zonke ezinye iilwimi ngeenguqulelo ezintsha ezivela kweli thebhu. Yonke into iya kugcinwa ngokuzenzekelayo emva koko. Qhubeka?',
+        'pt' => 'Isso substituirá o conteúdo de todos os outros idiomas por novas traduções desta aba. Tudo será salvo automaticamente em seguida. Continuar?',
+        'st' => 'Sena se tla nkela sebaka litaba tsa lipuo tse ling kaofela ka liphetolelo tse ncha tse tsoang lekhasing lena. Tsohle li tla bolokoa ka bo tsona ka mor\'a moo. Tsoela pele?'
+    ],
+    'translations_done_saved' => [
+        'af' => 'Vertalings voltooi en gestoor!',
+        'en' => 'Translations complete and saved!',
+        'zu' => 'Ukuhumusha kuqediwe futhi kugciniwe!',
+        'xh' => 'Uguqulelo lugqityiwe kwaye lugciniwe!',
+        'pt' => 'Traduções concluídas e salvas!',
+        'st' => 'Liphetolelo li phethiloe \'me li bolokiloe!'
+    ],
+    'improving' => [
+        'af' => 'Verbeter tans...',
+        'en' => 'Improving...',
+        'zu' => 'Iyathuthukisa...',
+        'xh' => 'Iyaphucula...',
+        'pt' => 'Melhorando...',
+        'st' => 'E a ntlafatsa...'
+    ],
+    'improved' => [
+        'af' => 'Verbeter!',
+        'en' => 'Improved!',
+        'zu' => 'Kuthuthukisiwe!',
+        'xh' => 'Iphuculiwe!',
+        'pt' => 'Melhorado!',
+        'st' => 'E ntlafalitsoe!'
+    ],
+    'verse_inserted' => [
+        'af' => 'Vers ingevoeg!',
+        'en' => 'Verse inserted!',
+        'zu' => 'Ivesi lifakiwe!',
+        'xh' => 'Ivesi ifakiwe!',
+        'pt' => 'Versículo inserido!',
+        'st' => 'Temana e kentsoe!'
+    ],
+    'bible_not_available' => [
+        'af' => 'Die Bybel is nie in hierdie taal beskikbaar nie',
+        'en' => 'The Bible is not available in this language',
+        'zu' => 'IBhayibheli alitholakali ngalolu limi',
+        'xh' => 'IBhayibhile ayifumaneki ngolu lwimi',
+        'pt' => 'A Bíblia não está disponível neste idioma',
+        'st' => 'Bibele ha e fumanehe ka puo ena'
+    ],
+    'select_all_fields' => [
+        'af' => 'Kies asseblief al die velde',
+        'en' => 'Please select all fields',
+        'zu' => 'Sicela ukhethe zonke izinkambu',
+        'xh' => 'Nceda ukhethe zonke iindawo',
+        'pt' => 'Por favor, selecione todos os campos',
+        'st' => 'Ka kopo khetha likarolo tsohle'
+    ],
+    'editor_empty' => [
+        'af' => 'Die inhoud is leeg',
+        'en' => 'The content is empty',
+        'zu' => 'Okuqukethwe akunalutho',
+        'xh' => 'Umxholo awunanto',
+        'pt' => 'O conteúdo está vazio',
+        'st' => 'Litaba ha li eo'
+    ],
+    'translation_stopped' => [
+        'af' => 'Vertaling het gestop by',
+        'en' => 'Translation stopped at',
+        'zu' => 'Ukuhumusha kume ku',
+        'xh' => 'Uguqulelo lumile ku',
+        'pt' => 'A tradução parou em',
+        'st' => 'Phetolelo e emisitse ho'
+    ],
+    'languages_completed' => [
+        'af' => 'taal/tale suksesvol voltooi',
+        'en' => 'language(s) completed successfully',
+        'zu' => 'izilimi eziqedwe ngempumelelo',
+        'xh' => 'iilwimi ezigqitywe ngempumelelo',
+        'pt' => 'idioma(s) concluído(s) com sucesso',
+        'st' => 'puo/lipuo tse phethiloeng ka katleho'
+    ],
+    'line_spacing' => [
+        'af' => 'Spasiëring',
+        'en' => 'Line spacing',
+        'zu' => 'Isikhala semigqa',
+        'xh' => 'Isithuba semigca',
+        'pt' => 'Espaçamento',
+        'st' => 'Sebaka sa mela'
+    ],
+    'text_color' => [
+        'af' => 'Tekskleur',
+        'en' => 'Text color',
+        'zu' => 'Umbala wombhalo',
+        'xh' => 'Umbala wombhalo',
+        'pt' => 'Cor do texto',
+        'st' => 'Mmala oa mongolo'
+    ],
+    'heading' => [
+        'af' => 'Opskrif',
+        'en' => 'Heading',
+        'zu' => 'Isihloko',
+        'xh' => 'Isihloko',
+        'pt' => 'Título',
+        'st' => 'Sehlooho'
+    ],
+    'paragraph' => [
+        'af' => 'Paragraaf',
+        'en' => 'Paragraph',
+        'zu' => 'Indima',
+        'xh' => 'Umhlathi',
+        'pt' => 'Parágrafo',
+        'st' => 'Serapa'
+    ],
+    'bold' => [
+        'af' => 'Vetdruk',
+        'en' => 'Bold',
+        'zu' => 'Okugqamile',
+        'xh' => 'Ngqindilili',
+        'pt' => 'Negrito',
+        'st' => 'Botenya'
+    ],
+    'italic' => [
+        'af' => 'Kursief',
+        'en' => 'Italic',
+        'zu' => 'I-ithalikhi',
+        'xh' => 'I-italiki',
+        'pt' => 'Itálico',
+        'st' => 'Italiki'
+    ],
+    'underline' => [
+        'af' => 'Onderstreep',
+        'en' => 'Underline',
+        'zu' => 'Dwebela ngaphansi',
+        'xh' => 'Krwela umgca ngezantsi',
+        'pt' => 'Sublinhado',
+        'st' => 'Mola ka tlase'
+    ],
+    'align_left' => [
+        'af' => 'Links belyn',
+        'en' => 'Align left',
+        'zu' => 'Hlela kwesokunxele',
+        'xh' => 'Lungelelanisa ekhohlo',
+        'pt' => 'Alinhar à esquerda',
+        'st' => 'Lekanya ka ho le letšehali'
+    ],
+    'align_center' => [
+        'af' => 'Sentreer',
+        'en' => 'Center',
+        'zu' => 'Maphakathi',
+        'xh' => 'Embindini',
+        'pt' => 'Centralizar',
+        'st' => 'Bohareng'
+    ],
+    'align_right' => [
+        'af' => 'Regs belyn',
+        'en' => 'Align right',
+        'zu' => 'Hlela kwesokudla',
+        'xh' => 'Lungelelanisa ekunene',
+        'pt' => 'Alinhar à direita',
+        'st' => 'Lekanya ka ho le letona'
+    ],
+    'bullet_list' => [
+        'af' => 'Kolpuntlys',
+        'en' => 'Bullet list',
+        'zu' => 'Uhlu lwamabhulethi',
+        'xh' => 'Uluhlu lweebhulethi',
+        'pt' => 'Lista com marcadores',
+        'st' => 'Lethathamo la matheba'
+    ],
+    'numbered_list' => [
+        'af' => 'Genommerde lys',
+        'en' => 'Numbered list',
+        'zu' => 'Uhlu olunezinombolo',
+        'xh' => 'Uluhlu olunamanani',
+        'pt' => 'Lista numerada',
+        'st' => 'Lethathamo le nang le linomoro'
+    ],
     'book' => [
         'af' => 'Boek',
         'en' => 'Book',

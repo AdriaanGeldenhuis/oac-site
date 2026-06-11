@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-error_log('=====================================');
-error_log('🔍 SAVE_TEACHING.PHP START');
-error_log('=====================================');
-
 // Load dependencies
 require_once dirname(__DIR__, 3) . '/security/config.php';
 require_once dirname(__DIR__, 3) . '/security/session.php';
@@ -24,9 +20,17 @@ if (!auth_logged_in()) {
     exit;
 }
 
+// Method guard
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ob_end_clean();
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit;
+}
+
 $userId = auth_user_id();
 
-// Check Elder permissions
+// Check Elder permissions and get the user's own town
 try {
     $stmt = $pdo->prepare('SELECT amp_id, town_id FROM users WHERE id = ? LIMIT 1');
     $stmt->execute([$userId]);
@@ -47,18 +51,10 @@ try {
         exit;
     }
 } catch (Throwable $e) {
-    error_log('❌ DB error: ' . $e->getMessage());
+    error_log('save_teaching: DB error: ' . $e->getMessage());
     ob_end_clean();
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Database error']);
-    exit;
-}
-
-// Method guard
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    ob_end_clean();
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
     exit;
 }
 
@@ -92,14 +88,16 @@ function sanitize_html(string $html): string {
     return $html;
 }
 
-// Get inputs for all 5 languages
+// Get inputs for all supported languages
 $contents = [];
 foreach (SUPPORTED_LANGS as $code) {
     $raw = trim((string)($_POST['content_' . $code] ?? ''));
     $contents[$code] = sanitize_html($raw);
 }
 
-$townId = (int)($_POST['town_id'] ?? $user['town_id'] ?? 0);
+// Always use the elder's own town - never trust a town id from the client,
+// otherwise an elder could overwrite another town's teaching.
+$townId = (int)($user['town_id'] ?? 0);
 
 // Check if at least one language has content
 $hasAnyContent = false;
@@ -138,11 +136,11 @@ if ($townId > 0) {
             $town = $location['town_name'] ?? '';
         }
     } catch (Throwable $e) {
-        error_log('⚠️ Location fetch failed: ' . $e->getMessage());
+        error_log('save_teaching: Location fetch failed: ' . $e->getMessage());
     }
 }
 
-// Build path
+// Build path - MUST match the slug logic in welcome.php and admin/elders.php
 function slugify(string $text): string {
     $text = strtolower(trim($text));
     $text = preg_replace('/[^a-z0-9]+/', '_', $text);
@@ -159,7 +157,7 @@ if ($province !== '' && $town !== '') {
 // Create directory
 if (!is_dir($targetDir)) {
     if (!@mkdir($targetDir, 0755, true)) {
-        error_log('❌ Failed to create: ' . $targetDir);
+        error_log('save_teaching: Failed to create: ' . $targetDir);
         ob_end_clean();
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'Failed to create directory']);
@@ -175,7 +173,8 @@ $fileNames = [
     'en' => 'teaching_content.en.html',
     'zu' => 'teaching_content.zu.html',
     'xh' => 'teaching_content.xh.html',
-    'pt' => 'teaching_content.pt.html'
+    'pt' => 'teaching_content.pt.html',
+    'st' => 'teaching_content.st.html'
 ];
 
 // Write files
@@ -184,6 +183,9 @@ $hasContent = [];
 
 try {
     foreach (SUPPORTED_LANGS as $code) {
+        if (!isset($fileNames[$code])) {
+            throw new Exception("No file name configured for language: {$code}");
+        }
         if ($contents[$code] !== '') {
             $filePath = $targetDir . '/' . $fileNames[$code];
             if (file_put_contents($filePath, $contents[$code]) === false) {
@@ -196,7 +198,7 @@ try {
         }
     }
 } catch (Throwable $e) {
-    error_log('❌ Write error: ' . $e->getMessage());
+    error_log('save_teaching: Write error: ' . $e->getMessage());
     ob_end_clean();
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Failed to write files']);
@@ -217,15 +219,30 @@ try {
             has_zu TINYINT(1) DEFAULT 0,
             has_xh TINYINT(1) DEFAULT 0,
             has_pt TINYINT(1) DEFAULT 0,
+            has_st TINYINT(1) DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_user (user_id),
             INDEX idx_town (town_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 
+    // Older installs may be missing some per-language columns entirely
+    // (e.g. a table created before zu/xh/pt/st were added) - add whatever
+    // is missing so the insert below always works
+    $existing = [];
+    foreach ($pdo->query('SHOW COLUMNS FROM teachings') as $col) {
+        $existing[] = $col['Field'];
+    }
+    foreach (SUPPORTED_LANGS as $code) {
+        $colName = 'has_' . $code;
+        if (!in_array($colName, $existing, true)) {
+            $pdo->exec("ALTER TABLE teachings ADD COLUMN {$colName} TINYINT(1) DEFAULT 0");
+        }
+    }
+
     $stmt = $pdo->prepare('
-        INSERT INTO teachings (user_id, town_id, province, town, has_af, has_en, has_zu, has_xh, has_pt, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        INSERT INTO teachings (user_id, town_id, province, town, has_af, has_en, has_zu, has_xh, has_pt, has_st, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ');
     $stmt->execute([
         $userId,
@@ -236,15 +253,14 @@ try {
         $hasContent['en'] ?? 0,
         $hasContent['zu'] ?? 0,
         $hasContent['xh'] ?? 0,
-        $hasContent['pt'] ?? 0
+        $hasContent['pt'] ?? 0,
+        $hasContent['st'] ?? 0
     ]);
 } catch (Throwable $e) {
-    error_log('⚠️ DB log failed: ' . $e->getMessage());
+    error_log('save_teaching: DB log failed: ' . $e->getMessage());
 }
 
 // SUCCESS
-error_log('✅ SAVE SUCCESS: ' . implode(', ', $written));
-
 ob_end_clean();
 http_response_code(200);
 echo json_encode([

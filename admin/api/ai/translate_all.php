@@ -96,6 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Only elders (amp_id 1-5) may use the AI endpoints
+if (!ai_user_is_elder($pdo, auth_user_id())) {
+    ob_end_clean();
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
+    exit;
+}
+
 // Check API key is configured
 if (!defined('OPENAI_API_KEY') || OPENAI_API_KEY === '') {
     ob_end_clean();
@@ -147,13 +155,14 @@ if ($sourceLang === $targetLang) {
     exit;
 }
 
-// Language names for prompts
+// Full language names for prompts - must cover EVERY supported language
 $langNames = [
     'af' => 'Afrikaans',
     'en' => 'English',
-    'zu' => 'isiZulu',
-    'xh' => 'isiXhosa',
-    'pt' => 'Portuguese'
+    'zu' => 'isiZulu (Zulu)',
+    'xh' => 'isiXhosa (Xhosa)',
+    'pt' => 'Portuguese',
+    'st' => 'Sesotho (Southern Sotho)'
 ];
 
 // Extract verse references to preserve them
@@ -175,9 +184,10 @@ try {
         "1. Translate ALL paragraphs, ALL headings, and ALL text - do not skip anything\n" .
         "2. Preserve the exact HTML structure and tags (<p>, <h1>, <h2>, <h3>, <span>, etc.)\n" .
         "3. Keep all class attributes intact (class=\"vref\", class=\"vtxt\", etc.)\n" .
-        "4. Do NOT translate Bible verse references (keep book names and chapter:verse numbers as-is)\n" .
-        "5. Output ONLY the translated HTML - no explanations, no comments\n" .
-        "6. Make sure to translate the COMPLETE document from start to finish";
+        "4. Do NOT translate Bible verse references in class=\"vref\" elements (keep book names and chapter:verse numbers exactly as-is)\n" .
+        "5. Keep <sup> verse numbers exactly where they are inside class=\"vtxt\" elements\n" .
+        "6. Output ONLY the translated HTML - no explanations, no comments, no markdown code fences\n" .
+        "7. Make sure to translate the COMPLETE document from start to finish";
 
     $messages = [
         ['role' => 'system', 'content' => $systemPrompt],
@@ -187,7 +197,7 @@ try {
     error_log('Calling OpenAI API for ' . $targetLang . '...');
     $data = openai_chat($messages);
     error_log('OpenAI response received for ' . $targetLang);
-    $translated = $data['choices'][0]['message']['content'] ?? '';
+    $translated = ai_clean_html_output($data['choices'][0]['message']['content'] ?? '');
 
     if ($translated === '') {
         error_log('ERROR: Empty translation for ' . $targetLang);
@@ -211,7 +221,8 @@ try {
             $reference = trim($match[1]);
 
             // Parse reference: "Book Chapter:VerseFrom-VerseTo" or "Book Chapter:Verse"
-            if (preg_match('/^([A-Za-zÀ-ÿ\s]+)\s+(\d+):(\d+)(?:-(\d+))?$/u', $reference, $parts)) {
+            // The optional leading digit handles numbered books like "1 Korinthiërs 13:4"
+            if (preg_match('/^((?:\d\s+)?[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s]*)\s+(\d+):(\d+)(?:-(\d+))?$/u', $reference, $parts)) {
                 $book = trim($parts[1]);
                 $chapter = (int)$parts[2];
                 $verseFrom = (int)$parts[3];

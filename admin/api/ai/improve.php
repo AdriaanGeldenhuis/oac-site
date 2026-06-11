@@ -5,7 +5,11 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/security/config.php';
 require_once dirname(__DIR__, 3) . '/security/session.php';
 require_once dirname(__DIR__, 3) . '/security/auth.php';
+require_once dirname(__DIR__, 3) . '/includes/languages.php';
 require_once dirname(__DIR__, 2) . '/config/ai_config.php';
+
+// Allow enough time for the AI call
+set_time_limit(180);
 
 // Headers
 ob_start();
@@ -28,10 +32,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Only elders (amp_id 1-5) may use the AI endpoints
+if (!ai_user_is_elder($pdo, auth_user_id())) {
+    ob_end_clean();
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
+    exit;
+}
+
+// Check API key is configured
+if (!defined('OPENAI_API_KEY') || OPENAI_API_KEY === '') {
+    ob_end_clean();
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'OpenAI API key not configured. Please add your API key to admin/config/secrets.php']);
+    exit;
+}
+
 // Get inputs
 $content = trim((string)($_POST['content'] ?? ''));
 $lang = trim((string)($_POST['lang'] ?? 'af'));
-$lang = $lang === 'en' ? 'en' : 'af';
+if (!in_array($lang, SUPPORTED_LANGS, true)) {
+    $lang = 'af';
+}
 
 if ($content === '') {
     ob_end_clean();
@@ -40,10 +62,26 @@ if ($content === '') {
     exit;
 }
 
-// Build prompt
-$systemPrompt = $lang === 'af'
-    ? "Jy is 'n professionele Afrikaanse redakteur. Verbeter SLEGS grammatika, spelling, leestekens en werkwoordtye. Behou die presiese HTML-struktuur en tags. Moenie inhoud byvoeg, verwyder of herrangskik nie. Antwoord met NET die verbeterde HTML."
-    : "You are a professional English editor. Improve ONLY grammar, spelling, punctuation, and tenses. Preserve the exact HTML structure and tags. Do not add, remove, or reorder content. Respond with ONLY the improved HTML.";
+// Full language names for the prompt
+$promptLangNames = [
+    'af' => 'Afrikaans',
+    'en' => 'English',
+    'zu' => 'isiZulu (Zulu)',
+    'xh' => 'isiXhosa (Xhosa)',
+    'pt' => 'Portuguese',
+    'st' => 'Sesotho (Southern Sotho)'
+];
+$langName = $promptLangNames[$lang];
+
+// Build prompt - works for every supported language
+$systemPrompt = "You are a professional {$langName} editor for religious content. " .
+    "The text below is written in {$langName}. " .
+    "Improve ONLY grammar, spelling, punctuation, and verb tenses. " .
+    "Keep the text in {$langName} - do NOT translate it to another language. " .
+    "Preserve the exact HTML structure, tags and class attributes. " .
+    "Do not add, remove, or reorder content. " .
+    "Do not change Bible verse references or quoted Bible verse text. " .
+    "Respond with ONLY the improved HTML - no explanations, no markdown fences.";
 
 $messages = [
     ['role' => 'system', 'content' => $systemPrompt],
@@ -52,7 +90,7 @@ $messages = [
 
 try {
     $data = openai_chat($messages);
-    $improved = $data['choices'][0]['message']['content'] ?? '';
+    $improved = ai_clean_html_output($data['choices'][0]['message']['content'] ?? '');
 
     if ($improved === '') {
         throw new Exception('Empty AI response');
