@@ -44,34 +44,34 @@
 
 /* ===== LIGHT THEME - WARM IVORY & LINEN (no stark white) ===== */
 [data-theme="light"] {
-  --bg-base: #f1e9e2;
-  --bg-elevated: #faf5ef;
-  --bg-card: #fbf6f0;
-  --bg-surface: #f3ebe3;
+  --bg-base: #efe5db;
+  --bg-elevated: #fbf6ef;
+  --bg-card: #fdfaf4;
+  --bg-surface: #f5eee5;
 
-  --rose-gold: #b3685c;
-  --rose-gold-light: #c9847a;
-  --rose-gold-dark: #96544a;
+  --rose-gold: #b05f52;
+  --rose-gold-light: #c98273;
+  --rose-gold-dark: #8f4a3f;
   --peach: #1a1816;
   --peach-light: #2a2826;
 
   --silver: #4a4a4a;
   --silver-dark: #6a6a6a;
 
-  --text-primary: #2b211c;
-  --text-secondary: #4d4038;
-  --text-muted: #8a7a70;
+  --text-primary: #2e231d;
+  --text-secondary: #51423a;
+  --text-muted: #8a7468;
 
-  --border: rgba(150, 84, 74, 0.22);
-  --border-light: rgba(90, 60, 50, 0.10);
-  --border-strong: rgba(150, 84, 74, 0.40);
-  --glow-rose: rgba(179, 104, 92, 0.16);
-  --glow-peach: rgba(179, 104, 92, 0.10);
-  --shadow: 0 8px 32px rgba(82, 51, 40, 0.14);
-  --shadow-sm: 0 4px 16px rgba(82, 51, 40, 0.10);
+  --border: rgba(143, 74, 63, 0.26);
+  --border-light: rgba(110, 70, 55, 0.16);
+  --border-strong: rgba(143, 74, 63, 0.46);
+  --glow-rose: rgba(176, 95, 82, 0.20);
+  --glow-peach: rgba(176, 95, 82, 0.12);
+  --shadow: 0 12px 36px rgba(92, 56, 42, 0.18);
+  --shadow-sm: 0 2px 4px rgba(92, 56, 42, 0.07), 0 10px 24px rgba(92, 56, 42, 0.11);
 
-  --ambient-1: rgba(179, 104, 92, 0.055);
-  --ambient-2: rgba(218, 165, 130, 0.07);
+  --ambient-1: rgba(176, 95, 82, 0.08);
+  --ambient-2: rgba(214, 146, 106, 0.10);
 }
 
 /* ===== BASE ===== */
@@ -176,10 +176,10 @@ html {
 }
 
 [data-theme="light"] .wc-page-title {
-  background: linear-gradient(115deg, var(--rose-gold-light) 0%, var(--rose-gold) 50%, var(--rose-gold-dark) 100%);
+  background: linear-gradient(115deg, #c98273 0%, #a85a4e 45%, #8f4a3f 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  filter: drop-shadow(0 1px 6px rgba(150, 84, 74, 0.18));
+  filter: drop-shadow(0 2px 8px rgba(143, 74, 63, 0.22));
 }
 
 .wc-location {
@@ -199,7 +199,8 @@ html {
 }
 
 [data-theme="light"] .wc-location {
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: linear-gradient(135deg, #fffdf9 0%, var(--bg-surface) 100%);
+  box-shadow: 0 2px 8px rgba(92, 56, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .wc-location-icon {
@@ -431,57 +432,57 @@ html {
   color: var(--rose-gold-light);
 }
 
-/* Light theme adjustments */
+/* Light theme adjustments - crisp ivory cards, filled rose-gold icons */
 [data-theme="light"] .wc-nav-card {
-  background:
-    linear-gradient(135deg, rgba(179, 104, 92, 0.05) 0%, rgba(179, 104, 92, 0) 55%),
-    linear-gradient(160deg, var(--bg-card) 0%, var(--bg-surface) 100%);
+  background: linear-gradient(160deg, #fffdf9 0%, var(--bg-card) 60%, var(--bg-surface) 100%);
+  border-color: var(--border-light);
   box-shadow:
-    0 2px 8px rgba(82, 51, 40, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 1px 2px rgba(92, 56, 42, 0.06),
+    0 6px 16px rgba(92, 56, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 [data-theme="light"] .wc-nav-card:hover {
+  border-color: var(--rose-gold-light);
   box-shadow:
-    0 12px 26px rgba(150, 84, 74, 0.20),
-    0 0 20px var(--glow-rose),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    0 14px 30px rgba(143, 74, 63, 0.20),
+    0 0 22px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 [data-theme="light"] .wc-nav-card:hover .wc-nav-label {
   color: var(--rose-gold-dark);
 }
 
-[data-theme="light"] .wc-nav-card:hover .wc-nav-icon {
-  color: var(--rose-gold-dark);
+/* Filled rose-gold circle with a cream icon - the anchor of each card */
+[data-theme="light"] .wc-nav-icon-wrap {
+  background: linear-gradient(135deg, #cd8a7a 0%, #a85a4e 100%);
+  border-color: rgba(143, 74, 63, 0.40);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 4px 12px rgba(143, 74, 63, 0.28);
 }
 
-[data-theme="light"] .wc-nav-icon-wrap {
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(179, 104, 92, 0.16) 0%,
-    rgba(179, 104, 92, 0.07) 55%,
-    rgba(179, 104, 92, 0.03) 100%
-  );
-  border-color: rgba(150, 84, 74, 0.30);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 2px 8px rgba(150, 84, 74, 0.12);
+[data-theme="light"] .wc-nav-icon {
+  color: #fdf3ec;
 }
 
 [data-theme="light"] .wc-nav-card:hover .wc-nav-icon-wrap {
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(179, 104, 92, 0.26) 0%,
-    rgba(179, 104, 92, 0.13) 55%,
-    rgba(179, 104, 92, 0.05) 100%
-  );
+  background: linear-gradient(135deg, #d8968a 0%, #b05f52 100%);
+  border-color: var(--rose-gold);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 6px 18px rgba(143, 74, 63, 0.38);
+}
+
+[data-theme="light"] .wc-nav-card:hover .wc-nav-icon {
+  color: #ffffff;
 }
 
 [data-theme="light"] .wc-nav-card::after {
   background: radial-gradient(
     120% 60% at 50% -20%,
-    rgba(179, 104, 92, 0.10) 0%,
+    rgba(176, 95, 82, 0.07) 0%,
     transparent 70%
   );
 }
@@ -490,7 +491,7 @@ html {
   background: linear-gradient(
     115deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.6) 50%,
     transparent 100%
   );
 }
@@ -577,10 +578,8 @@ html {
 }
 
 [data-theme="light"] .wc-thought-card {
-  background:
-    radial-gradient(140% 90% at 0% 0%, rgba(179, 104, 92, 0.06) 0%, transparent 55%),
-    linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface) 100%);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: linear-gradient(160deg, #fffdf9 0%, var(--bg-card) 55%, var(--bg-surface) 100%);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 [data-theme="light"] .wc-thought-author {
@@ -610,10 +609,9 @@ html {
 }
 
 [data-theme="light"] .wc-teaching-card {
-  background:
-    radial-gradient(120% 70% at 100% 0%, rgba(179, 104, 92, 0.05) 0%, transparent 55%),
-    linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface) 100%);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: linear-gradient(160deg, #fffdf9 0%, var(--bg-card) 55%, var(--bg-surface) 100%);
+  border-color: var(--border-light);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .wc-card-decoration {
@@ -783,11 +781,14 @@ html {
 
 [data-theme="light"] .wc-teaching-content,
 [data-theme="light"] .wc-teaching-content p,
-[data-theme="light"] .wc-teaching-content li,
+[data-theme="light"] .wc-teaching-content li {
+  color: #2e231d !important;
+}
+
 [data-theme="light"] .wc-teaching-content h1,
 [data-theme="light"] .wc-teaching-content h2,
 [data-theme="light"] .wc-teaching-content h3 {
-  color: #2b211c !important;
+  color: var(--rose-gold-dark) !important;
 }
 
 /* No content */
@@ -836,10 +837,20 @@ html {
 }
 
 [data-theme="light"] .wc-quote-card {
-  background:
-    radial-gradient(120% 100% at 50% 0%, rgba(179, 104, 92, 0.05) 0%, transparent 60%),
-    linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface) 100%);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: linear-gradient(160deg, #fffdf9 0%, var(--bg-card) 55%, var(--bg-surface) 100%);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+/* Accent line across the top (matches the thought card) */
+.wc-quote-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--rose-gold) 50%, transparent 100%);
+  opacity: 0.65;
 }
 
 /* Decorative quotation mark above the verse */
