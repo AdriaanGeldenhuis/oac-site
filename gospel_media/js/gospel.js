@@ -129,7 +129,9 @@
   // ===== DATE FORMATTING =====
   const fmtDT = s => {
     try {
-      const d = new Date(s);
+      // MySQL "YYYY-MM-DD HH:MM:SS" is not parseable on Safari/iOS - normalise to ISO
+      const iso = (typeof s === 'string') ? s.replace(' ', 'T') : s;
+      const d = new Date(iso);
       if (isNaN(d.getTime())) return s || '';
       const day = d.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
       const date = d.toLocaleDateString('en-GB', { year: '2-digit', month: '2-digit', day: '2-digit' });
@@ -258,8 +260,6 @@
       }
 
       closeOverlay();
-      feedLastId = null;
-      feedDone = false;
       await loadFeed(ROOM_ID, true);
     });
 
@@ -549,9 +549,11 @@
 
   // ===== POST CARDS =====
   function renderCard(p) {
-    POST_MAP.set(p.id, p);
-    
-    const card = ce('article', { class: 'post-card', 'data-post-id': String(p.id) });
+    // Key by string so lookups from data attributes always match,
+    // regardless of whether the API returned numeric or string ids
+    POST_MAP.set(String(p.id), p);
+
+    const card = ce('article', { class: 'post-card', id: 'post-' + p.id, 'data-post-id': String(p.id) });
     const header = ce('div', { class: 'post-header' });
     
     let avatar;
@@ -694,6 +696,7 @@
   let feedLastId = null;
   let feedLoading = false;
   let feedDone = false;
+  let feedGen = 0;
   let scrollObserver = null;
   let sentinelEl = null;
 
@@ -705,14 +708,19 @@
     const loading = $('#loadingIndicator');
 
     if (reset) {
+      // New generation: any in-flight response from before this reset is discarded
+      feedGen++;
       feed.innerHTML = '<div class="gm-placeholder"><svg class="gm-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/></svg><p>' + T('loading_posts') + '</p></div>';
       POST_MAP.clear();
       feedLastId = null;
       feedDone = false;
+      feedLoading = false;
       if (scrollObserver) scrollObserver.disconnect();
+    } else if (feedLoading || feedDone) {
+      return;
     }
 
-    if (feedLoading || feedDone) return;
+    const gen = feedGen;
     feedLoading = true;
     if (loading) loading.hidden = false;
 
@@ -720,6 +728,9 @@
     if (feedLastId) url += '&after_id=' + feedLastId;
 
     const j = await fetchJSON(url);
+
+    // A reset happened while this request was in flight - drop the stale response
+    if (gen !== feedGen) return;
 
     if (loading) loading.hidden = true;
     feedLoading = false;
@@ -1001,11 +1012,11 @@
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.post-menu-btn');
     if (!btn) return;
-    
+
     const card = btn.closest('[data-post-id]');
-    const id = card ? Number(card.getAttribute('data-post-id')) : null;
+    const id = card ? card.getAttribute('data-post-id') : null;
     const p = id ? POST_MAP.get(id) : null;
-    
+
     if (!p || !canEditPost(p)) return;
     openActionsModal(p);
   });
@@ -1029,6 +1040,12 @@
     }
 
     await loadFeed(ROOM_ID);
+
+    // Deep-link support: notifications link to #post-N
+    if (location.hash && /^#post-\d+$/.test(location.hash)) {
+      const target = document.getElementById(location.hash.slice(1));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   if (document.readyState === 'loading') {

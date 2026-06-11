@@ -6,40 +6,51 @@
 // Include FCM functions for push notifications
 require_once __DIR__ . '/../../../admin/config/fcm_config.php';
 
+// Reuse one SQLite connection (and run schema checks once) per request,
+// since posts can fan out notifications to hundreds of members in a loop.
+function gospelNotificationDb(): PDO {
+    static $db = null;
+    if ($db !== null) return $db;
+
+    $db = new PDO('sqlite:' . __DIR__ . '/../../../data/notifications.db');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Create table if not exists
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT,
+            type TEXT DEFAULT 'info',
+            is_read INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            link TEXT,
+            icon TEXT,
+            title_key TEXT,
+            message_key TEXT,
+            params TEXT
+        )
+    ");
+
+    // Check if we need to add the new columns
+    $cols = $db->query("PRAGMA table_info(notifications)")->fetchAll(PDO::FETCH_COLUMN, 1);
+    if (!in_array('title_key', $cols)) {
+        $db->exec("ALTER TABLE notifications ADD COLUMN title_key TEXT");
+    }
+    if (!in_array('message_key', $cols)) {
+        $db->exec("ALTER TABLE notifications ADD COLUMN message_key TEXT");
+    }
+    if (!in_array('params', $cols)) {
+        $db->exec("ALTER TABLE notifications ADD COLUMN params TEXT");
+    }
+
+    return $db;
+}
+
 function createGospelNotification($pdo, $userId, $type, $data = []) {
     try {
-        $db = new PDO('sqlite:' . __DIR__ . '/../../../data/notifications.db');
-        $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        // Create table if not exists
-        $db->exec("
-            CREATE TABLE IF NOT EXISTS notifications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                title TEXT NOT NULL,
-                message TEXT,
-                type TEXT DEFAULT 'info',
-                is_read INTEGER DEFAULT 0,
-                created_at TEXT DEFAULT (datetime('now')),
-                link TEXT,
-                icon TEXT,
-                title_key TEXT,
-                message_key TEXT,
-                params TEXT
-            )
-        ");
-
-        // Check if we need to add the new columns
-        $cols = $db->query("PRAGMA table_info(notifications)")->fetchAll(PDO::FETCH_COLUMN, 1);
-        if (!in_array('title_key', $cols)) {
-            $db->exec("ALTER TABLE notifications ADD COLUMN title_key TEXT");
-        }
-        if (!in_array('message_key', $cols)) {
-            $db->exec("ALTER TABLE notifications ADD COLUMN message_key TEXT");
-        }
-        if (!in_array('params', $cols)) {
-            $db->exec("ALTER TABLE notifications ADD COLUMN params TEXT");
-        }
+        $db = gospelNotificationDb();
 
         $title = '';
         $message = '';

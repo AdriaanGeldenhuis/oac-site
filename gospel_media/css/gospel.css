@@ -578,6 +578,11 @@ html {
   display: none;
 }
 
+/* Generic hide utility (used by comments toggle and others) */
+.hide {
+  display: none !important;
+}
+
 .composer-input {
   flex: 1;
   min-width: 200px;
@@ -1077,13 +1082,11 @@ html {
   grid-template-rows: 240px 180px;
 }
 
+/* 5+ photos: only 4 cells are visible (the 4th carries the "+N" overlay),
+   so lay them out as a clean 2x2 grid */
 .photo-grid-5 {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 240px 180px;
-}
-
-.photo-grid-5 .photo-grid-cell:first-child {
-  grid-column: 1 / -1;
 }
 
 .photo-grid-cell {

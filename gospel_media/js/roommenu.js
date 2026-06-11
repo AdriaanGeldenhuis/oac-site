@@ -454,8 +454,9 @@
           if (currentRoomId && parseInt(r.id) === parseInt(currentRoomId)) {
             row.classList.add('active');
           }
-          
-          const a = ce('a', 'rmx-link', labelForRoom(r));
+
+          const a = ce('a', 'rmx-link');
+          a.textContent = labelForRoom(r);
           a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
 
           const badge = ce('span', 'rmx-badge auto', T('auto'));
@@ -479,8 +480,9 @@
           if (currentRoomId && parseInt(r.id) === parseInt(currentRoomId)) {
             row.classList.add('active');
           }
-          
-          const a = ce('a', 'rmx-link', labelForRoom(r));
+
+          const a = ce('a', 'rmx-link');
+          a.textContent = labelForRoom(r);
           a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
 
           const badge = ce('span', 'rmx-badge joined', T('joined_badge'));

@@ -12,7 +12,7 @@ require_once dirname(__DIR__) . '/includes/languages.php';
 $pageLang = $_SESSION['language'] ?? 'af';
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
     $_SESSION['language'] = $pageLang = $_GET['lang'];
-    header('Location: /gospel_media/gospel.php?room_id=' . ($_GET['room_id'] ?? ''));
+    header('Location: /gospel_media/gospel.php?room_id=' . (int)($_GET['room_id'] ?? 0));
     exit;
 }
 // Translation helper using central 5-language system
@@ -108,7 +108,7 @@ if (!$hasAccess) {
 // Check posting rights
 $allowPost = $roomObj ? user_can_post_in_room($pdo, $userId, $roomObj) : false;
 
-$VER = '2.1.0';
+$VER = '2.2.0';
 ?><!doctype html>
 <html lang="<?= $pageLang ?>">
 <head>

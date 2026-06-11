@@ -441,7 +441,7 @@ $VER = time();
                                         • <?= t('auto_under_16') ?>
                                     <?php elseif ($roomType === 'jeug' && $age >= 16 && $age <= 25): ?>
                                         • <?= t('auto_16_25') ?>
-                                    <?php elseif ($r['description']): ?>
+                                    <?php elseif (!empty($r['description'])): ?>
                                         • <?= htmlspecialchars(mb_substr($r['description'], 0, 50)) ?>
                                     <?php endif; ?>
                                 </div>
@@ -493,7 +493,7 @@ $VER = time();
                                     <?php if (isset($r['town_name'])): ?>
                                         <?= htmlspecialchars($r['town_name']) ?>
                                     <?php endif; ?>
-                                    <?php if ($r['description']): ?>
+                                    <?php if (!empty($r['description'])): ?>
                                         • <?= htmlspecialchars(mb_substr($r['description'], 0, 50)) ?>
                                     <?php endif; ?>
                                 </div>
@@ -540,7 +540,7 @@ $VER = time();
                                     <?php if (isset($r['town_name'])): ?>
                                         <?= htmlspecialchars($r['town_name']) ?>
                                     <?php endif; ?>
-                                    <?php if ($r['description']): ?>
+                                    <?php if (!empty($r['description'])): ?>
                                         • <?= htmlspecialchars(mb_substr($r['description'], 0, 50)) ?>
                                     <?php endif; ?>
                                 </div>
@@ -600,8 +600,8 @@ $VER = time();
         if (action === 'leave') {
             const roomType = btn.dataset.roomType || '';
             const confirmMsg = roomType === 'gemeente'
-                ? `<?= t('confirm_leave_congregation') ?>`
-                : `<?= t('confirm_leave_room') ?> "${roomName}"?`;
+                ? <?= json_encode(t('confirm_leave_congregation')) ?>
+                : <?= json_encode(t('confirm_leave_room')) ?> + ' "' + roomName + '"?';
 
             if (!confirm(confirmMsg)) {
                 return;
@@ -623,8 +623,8 @@ $VER = time();
             
             if (data.ok || data.success) {
                 showToast(action === 'join'
-                    ? '<?= t('successfully_joined') ?>'
-                    : '<?= t('successfully_left') ?>');
+                    ? <?= json_encode(t('successfully_joined')) ?>
+                    : <?= json_encode(t('successfully_left')) ?>);
                 setTimeout(() => location.reload(), 1000);
             } else {
                 throw new Error(data.error || 'Unknown error');
@@ -632,14 +632,14 @@ $VER = time();
         } catch (err) {
             console.error(err);
             let errorMsg = err.message || 'Unknown error';
-            
+
             if (errorMsg.includes('cannot_leave_opsienerskap')) {
-                errorMsg = '<?= t('cannot_leave_oversight') ?>';
+                errorMsg = <?= json_encode(t('cannot_leave_oversight')) ?>;
             } else if (errorMsg.includes('cannot_leave_own_gemeente')) {
-                errorMsg = '<?= t('cannot_leave_congregation') ?>';
+                errorMsg = <?= json_encode(t('cannot_leave_congregation')) ?>;
             }
 
-            showToast('<?= t('error') ?>: ' + errorMsg, true);
+            showToast(<?= json_encode(t('error')) ?> + ': ' + errorMsg, true);
             btn.disabled = false;
             btn.textContent = originalText;
         }
