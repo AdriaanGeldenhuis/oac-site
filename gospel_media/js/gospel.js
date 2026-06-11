@@ -1196,6 +1196,20 @@
       composerBtn.addEventListener('click', openComposerOverlay);
     }
 
+    // Floating action button: appears once the hero button scrolls out of view
+    const fab = $('#gm-fab');
+    if (fab) {
+      fab.addEventListener('click', openComposerOverlay);
+      const hero = $('.gm-hero');
+      if (hero && 'IntersectionObserver' in window) {
+        new IntersectionObserver((entries) => {
+          fab.hidden = entries[0].isIntersecting;
+        }, { threshold: 0 }).observe(hero);
+      } else {
+        fab.hidden = false;
+      }
+    }
+
     await loadFeed(ROOM_ID);
 
     // Deep-link support: notifications link to #post-N
