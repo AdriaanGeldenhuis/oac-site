@@ -196,8 +196,16 @@
       evtFields.classList.remove('hide');
     });
 
-    // Textarea
+    // Textarea (restores any draft saved for this room, e.g. after an accidental close)
+    const DRAFT_KEY = 'gm_draft_' + ROOM_ID;
     const ta = ce('textarea', { class: 'composer-textarea', placeholder: T('type_message') });
+    try { ta.value = localStorage.getItem(DRAFT_KEY) || ''; } catch (e) { /* storage unavailable */ }
+    ta.addEventListener('input', () => {
+      try {
+        if (ta.value.trim()) localStorage.setItem(DRAFT_KEY, ta.value);
+        else localStorage.removeItem(DRAFT_KEY);
+      } catch (e) { /* storage unavailable */ }
+    });
 
     // File input + preview (each preview gets a remove button, like the edit modal)
     const fileInput = ce('input', { type: 'file', accept: 'image/*', multiple: 'multiple' });
@@ -282,6 +290,7 @@
         return;
       }
 
+      try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* storage unavailable */ }
       closeOverlay();
       await loadFeed(ROOM_ID, true);
     });
@@ -292,6 +301,8 @@
     backdrop.appendChild(panel);
     document.body.appendChild(backdrop);
     ta.focus();
+    // Put the cursor at the end of a restored draft
+    ta.setSelectionRange(ta.value.length, ta.value.length);
   }
 
   // ===== REACTIONS =====
