@@ -112,7 +112,7 @@ $VER = time();
   <main class="se-main">
     <!-- Language & Search Section -->
     <section class="se-section se-controls-section">
-      <h2 class="se-page-title">Sing Emmanuel</h2>
+      <h2 class="se-page-title">Sing Emmanuel<?php if ($selectedSong): ?> <span class="se-page-title-number"><?= t('hymn') ?> <?= htmlspecialchars((string)$selectedSong['number']) ?></span><?php endif; ?></h2>
 
       <div class="se-controls-grid">
         <div class="se-language-toggle">
@@ -179,6 +179,17 @@ $VER = time();
         <button class="se-overlay-close" id="closeSongPicker" aria-label="<?= t('close') ?>">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="se-overlay-search">
+        <input type="text" id="songNumberInput" class="se-number-input"
+               inputmode="numeric" pattern="[0-9]*" maxlength="4"
+               placeholder="<?= t('enter_song_number') ?>" autocomplete="off"
+               aria-label="<?= t('enter_song_number') ?>">
+        <button class="se-number-go" id="songNumberGo" aria-label="<?= t('search_song') ?>">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
       </div>

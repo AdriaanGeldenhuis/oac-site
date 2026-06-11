@@ -10,6 +10,8 @@
   const openBtn = document.getElementById('openSongPicker');
   const closeBtn = document.getElementById('closeSongPicker');
   const grid = document.getElementById('songPickerGrid');
+  const numberInput = document.getElementById('songNumberInput');
+  const numberGoBtn = document.getElementById('songNumberGo');
 
   // ===== SAVE SCROLL POSITION =====
   let savedScrollPosition = 0;
@@ -36,6 +38,15 @@
       savedScrollPosition = window.pageYOffset;
       overlay.hidden = false;
       document.body.style.overflow = 'hidden';
+      if (numberInput) {
+        numberInput.value = '';
+        filterSongGrid('');
+        // Only auto-focus on devices with a mouse/trackpad so the
+        // on-screen keyboard doesn't cover the grid on phones
+        if (window.matchMedia('(hover: hover)').matches) {
+          numberInput.focus();
+        }
+      }
     }
   }
 
@@ -44,6 +55,28 @@
       overlay.hidden = true;
       document.body.style.overflow = '';
       window.scrollTo(0, savedScrollPosition);
+    }
+  }
+
+  function filterSongGrid(value) {
+    if (!grid) return;
+    grid.querySelectorAll('.se-song-btn').forEach(function(btn) {
+      const num = btn.getAttribute('data-song') || '';
+      btn.hidden = value !== '' && num.indexOf(value) !== 0;
+    });
+  }
+
+  function goToTypedSong() {
+    if (!numberInput || !grid) return;
+    const value = numberInput.value.trim();
+    if (!value) return;
+    if (grid.querySelector('.se-song-btn[data-song="' + value + '"]')) {
+      navigateToSong(value);
+    } else {
+      numberInput.classList.add('se-input-error');
+      setTimeout(function() {
+        numberInput.classList.remove('se-input-error');
+      }, 800);
     }
   }
 
@@ -93,6 +126,31 @@
           navigateToSong(songNum);
         }
       }
+    });
+  }
+
+  // Song number input - filter grid while typing, Enter jumps to the song
+  if (numberInput) {
+    numberInput.addEventListener('input', function() {
+      const digits = numberInput.value.replace(/\D/g, '');
+      if (numberInput.value !== digits) {
+        numberInput.value = digits;
+      }
+      filterSongGrid(digits);
+    });
+
+    numberInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        goToTypedSong();
+      }
+    });
+  }
+
+  if (numberGoBtn) {
+    numberGoBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      goToTypedSong();
     });
   }
 

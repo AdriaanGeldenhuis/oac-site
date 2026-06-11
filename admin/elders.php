@@ -109,6 +109,14 @@ $siteColors = [
     ['name' => 'Black', 'value' => '#1a1816'],
     ['name' => 'Dark Gray', 'value' => '#3d3835'],
 ];
+
+// Soft highlight colors that read well on both dark and light themes
+$highlightColors = [
+    ['name' => 'Rose', 'value' => 'rgba(232, 180, 168, 0.45)'],
+    ['name' => 'Amber', 'value' => 'rgba(255, 213, 128, 0.45)'],
+    ['name' => 'Green', 'value' => 'rgba(165, 214, 167, 0.45)'],
+    ['name' => 'Blue', 'value' => 'rgba(144, 202, 249, 0.45)'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($lang) ?>">
@@ -238,7 +246,13 @@ $siteColors = [
         }
 
         .tool-btn {
-            padding: 6px 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-width: 34px;
+            min-height: 32px;
+            padding: 5px 10px;
             background: var(--surface-light);
             border: 1px solid var(--border);
             border-radius: 6px;
@@ -247,6 +261,12 @@ $siteColors = [
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+        }
+
+        .tool-btn svg {
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
         }
 
         .tool-btn:hover {
@@ -287,6 +307,18 @@ $siteColors = [
         .color-swatch:hover {
             transform: scale(1.15);
             border-color: var(--primary);
+        }
+
+        /* "Remove highlight" swatch - diagonal red line */
+        .color-swatch.swatch-none {
+            position: relative;
+            background: var(--surface-light);
+        }
+        .color-swatch.swatch-none::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: linear-gradient(135deg, transparent 45%, var(--error) 45%, var(--error) 55%, transparent 55%);
         }
 
         /* Special buttons */
@@ -384,6 +416,69 @@ $siteColors = [
         .editor strong, .editor b {
             font-weight: 500;
         }
+        .editor blockquote {
+            margin: 0 0 16px;
+            padding: 14px 20px;
+            border-left: 3px solid var(--primary);
+            background: rgba(232, 180, 168, 0.06);
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: var(--text-dim);
+        }
+        .editor blockquote p:last-child {
+            margin-bottom: 0;
+        }
+        .editor hr {
+            border: none;
+            height: 1px;
+            margin: 28px auto;
+            background: linear-gradient(90deg, transparent, var(--primary-dark), transparent);
+        }
+        .editor a {
+            color: var(--primary);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        /* ===== INLINE COLOR SAFETY =====
+           Ink colors picked on the opposite theme stay readable here */
+        .editor [style*="#3d3835" i],
+        .editor [style*="rgb(61, 56, 53)"],
+        .editor [style*="rgb(61,56,53)"],
+        .editor font[color="#3d3835" i] {
+            color: var(--editor-text) !important;
+        }
+
+        [data-theme="light"] .editor [style*="#fff" i],
+        [data-theme="light"] .editor [style*="rgb(255, 255, 255)"],
+        [data-theme="light"] .editor [style*="rgb(255,255,255)"],
+        [data-theme="light"] .editor [style*="#fae8e0" i],
+        [data-theme="light"] .editor [style*="rgb(250, 232, 224)"],
+        [data-theme="light"] .editor [style*="rgb(250,232,224)"],
+        [data-theme="light"] .editor [style*="#f5d5c8" i],
+        [data-theme="light"] .editor [style*="rgb(245, 213, 200)"],
+        [data-theme="light"] .editor [style*="rgb(245,213,200)"],
+        [data-theme="light"] .editor [style*="#b8b8b8" i],
+        [data-theme="light"] .editor [style*="rgb(184, 184, 184)"],
+        [data-theme="light"] .editor [style*="rgb(184,184,184)"],
+        [data-theme="light"] .editor font[color="#ffffff" i],
+        [data-theme="light"] .editor font[color="white" i],
+        [data-theme="light"] .editor font[color="#fae8e0" i],
+        [data-theme="light"] .editor font[color="#f5d5c8" i],
+        [data-theme="light"] .editor font[color="#b8b8b8" i] {
+            color: var(--editor-text) !important;
+        }
+
+        [data-theme="light"] .editor [style*="#e8b4a8" i],
+        [data-theme="light"] .editor [style*="rgb(232, 180, 168)"],
+        [data-theme="light"] .editor [style*="rgb(232,180,168)"],
+        [data-theme="light"] .editor [style*="#c99485" i],
+        [data-theme="light"] .editor [style*="rgb(201, 148, 133)"],
+        [data-theme="light"] .editor [style*="rgb(201,148,133)"],
+        [data-theme="light"] .editor font[color="#e8b4a8" i],
+        [data-theme="light"] .editor font[color="#c99485" i] {
+            color: var(--primary-dark) !important;
+        }
 
         /* Bible verse classes - MATCH WELCOME.CSS exactly */
         .editor .vref {
@@ -442,6 +537,11 @@ $siteColors = [
         .status.saved { border-color: var(--success); color: var(--success); }
         .status.error { border-color: var(--error); color: var(--error); }
         .status.unsaved { border-color: var(--warning); color: var(--warning); }
+
+        .word-count {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
 
         .btn {
             padding: 12px 24px;
@@ -735,8 +835,19 @@ $siteColors = [
             </div>
         </div>
 
-        <!-- TOOLBAR ROW 1: Headings & Basic Formatting -->
+        <!-- TOOLBAR ROW 1: History, Blocks & Text Formatting -->
         <div class="toolbar">
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-undo" title="<?= htmlspecialchars(t('undo')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+                </button>
+                <button class="tool-btn" id="btn-redo" title="<?= htmlspecialchars(t('redo')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+                </button>
+            </div>
+
+            <div class="sep"></div>
+
             <div class="tool-group">
                 <button class="tool-btn btn-h1" id="btn-h1" title="<?= htmlspecialchars(t('heading')) ?> 1">H1</button>
                 <button class="tool-btn btn-h2" id="btn-h2" title="<?= htmlspecialchars(t('heading')) ?> 2">H2</button>
@@ -750,6 +861,8 @@ $siteColors = [
                 <button class="tool-btn" id="btn-bold" title="<?= htmlspecialchars(t('bold')) ?>"><b>B</b></button>
                 <button class="tool-btn" id="btn-italic" title="<?= htmlspecialchars(t('italic')) ?>"><i>I</i></button>
                 <button class="tool-btn" id="btn-underline" title="<?= htmlspecialchars(t('underline')) ?>"><u>U</u></button>
+                <button class="tool-btn" id="btn-strike" title="<?= htmlspecialchars(t('strikethrough')) ?>"><s>S</s></button>
+                <button class="tool-btn" id="btn-clear" title="<?= htmlspecialchars(t('clear_formatting')) ?>"><span><s>T</s>x</span></button>
             </div>
 
             <div class="sep"></div>
@@ -757,6 +870,7 @@ $siteColors = [
             <div class="tool-group">
                 <label><?= t('size') ?></label>
                 <select id="font-size">
+                    <option value="" id="fs-custom" hidden></option>
                     <option value="12px">12</option>
                     <option value="14px">14</option>
                     <option value="16px" selected>16</option>
@@ -773,6 +887,7 @@ $siteColors = [
             <div class="tool-group">
                 <label><?= t('line_spacing') ?></label>
                 <select id="line-spacing">
+                    <option value="" id="ls-custom" hidden></option>
                     <option value="1">1.0</option>
                     <option value="1.5" selected>1.5</option>
                     <option value="1.8">1.8</option>
@@ -784,9 +899,18 @@ $siteColors = [
             <div class="sep"></div>
 
             <div class="tool-group">
-                <button class="tool-btn" id="btn-left" title="<?= htmlspecialchars(t('align_left')) ?>">&#8676;</button>
-                <button class="tool-btn" id="btn-center" title="<?= htmlspecialchars(t('align_center')) ?>">&#8801;</button>
-                <button class="tool-btn" id="btn-right" title="<?= htmlspecialchars(t('align_right')) ?>">&#8677;</button>
+                <button class="tool-btn" id="btn-left" title="<?= htmlspecialchars(t('align_left')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
+                </button>
+                <button class="tool-btn" id="btn-center" title="<?= htmlspecialchars(t('align_center')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="5" y1="18" x2="19" y2="18"/></svg>
+                </button>
+                <button class="tool-btn" id="btn-right" title="<?= htmlspecialchars(t('align_right')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="6" y1="18" x2="20" y2="18"/></svg>
+                </button>
+                <button class="tool-btn" id="btn-justify" title="<?= htmlspecialchars(t('align_justify')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+                </button>
             </div>
 
             <div class="sep"></div>
@@ -794,10 +918,16 @@ $siteColors = [
             <div class="tool-group">
                 <button class="tool-btn" id="btn-ul" title="<?= htmlspecialchars(t('bullet_list')) ?>">&#8226; <?= t('bullet_list') ?></button>
                 <button class="tool-btn" id="btn-ol" title="<?= htmlspecialchars(t('numbered_list')) ?>">1. <?= t('numbered_list') ?></button>
+                <button class="tool-btn" id="btn-outdent" title="<?= htmlspecialchars(t('outdent')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 3 12 7 16"/><line x1="21" y1="6" x2="11" y2="6"/><line x1="21" y1="12" x2="11" y2="12"/><line x1="21" y1="18" x2="11" y2="18"/></svg>
+                </button>
+                <button class="tool-btn" id="btn-indent" title="<?= htmlspecialchars(t('indent')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 3 16"/><line x1="21" y1="6" x2="11" y2="6"/><line x1="21" y1="12" x2="11" y2="12"/><line x1="21" y1="18" x2="11" y2="18"/></svg>
+                </button>
             </div>
         </div>
 
-        <!-- TOOLBAR ROW 2: Colors & Actions -->
+        <!-- TOOLBAR ROW 2: Colors, Inserts & Actions -->
         <div class="toolbar">
             <div class="tool-group">
                 <label><?= t('text_color') ?></label>
@@ -808,6 +938,38 @@ $siteColors = [
                         data-type="text"
                         title="<?= $color['name'] ?>"></button>
                 <?php endforeach; ?>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="tool-group">
+                <label><?= t('highlight_color') ?></label>
+                <?php foreach ($highlightColors as $color): ?>
+                <button class="color-swatch"
+                        style="background: <?= $color['value'] ?>"
+                        data-color="<?= $color['value'] ?>"
+                        data-type="highlight"
+                        title="<?= $color['name'] ?>"></button>
+                <?php endforeach; ?>
+                <button class="color-swatch swatch-none"
+                        data-color="transparent"
+                        data-type="highlight"
+                        title="<?= htmlspecialchars(t('remove_highlight')) ?>"></button>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="tool-group">
+                <button class="tool-btn" id="btn-quote" title="<?= htmlspecialchars(t('quote_block')) ?>">&#10077;</button>
+                <button class="tool-btn" id="btn-hr" title="<?= htmlspecialchars(t('divider')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="7" y1="6" x2="17" y2="6" opacity=".35"/><line x1="7" y1="18" x2="17" y2="18" opacity=".35"/></svg>
+                </button>
+                <button class="tool-btn" id="btn-link" title="<?= htmlspecialchars(t('insert_link')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </button>
+                <button class="tool-btn" id="btn-unlink" title="<?= htmlspecialchars(t('remove_link')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M5.17 11.75l-1.72 1.71a5 5 0 0 0 7.07 7.07l1.72-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/></svg>
+                </button>
             </div>
 
             <div class="sep"></div>
@@ -841,6 +1003,7 @@ $siteColors = [
                 <span id="status-icon">&#128190;</span>
                 <span id="status-text"><?= t('ready_to_save') ?></span>
             </span>
+            <span class="word-count" id="word-count"></span>
             <button class="btn btn-primary" id="btn-save">
                 <?= t('save_all') ?>
             </button>
@@ -931,7 +1094,10 @@ $siteColors = [
             'languages_completed' => t('languages_completed'),
             'ready_to_save' => t('ready_to_save'),
             'select' => t('select'),
-            'improve' => t('improve')
+            'improve' => t('improve'),
+            'words' => t('words'),
+            'characters' => t('characters'),
+            'link_prompt' => t('link_prompt')
         ], JSON_UNESCAPED_UNICODE) ?>;
 
         // State
@@ -1072,165 +1238,542 @@ $siteColors = [
                 });
 
                 loadBible(currentLang);
+                updateToolbarState();
             };
         });
 
-        // ===== FORMATTING COMMANDS =====
-        function execCmd(cmd, val = null) {
-            document.execCommand(cmd, false, val);
-            getCurrentEditor().focus();
+        // ===================================================================
+        // FORMATTING ENGINE
+        // ===================================================================
+        const BLOCK_TAGS = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'PRE', 'DIV'];
+
+        // New lines create <p> instead of <div>
+        try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch(e) {}
+
+        // ----- Selection helpers -----
+
+        // Returns {sel, range, editor} when the selection lives inside the
+        // currently visible editor, otherwise null
+        function selectionInEditor() {
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return null;
+            const range = sel.getRangeAt(0);
+            const editor = getCurrentEditor();
+            if (!editor || !editor.contains(range.commonAncestorContainer)) return null;
+            return { sel, range, editor };
         }
 
-        // Custom function to change block type (H1, H2, H3, P) - IMPROVED
-        function changeBlockType(newTag) {
+        function closestBlock(node) {
+            const editor = getCurrentEditor();
+            while (node && node !== editor) {
+                if (node.nodeType === 1 && BLOCK_TAGS.includes(node.tagName)) return node;
+                node = node.parentNode;
+            }
+            return null;
+        }
+
+        // True only when the range actually overlaps the block's content,
+        // not when it merely touches a boundary (e.g. triple-click selections
+        // that end at the start of the next paragraph)
+        function rangeOverlapsBlock(range, blk) {
+            const r = document.createRange();
+            r.selectNodeContents(blk);
+            return range.compareBoundaryPoints(Range.START_TO_END, r) > 0 &&
+                   range.compareBoundaryPoints(Range.END_TO_START, r) < 0;
+        }
+
+        // All innermost block elements covered by the current selection
+        function getSelectedBlocks() {
+            const ctx = selectionInEditor();
+            if (!ctx) return [];
+            const candidates = [];
+            ctx.editor.querySelectorAll(BLOCK_TAGS.join(',')).forEach(blk => {
+                if (rangeOverlapsBlock(ctx.range, blk)) candidates.push(blk);
+            });
+            const blocks = candidates.filter(b => !candidates.some(o => o !== b && b.contains(o)));
+            if (!blocks.length) {
+                const blk = closestBlock(ctx.sel.anchorNode);
+                if (blk) blocks.push(blk);
+            }
+            return blocks;
+        }
+
+        // Commands that need a selection get the whole current block when
+        // the cursor is just sitting somewhere - so clicking a color or size
+        // always visibly does something
+        function expandToBlockIfCollapsed(sel) {
+            if (!sel.isCollapsed) return;
+            const blk = closestBlock(sel.anchorNode);
+            if (!blk) return;
+            const r = document.createRange();
+            r.selectNodeContents(blk);
+            sel.removeAllRanges();
+            sel.addRange(r);
+        }
+
+        function unwrap(el) {
+            const parent = el.parentNode;
+            while (el.firstChild) parent.insertBefore(el.firstChild, el);
+            parent.removeChild(el);
+        }
+
+        function clearFontSizeStyle(el) {
+            el.style.fontSize = '';
+            if (!el.getAttribute('style')) el.removeAttribute('style');
+            if (el.tagName === 'SPAN' && !el.attributes.length) unwrap(el);
+        }
+
+        function execCmd(cmd, val = null) {
+            getCurrentEditor().focus();
+            document.execCommand(cmd, false, val);
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        // ----- Block type (H1 / H2 / H3 / P) -----
+        // Uses the browser's formatBlock (handles multi-block selections and
+        // lists correctly), then strips inline font sizes inside headings so
+        // the site's heading styles actually show
+        function setBlockType(tag) {
             const editor = getCurrentEditor();
             editor.focus();
+            const ctx = selectionInEditor();
+            if (!ctx) return;
 
-            const sel = window.getSelection();
-            if (!sel.rangeCount) {
-                // No selection - create a new element at cursor
-                const newEl = document.createElement(newTag);
-                newEl.innerHTML = '<br>';
-                editor.appendChild(newEl);
-
-                const range = document.createRange();
-                range.selectNodeContents(newEl);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                markUnsaved();
-                return;
+            let target = tag.toUpperCase();
+            const cur = closestBlock(ctx.sel.anchorNode);
+            if (target !== 'P' && cur && cur.tagName === target) {
+                target = 'P'; // clicking the active heading toggles back to paragraph
             }
 
-            // Find the parent block element
-            let node = sel.anchorNode;
+            document.execCommand('formatBlock', false, '<' + target + '>');
 
-            // If we're on a text node, get the parent
-            if (node.nodeType === 3) {
-                node = node.parentNode;
+            if (/^H[1-6]$/.test(target)) {
+                getSelectedBlocks().forEach(blk => {
+                    if (!/^H[1-6]$/.test(blk.tagName)) return;
+                    blk.style.fontSize = '';
+                    if (!blk.getAttribute('style')) blk.removeAttribute('style');
+                    blk.querySelectorAll('span, font').forEach(el => {
+                        if (el.style && el.style.fontSize) clearFontSizeStyle(el);
+                        if (el.tagName === 'FONT') el.removeAttribute('size');
+                    });
+                });
             }
-
-            // Walk up to find the block element
-            while (node && node !== editor && node.parentNode !== editor) {
-                if (node.nodeType === 1 && ['P', 'H1', 'H2', 'H3', 'H4', 'DIV', 'LI'].includes(node.tagName)) {
-                    break;
-                }
-                node = node.parentNode;
-            }
-
-            // If node is direct child of editor or we found a block
-            if (node && node !== editor) {
-                // Check if this is actually a block we can convert
-                const isBlock = node.nodeType === 1 &&
-                    (node.parentNode === editor || ['P', 'H1', 'H2', 'H3', 'H4', 'DIV'].includes(node.tagName));
-
-                if (isBlock && node.tagName !== newTag.toUpperCase()) {
-                    // Create new element with the desired tag
-                    const newEl = document.createElement(newTag);
-
-                    // Copy content (strip only the outermost tag, keep inner formatting)
-                    newEl.innerHTML = node.innerHTML || '<br>';
-
-                    // Copy any relevant styles (like text-align)
-                    if (node.style.textAlign) {
-                        newEl.style.textAlign = node.style.textAlign;
-                    }
-                    if (node.style.lineHeight) {
-                        newEl.style.lineHeight = node.style.lineHeight;
-                    }
-
-                    // Replace the old element with the new one
-                    node.parentNode.replaceChild(newEl, node);
-
-                    // Restore cursor position at end of new element
-                    const range = document.createRange();
-                    range.selectNodeContents(newEl);
-                    range.collapse(false);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-
-                    markUnsaved();
-                    console.log('Changed block from', node.tagName, 'to:', newTag);
-                } else if (!isBlock) {
-                    // Wrap current content in the new tag
-                    document.execCommand('formatBlock', false, newTag);
-                    markUnsaved();
-                    console.log('Wrapped content in:', newTag);
-                }
-            } else {
-                // Fallback: use execCommand
-                try {
-                    document.execCommand('formatBlock', false, newTag);
-                    markUnsaved();
-                    console.log('Used execCommand for:', newTag);
-                } catch(e) {
-                    console.error('formatBlock failed:', e);
-                }
-            }
-            editor.focus();
+            markUnsaved();
+            updateToolbarState();
         }
 
-        // Headings - apply site fonts automatically
-        document.getElementById('btn-h1').onclick = () => changeBlockType('h1');
-        document.getElementById('btn-h2').onclick = () => changeBlockType('h2');
-        document.getElementById('btn-h3').onclick = () => changeBlockType('h3');
-        document.getElementById('btn-p').onclick = () => changeBlockType('p');
+        // ----- Font size -----
+        // Collapsed cursor: the whole current block gets the size.
+        // Real selection: the browser splits the text nodes cleanly via the
+        // legacy fontSize command, then the <font> tags are swapped for
+        // proper px spans and conflicting nested sizes are removed.
+        function applyFontSize(px) {
+            const editor = getCurrentEditor();
+            editor.focus();
+            const ctx = selectionInEditor();
+            if (!ctx) return;
 
-        // Basic formatting
+            if (ctx.sel.isCollapsed) {
+                const blk = closestBlock(ctx.sel.anchorNode);
+                if (!blk) return;
+                blk.querySelectorAll('span, font').forEach(el => {
+                    if (el.style && el.style.fontSize) clearFontSizeStyle(el);
+                    if (el.tagName === 'FONT') el.removeAttribute('size');
+                });
+                blk.style.fontSize = px;
+            } else {
+                document.execCommand('styleWithCSS', false, false);
+                document.execCommand('fontSize', false, '7');
+                const spans = [];
+                editor.querySelectorAll('font[size="7"]').forEach(f => {
+                    const span = document.createElement('span');
+                    span.style.fontSize = px;
+                    while (f.firstChild) span.appendChild(f.firstChild);
+                    f.replaceWith(span);
+                    span.querySelectorAll('span, font').forEach(el => {
+                        if (el.style && el.style.fontSize) clearFontSizeStyle(el);
+                        if (el.tagName === 'FONT') el.removeAttribute('size');
+                    });
+                    spans.push(span);
+                });
+                if (spans.length) {
+                    const r = document.createRange();
+                    r.setStartBefore(spans[0]);
+                    r.setEndAfter(spans[spans.length - 1]);
+                    ctx.sel.removeAllRanges();
+                    ctx.sel.addRange(r);
+                }
+            }
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        // ----- Line spacing: every block in the selection -----
+        function applyLineSpacing(value) {
+            getCurrentEditor().focus();
+            const blocks = getSelectedBlocks();
+            if (!blocks.length) return;
+            blocks.forEach(b => { b.style.lineHeight = value; });
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        // ----- Colors -----
+        function applyColor(color) {
+            const editor = getCurrentEditor();
+            editor.focus();
+            const ctx = selectionInEditor();
+            if (!ctx) return;
+            expandToBlockIfCollapsed(ctx.sel);
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('foreColor', false, color);
+            document.execCommand('styleWithCSS', false, false);
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        function applyHighlight(color) {
+            const editor = getCurrentEditor();
+            editor.focus();
+            const ctx = selectionInEditor();
+            if (!ctx) return;
+            expandToBlockIfCollapsed(ctx.sel);
+            document.execCommand('styleWithCSS', false, true);
+            let ok = false;
+            try { ok = document.execCommand('hiliteColor', false, color); } catch(e) {}
+            if (!ok) {
+                try { document.execCommand('backColor', false, color); } catch(e) {}
+            }
+            document.execCommand('styleWithCSS', false, false);
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        // ----- Quote block toggle -----
+        function toggleQuote() {
+            const editor = getCurrentEditor();
+            editor.focus();
+            const ctx = selectionInEditor();
+            if (!ctx) return;
+            let el = ctx.sel.anchorNode;
+            if (el && el.nodeType === 3) el = el.parentElement;
+            const bq = el && el.closest ? el.closest('blockquote') : null;
+
+            if (bq && editor.contains(bq)) {
+                document.execCommand('formatBlock', false, '<P>');
+                // Some browsers leave the old blockquote wrapper behind
+                let el2 = window.getSelection().anchorNode;
+                if (el2 && el2.nodeType === 3) el2 = el2.parentElement;
+                const left = el2 && el2.closest ? el2.closest('blockquote') : null;
+                if (left && editor.contains(left)) unwrap(left);
+            } else {
+                document.execCommand('formatBlock', false, '<BLOCKQUOTE>');
+            }
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        // ----- Clear formatting -----
+        function clearFormatting() {
+            const editor = getCurrentEditor();
+            editor.focus();
+            const ctx = selectionInEditor();
+            if (!ctx) return;
+            expandToBlockIfCollapsed(ctx.sel);
+            document.execCommand('removeFormat');
+            document.execCommand('unlink');
+            getSelectedBlocks().forEach(blk => {
+                ['fontSize', 'color', 'backgroundColor', 'lineHeight', 'textAlign'].forEach(prop => {
+                    blk.style[prop] = '';
+                });
+                if (!blk.getAttribute('style')) blk.removeAttribute('style');
+            });
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        // ----- Links -----
+        function insertLink() {
+            const editor = getCurrentEditor();
+            editor.focus();
+            const ctx = selectionInEditor();
+            if (!ctx) return;
+            const savedRange = ctx.range.cloneRange();
+
+            let url = prompt(STR.link_prompt, 'https://');
+            if (!url) return;
+            url = url.trim();
+            if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+            editor.focus();
+            ctx.sel.removeAllRanges();
+            ctx.sel.addRange(savedRange);
+
+            if (savedRange.collapsed) {
+                const a = document.createElement('a');
+                a.href = url;
+                a.textContent = url.replace(/^https?:\/\//i, '');
+                savedRange.insertNode(a);
+                const r = document.createRange();
+                r.setStartAfter(a);
+                r.collapse(true);
+                ctx.sel.removeAllRanges();
+                ctx.sel.addRange(r);
+            } else {
+                document.execCommand('createLink', false, url);
+            }
+            editor.querySelectorAll('a').forEach(a => {
+                a.target = '_blank';
+                a.rel = 'noopener';
+            });
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        function removeLink() {
+            const editor = getCurrentEditor();
+            editor.focus();
+            const ctx = selectionInEditor();
+            if (!ctx) return;
+            if (ctx.sel.isCollapsed) {
+                let el = ctx.sel.anchorNode;
+                if (el && el.nodeType === 3) el = el.parentElement;
+                const a = el && el.closest ? el.closest('a') : null;
+                if (a && editor.contains(a)) {
+                    const r = document.createRange();
+                    r.selectNodeContents(a);
+                    ctx.sel.removeAllRanges();
+                    ctx.sel.addRange(r);
+                }
+            }
+            document.execCommand('unlink');
+            markUnsaved();
+            updateToolbarState();
+        }
+
+        // ----- Toolbar wiring -----
+
+        document.getElementById('btn-undo').onclick = () => execCmd('undo');
+        document.getElementById('btn-redo').onclick = () => execCmd('redo');
+
+        document.getElementById('btn-h1').onclick = () => setBlockType('h1');
+        document.getElementById('btn-h2').onclick = () => setBlockType('h2');
+        document.getElementById('btn-h3').onclick = () => setBlockType('h3');
+        document.getElementById('btn-p').onclick = () => setBlockType('p');
+
         document.getElementById('btn-bold').onclick = () => execCmd('bold');
         document.getElementById('btn-italic').onclick = () => execCmd('italic');
         document.getElementById('btn-underline').onclick = () => execCmd('underline');
+        document.getElementById('btn-strike').onclick = () => execCmd('strikeThrough');
+        document.getElementById('btn-clear').onclick = clearFormatting;
 
-        // Alignment
         document.getElementById('btn-left').onclick = () => execCmd('justifyLeft');
         document.getElementById('btn-center').onclick = () => execCmd('justifyCenter');
         document.getElementById('btn-right').onclick = () => execCmd('justifyRight');
+        document.getElementById('btn-justify').onclick = () => execCmd('justifyFull');
 
-        // Lists
         document.getElementById('btn-ul').onclick = () => execCmd('insertUnorderedList');
         document.getElementById('btn-ol').onclick = () => execCmd('insertOrderedList');
+        document.getElementById('btn-indent').onclick = () => execCmd('indent');
+        document.getElementById('btn-outdent').onclick = () => execCmd('outdent');
 
-        // Font size
+        document.getElementById('btn-quote').onclick = toggleQuote;
+        document.getElementById('btn-hr').onclick = () => execCmd('insertHorizontalRule');
+        document.getElementById('btn-link').onclick = insertLink;
+        document.getElementById('btn-unlink').onclick = removeLink;
+
         document.getElementById('font-size').onchange = function() {
-            const size = this.value;
-            const sel = window.getSelection();
-            if (!sel.rangeCount || sel.getRangeAt(0).collapsed) return;
-
-            const range = sel.getRangeAt(0);
-            const contents = range.extractContents();
-            const span = document.createElement('span');
-            span.style.fontSize = size;
-            span.appendChild(contents);
-            range.insertNode(span);
-            getCurrentEditor().focus();
-            markUnsaved();
+            if (this.value) applyFontSize(this.value);
         };
 
-        // Line spacing
         document.getElementById('line-spacing').onchange = function() {
-            const lineHeight = this.value;
-            const sel = window.getSelection();
-            if (!sel.rangeCount) return;
-
-            let node = sel.anchorNode;
-            while (node && node !== getCurrentEditor()) {
-                if (node.nodeType === 1 && ['P', 'DIV', 'H1', 'H2', 'H3', 'LI'].includes(node.tagName)) {
-                    node.style.lineHeight = lineHeight;
-                    break;
-                }
-                node = node.parentNode;
-            }
-            getCurrentEditor().focus();
-            markUnsaved();
+            if (this.value) applyLineSpacing(this.value);
         };
 
-        // Color swatches
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.onclick = function() {
-                const color = this.dataset.color;
-                execCmd('foreColor', color);
+                if (this.dataset.type === 'highlight') {
+                    applyHighlight(this.dataset.color);
+                } else {
+                    applyColor(this.dataset.color);
+                }
             };
         });
+
+        // Tab / Shift+Tab indents and outdents (handy inside lists)
+        Object.values(editors).forEach(ed => {
+            if (!ed) return;
+            ed.addEventListener('keydown', e => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    execCmd(e.shiftKey ? 'outdent' : 'indent');
+                }
+            });
+        });
+
+        // ===================================================================
+        // TOOLBAR STATE SYNC - buttons and dropdowns follow the cursor
+        // ===================================================================
+
+        function setActive(id, on) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('active', !!on);
+        }
+
+        function reflectFontSize(px) {
+            const sel = document.getElementById('font-size');
+            const custom = document.getElementById('fs-custom');
+            const val = px + 'px';
+            if (Array.from(sel.options).some(o => o !== custom && o.value === val)) {
+                custom.textContent = '';
+                sel.value = val;
+            } else {
+                custom.value = val;
+                custom.textContent = px;
+                sel.value = val;
+            }
+        }
+
+        function reflectLineSpacing(ratio) {
+            const sel = document.getElementById('line-spacing');
+            const custom = document.getElementById('ls-custom');
+            const match = Array.from(sel.options).find(o =>
+                o !== custom && Math.abs(parseFloat(o.value) - ratio) < 0.05);
+            if (match) {
+                custom.textContent = '';
+                sel.value = match.value;
+            } else {
+                const v = (Math.round(ratio * 10) / 10).toString();
+                custom.value = v;
+                custom.textContent = v;
+                sel.value = v;
+            }
+        }
+
+        function updateWordCount() {
+            const out = document.getElementById('word-count');
+            if (!out) return;
+            const ed = getCurrentEditor();
+            const text = ed ? ed.innerText.trim() : '';
+            const words = text ? (text.match(/\S+/g) || []).length : 0;
+            const chars = text.replace(/\s+/g, ' ').length;
+            out.textContent = words + ' ' + STR.words + ' · ' + chars + ' ' + STR.characters;
+        }
+
+        function updateToolbarState() {
+            const ctx = selectionInEditor();
+            const q = cmd => {
+                try { return document.queryCommandState(cmd); } catch(e) { return false; }
+            };
+            const on = !!ctx;
+
+            setActive('btn-bold', on && q('bold'));
+            setActive('btn-italic', on && q('italic'));
+            setActive('btn-underline', on && q('underline'));
+            setActive('btn-strike', on && q('strikeThrough'));
+            setActive('btn-left', on && q('justifyLeft'));
+            setActive('btn-center', on && q('justifyCenter'));
+            setActive('btn-right', on && q('justifyRight'));
+            setActive('btn-justify', on && q('justifyFull'));
+            setActive('btn-ul', on && q('insertUnorderedList'));
+            setActive('btn-ol', on && q('insertOrderedList'));
+
+            let tag = '', inQuote = false, el = null;
+            if (ctx) {
+                el = ctx.sel.focusNode;
+                if (el && el.nodeType === 3) el = el.parentElement;
+                const blk = closestBlock(ctx.sel.focusNode);
+                tag = blk ? blk.tagName : '';
+                if (el && el.closest) {
+                    const bq = el.closest('blockquote');
+                    inQuote = !!(bq && ctx.editor.contains(bq));
+                }
+            }
+            setActive('btn-h1', tag === 'H1');
+            setActive('btn-h2', tag === 'H2');
+            setActive('btn-h3', tag === 'H3');
+            setActive('btn-p', tag === 'P');
+            setActive('btn-quote', inQuote);
+
+            if (ctx && el && ctx.editor.contains(el)) {
+                const cs = getComputedStyle(el);
+                reflectFontSize(Math.round(parseFloat(cs.fontSize)));
+
+                const blk = closestBlock(ctx.sel.focusNode) || el;
+                const bcs = getComputedStyle(blk);
+                const ratio = bcs.lineHeight === 'normal'
+                    ? 1.2
+                    : parseFloat(bcs.lineHeight) / parseFloat(bcs.fontSize);
+                reflectLineSpacing(ratio);
+            }
+            updateWordCount();
+        }
+
+        let stateRaf = null;
+        document.addEventListener('selectionchange', () => {
+            if (stateRaf) return;
+            stateRaf = requestAnimationFrame(() => {
+                stateRaf = null;
+                updateToolbarState();
+            });
+        });
+
+        // Escape closes any open modal
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+
+        // White ink (dark theme) and near-black ink (light theme) ARE the
+        // theme defaults - storing them literally makes the text invisible
+        // on the opposite theme. Strip them so the text adapts to any theme.
+        const THEME_INK = ['rgb(255,255,255)', '#ffffff', '#fff', 'white', 'rgb(26,24,22)', '#1a1816'];
+
+        function stripThemeInkColors(root) {
+            root.querySelectorAll('[style*="color" i]').forEach(el => {
+                const c = (el.style.color || '').toLowerCase().replace(/\s+/g, '');
+                if (c && THEME_INK.includes(c)) {
+                    el.style.color = '';
+                    if (!el.getAttribute('style')) el.removeAttribute('style');
+                    if (el.tagName === 'SPAN' && !el.attributes.length) unwrap(el);
+                }
+            });
+            root.querySelectorAll('font[color]').forEach(f => {
+                const c = (f.getAttribute('color') || '').toLowerCase().replace(/\s+/g, '');
+                if (THEME_INK.includes(c)) f.removeAttribute('color');
+            });
+        }
+
+        // Make legacy content predictable: top-level <div> becomes <p>,
+        // stray inline nodes get wrapped in a paragraph
+        function normalizeEditor(ed) {
+            stripThemeInkColors(ed);
+            Array.from(ed.children).forEach(child => {
+                if (child.tagName === 'DIV') {
+                    const p = document.createElement('p');
+                    p.innerHTML = child.innerHTML;
+                    const style = child.getAttribute('style');
+                    if (style) p.setAttribute('style', style);
+                    child.replaceWith(p);
+                }
+            });
+            const blockLevel = BLOCK_TAGS.concat(['UL', 'OL', 'HR', 'TABLE']);
+            let wrap = null;
+            Array.from(ed.childNodes).forEach(node => {
+                if (node.nodeType === 1 && blockLevel.includes(node.tagName)) {
+                    wrap = null;
+                    return;
+                }
+                if (node.nodeType === 3 && !node.textContent.trim()) return;
+                if (!wrap) {
+                    wrap = document.createElement('p');
+                    ed.insertBefore(wrap, node);
+                }
+                wrap.appendChild(node);
+            });
+        }
 
         // ===== BIBLE LOADING =====
         async function loadBible(lang) {
@@ -1436,6 +1979,7 @@ $siteColors = [
                     showStatus('saved', STR.improved);
                     hasChanges = true;
                     updateTabIndicators();
+                    updateToolbarState();
                 } else {
                     throw new Error(data.error || STR.save_failed);
                 }
@@ -1580,6 +2124,7 @@ $siteColors = [
                 const fd = new URLSearchParams();
                 CONFIG.supportedLangs.forEach(code => {
                     if (editors[code]) {
+                        stripThemeInkColors(editors[code]);
                         fd.append('content_' + code, editors[code].innerHTML);
                     }
                 });
@@ -1635,9 +2180,10 @@ $siteColors = [
         };
 
         // ===== INIT =====
+        Object.values(editors).forEach(ed => { if (ed) normalizeEditor(ed); });
         loadBible('af');
         updateTabIndicators();
-        console.log('Elder teaching editor initialized');
+        updateToolbarState();
 
     })();
     </script>
