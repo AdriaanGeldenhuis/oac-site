@@ -440,6 +440,46 @@ $highlightColors = [
             text-underline-offset: 2px;
         }
 
+        /* ===== INLINE COLOR SAFETY =====
+           Ink colors picked on the opposite theme stay readable here */
+        .editor [style*="#3d3835" i],
+        .editor [style*="rgb(61, 56, 53)"],
+        .editor [style*="rgb(61,56,53)"],
+        .editor font[color="#3d3835" i] {
+            color: var(--editor-text) !important;
+        }
+
+        [data-theme="light"] .editor [style*="#fff" i],
+        [data-theme="light"] .editor [style*="rgb(255, 255, 255)"],
+        [data-theme="light"] .editor [style*="rgb(255,255,255)"],
+        [data-theme="light"] .editor [style*="#fae8e0" i],
+        [data-theme="light"] .editor [style*="rgb(250, 232, 224)"],
+        [data-theme="light"] .editor [style*="rgb(250,232,224)"],
+        [data-theme="light"] .editor [style*="#f5d5c8" i],
+        [data-theme="light"] .editor [style*="rgb(245, 213, 200)"],
+        [data-theme="light"] .editor [style*="rgb(245,213,200)"],
+        [data-theme="light"] .editor [style*="#b8b8b8" i],
+        [data-theme="light"] .editor [style*="rgb(184, 184, 184)"],
+        [data-theme="light"] .editor [style*="rgb(184,184,184)"],
+        [data-theme="light"] .editor font[color="#ffffff" i],
+        [data-theme="light"] .editor font[color="white" i],
+        [data-theme="light"] .editor font[color="#fae8e0" i],
+        [data-theme="light"] .editor font[color="#f5d5c8" i],
+        [data-theme="light"] .editor font[color="#b8b8b8" i] {
+            color: var(--editor-text) !important;
+        }
+
+        [data-theme="light"] .editor [style*="#e8b4a8" i],
+        [data-theme="light"] .editor [style*="rgb(232, 180, 168)"],
+        [data-theme="light"] .editor [style*="rgb(232,180,168)"],
+        [data-theme="light"] .editor [style*="#c99485" i],
+        [data-theme="light"] .editor [style*="rgb(201, 148, 133)"],
+        [data-theme="light"] .editor [style*="rgb(201,148,133)"],
+        [data-theme="light"] .editor font[color="#e8b4a8" i],
+        [data-theme="light"] .editor font[color="#c99485" i] {
+            color: var(--primary-dark) !important;
+        }
+
         /* Bible verse classes - MATCH WELCOME.CSS exactly */
         .editor .vref {
             font-family: 'Parisienne', cursive;
@@ -1686,9 +1726,30 @@ $highlightColors = [
             }
         });
 
+        // White ink (dark theme) and near-black ink (light theme) ARE the
+        // theme defaults - storing them literally makes the text invisible
+        // on the opposite theme. Strip them so the text adapts to any theme.
+        const THEME_INK = ['rgb(255,255,255)', '#ffffff', '#fff', 'white', 'rgb(26,24,22)', '#1a1816'];
+
+        function stripThemeInkColors(root) {
+            root.querySelectorAll('[style*="color" i]').forEach(el => {
+                const c = (el.style.color || '').toLowerCase().replace(/\s+/g, '');
+                if (c && THEME_INK.includes(c)) {
+                    el.style.color = '';
+                    if (!el.getAttribute('style')) el.removeAttribute('style');
+                    if (el.tagName === 'SPAN' && !el.attributes.length) unwrap(el);
+                }
+            });
+            root.querySelectorAll('font[color]').forEach(f => {
+                const c = (f.getAttribute('color') || '').toLowerCase().replace(/\s+/g, '');
+                if (THEME_INK.includes(c)) f.removeAttribute('color');
+            });
+        }
+
         // Make legacy content predictable: top-level <div> becomes <p>,
         // stray inline nodes get wrapped in a paragraph
         function normalizeEditor(ed) {
+            stripThemeInkColors(ed);
             Array.from(ed.children).forEach(child => {
                 if (child.tagName === 'DIV') {
                     const p = document.createElement('p');
@@ -2063,6 +2124,7 @@ $highlightColors = [
                 const fd = new URLSearchParams();
                 CONFIG.supportedLangs.forEach(code => {
                     if (editors[code]) {
+                        stripThemeInkColors(editors[code]);
                         fd.append('content_' + code, editors[code].innerHTML);
                     }
                 });
