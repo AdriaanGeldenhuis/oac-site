@@ -308,7 +308,7 @@
 
   // ===== DATA LOADING =====
   async function loadJSON(url, onProgress) {
-    const cacheKey = `bible_v5_${url}`;
+    const cacheKey = `bible_v6_${url}`;
     
     const cached = await getFromDB(cacheKey);
     if (cached) {

@@ -283,8 +283,8 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
     window.BIBLE = {
       lang: '<?= esc($pageLang) ?>',
       paths: {
-        af: '/bible/bibles/af_1933_53.json',
-        en: '/bible/bibles/en_kjv1611.json'
+        af: '/bible/bibles/af_1933_53.json?v=<?= filemtime(__DIR__ . '/bibles/af_1933_53.json') ?>',
+        en: '/bible/bibles/en_kjv1611.json?v=<?= filemtime(__DIR__ . '/bibles/en_kjv1611.json') ?>'
       },
       userId: <?= (int)($_SESSION['user_id'] ?? 0) ?>
     };
