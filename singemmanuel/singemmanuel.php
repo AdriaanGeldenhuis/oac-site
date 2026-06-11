@@ -112,7 +112,7 @@ $VER = time();
   <main class="se-main">
     <!-- Language & Search Section -->
     <section class="se-section se-controls-section">
-      <h2 class="se-page-title">Sing Emmanuel</h2>
+      <h2 class="se-page-title">Sing Emmanuel<?php if ($selectedSong): ?> <span class="se-page-title-number"><?= t('hymn') ?> <?= htmlspecialchars((string)$selectedSong['number']) ?></span><?php endif; ?></h2>
 
       <div class="se-controls-grid">
         <div class="se-language-toggle">
