@@ -184,9 +184,10 @@ try {
         "1. Translate ALL paragraphs, ALL headings, and ALL text - do not skip anything\n" .
         "2. Preserve the exact HTML structure and tags (<p>, <h1>, <h2>, <h3>, <span>, etc.)\n" .
         "3. Keep all class attributes intact (class=\"vref\", class=\"vtxt\", etc.)\n" .
-        "4. Do NOT translate Bible verse references (keep book names and chapter:verse numbers as-is)\n" .
-        "5. Output ONLY the translated HTML - no explanations, no comments\n" .
-        "6. Make sure to translate the COMPLETE document from start to finish";
+        "4. Do NOT translate Bible verse references in class=\"vref\" elements (keep book names and chapter:verse numbers exactly as-is)\n" .
+        "5. Keep <sup> verse numbers exactly where they are inside class=\"vtxt\" elements\n" .
+        "6. Output ONLY the translated HTML - no explanations, no comments, no markdown code fences\n" .
+        "7. Make sure to translate the COMPLETE document from start to finish";
 
     $messages = [
         ['role' => 'system', 'content' => $systemPrompt],
@@ -220,7 +221,8 @@ try {
             $reference = trim($match[1]);
 
             // Parse reference: "Book Chapter:VerseFrom-VerseTo" or "Book Chapter:Verse"
-            if (preg_match('/^([A-Za-zÀ-ÿ\s]+)\s+(\d+):(\d+)(?:-(\d+))?$/u', $reference, $parts)) {
+            // The optional leading digit handles numbered books like "1 Korinthiërs 13:4"
+            if (preg_match('/^((?:\d\s+)?[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s]*)\s+(\d+):(\d+)(?:-(\d+))?$/u', $reference, $parts)) {
                 $book = trim($parts[1]);
                 $chapter = (int)$parts[2];
                 $verseFrom = (int)$parts[3];

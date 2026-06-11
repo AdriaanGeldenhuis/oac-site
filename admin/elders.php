@@ -738,24 +738,24 @@ $siteColors = [
         <!-- TOOLBAR ROW 1: Headings & Basic Formatting -->
         <div class="toolbar">
             <div class="tool-group">
-                <button class="tool-btn btn-h1" id="btn-h1" title="Heading 1">H1</button>
-                <button class="tool-btn btn-h2" id="btn-h2" title="Heading 2">H2</button>
-                <button class="tool-btn btn-h3" id="btn-h3" title="Heading 3">H3</button>
-                <button class="tool-btn" id="btn-p" title="Paragraph">P</button>
+                <button class="tool-btn btn-h1" id="btn-h1" title="<?= htmlspecialchars(t('heading')) ?> 1">H1</button>
+                <button class="tool-btn btn-h2" id="btn-h2" title="<?= htmlspecialchars(t('heading')) ?> 2">H2</button>
+                <button class="tool-btn btn-h3" id="btn-h3" title="<?= htmlspecialchars(t('heading')) ?> 3">H3</button>
+                <button class="tool-btn" id="btn-p" title="<?= htmlspecialchars(t('paragraph')) ?>">P</button>
             </div>
 
             <div class="sep"></div>
 
             <div class="tool-group">
-                <button class="tool-btn" id="btn-bold" title="Bold"><b>B</b></button>
-                <button class="tool-btn" id="btn-italic" title="Italic"><i>I</i></button>
-                <button class="tool-btn" id="btn-underline" title="Underline"><u>U</u></button>
+                <button class="tool-btn" id="btn-bold" title="<?= htmlspecialchars(t('bold')) ?>"><b>B</b></button>
+                <button class="tool-btn" id="btn-italic" title="<?= htmlspecialchars(t('italic')) ?>"><i>I</i></button>
+                <button class="tool-btn" id="btn-underline" title="<?= htmlspecialchars(t('underline')) ?>"><u>U</u></button>
             </div>
 
             <div class="sep"></div>
 
             <div class="tool-group">
-                <label>Size</label>
+                <label><?= t('size') ?></label>
                 <select id="font-size">
                     <option value="12px">12</option>
                     <option value="14px">14</option>
@@ -771,7 +771,7 @@ $siteColors = [
             </div>
 
             <div class="tool-group">
-                <label>Line</label>
+                <label><?= t('line_spacing') ?></label>
                 <select id="line-spacing">
                     <option value="1">1.0</option>
                     <option value="1.5" selected>1.5</option>
@@ -784,23 +784,23 @@ $siteColors = [
             <div class="sep"></div>
 
             <div class="tool-group">
-                <button class="tool-btn" id="btn-left" title="Align Left">&#8676;</button>
-                <button class="tool-btn" id="btn-center" title="Center">&#8801;</button>
-                <button class="tool-btn" id="btn-right" title="Align Right">&#8677;</button>
+                <button class="tool-btn" id="btn-left" title="<?= htmlspecialchars(t('align_left')) ?>">&#8676;</button>
+                <button class="tool-btn" id="btn-center" title="<?= htmlspecialchars(t('align_center')) ?>">&#8801;</button>
+                <button class="tool-btn" id="btn-right" title="<?= htmlspecialchars(t('align_right')) ?>">&#8677;</button>
             </div>
 
             <div class="sep"></div>
 
             <div class="tool-group">
-                <button class="tool-btn" id="btn-ul" title="Bullet List">&#8226; List</button>
-                <button class="tool-btn" id="btn-ol" title="Numbered List">1. List</button>
+                <button class="tool-btn" id="btn-ul" title="<?= htmlspecialchars(t('bullet_list')) ?>">&#8226; <?= t('bullet_list') ?></button>
+                <button class="tool-btn" id="btn-ol" title="<?= htmlspecialchars(t('numbered_list')) ?>">1. <?= t('numbered_list') ?></button>
             </div>
         </div>
 
         <!-- TOOLBAR ROW 2: Colors & Actions -->
         <div class="toolbar">
             <div class="tool-group">
-                <label>Text Color</label>
+                <label><?= t('text_color') ?></label>
                 <?php foreach ($siteColors as $color): ?>
                 <button class="color-swatch"
                         style="background: <?= $color['value'] ?>"

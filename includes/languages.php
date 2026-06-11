@@ -1246,6 +1246,86 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Cor do texto',
         'st' => 'Mmala oa mongolo'
     ],
+    'heading' => [
+        'af' => 'Opskrif',
+        'en' => 'Heading',
+        'zu' => 'Isihloko',
+        'xh' => 'Isihloko',
+        'pt' => 'Título',
+        'st' => 'Sehlooho'
+    ],
+    'paragraph' => [
+        'af' => 'Paragraaf',
+        'en' => 'Paragraph',
+        'zu' => 'Indima',
+        'xh' => 'Umhlathi',
+        'pt' => 'Parágrafo',
+        'st' => 'Serapa'
+    ],
+    'bold' => [
+        'af' => 'Vetdruk',
+        'en' => 'Bold',
+        'zu' => 'Okugqamile',
+        'xh' => 'Ngqindilili',
+        'pt' => 'Negrito',
+        'st' => 'Botenya'
+    ],
+    'italic' => [
+        'af' => 'Kursief',
+        'en' => 'Italic',
+        'zu' => 'I-ithalikhi',
+        'xh' => 'I-italiki',
+        'pt' => 'Itálico',
+        'st' => 'Italiki'
+    ],
+    'underline' => [
+        'af' => 'Onderstreep',
+        'en' => 'Underline',
+        'zu' => 'Dwebela ngaphansi',
+        'xh' => 'Krwela umgca ngezantsi',
+        'pt' => 'Sublinhado',
+        'st' => 'Mola ka tlase'
+    ],
+    'align_left' => [
+        'af' => 'Links belyn',
+        'en' => 'Align left',
+        'zu' => 'Hlela kwesokunxele',
+        'xh' => 'Lungelelanisa ekhohlo',
+        'pt' => 'Alinhar à esquerda',
+        'st' => 'Lekanya ka ho le letšehali'
+    ],
+    'align_center' => [
+        'af' => 'Sentreer',
+        'en' => 'Center',
+        'zu' => 'Maphakathi',
+        'xh' => 'Embindini',
+        'pt' => 'Centralizar',
+        'st' => 'Bohareng'
+    ],
+    'align_right' => [
+        'af' => 'Regs belyn',
+        'en' => 'Align right',
+        'zu' => 'Hlela kwesokudla',
+        'xh' => 'Lungelelanisa ekunene',
+        'pt' => 'Alinhar à direita',
+        'st' => 'Lekanya ka ho le letona'
+    ],
+    'bullet_list' => [
+        'af' => 'Kolpuntlys',
+        'en' => 'Bullet list',
+        'zu' => 'Uhlu lwamabhulethi',
+        'xh' => 'Uluhlu lweebhulethi',
+        'pt' => 'Lista com marcadores',
+        'st' => 'Lethathamo la matheba'
+    ],
+    'numbered_list' => [
+        'af' => 'Genommerde lys',
+        'en' => 'Numbered list',
+        'zu' => 'Uhlu olunezinombolo',
+        'xh' => 'Uluhlu olunamanani',
+        'pt' => 'Lista numerada',
+        'st' => 'Lethathamo le nang le linomoro'
+    ],
     'book' => [
         'af' => 'Boek',
         'en' => 'Book',
