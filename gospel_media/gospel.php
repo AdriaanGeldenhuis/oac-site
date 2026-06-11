@@ -108,7 +108,7 @@ if (!$hasAccess) {
 // Check posting rights
 $allowPost = $roomObj ? user_can_post_in_room($pdo, $userId, $roomObj) : false;
 
-$VER = '2.2.0';
+$VER = '2.3.0';
 ?><!doctype html>
 <html lang="<?= $pageLang ?>">
 <head>
@@ -167,6 +167,9 @@ $VER = '2.2.0';
             datetime: <?= json_encode(__t('js_datetime', $pageLang)) ?>,
             place: <?= json_encode(__t('js_place', $pageLang)) ?>,
             remove: <?= json_encode(__t('js_remove', $pageLang)) ?>,
+            reactions: <?= json_encode(__t('js_reactions', $pageLang)) ?>,
+            no_reactions: <?= json_encode(__t('js_no_reactions', $pageLang)) ?>,
+            all: <?= json_encode(__t('js_all', $pageLang)) ?>,
             // Rooms menu translations
             rooms: <?= json_encode(__t('js_rooms', $pageLang)) ?>,
             manage_rooms: <?= json_encode(__t('js_manage_rooms', $pageLang)) ?>,

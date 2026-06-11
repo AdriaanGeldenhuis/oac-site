@@ -4442,6 +4442,30 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Inscrita',
         'st' => 'O kene'
     ],
+    'js_reactions' => [
+        'af' => 'Reaksies',
+        'en' => 'Reactions',
+        'zu' => 'Ukusabela',
+        'xh' => 'Iimpendulo',
+        'pt' => 'Reações',
+        'st' => 'Likarabo'
+    ],
+    'js_no_reactions' => [
+        'af' => 'Nog geen reaksies nie',
+        'en' => 'No reactions yet',
+        'zu' => 'Akukho ukusabela okwamanje',
+        'xh' => 'Akukho zimpendulo okwangoku',
+        'pt' => 'Ainda não há reações',
+        'st' => 'Ha ho likarabo hajoale'
+    ],
+    'js_all' => [
+        'af' => 'Almal',
+        'en' => 'All',
+        'zu' => 'Konke',
+        'xh' => 'Zonke',
+        'pt' => 'Todos',
+        'st' => 'Tsohle'
+    ],
 
     // DAILY THOUGHT TRANSLATIONS
     'thought_of_day' => [

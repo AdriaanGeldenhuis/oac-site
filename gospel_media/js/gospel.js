@@ -127,13 +127,18 @@
   }
 
   // ===== DATE FORMATTING =====
+  // Show weekday names in the user's chosen language (falls back to English
+  // if the browser doesn't ship that locale)
+  const LOCALE_MAP = { af: 'af-ZA', en: 'en-GB', zu: 'zu-ZA', xh: 'xh-ZA', pt: 'pt-PT', st: 'st-ZA' };
+  const DATE_LOCALES = [LOCALE_MAP[window.PAGE_LANG || 'af'] || 'af-ZA', 'en-GB'];
+
   const fmtDT = s => {
     try {
       // MySQL "YYYY-MM-DD HH:MM:SS" is not parseable on Safari/iOS - normalise to ISO
       const iso = (typeof s === 'string') ? s.replace(' ', 'T') : s;
       const d = new Date(iso);
       if (isNaN(d.getTime())) return s || '';
-      const day = d.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
+      const day = d.toLocaleDateString(DATE_LOCALES, { weekday: 'short' }).toUpperCase();
       const date = d.toLocaleDateString('en-GB', { year: '2-digit', month: '2-digit', day: '2-digit' });
       const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
       return `${day} ${date}, ${time}`;
@@ -194,19 +199,35 @@
     // Textarea
     const ta = ce('textarea', { class: 'composer-textarea', placeholder: T('type_message') });
 
-    // File input + preview
+    // File input + preview (each preview gets a remove button, like the edit modal)
     const fileInput = ce('input', { type: 'file', accept: 'image/*', multiple: 'multiple' });
     fileInput.style.display = 'none';
     const preview = ce('div', { class: 'composer-preview' });
 
-    fileInput.addEventListener('change', () => {
+    function renderPreviews() {
       preview.innerHTML = '';
-      Array.from(fileInput.files || []).forEach(f => {
+      Array.from(fileInput.files || []).forEach((f, idx) => {
+        const box = ce('div', { class: 'modal-img-box' });
+
         const img = ce('img', { class: 'composer-preview-img' });
         img.src = URL.createObjectURL(f);
-        preview.appendChild(img);
+
+        const x = ce('button', { type: 'button', class: 'modal-img-del', text: '×', title: T('remove') });
+        x.addEventListener('click', () => {
+          const dt = new DataTransfer();
+          Array.from(fileInput.files).forEach((f2, i2) => {
+            if (i2 !== idx) dt.items.add(f2);
+          });
+          fileInput.files = dt.files;
+          renderPreviews();
+        });
+
+        box.append(img, x);
+        preview.appendChild(box);
       });
-    });
+    }
+
+    fileInput.addEventListener('change', renderPreviews);
 
     // Actions
     const actions = ce('div', { class: 'composer-actions' });
@@ -226,7 +247,9 @@
 
     submitBtn.addEventListener('click', async () => {
       const text = (ta.value || '').trim();
-      if (!text) { alert(T('type_message')); return; }
+      const hasImages = fileInput.files && fileInput.files.length > 0;
+      // A post needs text or at least one photo
+      if (!text && !hasImages) { alert(T('type_message')); return; }
 
       const fd = new FormData();
       fd.append('room_id', ROOM_ID);
@@ -279,17 +302,21 @@
     const bH = ce('button', { type: 'button', class: 'btn-react heart-btn' });
     if (myReacts.includes('heart')) bH.classList.add('reacted');
     const heartIcon = ce('img', { class: 'icon', src: '/assets/icons/heart.png', alt: 'heart' });
-    const heartCount = ce('span', { class: 'badge count-heart', text: (p.heart_count || 0) });
+    const heartCount = ce('span', { class: 'badge badge-clickable count-heart', text: (p.heart_count || 0), title: T('reactions') });
     bH.append(heartIcon, heartCount);
 
     const bP = ce('button', { type: 'button', class: 'btn-react pray-btn' });
     if (myReacts.includes('pray')) bP.classList.add('reacted');
     const prayIcon = ce('img', { class: 'icon', src: '/assets/icons/amen.png', alt: 'amen' });
-    const prayCount = ce('span', { class: 'badge count-pray', text: (p.pray_count || 0) });
+    const prayCount = ce('span', { class: 'badge badge-clickable count-pray', text: (p.pray_count || 0), title: T('reactions') });
     bP.append(prayIcon, prayCount);
 
     bH.addEventListener('click', () => toggleReact(p.id, 'heart', bH, bP));
     bP.addEventListener('click', () => toggleReact(p.id, 'pray', bH, bP));
+
+    // WhatsApp/FB style: tapping the count shows who reacted
+    heartCount.addEventListener('click', (e) => { e.stopPropagation(); openReactionsModal(p); });
+    prayCount.addEventListener('click', (e) => { e.stopPropagation(); openReactionsModal(p); });
 
     const bC = ce('button', { type: 'button', class: 'btn-react comments-btn' });
     bC.innerHTML = `
@@ -304,27 +331,136 @@
     card.appendChild(bar);
   }
 
+  const reactInFlight = new Set();
+
   async function toggleReact(post_id, type, bH, bP) {
+    const key = post_id + ':' + type;
+    if (reactInFlight.has(key)) return;
+    reactInFlight.add(key);
+
     const btn = type === 'heart' ? bH : bP;
-    btn.disabled = true;
+    const countEl = btn.querySelector('.badge');
+
+    // Optimistic update so the button feels instant; rolled back on failure
+    const wasReacted = btn.classList.contains('reacted');
+    const prevCount = parseInt(countEl.textContent || '0', 10);
+    btn.classList.toggle('reacted');
+    countEl.textContent = Math.max(0, prevCount + (wasReacted ? -1 : 1));
 
     const fd = new FormData();
     fd.append('post_id', post_id);
     fd.append('type', type);
 
     const j = await fetchJSON('/gospel_media/api/posts/react.php', { method: 'POST', body: fd });
-    btn.disabled = false;
-    if (!(j && j.ok)) return;
+    reactInFlight.delete(key);
 
-    // Toggle active state
-    btn.classList.toggle('reacted');
+    if (!(j && j.ok)) {
+      btn.classList.toggle('reacted');
+      countEl.textContent = prevCount;
+      return;
+    }
 
+    // Sync with the authoritative server counts
     if (bH && typeof j.heart_count !== 'undefined') {
       bH.querySelector('.count-heart').textContent = j.heart_count;
     }
     if (bP && typeof j.pray_count !== 'undefined') {
       bP.querySelector('.count-pray').textContent = j.pray_count;
     }
+
+    // Keep the cached post in step for re-renders and the reactions modal
+    const p = POST_MAP.get(String(post_id));
+    if (p) {
+      if (typeof j.heart_count !== 'undefined') p.heart_count = j.heart_count;
+      if (typeof j.pray_count !== 'undefined') p.pray_count = j.pray_count;
+      const mine = Array.isArray(p.my_reactions) ? p.my_reactions : (p.my_reactions = []);
+      const idx = mine.indexOf(type);
+      if (wasReacted && idx !== -1) mine.splice(idx, 1);
+      if (!wasReacted && idx === -1) mine.push(type);
+    }
+  }
+
+  // ===== WHO REACTED (WhatsApp/FB style) =====
+  function openReactionsModal(p) {
+    const back = ce('div', { class: 'modal-backdrop' });
+    back.addEventListener('click', (e) => { if (e.target === back) back.remove(); });
+
+    const panel = ce('div', { class: 'modal-panel reactions-panel' });
+    const title = ce('h2', { text: T('reactions') });
+
+    const tabs = ce('div', { class: 'reactions-tabs' });
+    const list = ce('div', { class: 'reactions-list' });
+    list.innerHTML = '<p class="muted">' + T('loading') + '</p>';
+
+    const actions = ce('div', { class: 'modal-actions' });
+    const closeBtn = ce('button', { class: 'modal-btn', type: 'button', text: T('back') });
+    closeBtn.addEventListener('click', () => back.remove());
+    actions.appendChild(closeBtn);
+
+    panel.append(title, tabs, list, actions);
+    back.appendChild(panel);
+    document.body.appendChild(back);
+
+    fetchJSON('/gospel_media/api/posts/reactions.php?post_id=' + encodeURIComponent(p.id)).then(j => {
+      const all = (j && j.ok && Array.isArray(j.reactions)) ? j.reactions : [];
+
+      if (!all.length) {
+        list.innerHTML = '<p class="muted">' + T('no_reactions') + '</p>';
+        return;
+      }
+
+      const hearts = all.filter(r => r.type === 'heart');
+      const prays = all.filter(r => r.type === 'pray');
+
+      function renderList(rows) {
+        list.innerHTML = '';
+        if (!rows.length) {
+          list.innerHTML = '<p class="muted">' + T('no_reactions') + '</p>';
+          return;
+        }
+        rows.forEach(r => {
+          const item = ce('div', { class: 'reaction-item' });
+
+          let avatar;
+          if (r.photo) {
+            avatar = ce('img', { class: 'comment-avatar', alt: 'avatar' });
+            avatar.src = r.photo;
+          } else {
+            avatar = ce('div', { class: 'comment-avatar gm-avatar-initials gm-avatar-initials-sm' });
+            avatar.textContent = r.initials || '??';
+          }
+
+          const name = ce('a', {
+            class: 'reaction-name',
+            href: '/profile/index.php?u=' + encodeURIComponent(r.user_id),
+            text: computeDisplayName(r)
+          });
+
+          const emoji = ce('span', { class: 'reaction-emoji', text: r.type === 'heart' ? '❤️' : '🙏' });
+
+          item.append(avatar, name, emoji);
+          list.appendChild(item);
+        });
+      }
+
+      function makeTab(label, rows) {
+        const b = ce('button', { type: 'button', class: 'reactions-tab', text: label });
+        b.addEventListener('click', () => {
+          $$('.reactions-tab', tabs).forEach(t => t.classList.remove('active'));
+          b.classList.add('active');
+          renderList(rows);
+        });
+        return b;
+      }
+
+      const tabAll = makeTab(T('all') + ' ' + all.length, all);
+      tabAll.classList.add('active');
+      tabs.appendChild(tabAll);
+      if (hearts.length) tabs.appendChild(makeTab('❤️ ' + hearts.length, hearts));
+      if (prays.length) tabs.appendChild(makeTab('🙏 ' + prays.length, prays));
+
+      renderList(all);
+    });
   }
 
   // ===== COMMENTS =====
@@ -444,8 +580,15 @@
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
       });
+      // WhatsApp style: Enter sends, Shift+Enter makes a new line
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (submit && !submit.disabled) submit.click();
+        }
+      });
     }
-    
+
     await loadComments(postId, list);
     
     if (submit) {
@@ -686,6 +829,20 @@
       if (e.key === 'ArrowRight') show((idx + 1) % attachments.length);
     }
     document.addEventListener('keydown', onKey);
+
+    // Swipe left/right between photos on touch devices
+    let touchX = null;
+    backdrop.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) touchX = e.touches[0].clientX;
+    }, { passive: true });
+    backdrop.addEventListener('touchend', (e) => {
+      if (touchX === null || attachments.length < 2) { touchX = null; return; }
+      const dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) < 40) return;
+      if (dx < 0) show((idx + 1) % attachments.length);
+      else show((idx - 1 + attachments.length) % attachments.length);
+    }, { passive: true });
 
     document.body.appendChild(backdrop);
     show(startIdx);

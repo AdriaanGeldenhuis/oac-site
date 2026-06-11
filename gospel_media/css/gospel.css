@@ -1263,6 +1263,104 @@ html {
   transition: var(--transition);
 }
 
+/* Counts that open the "who reacted" list */
+.badge-clickable {
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.badge-clickable:hover {
+  background: rgba(183, 110, 121, 0.18);
+  color: var(--color-rosegold);
+  text-decoration: underline;
+}
+
+/* Pop animation when a reaction is switched on */
+.btn-react.reacted .icon {
+  animation: react-pop 0.3s ease;
+}
+
+@keyframes react-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+/* ===== WHO REACTED MODAL ===== */
+.reactions-panel {
+  max-width: 420px;
+}
+
+.reactions-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.reactions-tab {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--section-border);
+  border-radius: 20px;
+  color: var(--btn-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.reactions-tab:hover {
+  border-color: var(--color-rosegold);
+}
+
+.reactions-tab.active {
+  border-color: var(--color-rosegold);
+  background: rgba(183, 110, 121, 0.18);
+  color: var(--color-rosegold);
+}
+
+.reactions-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.reaction-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  transition: var(--transition);
+}
+
+.reaction-item:hover {
+  background: rgba(183, 110, 121, 0.1);
+}
+
+.reaction-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reaction-name:hover {
+  color: var(--color-rosegold);
+}
+
+.reaction-emoji {
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+
 /* ===== COMMENTS SECTION ===== */
 .comments-section {
   margin-top: 20px;

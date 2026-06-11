@@ -460,9 +460,14 @@
           a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
 
           const badge = ce('span', 'rmx-badge auto', T('auto'));
-          
+
           row.appendChild(a);
           row.appendChild(badge);
+          // Whole row is tappable, not just the text
+          row.style.cursor = 'pointer';
+          row.addEventListener('click', function (e) {
+            if (!e.target.closest('a')) window.location.href = a.href;
+          });
           autoSection.appendChild(row);
         });
         
@@ -486,9 +491,14 @@
           a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
 
           const badge = ce('span', 'rmx-badge joined', T('joined_badge'));
-          
+
           row.appendChild(a);
           row.appendChild(badge);
+          // Whole row is tappable, not just the text
+          row.style.cursor = 'pointer';
+          row.addEventListener('click', function (e) {
+            if (!e.target.closest('a')) window.location.href = a.href;
+          });
           joinedSection.appendChild(row);
         });
         
@@ -512,6 +522,10 @@
         e.preventDefault();
         openOverlay();
       }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeOverlay();
     });
   }
 
