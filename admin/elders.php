@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $userId = (int)$_SESSION['user_id'];
-$lang = $_SESSION['language'] ?? 'af';
+$lang = validate_language((string)($_SESSION['language'] ?? 'af'));
 
 // Check Elder permissions
 $stmt = $pdo->prepare('SELECT amp_id, town_id FROM users WHERE id = ? LIMIT 1');
@@ -42,8 +42,11 @@ if ($townId) {
     }
 }
 
-function slug($s) {
-    return preg_replace('/[^a-z0-9]+/', '_', strtolower(trim($s)));
+// MUST match the slug logic in welcome.php and save_teaching.php
+function slug(string $s): string {
+    $s = strtolower(trim($s));
+    $s = preg_replace('/[^a-z0-9]+/', '_', $s);
+    return trim($s, '_') ?: 'unknown';
 }
 
 $provinceSlug = slug($provinceName);
@@ -86,7 +89,8 @@ $defaultContent = [
 
 foreach (SUPPORTED_LANGS as $code) {
     $file = $contentFiles[$code];
-    $contents[$code] = file_exists($file) ? file_get_contents($file) : $defaultContent[$code];
+    $loaded = file_exists($file) ? file_get_contents($file) : false;
+    $contents[$code] = ($loaded !== false && trim($loaded) !== '') ? $loaded : $defaultContent[$code];
 }
 
 function t(string $key): string {
@@ -879,7 +883,6 @@ $siteColors = [
 
         // Configuration
         const CONFIG = {
-            townId: <?= $townId ?? 'null' ?>,
             supportedLangs: <?= json_encode(SUPPORTED_LANGS) ?>,
             bibleFiles: <?= json_encode(BIBLE_FILES) ?>,
             langNames: <?= json_encode(LANG_NAMES) ?>
@@ -898,44 +901,6 @@ $siteColors = [
 
         // Current editor getter
         const getCurrentEditor = () => editors[currentLang];
-
-        // ===== LANGUAGE DETECTION =====
-        function detectLanguage(text) {
-            // Common words in each language
-            const markers = {
-                af: ['die', 'en', 'van', 'het', 'ons', 'met', 'is', 'dat', 'nie', 'vir', 'wat', 'sal', 'kan', 'hul', 'ook'],
-                en: ['the', 'and', 'of', 'to', 'is', 'in', 'that', 'for', 'with', 'was', 'are', 'have', 'this', 'will', 'but'],
-                zu: ['ukuthi', 'futhi', 'yena', 'kwa', 'ngi', 'uma', 'yabo', 'bonke', 'wena', 'ukuba'],
-                xh: ['ukuba', 'futhi', 'yena', 'kwa', 'ndi', 'ukuthi', 'wabo', 'bonke', 'wena', 'ukuba'],
-                pt: ['que', 'de', 'para', 'com', 'uma', 'seu', 'sua', 'como', 'mais', 'quando', 'esse', 'esta']
-            };
-
-            const words = text.toLowerCase().split(/\s+/);
-            const scores = {};
-
-            CONFIG.supportedLangs.forEach(lang => {
-                scores[lang] = 0;
-                markers[lang].forEach(marker => {
-                    words.forEach(word => {
-                        if (word === marker || word.startsWith(marker)) {
-                            scores[lang]++;
-                        }
-                    });
-                });
-            });
-
-            // Find highest score
-            let detected = 'af';
-            let maxScore = 0;
-            Object.keys(scores).forEach(lang => {
-                if (scores[lang] > maxScore) {
-                    maxScore = scores[lang];
-                    detected = lang;
-                }
-            });
-
-            return detected;
-        }
 
         // ===== PASTE HANDLER - Plain paste, user chooses formatting =====
         Object.values(editors).forEach(ed => {
@@ -1521,7 +1486,6 @@ $siteColors = [
                         fd.append('content_' + code, editors[code].innerHTML);
                     }
                 });
-                fd.append('town_id', CONFIG.townId);
 
                 const res = await fetch('/admin/api/elders/save_teaching.php', { method: 'POST', body: fd });
                 const data = await res.json();

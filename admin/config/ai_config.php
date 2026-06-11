@@ -116,6 +116,42 @@ function openai_chat(array $messages): array {
 }
 
 // =============================================================================
+// HELPERS
+// =============================================================================
+
+/**
+ * Check whether a user holds an Elder-or-higher office (amp_id 1-5).
+ * Used to gate the AI endpoints so only elders can spend API credits.
+ */
+function ai_user_is_elder(PDO $pdo, ?int $userId): bool {
+    if (!$userId) {
+        return false;
+    }
+    try {
+        $stmt = $pdo->prepare('SELECT amp_id FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $ampId = (int)($row['amp_id'] ?? 0);
+        return $ampId >= 1 && $ampId <= 5;
+    } catch (Throwable $e) {
+        error_log('ai_user_is_elder: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Strip markdown code fences (```html ... ```) that models sometimes
+ * wrap around HTML output.
+ */
+function ai_clean_html_output(string $html): string {
+    $html = trim($html);
+    if (preg_match('/^```[a-z]*\s*(.*?)\s*```$/is', $html, $m)) {
+        $html = $m[1];
+    }
+    return trim($html);
+}
+
+// =============================================================================
 // BIBLE DATA LOADER
 // =============================================================================
 

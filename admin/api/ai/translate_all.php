@@ -96,6 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Only elders (amp_id 1-5) may use the AI endpoints
+if (!ai_user_is_elder($pdo, auth_user_id())) {
+    ob_end_clean();
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
+    exit;
+}
+
 // Check API key is configured
 if (!defined('OPENAI_API_KEY') || OPENAI_API_KEY === '') {
     ob_end_clean();
@@ -147,13 +155,14 @@ if ($sourceLang === $targetLang) {
     exit;
 }
 
-// Language names for prompts
+// Full language names for prompts - must cover EVERY supported language
 $langNames = [
     'af' => 'Afrikaans',
     'en' => 'English',
-    'zu' => 'isiZulu',
-    'xh' => 'isiXhosa',
-    'pt' => 'Portuguese'
+    'zu' => 'isiZulu (Zulu)',
+    'xh' => 'isiXhosa (Xhosa)',
+    'pt' => 'Portuguese',
+    'st' => 'Sesotho (Southern Sotho)'
 ];
 
 // Extract verse references to preserve them
@@ -187,7 +196,7 @@ try {
     error_log('Calling OpenAI API for ' . $targetLang . '...');
     $data = openai_chat($messages);
     error_log('OpenAI response received for ' . $targetLang);
-    $translated = $data['choices'][0]['message']['content'] ?? '';
+    $translated = ai_clean_html_output($data['choices'][0]['message']['content'] ?? '');
 
     if ($translated === '') {
         error_log('ERROR: Empty translation for ' . $targetLang);
