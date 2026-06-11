@@ -275,9 +275,10 @@ $highlightColors = [
         }
 
         .tool-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
+            background: rgba(232, 180, 168, 0.16);
+            color: var(--primary);
+            border-color: rgba(232, 180, 168, 0.55);
+            box-shadow: 0 0 10px rgba(232, 180, 168, 0.18);
         }
 
         .sep {
@@ -556,13 +557,39 @@ $highlightColors = [
             gap: 8px;
         }
 
+        /* Glossy dark ring with rose-gold border & text - matches the
+           welcome floating buttons (no washed-out pink fill) */
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-            color: white;
+            background:
+                radial-gradient(
+                    circle at 30% 30%,
+                    rgba(232, 180, 168, 0.18) 0%,
+                    rgba(232, 180, 168, 0.08) 55%,
+                    rgba(232, 180, 168, 0.03) 100%
+                ),
+                linear-gradient(160deg, var(--surface) 0%, var(--bg) 100%);
+            border: 1px solid rgba(232, 180, 168, 0.45);
+            color: var(--primary);
+            box-shadow:
+                0 8px 28px rgba(0, 0, 0, 0.45),
+                0 0 18px rgba(232, 180, 168, 0.22),
+                inset 0 1px 0 rgba(255, 255, 255, 0.10);
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            border-color: var(--primary);
+            box-shadow:
+                0 12px 30px rgba(0, 0, 0, 0.5),
+                0 0 26px rgba(232, 180, 168, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+        [data-theme="light"] .btn-primary {
+            background: linear-gradient(180deg, #ffffff 0%, #f6f4f1 100%);
+            border-color: rgba(176, 96, 84, 0.45);
+            box-shadow:
+                0 2px 8px rgba(28, 22, 16, 0.08),
+                0 0 14px rgba(176, 96, 84, 0.12),
+                inset 0 1.5px 0 #ffffff;
         }
 
         .btn:disabled, .tool-btn:disabled {
@@ -776,7 +803,7 @@ $highlightColors = [
 
         .lang-tab {
             padding: 8px 16px;
-            border: none;
+            border: 1px solid transparent;
             background: transparent;
             color: var(--text-dim);
             font-weight: 500;
@@ -787,8 +814,10 @@ $highlightColors = [
         }
 
         .lang-tab.active {
-            background: var(--primary);
-            color: white;
+            background: rgba(232, 180, 168, 0.16);
+            border: 1px solid rgba(232, 180, 168, 0.55);
+            color: var(--primary);
+            box-shadow: 0 0 10px rgba(232, 180, 168, 0.18);
         }
 
         /* Green dot on tabs that already contain real content */

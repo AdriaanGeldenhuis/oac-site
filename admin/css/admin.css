@@ -412,18 +412,33 @@ html {
     0 10px 28px rgba(0, 0, 0, 0.55);
 }
 
+/* Active tab - glossy dark ring with rose-gold accents, exactly like
+   the welcome floating buttons (no washed-out pink fill) */
 .admin-tab.active {
-  background: linear-gradient(135deg, var(--rose-gold-dark), var(--rose-gold));
-  border-color: var(--rose-gold);
-  color: #fff;
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(232, 180, 168, 0.20) 0%,
+      rgba(232, 180, 168, 0.09) 55%,
+      rgba(232, 180, 168, 0.03) 100%
+    ),
+    linear-gradient(160deg, var(--bg-card) 0%, var(--bg-base) 100%);
+  border-color: rgba(232, 180, 168, 0.55);
+  color: var(--rose-gold);
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.45),
-    0 0 24px var(--glow-rose),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    0 0 18px var(--glow-rose),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.30);
 }
 
 .admin-tab.active svg {
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+  color: var(--rose-gold);
+  filter: drop-shadow(0 0 6px var(--glow-rose));
+}
+
+.admin-tab.active span {
+  font-weight: 600;
 }
 
 [data-theme="light"] .admin-tab {
@@ -464,9 +479,26 @@ html {
 }
 
 [data-theme="light"] .admin-tab.active {
-  background: linear-gradient(135deg, var(--rose-gold-dark), var(--rose-gold));
-  border-color: var(--rose-gold);
-  color: #fff;
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(176, 96, 84, 0.12) 0%,
+      rgba(176, 96, 84, 0.05) 55%,
+      rgba(176, 96, 84, 0.01) 100%
+    ),
+    linear-gradient(180deg, #ffffff 0%, #f6f4f1 100%);
+  border-color: rgba(176, 96, 84, 0.5);
+  color: var(--rose-gold-dark);
+  box-shadow:
+    0 1px 2px rgba(28, 22, 16, 0.06),
+    0 8px 20px rgba(28, 22, 16, 0.10),
+    0 0 16px var(--glow-rose),
+    inset 0 1.5px 0 #ffffff,
+    inset 0 -2px 4px rgba(28, 22, 16, 0.05);
+}
+
+[data-theme="light"] .admin-tab.active svg {
+  color: var(--rose-gold-dark);
 }
 
 /* Pending-count badge on a tab (mobile: pinned to the card corner) */
@@ -490,11 +522,6 @@ html {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(217, 83, 79, 0.35);
 }
 
-.admin-tab.active .admin-tab-badge {
-  background: #fff;
-  color: var(--rose-gold-dark);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
 
 /* Desktop: one tidy row of pills with the icon next to the label */
 @media (min-width: 641px) {
@@ -884,28 +911,61 @@ p.admin-muted {
   transform: none;
 }
 
+/* Primary - glossy dark ring with rose-gold border & text, the same
+   recipe as the welcome floating buttons */
 .admin-btn-primary {
-  background: linear-gradient(135deg, var(--rose-gold-dark) 0%, var(--rose-gold) 100%);
-  color: #fff;
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(232, 180, 168, 0.18) 0%,
+      rgba(232, 180, 168, 0.08) 55%,
+      rgba(232, 180, 168, 0.03) 100%
+    ),
+    linear-gradient(160deg, var(--bg-card) 0%, var(--bg-base) 100%);
+  border-color: rgba(232, 180, 168, 0.45);
+  color: var(--rose-gold);
+  font-weight: 600;
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.4),
-    0 0 18px var(--glow-rose),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(232, 180, 168, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.30);
 }
 
 .admin-btn-primary:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: var(--rose-gold);
+  color: var(--rose-gold-light);
   box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.5),
-    0 0 26px var(--glow-rose),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 14px 36px rgba(0, 0, 0, 0.65),
+    0 0 28px rgba(232, 180, 168, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 [data-theme="light"] .admin-btn-primary {
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(176, 96, 84, 0.10) 0%,
+      rgba(176, 96, 84, 0.04) 55%,
+      rgba(176, 96, 84, 0.01) 100%
+    ),
+    linear-gradient(180deg, #ffffff 0%, #f6f4f1 100%);
+  border-color: rgba(176, 96, 84, 0.45);
+  color: var(--rose-gold-dark);
   box-shadow:
-    0 8px 20px rgba(28, 22, 16, 0.16),
-    0 0 16px var(--glow-rose),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 1px 2px rgba(28, 22, 16, 0.06),
+    0 8px 20px rgba(28, 22, 16, 0.10),
+    0 0 16px rgba(176, 96, 84, 0.12),
+    inset 0 1.5px 0 #ffffff,
+    inset 0 -2px 4px rgba(28, 22, 16, 0.05);
+}
+
+[data-theme="light"] .admin-btn-primary:hover {
+  box-shadow:
+    0 14px 30px rgba(169, 104, 96, 0.22),
+    0 0 26px rgba(176, 96, 84, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .admin-btn-secondary {
