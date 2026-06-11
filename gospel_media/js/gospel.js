@@ -906,6 +906,9 @@
 
     if (rows.length < FEED_LIMIT) feedDone = true;
 
+    // Newest loaded post id, used to detect brand-new posts while the page is open
+    if (reset && rows.length) feedNewestId = Number(rows[0].id) || 0;
+
     rows.forEach(p => {
       feed.appendChild(renderCard(p));
       feedLastId = p.id;
@@ -914,6 +917,35 @@
     // Set up infinite scroll sentinel
     setupScrollObserver(feed, roomId);
   }
+
+  // ===== NEW POSTS PILL (auto-check without reloading) =====
+  let feedNewestId = 0;
+  let newPostsPill = null;
+
+  function showNewPostsPill() {
+    if (newPostsPill) return;
+    newPostsPill = ce('button', { type: 'button', class: 'gm-new-posts-pill' });
+    newPostsPill.innerHTML = '&#8593; ' + esc(T('new_posts'));
+    newPostsPill.addEventListener('click', async () => {
+      newPostsPill.remove();
+      newPostsPill = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      await loadFeed(ROOM_ID, true);
+    });
+    document.body.appendChild(newPostsPill);
+  }
+
+  async function checkForNewPosts() {
+    if (document.hidden || feedLoading || !feedNewestId || newPostsPill) return;
+    try {
+      // peek=1 keeps this check from marking the room as read
+      const j = await fetchJSON('/gospel_media/api/posts/list.php?room_id=' + encodeURIComponent(ROOM_ID) + '&limit=1&peek=1');
+      const rows = Array.isArray(j) ? j : [];
+      if (rows.length && Number(rows[0].id) > feedNewestId) showNewPostsPill();
+    } catch (e) { /* network hiccup - try again next round */ }
+  }
+
+  setInterval(checkForNewPosts, 30000);
 
   function setupScrollObserver(feed, roomId) {
     if (scrollObserver) scrollObserver.disconnect();

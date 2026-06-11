@@ -623,6 +623,34 @@ html {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* ===== NEW POSTS PILL ===== */
+.gm-new-posts-pill {
+  position: fixed;
+  top: 86px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(183, 110, 121, 0.6);
+  background: linear-gradient(135deg, #b76e79 0%, #8a4f58 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 9500;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 14px rgba(183, 110, 121, 0.5);
+  animation: pill-in 0.25s ease-out;
+}
+
+.gm-new-posts-pill:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 20px rgba(183, 110, 121, 0.7);
+}
+
+@keyframes pill-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 .composer-input {
   flex: 1;
   min-width: 200px;

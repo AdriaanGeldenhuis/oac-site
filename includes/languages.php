@@ -4466,6 +4466,22 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Todos',
         'st' => 'Tsohle'
     ],
+    'js_new_posts' => [
+        'af' => 'Nuwe plasings',
+        'en' => 'New posts',
+        'zu' => 'Okuthunyelwe okusha',
+        'xh' => 'Izithuba ezintsha',
+        'pt' => 'Novas publicações',
+        'st' => 'Diphatlalatso tse ncha'
+    ],
+    'js_add_to_calendar' => [
+        'af' => 'Voeg by kalender',
+        'en' => 'Add to calendar',
+        'zu' => 'Engeza kukhalenda',
+        'xh' => 'Yongeza kwikhalenda',
+        'pt' => 'Adicionar ao calendário',
+        'st' => 'Kenya khalendareng'
+    ],
 
     // DAILY THOUGHT TRANSLATIONS
     'thought_of_day' => [
