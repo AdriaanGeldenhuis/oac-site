@@ -3433,6 +3433,14 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Pesquisar Canção',
         'st' => 'Batla Sefela'
     ],
+    'enter_song_number' => [
+        'af' => 'Tik liednommer in',
+        'en' => 'Enter song number',
+        'zu' => 'Faka inombolo yengoma',
+        'xh' => 'Faka inombolo yengoma',
+        'pt' => 'Digite o número da canção',
+        'st' => 'Kenya nomoro ea sefela'
+    ],
     'hymn' => [
         'af' => 'Lied',
         'en' => 'Hymn',

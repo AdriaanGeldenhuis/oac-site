@@ -182,6 +182,17 @@ $VER = time();
           </svg>
         </button>
       </div>
+      <div class="se-overlay-search">
+        <input type="text" id="songNumberInput" class="se-number-input"
+               inputmode="numeric" pattern="[0-9]*" maxlength="4"
+               placeholder="<?= t('enter_song_number') ?>" autocomplete="off"
+               aria-label="<?= t('enter_song_number') ?>">
+        <button class="se-number-go" id="songNumberGo" aria-label="<?= t('search_song') ?>">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
       <div class="se-overlay-grid" id="songPickerGrid">
         <?php foreach ($allSongNumbers as $songNumber): ?>
           <?php $songNumberStr = (string)$songNumber; ?>
