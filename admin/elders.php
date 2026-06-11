@@ -441,6 +441,7 @@ $siteColors = [
         .status.saving { border-color: var(--warning); color: var(--warning); }
         .status.saved { border-color: var(--success); color: var(--success); }
         .status.error { border-color: var(--error); color: var(--error); }
+        .status.unsaved { border-color: var(--warning); color: var(--warning); }
 
         .btn {
             padding: 12px 24px;
@@ -462,6 +463,13 @@ $siteColors = [
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled, .tool-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         /* ===== TRANSLATION OVERLAY ===== */
@@ -683,12 +691,28 @@ $siteColors = [
             color: white;
         }
 
+        /* Green dot on tabs that already contain real content */
+        .lang-tab.filled::after {
+            content: '';
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            margin-left: 7px;
+            vertical-align: middle;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 20px; }
             .toolbar { padding: 10px; }
             .sep { display: none; }
             .form-grid { grid-template-columns: 1fr; }
+            .lang-tabs { flex-wrap: wrap; }
+            .editor { padding: 20px; min-height: 400px; }
+            .actions { flex-direction: column; gap: 14px; }
+            .actions .btn { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -885,14 +909,37 @@ $siteColors = [
         const CONFIG = {
             supportedLangs: <?= json_encode(SUPPORTED_LANGS) ?>,
             bibleFiles: <?= json_encode(BIBLE_FILES) ?>,
-            langNames: <?= json_encode(LANG_NAMES) ?>
+            langNames: <?= json_encode(LANG_NAMES) ?>,
+            placeholders: <?= json_encode(array_map('strip_tags', $defaultContent), JSON_UNESCAPED_UNICODE) ?>
         };
+
+        // Translated UI strings
+        const STR = <?= json_encode([
+            'saving' => t('saving'),
+            'saved' => t('saved'),
+            'save_failed' => t('save_failed'),
+            'unsaved_changes' => t('unsaved_changes'),
+            'translate_confirm' => t('translate_confirm'),
+            'translations_done_saved' => t('translations_done_saved'),
+            'improving' => t('improving'),
+            'improved' => t('improved'),
+            'verse_inserted' => t('verse_inserted'),
+            'bible_not_available' => t('bible_not_available'),
+            'select_all_fields' => t('select_all_fields'),
+            'editor_empty' => t('editor_empty'),
+            'translation_stopped' => t('translation_stopped'),
+            'languages_completed' => t('languages_completed'),
+            'ready_to_save' => t('ready_to_save'),
+            'select' => t('select'),
+            'improve' => t('improve')
+        ], JSON_UNESCAPED_UNICODE) ?>;
 
         // State
         let currentLang = 'af';
         let editors = {};
         let bibles = {};
         let hasChanges = false;
+        let isSaving = false;
 
         // Get all editors
         CONFIG.supportedLangs.forEach(code => {
@@ -902,12 +949,33 @@ $siteColors = [
         // Current editor getter
         const getCurrentEditor = () => editors[currentLang];
 
+        // Mark content as changed and reflect it in the status badge
+        function markUnsaved() {
+            hasChanges = true;
+            showStatus('unsaved', STR.unsaved_changes);
+        }
+
+        // Does this editor contain real content (not empty, not the placeholder)?
+        function editorHasContent(code) {
+            const ed = editors[code];
+            if (!ed) return false;
+            const text = ed.textContent.trim();
+            return text !== '' && text !== (CONFIG.placeholders[code] || '').trim();
+        }
+
+        // Green dot on tabs that already have real content
+        function updateTabIndicators() {
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.toggle('filled', editorHasContent(tab.dataset.lang));
+            });
+        }
+
         // ===== PASTE HANDLER - Plain paste, user chooses formatting =====
         Object.values(editors).forEach(ed => {
             if (!ed) return;
             ed.addEventListener('paste', function(e) {
                 e.preventDefault();
-                hasChanges = true;
+                markUnsaved();
 
                 const html = e.clipboardData.getData('text/html');
                 const text = e.clipboardData.getData('text/plain');
@@ -983,7 +1051,10 @@ $siteColors = [
             });
 
             // Track changes
-            ed.addEventListener('input', () => hasChanges = true);
+            ed.addEventListener('input', () => {
+                markUnsaved();
+                updateTabIndicators();
+            });
         });
 
         // ===== LANGUAGE TABS =====
@@ -1027,7 +1098,7 @@ $siteColors = [
                 range.collapse(true);
                 sel.removeAllRanges();
                 sel.addRange(range);
-                hasChanges = true;
+                markUnsaved();
                 return;
             }
 
@@ -1078,19 +1149,19 @@ $siteColors = [
                     sel.removeAllRanges();
                     sel.addRange(range);
 
-                    hasChanges = true;
+                    markUnsaved();
                     console.log('Changed block from', node.tagName, 'to:', newTag);
                 } else if (!isBlock) {
                     // Wrap current content in the new tag
                     document.execCommand('formatBlock', false, newTag);
-                    hasChanges = true;
+                    markUnsaved();
                     console.log('Wrapped content in:', newTag);
                 }
             } else {
                 // Fallback: use execCommand
                 try {
                     document.execCommand('formatBlock', false, newTag);
-                    hasChanges = true;
+                    markUnsaved();
                     console.log('Used execCommand for:', newTag);
                 } catch(e) {
                     console.error('formatBlock failed:', e);
@@ -1132,7 +1203,7 @@ $siteColors = [
             span.appendChild(contents);
             range.insertNode(span);
             getCurrentEditor().focus();
-            hasChanges = true;
+            markUnsaved();
         };
 
         // Line spacing
@@ -1150,7 +1221,7 @@ $siteColors = [
                 node = node.parentNode;
             }
             getCurrentEditor().focus();
-            hasChanges = true;
+            markUnsaved();
         };
 
         // Color swatches
@@ -1184,14 +1255,14 @@ $siteColors = [
         document.getElementById('btn-verse').onclick = async () => {
             const bible = await loadBible(currentLang);
             if (!bible) {
-                alert('Bible not available for this language');
+                alert(STR.bible_not_available);
                 return;
             }
 
             const modal = document.getElementById('verse-modal');
             const bookSel = document.getElementById('v-book');
 
-            bookSel.innerHTML = '<option value="">Select...</option>';
+            bookSel.innerHTML = '<option value="">' + STR.select + '...</option>';
             Object.keys(bible).forEach(book => {
                 const opt = document.createElement('option');
                 opt.value = book;
@@ -1213,7 +1284,7 @@ $siteColors = [
             const book = this.value;
             const chapterSel = document.getElementById('v-chapter');
 
-            chapterSel.innerHTML = '<option value="">Select...</option>';
+            chapterSel.innerHTML = '<option value="">' + STR.select + '...</option>';
             document.getElementById('v-from').innerHTML = '';
             document.getElementById('v-to').innerHTML = '';
             document.getElementById('v-preview').innerHTML = '';
@@ -1251,8 +1322,8 @@ $siteColors = [
             const fromSel = document.getElementById('v-from');
             const toSel = document.getElementById('v-to');
 
-            fromSel.innerHTML = '<option value="">Select...</option>';
-            toSel.innerHTML = '<option value="">Select...</option>';
+            fromSel.innerHTML = '<option value="">' + STR.select + '...</option>';
+            toSel.innerHTML = '<option value="">' + STR.select + '...</option>';
             document.getElementById('v-preview').innerHTML = '';
 
             if (book && chapter) {
@@ -1307,7 +1378,7 @@ $siteColors = [
             const to = parseInt(document.getElementById('v-to').value) || from;
 
             if (!book || !chapter || !from) {
-                alert('Please select all fields');
+                alert(STR.select_all_fields);
                 return;
             }
 
@@ -1322,8 +1393,9 @@ $siteColors = [
 
             execCmd('insertHTML', html);
             document.getElementById('verse-modal').classList.remove('show');
-            showStatus('saved', 'Verse inserted!');
+            showStatus('saved', STR.verse_inserted);
             hasChanges = true;
+            updateTabIndicators();
         };
 
         // Modal close
@@ -1341,12 +1413,15 @@ $siteColors = [
         document.getElementById('btn-improve').onclick = async () => {
             const editor = getCurrentEditor();
             const content = editor.innerHTML;
-            if (!content.trim()) return;
+            if (!editorHasContent(currentLang)) {
+                showStatus('error', STR.editor_empty);
+                return;
+            }
 
             const btn = document.getElementById('btn-improve');
             btn.disabled = true;
-            btn.textContent = 'Improving...';
-            showStatus('saving', 'Improving...');
+            btn.textContent = STR.improving;
+            showStatus('saving', STR.improving);
 
             try {
                 const fd = new URLSearchParams();
@@ -1358,26 +1433,34 @@ $siteColors = [
 
                 if (data.success) {
                     editor.innerHTML = data.improved;
-                    showStatus('saved', 'Improved!');
+                    showStatus('saved', STR.improved);
                     hasChanges = true;
+                    updateTabIndicators();
                 } else {
-                    throw new Error(data.error || 'Improvement failed');
+                    throw new Error(data.error || STR.save_failed);
                 }
             } catch(e) {
                 showStatus('error', e.message);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Improve';
+                btn.textContent = STR.improve;
             }
         };
 
         // ===== TRANSLATE ALL - with full-screen overlay =====
-        // Translates ONE language at a time to avoid API timeout
+        // Translates ONE language at a time to avoid API timeout,
+        // then saves everything automatically.
         document.getElementById('btn-translate-all').onclick = async () => {
             // Get source content from CURRENT TAB (not detection - more reliable)
             const sourceEditor = getCurrentEditor();
             const content = sourceEditor.innerHTML;
-            if (!content.trim()) return;
+            if (!editorHasContent(currentLang)) {
+                showStatus('error', STR.editor_empty);
+                return;
+            }
+
+            // The other tabs get overwritten - make sure the elder means it
+            if (!confirm(STR.translate_confirm)) return;
 
             // Use current tab as source language (user is on this tab, so content is in this language)
             const sourceLang = currentLang;
@@ -1385,6 +1468,8 @@ $siteColors = [
 
             // Show overlay
             const overlay = document.getElementById('translate-overlay');
+            const overlayText = overlay.querySelector('.translate-text');
+            const overlayTextDefault = overlayText.textContent;
             overlay.classList.add('show');
 
             // Reset badges
@@ -1457,27 +1542,39 @@ $siteColors = [
                 }
 
                 hasChanges = true;
+                updateTabIndicators();
 
-                // Short delay to show success
-                await new Promise(r => setTimeout(r, 500));
-                showStatus('saved', 'All ' + successCount + ' translations complete!');
+                // Auto-save everything while the overlay is still up
+                overlayText.textContent = STR.saving;
+                const saved = await saveAll();
+                if (saved) {
+                    showStatus('saved', STR.translations_done_saved);
+                }
 
             } catch(e) {
                 console.error('Translation error:', e);
                 showStatus('error', (errorLang ? errorLang.toUpperCase() + ': ' : '') + e.message);
                 if (successCount > 0) {
-                    alert('Translation stopped at ' + (errorLang || 'unknown') + ': ' + e.message + '\n\n' + successCount + ' language(s) completed successfully.');
+                    alert(STR.translation_stopped + ' ' + (errorLang || '?').toUpperCase() + ': ' + e.message + '\n\n' + successCount + ' ' + STR.languages_completed);
                 } else {
-                    alert('Translation Error: ' + e.message);
+                    alert(e.message);
                 }
             } finally {
+                overlayText.textContent = overlayTextDefault;
                 overlay.classList.remove('show');
             }
         };
 
         // ===== SAVE ALL =====
-        document.getElementById('btn-save').onclick = async () => {
-            showStatus('saving', 'Saving...');
+        // Shared by the save button, Ctrl+S and the translate flow.
+        // Returns true on success.
+        async function saveAll() {
+            if (isSaving) return false;
+            isSaving = true;
+
+            const saveBtn = document.getElementById('btn-save');
+            saveBtn.disabled = true;
+            showStatus('saving', STR.saving);
 
             try {
                 const fd = new URLSearchParams();
@@ -1491,15 +1588,29 @@ $siteColors = [
                 const data = await res.json();
 
                 if (data.success) {
-                    showStatus('saved', 'Saved!');
+                    showStatus('saved', STR.saved);
                     hasChanges = false;
-                } else {
-                    throw new Error(data.error || 'Save failed');
+                    return true;
                 }
+                throw new Error(data.error || STR.save_failed);
             } catch(e) {
                 showStatus('error', e.message);
+                return false;
+            } finally {
+                isSaving = false;
+                saveBtn.disabled = false;
             }
-        };
+        }
+
+        document.getElementById('btn-save').onclick = () => saveAll();
+
+        // Ctrl+S / Cmd+S saves
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                saveAll();
+            }
+        });
 
         // ===== STATUS =====
         function showStatus(type, msg) {
@@ -1508,7 +1619,10 @@ $siteColors = [
             const text = document.getElementById('status-text');
 
             badge.className = 'status ' + type;
-            icon.innerHTML = type === 'saving' ? '&#9203;' : type === 'saved' ? '&#9989;' : '&#10060;';
+            icon.innerHTML = type === 'saving' ? '&#9203;'
+                : type === 'saved' ? '&#9989;'
+                : type === 'unsaved' ? '&#9998;'
+                : '&#10060;';
             text.textContent = msg;
         }
 
@@ -1522,6 +1636,7 @@ $siteColors = [
 
         // ===== INIT =====
         loadBible('af');
+        updateTabIndicators();
         console.log('Elder teaching editor initialized');
 
     })();
