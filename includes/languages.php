@@ -1326,6 +1326,126 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Lista numerada',
         'st' => 'Lethathamo le nang le linomoro'
     ],
+    'undo' => [
+        'af' => 'Ontdoen',
+        'en' => 'Undo',
+        'zu' => 'Hlehlisa',
+        'xh' => 'Buyisela umva',
+        'pt' => 'Desfazer',
+        'st' => 'Khutlisa'
+    ],
+    'redo' => [
+        'af' => 'Herdoen',
+        'en' => 'Redo',
+        'zu' => 'Phinda',
+        'xh' => 'Yenza kwakhona',
+        'pt' => 'Refazer',
+        'st' => 'Etsa hape'
+    ],
+    'strikethrough' => [
+        'af' => 'Deurhaal',
+        'en' => 'Strikethrough',
+        'zu' => 'Umugqa phakathi',
+        'xh' => 'Umgca phakathi',
+        'pt' => 'Tachado',
+        'st' => 'Mola bohareng'
+    ],
+    'clear_formatting' => [
+        'af' => 'Verwyder formatering',
+        'en' => 'Clear formatting',
+        'zu' => 'Susa ukufomatha',
+        'xh' => 'Susa ulungiselelo',
+        'pt' => 'Limpar formatação',
+        'st' => 'Tlosa sebopeho'
+    ],
+    'align_justify' => [
+        'af' => 'Volblok belyn',
+        'en' => 'Justify',
+        'zu' => 'Lungelelanisa zombili',
+        'xh' => 'Lungelelanisa macala omabini',
+        'pt' => 'Justificar',
+        'st' => 'Lekanya mahlakoreng'
+    ],
+    'indent' => [
+        'af' => 'Inkeep',
+        'en' => 'Indent',
+        'zu' => 'Sondeza phakathi',
+        'xh' => 'Sondeza phakathi',
+        'pt' => 'Aumentar recuo',
+        'st' => 'Sutumetsa ka hare'
+    ],
+    'outdent' => [
+        'af' => 'Uitkeep',
+        'en' => 'Outdent',
+        'zu' => 'Sondeza ngaphandle',
+        'xh' => 'Sondeza ngaphandle',
+        'pt' => 'Diminuir recuo',
+        'st' => 'Sutumetsa ka ntle'
+    ],
+    'quote_block' => [
+        'af' => 'Aanhaling',
+        'en' => 'Quote',
+        'zu' => 'Isicaphuno',
+        'xh' => 'Ucaphulo',
+        'pt' => 'Citação',
+        'st' => 'Qotsulo'
+    ],
+    'divider' => [
+        'af' => 'Skeidingslyn',
+        'en' => 'Divider',
+        'zu' => 'Umugqa wokwahlukanisa',
+        'xh' => 'Umgca wokwahlula',
+        'pt' => 'Linha divisória',
+        'st' => 'Mola o arolang'
+    ],
+    'highlight_color' => [
+        'af' => 'Merkkleur',
+        'en' => 'Highlight',
+        'zu' => 'Gqamisa',
+        'xh' => 'Qaqambisa',
+        'pt' => 'Realce',
+        'st' => 'Totobatsa'
+    ],
+    'remove_highlight' => [
+        'af' => 'Verwyder merk',
+        'en' => 'Remove highlight',
+        'zu' => 'Susa ukugqamisa',
+        'xh' => 'Susa uqaqambiso',
+        'pt' => 'Remover realce',
+        'st' => 'Tlosa totobatso'
+    ],
+    'insert_link' => [
+        'af' => 'Voeg skakel by',
+        'en' => 'Insert link',
+        'zu' => 'Faka isixhumanisi',
+        'xh' => 'Faka ikhonkco',
+        'pt' => 'Inserir link',
+        'st' => 'Kenya sehokelo'
+    ],
+    'remove_link' => [
+        'af' => 'Verwyder skakel',
+        'en' => 'Remove link',
+        'zu' => 'Susa isixhumanisi',
+        'xh' => 'Susa ikhonkco',
+        'pt' => 'Remover link',
+        'st' => 'Tlosa sehokelo'
+    ],
+    'link_prompt' => [
+        'af' => 'Voer die webadres in:',
+        'en' => 'Enter the web address:',
+        'zu' => 'Faka ikheli lewebhu:',
+        'xh' => 'Faka idilesi yewebhu:',
+        'pt' => 'Digite o endereço da web:',
+        'st' => 'Kenya aterese ea webo:'
+    ],
+    'characters' => [
+        'af' => 'karakters',
+        'en' => 'characters',
+        'zu' => 'izinhlamvu',
+        'xh' => 'oonobumba',
+        'pt' => 'caracteres',
+        'st' => 'litlhaku'
+    ],
     'book' => [
         'af' => 'Boek',
         'en' => 'Book',

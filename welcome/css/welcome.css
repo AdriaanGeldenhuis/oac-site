@@ -548,6 +548,43 @@ html {
   color: #a86860;
 }
 
+/* Quote blocks, dividers & links from the teaching editor */
+.wc-teaching-content blockquote {
+  margin: 0 0 20px;
+  padding: 14px 20px;
+  border-left: 3px solid var(--rose-gold);
+  background: rgba(232, 180, 168, 0.06);
+  border-radius: 0 10px 10px 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.wc-teaching-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.wc-teaching-content hr {
+  border: none;
+  height: 1px;
+  margin: 28px auto;
+  background: linear-gradient(90deg, transparent, var(--rose-gold-dark), transparent);
+}
+
+.wc-teaching-content a {
+  color: var(--rose-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+[data-theme="light"] .wc-teaching-content blockquote {
+  border-left-color: #a86860;
+  background: rgba(168, 104, 96, 0.06);
+}
+
+[data-theme="light"] .wc-teaching-content a {
+  color: #a86860;
+}
+
 [data-theme="light"] .wc-teaching-content,
 [data-theme="light"] .wc-teaching-content p,
 [data-theme="light"] .wc-teaching-content li,
