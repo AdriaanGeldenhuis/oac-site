@@ -3835,6 +3835,14 @@ define('UI_TRANSLATIONS', [
         'pt' => '{name} reagiu com {emoji} à sua publicação.',
         'st' => '{name} o arabile ka {emoji} posong ea hao.'
     ],
+    'notif_comment_reaction_msg' => [
+        'af' => '{name} het {emoji} op jou kommentaar gegee.',
+        'en' => '{name} reacted with {emoji} to your comment.',
+        'zu' => '{name} usabele ngo-{emoji} kumbono wakho.',
+        'xh' => '{name} usabele nge-{emoji} kuluvo lwakho.',
+        'pt' => '{name} reagiu com {emoji} ao seu comentário.',
+        'st' => '{name} o arabile ka {emoji} maikutlong a hao.'
+    ],
     'notif_tagged' => [
         'af' => '🏷️ Ge-tag',
         'en' => '🏷️ Tagged',

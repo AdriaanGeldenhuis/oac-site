@@ -108,7 +108,7 @@ if (!$hasAccess) {
 // Check posting rights
 $allowPost = $roomObj ? user_can_post_in_room($pdo, $userId, $roomObj) : false;
 
-$VER = '2.7.0';
+$VER = '2.8.0';
 ?><!doctype html>
 <html lang="<?= $pageLang ?>">
 <head>

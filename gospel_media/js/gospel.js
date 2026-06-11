@@ -393,6 +393,14 @@
 
   // ===== WHO REACTED (WhatsApp/FB style) =====
   function openReactionsModal(p) {
+    openReactionsListModal('/gospel_media/api/posts/reactions.php?post_id=' + encodeURIComponent(p.id));
+  }
+
+  function openCommentReactionsModal(commentId) {
+    openReactionsListModal('/gospel_media/api/comments/reactions.php?comment_id=' + encodeURIComponent(commentId));
+  }
+
+  function openReactionsListModal(url) {
     const back = ce('div', { class: 'modal-backdrop' });
     back.addEventListener('click', (e) => { if (e.target === back) back.remove(); });
 
@@ -412,7 +420,7 @@
     back.appendChild(panel);
     document.body.appendChild(back);
 
-    fetchJSON('/gospel_media/api/posts/reactions.php?post_id=' + encodeURIComponent(p.id)).then(j => {
+    fetchJSON(url).then(j => {
       const all = (j && j.ok && Array.isArray(j.reactions)) ? j.reactions : [];
 
       if (!all.length) {
@@ -472,6 +480,40 @@
 
       renderList(all);
     });
+  }
+
+  // ===== COMMENT HEARTS =====
+  const commentReactInFlight = new Set();
+
+  async function toggleCommentHeart(commentId, btn) {
+    if (commentReactInFlight.has(commentId)) return;
+    commentReactInFlight.add(commentId);
+
+    const countEl = btn.querySelector('.comment-like-count');
+    const wasReacted = btn.classList.contains('reacted');
+    const prevCount = parseInt(countEl.textContent || '0', 10);
+
+    // Optimistic update, rolled back on failure
+    btn.classList.toggle('reacted');
+    const nextCount = Math.max(0, prevCount + (wasReacted ? -1 : 1));
+    countEl.textContent = nextCount > 0 ? String(nextCount) : '';
+
+    const fd = new FormData();
+    fd.append('comment_id', commentId);
+    fd.append('type', 'heart');
+
+    const j = await fetchJSON('/gospel_media/api/comments/react.php', { method: 'POST', body: fd });
+    commentReactInFlight.delete(commentId);
+
+    if (!(j && j.ok)) {
+      btn.classList.toggle('reacted');
+      countEl.textContent = prevCount > 0 ? String(prevCount) : '';
+      return;
+    }
+
+    if (typeof j.heart_count !== 'undefined') {
+      countEl.textContent = j.heart_count > 0 ? String(j.heart_count) : '';
+    }
   }
 
   // ===== COMMENTS =====
@@ -695,8 +737,27 @@
       }
       
       const text = ce('div', { class: 'comment-text', text: c.text || '' });
-      
-      item.append(header, text);
+
+      // Heart on the comment; tapping the count shows who hearted it
+      const likeRow = ce('div', { class: 'comment-like-row' });
+      const likeBtn = ce('button', { type: 'button', class: 'comment-like-btn', title: T('reactions') });
+      if (c.my_heart) likeBtn.classList.add('reacted');
+      const likeIcon = ce('span', { class: 'comment-like-icon', text: '♥' });
+      const likeCount = ce('span', { class: 'comment-like-count', text: (c.heart_count > 0 ? String(c.heart_count) : '') });
+      likeBtn.append(likeIcon, likeCount);
+
+      likeBtn.addEventListener('click', () => toggleCommentHeart(c.id, likeBtn));
+      likeCount.addEventListener('click', (e) => {
+        const n = parseInt(likeCount.textContent || '0', 10);
+        if (n > 0) {
+          e.stopPropagation();
+          openCommentReactionsModal(c.id);
+        }
+      });
+
+      likeRow.appendChild(likeBtn);
+
+      item.append(header, text, likeRow);
       listEl.appendChild(item);
     });
   }

@@ -33,15 +33,34 @@ try {
         exit;
     }
 
-    $sql = "SELECT c.*, u.name, u.surname, u.photo, u.gender, u.amp_id
-            FROM comments c
-            JOIN users u ON u.id = c.user_id
-            WHERE c.post_id = ?
-            ORDER BY c.created_at ASC";
+    // Include heart counts and whether the current user hearted each comment.
+    // Falls back to the plain query if the comment_reactions table is missing.
+    try {
+        $sql = "SELECT c.*, u.name, u.surname, u.photo, u.gender, u.amp_id,
+                       (SELECT COUNT(*) FROM comment_reactions cr
+                         WHERE cr.comment_id = c.id AND cr.type = 'heart') AS heart_count,
+                       EXISTS(SELECT 1 FROM comment_reactions cr2
+                         WHERE cr2.comment_id = c.id AND cr2.user_id = ? AND cr2.type = 'heart') AS my_heart
+                FROM comments c
+                JOIN users u ON u.id = c.user_id
+                WHERE c.post_id = ?
+                ORDER BY c.created_at ASC";
 
-    $st = $pdo->prepare($sql);
-    $st->execute([$postId]);
-    $comments = $st->fetchAll(PDO::FETCH_ASSOC);
+        $st = $pdo->prepare($sql);
+        $st->execute([$userId, $postId]);
+        $comments = $st->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        $sql = "SELECT c.*, u.name, u.surname, u.photo, u.gender, u.amp_id,
+                       0 AS heart_count, 0 AS my_heart
+                FROM comments c
+                JOIN users u ON u.id = c.user_id
+                WHERE c.post_id = ?
+                ORDER BY c.created_at ASC";
+
+        $st = $pdo->prepare($sql);
+        $st->execute([$postId]);
+        $comments = $st->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     // Fix photo paths and translate office titles
     foreach ($comments as &$c) {
@@ -56,6 +75,9 @@ try {
         $ampId = (int)($c['amp_id'] ?? 10);
         $gender = $c['gender'] ?? 'man';
         $c['amp_title'] = get_translated_office($ampId, $gender, $pageLang);
+
+        $c['heart_count'] = (int)($c['heart_count'] ?? 0);
+        $c['my_heart'] = (bool)($c['my_heart'] ?? false);
 
         // Generate initials
         $fullName = trim(($c['name'] ?? '') . ' ' . ($c['surname'] ?? ''));

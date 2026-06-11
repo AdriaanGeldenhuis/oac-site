@@ -99,6 +99,19 @@ function createGospelNotification($pdo, $userId, $type, $data = []) {
                 $icon = $emoji;
                 break;
 
+            case 'reaction_on_comment':
+                $reactorName = $data['reactor_name'] ?? 'Iemand';
+                $reactionType = $data['reaction_type'] ?? 'heart';
+                $emoji = $reactionType === 'heart' ? '❤️' : '🙏';
+                $titleKey = 'notif_reaction';
+                $messageKey = 'notif_comment_reaction_msg';
+                $params = ['name' => $reactorName, 'emoji' => $emoji];
+                $title = "{$emoji} Reaksie";
+                $message = "{$reactorName} het {$emoji} op jou kommentaar gegee.";
+                $link = '/gospel_media/gospel.php?room_id=' . ($data['room_id'] ?? '') . '#post-' . ($data['post_id'] ?? '');
+                $icon = $emoji;
+                break;
+
             case 'tagged_in_post':
                 $taggerName = $data['tagger_name'] ?? 'Iemand';
                 $titleKey = 'notif_tagged';

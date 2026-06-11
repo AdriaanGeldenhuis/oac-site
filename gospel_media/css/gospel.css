@@ -1429,6 +1429,47 @@ html {
   flex: 0 0 auto;
 }
 
+/* ===== COMMENT HEARTS ===== */
+.comment-like-row {
+  margin-top: 6px;
+}
+
+.comment-like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  transition: var(--transition);
+}
+
+.comment-like-btn:hover {
+  color: var(--color-rosegold);
+  background: rgba(183, 110, 121, 0.12);
+}
+
+.comment-like-btn.reacted {
+  color: #e63946;
+}
+
+.comment-like-btn.reacted .comment-like-icon {
+  animation: react-pop 0.3s ease;
+}
+
+.comment-like-count {
+  min-width: 10px;
+  font-size: 13px;
+}
+
+.comment-like-btn .comment-like-count:hover {
+  text-decoration: underline;
+}
+
 /* ===== COMMENTS SECTION ===== */
 .comments-section {
   margin-top: 20px;
