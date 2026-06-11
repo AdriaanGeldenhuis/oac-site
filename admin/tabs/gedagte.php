@@ -19,10 +19,6 @@
 
     <div class="gedagte-row">
       <div class="gedagte-field">
-        <label for="thoughtAuthor"><?= t('thought_author') ?></label>
-        <input type="text" id="thoughtAuthor" name="author" placeholder="<?= esc(t('thought_author')) ?>">
-      </div>
-      <div class="gedagte-field">
         <label for="thoughtDate"><?= t('thought_date') ?></label>
         <input type="date" id="thoughtDate" name="display_date" required>
       </div>

@@ -1,0 +1,274 @@
+/* =====================================================================
+   OAC Admin UI - shared toasts & confirm dialogs
+   Welcome design language; falls back gracefully if page variables
+   are missing.
+   ===================================================================== */
+
+/* ===== TOASTS ===== */
+.oac-toast-wrap {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 30000;
+  width: min(92vw, 420px);
+  pointer-events: none;
+}
+
+@media (min-width: 641px) {
+  .oac-toast-wrap {
+    left: auto;
+    right: 24px;
+    transform: none;
+    align-items: flex-end;
+  }
+}
+
+.oac-toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(160deg, var(--bg-card, #171514) 0%, var(--bg-surface, #1d1a19) 100%);
+  border: 1px solid var(--border, rgba(232, 180, 168, 0.16));
+  border-radius: 14px;
+  color: var(--text-primary, #f5ebe6);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.oac-toast.show {
+  opacity: 1;
+  transform: none;
+}
+
+[data-theme="light"] .oac-toast {
+  background: linear-gradient(180deg, #ffffff 0%, #f7f5f2 100%);
+  box-shadow:
+    0 8px 28px rgba(28, 22, 16, 0.16),
+    inset 0 1.5px 0 #ffffff;
+}
+
+.oac-toast-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.oac-toast-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.oac-toast--success { border-color: rgba(102, 187, 106, 0.5); }
+.oac-toast--success .oac-toast-icon {
+  color: #66bb6a;
+  background: rgba(102, 187, 106, 0.14);
+}
+
+.oac-toast--error { border-color: rgba(239, 83, 80, 0.5); }
+.oac-toast--error .oac-toast-icon {
+  color: #ef5350;
+  background: rgba(239, 83, 80, 0.14);
+}
+
+.oac-toast--info { border-color: var(--border-strong, rgba(232, 180, 168, 0.35)); }
+.oac-toast--info .oac-toast-icon {
+  color: var(--rose-gold, #e8b4a8);
+  background: rgba(232, 180, 168, 0.14);
+}
+
+[data-theme="light"] .oac-toast--success { border-color: rgba(46, 125, 50, 0.4); }
+[data-theme="light"] .oac-toast--success .oac-toast-icon { color: #2e7d32; }
+[data-theme="light"] .oac-toast--error { border-color: rgba(198, 40, 40, 0.4); }
+[data-theme="light"] .oac-toast--error .oac-toast-icon { color: #c62828; }
+[data-theme="light"] .oac-toast--info .oac-toast-icon { color: var(--rose-gold-dark, #8f4a3f); }
+
+/* ===== CONFIRM DIALOG ===== */
+.oac-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  z-index: 29000;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.oac-dialog-overlay.show {
+  opacity: 1;
+}
+
+[data-theme="light"] .oac-dialog-overlay {
+  background: rgba(40, 32, 26, 0.35);
+}
+
+.oac-dialog {
+  width: min(92vw, 400px);
+  padding: 26px 24px 22px;
+  background:
+    radial-gradient(140% 90% at 0% 0%, rgba(232, 180, 168, 0.07) 0%, transparent 55%),
+    linear-gradient(160deg, var(--bg-card, #171514) 0%, var(--bg-surface, #1d1a19) 100%);
+  border: 1px solid var(--border, rgba(232, 180, 168, 0.16));
+  border-radius: 18px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transform: translateY(12px) scale(0.98);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.oac-dialog-overlay.show .oac-dialog {
+  transform: none;
+}
+
+[data-theme="light"] .oac-dialog {
+  background: linear-gradient(160deg, #fffdf9 0%, #ffffff 55%, #f7f5f2 100%);
+  box-shadow:
+    0 24px 60px rgba(28, 22, 16, 0.22),
+    inset 0 1.5px 0 #ffffff;
+}
+
+.oac-dialog-msg {
+  margin: 0 0 22px;
+  color: var(--text-primary, #f5ebe6);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.98rem;
+  font-weight: 300;
+  line-height: 1.65;
+}
+
+.oac-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.oac-dialog-btn {
+  padding: 10px 22px;
+  border-radius: 11px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.oac-dialog-btn:active {
+  transform: translateY(1px);
+}
+
+.oac-dialog-cancel {
+  background: transparent;
+  border: 1px solid var(--border, rgba(232, 180, 168, 0.16));
+  color: var(--text-secondary, #c8c0ba);
+}
+
+.oac-dialog-cancel:hover {
+  border-color: var(--border-strong, rgba(232, 180, 168, 0.35));
+  color: var(--text-primary, #f5ebe6);
+}
+
+.oac-dialog-ok {
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(232, 180, 168, 0.18) 0%,
+      rgba(232, 180, 168, 0.08) 55%,
+      rgba(232, 180, 168, 0.03) 100%
+    ),
+    linear-gradient(160deg, var(--bg-card, #171514) 0%, var(--bg-base, #0a0a0a) 100%);
+  border: 1px solid rgba(232, 180, 168, 0.45);
+  color: var(--rose-gold, #e8b4a8);
+  font-weight: 600;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.35),
+    0 0 14px var(--glow-rose, rgba(232, 180, 168, 0.25)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+.oac-dialog-ok:hover {
+  transform: translateY(-1px);
+  border-color: var(--rose-gold, #e8b4a8);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 20px var(--glow-rose, rgba(232, 180, 168, 0.25));
+}
+
+[data-theme="light"] .oac-dialog-ok {
+  background: linear-gradient(180deg, #ffffff 0%, #f6f4f1 100%);
+  border-color: rgba(176, 96, 84, 0.45);
+  color: var(--rose-gold-dark, #8f4a3f);
+  box-shadow:
+    0 2px 8px rgba(28, 22, 16, 0.08),
+    0 0 14px var(--glow-rose, rgba(176, 96, 84, 0.16)),
+    inset 0 1.5px 0 #ffffff;
+}
+
+.oac-dialog-ok--danger,
+[data-theme="light"] .oac-dialog-ok--danger {
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(217, 83, 79, 0.20) 0%,
+      rgba(217, 83, 79, 0.08) 55%,
+      rgba(217, 83, 79, 0.03) 100%
+    ),
+    linear-gradient(160deg, var(--bg-card, #171514) 0%, var(--bg-base, #0a0a0a) 100%);
+  border-color: rgba(217, 83, 79, 0.55);
+  color: #ef7672;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.35),
+    0 0 14px rgba(217, 83, 79, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .oac-dialog-ok--danger {
+  background: linear-gradient(180deg, #ffffff 0%, #f8f3f2 100%);
+  color: #c62828;
+  box-shadow:
+    0 2px 8px rgba(28, 22, 16, 0.08),
+    0 0 14px rgba(198, 40, 40, 0.15),
+    inset 0 1.5px 0 #ffffff;
+}
+
+@media (max-width: 640px) {
+  .oac-dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .oac-dialog-btn {
+    width: 100%;
+    padding: 12px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oac-toast,
+  .oac-dialog,
+  .oac-dialog-overlay {
+    transition-duration: 0.01ms !important;
+  }
+}
