@@ -791,6 +791,56 @@ html {
   color: var(--rose-gold-dark) !important;
 }
 
+/* ===== INLINE COLOR SAFETY =====
+   Text colors picked in the editor can be unreadable on the opposite
+   theme (white text on the ivory light theme, black text on dark).
+   Remap them so the teaching stays legible in both themes. */
+
+/* Dark ink chosen in the editor -> light text on the dark theme */
+.wc-teaching-content [style*="#1a1816" i],
+.wc-teaching-content [style*="rgb(26, 24, 22)"],
+.wc-teaching-content [style*="rgb(26,24,22)"],
+.wc-teaching-content [style*="#3d3835" i],
+.wc-teaching-content [style*="rgb(61, 56, 53)"],
+.wc-teaching-content [style*="rgb(61,56,53)"],
+.wc-teaching-content font[color="#1a1816" i],
+.wc-teaching-content font[color="#3d3835" i] {
+  color: var(--text-primary) !important;
+}
+
+/* White / peach / silver ink -> dark text on the light theme */
+[data-theme="light"] .wc-teaching-content [style*="#fff" i],
+[data-theme="light"] .wc-teaching-content [style*="rgb(255, 255, 255)"],
+[data-theme="light"] .wc-teaching-content [style*="rgb(255,255,255)"],
+[data-theme="light"] .wc-teaching-content [style*="#fae8e0" i],
+[data-theme="light"] .wc-teaching-content [style*="rgb(250, 232, 224)"],
+[data-theme="light"] .wc-teaching-content [style*="rgb(250,232,224)"],
+[data-theme="light"] .wc-teaching-content [style*="#f5d5c8" i],
+[data-theme="light"] .wc-teaching-content [style*="rgb(245, 213, 200)"],
+[data-theme="light"] .wc-teaching-content [style*="rgb(245,213,200)"],
+[data-theme="light"] .wc-teaching-content [style*="#b8b8b8" i],
+[data-theme="light"] .wc-teaching-content [style*="rgb(184, 184, 184)"],
+[data-theme="light"] .wc-teaching-content [style*="rgb(184,184,184)"],
+[data-theme="light"] .wc-teaching-content font[color="#ffffff" i],
+[data-theme="light"] .wc-teaching-content font[color="white" i],
+[data-theme="light"] .wc-teaching-content font[color="#fae8e0" i],
+[data-theme="light"] .wc-teaching-content font[color="#f5d5c8" i],
+[data-theme="light"] .wc-teaching-content font[color="#b8b8b8" i] {
+  color: #2e231d !important;
+}
+
+/* Pale rose-gold ink -> deeper rose that reads on ivory */
+[data-theme="light"] .wc-teaching-content [style*="#e8b4a8" i],
+[data-theme="light"] .wc-teaching-content [style*="rgb(232, 180, 168)"],
+[data-theme="light"] .wc-teaching-content [style*="rgb(232,180,168)"],
+[data-theme="light"] .wc-teaching-content [style*="#c99485" i],
+[data-theme="light"] .wc-teaching-content [style*="rgb(201, 148, 133)"],
+[data-theme="light"] .wc-teaching-content [style*="rgb(201,148,133)"],
+[data-theme="light"] .wc-teaching-content font[color="#e8b4a8" i],
+[data-theme="light"] .wc-teaching-content font[color="#c99485" i] {
+  color: var(--rose-gold-dark) !important;
+}
+
 /* No content */
 .wc-no-content {
   text-align: center;
