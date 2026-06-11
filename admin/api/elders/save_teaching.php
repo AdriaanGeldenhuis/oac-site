@@ -226,11 +226,18 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 
-    // Older installs may not have the has_st column yet
-    try {
-        $pdo->exec("ALTER TABLE teachings ADD COLUMN has_st TINYINT(1) DEFAULT 0 AFTER has_pt");
-    } catch (Throwable $e) {
-        // Column already exists - ignore
+    // Older installs may be missing some per-language columns entirely
+    // (e.g. a table created before zu/xh/pt/st were added) - add whatever
+    // is missing so the insert below always works
+    $existing = [];
+    foreach ($pdo->query('SHOW COLUMNS FROM teachings') as $col) {
+        $existing[] = $col['Field'];
+    }
+    foreach (SUPPORTED_LANGS as $code) {
+        $colName = 'has_' . $code;
+        if (!in_array($colName, $existing, true)) {
+            $pdo->exec("ALTER TABLE teachings ADD COLUMN {$colName} TINYINT(1) DEFAULT 0");
+        }
     }
 
     $stmt = $pdo->prepare('
