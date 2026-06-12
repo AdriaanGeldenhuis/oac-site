@@ -51,6 +51,12 @@ if (!$userId) {
     exit;
 }
 
+if (!csrf_verify($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Invalid CSRF token']);
+    exit;
+}
+
 $input = json_decode(file_get_contents('php://input'), true);
 $verseRef = $input['verse_ref'] ?? '';      // e.g., "Lukas 17:21" or "Luke 17:21"
 $verseText = $input['verse_text'] ?? '';
@@ -62,6 +68,11 @@ $lang = $input['lang'] ?? 'af';
 if (!$verseRef || !$verseText || !$chapter || !$verse) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing required fields']);
+    exit;
+}
+if (strlen($verseRef) > 100 || strlen($bookEN) > 50 || strlen($verseText) > 2000) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid input']);
     exit;
 }
 
@@ -289,6 +300,15 @@ try {
     if (empty($context)) {
         // Fallback: just use the provided verse
         $context = ["v{$verse}: {$verseText} **[SELECTED]**"];
+    } else {
+        // Verkies die werklike verteks uit ons eie Bybeldata bo die
+        // kliënt-gestuurde teks, sodat die AI-prompt nie gemanipuleer kan word nie.
+        foreach ($context as $line) {
+            if (preg_match('/^v\d+: (.*) \*\*\[SELECTED\]\*\*$/s', $line, $m)) {
+                $verseText = $m[1];
+                break;
+            }
+        }
     }
 
     // Build the prompt
@@ -357,9 +377,12 @@ try {
     ]);
 
 } catch (Exception $e) {
+    error_log('AI commentary error: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage()
+        'error' => $lang === 'af'
+            ? 'Kon nie die AI-kommentaar laai nie. Probeer asseblief weer.'
+            : 'Could not load AI commentary. Please try again.'
     ]);
 }

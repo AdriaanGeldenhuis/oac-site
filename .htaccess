@@ -30,6 +30,21 @@ Options -Indexes
     Header set Pragma "no-cache"
     Header set Expires "0"
   </FilesMatch>
+
+  # JSON DATA (Bybel-lêers) - Cache vir 30 dae.
+  # URLs word met ?v=<mtime> gebreek wanneer die data verander, so 'n
+  # lang cache is veilig en spaar die 5 MB aflaai by elke besoek.
+  <FilesMatch "\.json$">
+    Header set Cache-Control "public, max-age=2592000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# ===========================================
+# COMPRESSION (Bybel-JSON 5.3MB -> ~1.3MB)
+# ===========================================
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE application/json text/html text/css application/javascript text/javascript image/svg+xml
 </IfModule>
 
 # ===========================================
