@@ -1009,6 +1009,7 @@
         }
         
         refreshVerseDisplay();
+        renderBookmarksList();
       } else {
         throw new Error(data.error);
       }
@@ -1016,7 +1017,7 @@
       console.error('Bookmark toggle failed:', e);
       alert(state.lang === 'af' ? 'Kon nie boekmerk stoor nie' : 'Could not save bookmark');
     }
-    
+
     hideContextMenu();
   }
 
@@ -1044,11 +1045,43 @@
       item.innerHTML = `
         <div class="bible-bookmark-ref">${esc(displayName)} ${parsed.chapter}:${parsed.verse}</div>
         <div class="bible-bookmark-text">${esc(bookmark.text.substring(0, 100))}${bookmark.text.length > 100 ? '...' : ''}</div>
+        <div class="bible-bookmark-item-actions">
+          <button class="bible-btn-small bible-bookmark-delete" title="${state.lang === 'en' ? 'Delete bookmark' : 'Verwyder boekmerk'}">🗑️</button>
+        </div>
       `;
-      
+
       item.addEventListener('click', () => {
         goToReference(ref);
         hidePanel(els.bookmarksPanel);
+      });
+
+      item.querySelector('.bible-bookmark-delete').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!confirm(state.lang === 'en' ? 'Delete this bookmark?' : 'Verwyder hierdie boekmerk?')) return;
+        try {
+          const res = await fetch('/bible/api/bookmarks/save.php', {
+            method: 'POST',
+            headers: apiHeaders(),
+            credentials: 'same-origin',
+            body: JSON.stringify({
+              verse_ref: ref,
+              action: 'remove'
+            })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            delete state.bookmarks[ref];
+            renderBookmarksList();
+            refreshVerseDisplay();
+          } else {
+            throw new Error(data.error);
+          }
+        } catch (err) {
+          console.error('Bookmark delete failed:', err);
+          alert(state.lang === 'af' ? 'Kon nie boekmerk verwyder nie' : 'Could not delete bookmark');
+        }
       });
       
       frag.appendChild(item);
@@ -1802,9 +1835,16 @@
       if (data.success && data.references) {
         state.crossReferences[cacheKey] = data.references;
         displayCrossReferences(data.references);
+      } else {
+        throw new Error(data.error || 'Cross references failed');
       }
     } catch (e) {
       console.error('Cross references error:', e);
+      // Wys darem die paneel met 'n boodskap i.p.v. om stilweg niks te doen nie.
+      if (els.crossRefPanel && els.crossRefList) {
+        els.crossRefList.innerHTML = `<p class="bible-empty-state">${state.lang === 'af' ? 'Kon nie kruisverwysings laai nie.' : 'Could not load cross-references.'}</p>`;
+        showPanel(els.crossRefPanel);
+      }
     }
   }
 
