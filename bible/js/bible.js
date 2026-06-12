@@ -150,6 +150,8 @@
     lang: window.BIBLE?.lang || 'af',
     paths: window.BIBLE?.paths || {},
     userId: window.BIBLE?.userId || 0,
+    csrfToken: window.BIBLE?.csrfToken || '',
+    viewRef: null,
     dataAF: null,
     dataEN: null,
     booksAF: [],
@@ -179,15 +181,26 @@
     syncingScroll: false
   };
 
+  function apiHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': state.csrfToken
+    };
+  }
+
   // ===== LANGUAGE CHANGE HANDLER =====
   function handleLanguageChange(newLang) {
     if (newLang === state.lang) return;
 
     const overlay = createLoadingOverlay();
 
-    // Save current position before switching
-    const savedBookIdx = state.currentBookIndex;
-    const savedChapter = state.currentChapter;
+    // Save the position the reader is actually viewing (tracked by
+    // updateHeaderRef); fall back to the render cursor if unavailable.
+    const savedView = state.viewRef ? parseRef(state.viewRef) : null;
+    const savedBookIdx = savedView && state.booksEN.indexOf(savedView.bookEN) !== -1
+      ? state.booksEN.indexOf(savedView.bookEN)
+      : state.currentBookIndex;
+    const savedChapter = savedView ? savedView.chapter : state.currentChapter;
 
     state.lang = newLang;
 
@@ -521,6 +534,10 @@
       const bookEN = topVerse.dataset.booken;
       const chapter = topVerse.dataset.chapter;
       const verse = topVerse.dataset.verse;
+
+      // Onthou die posisie wat die leser werklik sien, sodat taalwisseling
+      // hierheen terugkeer en nie na die laaste vooraf-gelaaide hoofstuk nie.
+      state.viewRef = makeRef(bookEN, parseInt(chapter, 10) || 1, parseInt(verse, 10) || 1);
 
       const displayName = state.lang === 'af' ? EN_TO_AF_BOOKS[bookEN] || bookEN : bookEN;
       headerTitle.textContent = `${displayName} ${chapter}:${verse}`;
@@ -931,7 +948,7 @@
     try {
       const res = await fetch('/bible/api/highlights/save.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiHeaders(),
         credentials: 'same-origin',
         body: JSON.stringify({
           verse_ref: state.selectedVerse,
@@ -970,7 +987,7 @@
     try {
       const res = await fetch('/bible/api/bookmarks/save.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiHeaders(),
         credentials: 'same-origin',
         body: JSON.stringify({
           verse_ref: state.selectedVerse,
@@ -992,6 +1009,7 @@
         }
         
         refreshVerseDisplay();
+        renderBookmarksList();
       } else {
         throw new Error(data.error);
       }
@@ -999,7 +1017,7 @@
       console.error('Bookmark toggle failed:', e);
       alert(state.lang === 'af' ? 'Kon nie boekmerk stoor nie' : 'Could not save bookmark');
     }
-    
+
     hideContextMenu();
   }
 
@@ -1027,11 +1045,43 @@
       item.innerHTML = `
         <div class="bible-bookmark-ref">${esc(displayName)} ${parsed.chapter}:${parsed.verse}</div>
         <div class="bible-bookmark-text">${esc(bookmark.text.substring(0, 100))}${bookmark.text.length > 100 ? '...' : ''}</div>
+        <div class="bible-bookmark-item-actions">
+          <button class="bible-btn-small bible-bookmark-delete" title="${state.lang === 'en' ? 'Delete bookmark' : 'Verwyder boekmerk'}">🗑️</button>
+        </div>
       `;
-      
+
       item.addEventListener('click', () => {
         goToReference(ref);
         hidePanel(els.bookmarksPanel);
+      });
+
+      item.querySelector('.bible-bookmark-delete').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!confirm(state.lang === 'en' ? 'Delete this bookmark?' : 'Verwyder hierdie boekmerk?')) return;
+        try {
+          const res = await fetch('/bible/api/bookmarks/save.php', {
+            method: 'POST',
+            headers: apiHeaders(),
+            credentials: 'same-origin',
+            body: JSON.stringify({
+              verse_ref: ref,
+              action: 'remove'
+            })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            delete state.bookmarks[ref];
+            renderBookmarksList();
+            refreshVerseDisplay();
+          } else {
+            throw new Error(data.error);
+          }
+        } catch (err) {
+          console.error('Bookmark delete failed:', err);
+          alert(state.lang === 'af' ? 'Kon nie boekmerk verwyder nie' : 'Could not delete bookmark');
+        }
       });
       
       frag.appendChild(item);
@@ -1185,7 +1235,7 @@
           try {
             const res = await fetch('/bible/api/notes/save.php', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: apiHeaders(),
               credentials: 'same-origin',
               body: JSON.stringify({
                 verse_ref: ref,
@@ -1234,7 +1284,7 @@
     try {
       const res = await fetch('/bible/api/notes/save.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiHeaders(),
         credentials: 'same-origin',
         body: JSON.stringify({
           verse_ref: state.selectedVerse,
@@ -1428,12 +1478,16 @@
   }
 
   function highlightMatches(text, terms) {
-    const safe = esc(text);
-    if (!terms || !terms.length) return safe;
+    const raw = String(text || '');
+    if (!terms || !terms.length) return esc(raw);
     const parts = terms.filter(Boolean).map(escapeRegex);
-    if (!parts.length) return safe;
+    if (!parts.length) return esc(raw);
+    // Match teen die rou teks en ontsnap elke stuk afsonderlik, sodat
+    // soekterme soos "amp" nooit binne HTML-entiteite kan merk nie.
     const re = new RegExp(`(${parts.join('|')})`, 'gi');
-    return safe.replace(re, '<mark class="bible-search-hl">$1</mark>');
+    return raw.split(re)
+      .map((seg, i) => i % 2 ? `<mark class="bible-search-hl">${esc(seg)}</mark>` : esc(seg))
+      .join('');
   }
 
   // Build a compact snippet centered around the first match so you
@@ -1468,7 +1522,7 @@
   function parseReference(q) {
     const norm = normalizeSearch(q);
     // book chapter[:verse]
-    const m = norm.match(/^(\d?\s*[a-z]+(?:\s+[a-z]+)?)\s+(\d+)(?:\s*[:\.]\s*(\d+))?$/);
+    const m = norm.match(/^(\d?\s*[a-z]+(?:\s+[a-z]+){0,2})\s+(\d+)(?:\s*[:\.]\s*(\d+))?$/);
     if (!m) return null;
     const bookGuess = m[1].replace(/\s+/g, ' ').trim();
     const chapter = parseInt(m[2], 10);
@@ -1700,7 +1754,7 @@
     try {
       const res = await fetch('/bible/api/ai_commentary.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiHeaders(),
         credentials: 'same-origin',
         body: JSON.stringify({
           verse_ref: verseRef,
@@ -1781,9 +1835,16 @@
       if (data.success && data.references) {
         state.crossReferences[cacheKey] = data.references;
         displayCrossReferences(data.references);
+      } else {
+        throw new Error(data.error || 'Cross references failed');
       }
     } catch (e) {
       console.error('Cross references error:', e);
+      // Wys darem die paneel met 'n boodskap i.p.v. om stilweg niks te doen nie.
+      if (els.crossRefPanel && els.crossRefList) {
+        els.crossRefList.innerHTML = `<p class="bible-empty-state">${state.lang === 'af' ? 'Kon nie kruisverwysings laai nie.' : 'Could not load cross-references.'}</p>`;
+        showPanel(els.crossRefPanel);
+      }
     }
   }
 

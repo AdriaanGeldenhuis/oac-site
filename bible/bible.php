@@ -286,7 +286,8 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
         af: '/bible/bibles/af_1933_53.json?v=<?= filemtime(__DIR__ . '/bibles/af_1933_53.json') ?>',
         en: '/bible/bibles/en_kjv1611.json?v=<?= filemtime(__DIR__ . '/bibles/en_kjv1611.json') ?>'
       },
-      userId: <?= (int)($_SESSION['user_id'] ?? 0) ?>
+      userId: <?= (int)($_SESSION['user_id'] ?? 0) ?>,
+      csrfToken: '<?= esc(csrf_token()) ?>'
     };
   </script>
   <script type="module" src="/bible/js/bible.js?v=<?= filemtime(__DIR__ . '/js/bible.js') ?>"></script>

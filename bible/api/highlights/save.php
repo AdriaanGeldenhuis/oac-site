@@ -19,6 +19,12 @@ if (!$userId) {
   exit;
 }
 
+if (!csrf_verify($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) {
+  http_response_code(403);
+  echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+  exit;
+}
+
 $rawInput = file_get_contents('php://input');
 $input = json_decode($rawInput, true);
 
@@ -34,6 +40,11 @@ $color = (int)$input['color'];
 if (strlen($verseRef) > 100) {
   http_response_code(400);
   echo json_encode(['success' => false, 'error' => 'Invalid verse_ref']);
+  exit;
+}
+if ($color < 0 || $color > 6) {
+  http_response_code(400);
+  echo json_encode(['success' => false, 'error' => 'Invalid color']);
   exit;
 }
 
