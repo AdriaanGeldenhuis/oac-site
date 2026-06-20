@@ -65,38 +65,6 @@ $userName = $user ? trim($user['name'] . ' ' . $user['surname']) : 'User';
 
   <main class="diary-main">
     <h2 class="diary-page-title"><?= esc(t('my_diary')) ?></h2>
-    
-    <!-- Quick Stats -->
-    <section class="diary-stats">
-      <div class="stat-card" data-stat="total">
-        <div class="stat-icon">📝</div>
-        <div class="stat-info">
-          <div class="stat-value" id="statTotal">0</div>
-          <div class="stat-label"><?= esc(t('total_entries')) ?></div>
-        </div>
-      </div>
-      <div class="stat-card" data-stat="month">
-        <div class="stat-icon">📅</div>
-        <div class="stat-info">
-          <div class="stat-value" id="statMonth">0</div>
-          <div class="stat-label"><?= esc(t('this_month')) ?></div>
-        </div>
-      </div>
-      <div class="stat-card" data-stat="streak">
-        <div class="stat-icon">🔥</div>
-        <div class="stat-info">
-          <div class="stat-value" id="statStreak">0</div>
-          <div class="stat-label"><?= esc(t('day_streak')) ?></div>
-        </div>
-      </div>
-      <div class="stat-card" data-stat="words">
-        <div class="stat-icon">✍️</div>
-        <div class="stat-info">
-          <div class="stat-value" id="statWords">0</div>
-          <div class="stat-label"><?= esc(t('total_words')) ?></div>
-        </div>
-      </div>
-    </section>
 
     <!-- View Toggle -->
     <section class="diary-view-toggle">
@@ -344,6 +312,30 @@ $userName = $user ? trim($user['name'] . ' ' . $user['surname']) : 'User';
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Entry Modal (read-only) -->
+  <div class="modal" id="viewModal">
+    <div class="modal-overlay" id="viewModalOverlay"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title" id="viewModalTitle"></h2>
+        <button class="modal-close" id="viewModalClose">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="viewModalBody">
+        <!-- Populated by JS -->
+      </div>
+      <div class="view-modal-footer">
+        <button type="button" class="btn btn-secondary" id="viewEditBtn"><?= esc(t('edit')) ?></button>
+        <button type="button" class="btn btn-secondary" id="viewShareBtn"><?= esc(t('share')) ?></button>
+        <button type="button" class="btn btn-secondary" id="viewDeleteBtn"><?= esc(t('delete')) ?></button>
+        <button type="button" class="btn btn-primary" id="viewCloseBtn"><?= esc(t('close')) ?></button>
       </div>
     </div>
   </div>

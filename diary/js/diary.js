@@ -122,44 +122,6 @@ const API = {
   }
 };
 
-// ===== STATS LOADER =====
-async function loadStats() {
-  try {
-    const stats = await API.get('stats.php');
-    
-    document.getElementById('statTotal').textContent = stats.total || 0;
-    document.getElementById('statMonth').textContent = stats.month || 0;
-    document.getElementById('statStreak').textContent = stats.streak || 0;
-    document.getElementById('statWords').textContent = stats.words || 0;
-    
-    // Animate numbers
-    animateValue('statTotal', 0, stats.total || 0, 1000);
-    animateValue('statMonth', 0, stats.month || 0, 1000);
-    animateValue('statStreak', 0, stats.streak || 0, 1000);
-    animateValue('statWords', 0, stats.words || 0, 1500);
-  } catch (error) {
-    console.error('Stats load error:', error);
-  }
-}
-
-function animateValue(id, start, end, duration) {
-  const element = document.getElementById(id);
-  if (!element) return;
-  
-  const range = end - start;
-  const increment = range / (duration / 16);
-  let current = start;
-  
-  const timer = setInterval(() => {
-    current += increment;
-    if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
-      current = end;
-      clearInterval(timer);
-    }
-    element.textContent = Math.floor(current);
-  }, 16);
-}
-
 // ===== VIEW SWITCHING =====
 function switchView(viewName) {
   // Update buttons
@@ -514,8 +476,7 @@ async function saveEntry() {
     
     closeEntryModal();
     refreshCurrentView();
-    loadStats();
-    
+
   } catch (error) {
     Toast.error(DiaryApp.t('Kon nie stoor nie', 'Could not save'));
   } finally {
@@ -526,7 +487,71 @@ async function saveEntry() {
 
 // ===== ENTRY ACTIONS =====
 async function viewEntry(entryId) {
-  editEntry(entryId);
+  const modal = document.getElementById('viewModal');
+  if (!modal) return;
+
+  DiaryApp.currentEntry = entryId;
+
+  const bodyEl = document.getElementById('viewModalBody');
+  const titleEl = document.getElementById('viewModalTitle');
+
+  // Open modal with loading state
+  titleEl.textContent = '';
+  bodyEl.innerHTML = `
+    <div class="timeline-loading">
+      <div class="loading-spinner"></div>
+      <p>${DiaryApp.t('Laai inskrywing...', 'Loading entry...')}</p>
+    </div>
+  `;
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    const data = await API.get(`get.php?id=${entryId}`);
+    const entry = data.entry;
+
+    titleEl.textContent = entry.title || DiaryApp.t('Geen titel', 'No title');
+
+    const metaIcons = (entry.mood || entry.weather) ? `
+      <div class="view-meta-icons">
+        ${entry.mood ? `<span class="entry-mood" title="${DiaryApp.t('Gemoed', 'Mood')}">${getMoodEmoji(entry.mood)}</span>` : ''}
+        ${entry.weather ? `<span class="entry-weather" title="${DiaryApp.t('Weer', 'Weather')}">${getWeatherEmoji(entry.weather)}</span>` : ''}
+      </div>
+    ` : '';
+
+    const tags = (entry.tags && entry.tags.length > 0) ? `
+      <div class="entry-tags view-entry-tags">
+        ${entry.tags.map(tag => `<span class="entry-tag">#${escapeHtml(tag)}</span>`).join('')}
+      </div>
+    ` : '';
+
+    bodyEl.innerHTML = `
+      <div class="view-entry">
+        <div class="view-entry-header">
+          <span class="entry-date">${formatDate(entry.date, entry.time)}</span>
+          ${metaIcons}
+        </div>
+        ${tags}
+        <div class="view-entry-body">${escapeHtml(entry.body || '').replace(/\n/g, '<br>')}</div>
+      </div>
+    `;
+  } catch (error) {
+    bodyEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">❌</div>
+        <h3 class="empty-state-title">${DiaryApp.t('Fout', 'Error')}</h3>
+        <p class="empty-state-text">${error.message}</p>
+      </div>
+    `;
+  }
+}
+
+function closeViewModal() {
+  const modal = document.getElementById('viewModal');
+  if (!modal) return;
+
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 async function editEntry(entryId) {
@@ -541,8 +566,8 @@ async function deleteEntry(entryId) {
   try {
     await API.delete(`delete.php?id=${entryId}`);
     Toast.success(DiaryApp.t('Inskrywing uitgevee', 'Entry deleted'));
+    closeViewModal();
     refreshCurrentView();
-    loadStats();
   } catch (error) {
     Toast.error(DiaryApp.t('Kon nie uitvee nie', 'Could not delete'));
   }
@@ -778,6 +803,22 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('modalClose')?.addEventListener('click', closeEntryModal);
   document.getElementById('modalOverlay')?.addEventListener('click', closeEntryModal);
   document.getElementById('cancelBtn')?.addEventListener('click', closeEntryModal);
+
+  // View modal
+  document.getElementById('viewModalClose')?.addEventListener('click', closeViewModal);
+  document.getElementById('viewModalOverlay')?.addEventListener('click', closeViewModal);
+  document.getElementById('viewCloseBtn')?.addEventListener('click', closeViewModal);
+  document.getElementById('viewEditBtn')?.addEventListener('click', () => {
+    const entryId = DiaryApp.currentEntry;
+    closeViewModal();
+    if (entryId) editEntry(entryId);
+  });
+  document.getElementById('viewShareBtn')?.addEventListener('click', () => {
+    if (DiaryApp.currentEntry) shareEntry(DiaryApp.currentEntry);
+  });
+  document.getElementById('viewDeleteBtn')?.addEventListener('click', () => {
+    if (DiaryApp.currentEntry) deleteEntry(DiaryApp.currentEntry);
+  });
   
   // Form submit
   document.getElementById('entryForm')?.addEventListener('submit', (e) => {
@@ -852,7 +893,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Load initial view
-  loadStats();
   loadTimeline();
   
   // Keyboard shortcuts
@@ -866,6 +906,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Escape = Close modal
     if (e.key === 'Escape') {
       closeEntryModal();
+      closeViewModal();
       closeShareModal();
     }
   });
