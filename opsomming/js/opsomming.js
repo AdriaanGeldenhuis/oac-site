@@ -333,6 +333,7 @@
         '<span class="ops-part-roman">' + (ROMANS[pi] || pi + 1) + '</span>' +
         '<span class="ops-part-eyebrow">' + esc(partLabel(d)) + ' ' + p.n + '</span>' +
         '<span class="ops-part-title">' + esc(p.title) + '</span>' +
+        (p.sub ? '<span class="ops-part-sub">' + esc(p.sub) + '</span>' : '') +
         '<span class="ops-part-range">' + esc(p.range) + '</span>' +
         '<span class="ops-part-foot">' +
         '<span>' + p.studies.length + ' ' + esc(T.sum_studies_label) + ' · ' + readC + '/' + p.studies.length + '</span>' +
@@ -457,6 +458,7 @@
       '<div class="ops-part-head">' +
       '<span class="ops-part-eyebrow">' + esc(partLabel(d)) + ' ' + part.n + ' · ' + (ROMANS[pi] || '') + '</span>' +
       '<h2 class="ops-part-head-title">' + esc(part.title) + '</h2>' +
+      (part.sub ? '<p class="ops-part-head-sub">' + esc(part.sub) + '</p>' : '') +
       '<p class="ops-part-head-range">' + esc(part.range) + ' · ' + part.studies.length + ' ' + esc(T.sum_studies_label) + '</p>' +
       '</div>' +
       intro +

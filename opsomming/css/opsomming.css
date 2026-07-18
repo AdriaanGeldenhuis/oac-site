@@ -615,6 +615,14 @@ html {
   padding-right: 40px;
 }
 
+.ops-part-sub {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.94rem;
+  color: var(--text-muted);
+  margin-top: -4px;
+}
+
 .ops-part-range {
   display: inline-flex;
   width: fit-content;
@@ -697,6 +705,14 @@ html {
   font-size: 2rem;
   font-weight: 500;
   line-height: 1.2;
+}
+
+.ops-part-head-sub {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
 }
 
 .ops-part-head-range {
