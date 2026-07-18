@@ -1,37 +1,39 @@
 /* =====================================================================
-   Bybel Opsomming — client-side reader
-   Views: boeke → boek-oorsig (6 dele) → deel → studie
+   Bybel Opsomming — client-side reader (multi-book)
+   Views: boeke → boek-oorsig (dele/blokke) → deel → studie
    ===================================================================== */
 (function () {
   'use strict';
 
   const CFG = window.OPSOMMING || {};
   const T = CFG.t || {};
+  const BOOKS_DATA = CFG.booksData || {};
+  const AVAILABLE = Object.keys(BOOKS_DATA);
   const app = document.getElementById('opsApp');
 
-  const ROMANS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+  const ROMANS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
   const state = {
-    data: null,
-    flat: [],          // flat list of studies: {p, s, study}
-    read: new Set(),
-    searchIndex: [],
+    books: {},       // id → data
+    flat: {},        // id → [{pi, si, study}]
+    searchIndex: {}, // id → [...]
+    read: {},        // id → Set
     tab: 'ot',
   };
 
   // ---------- storage ----------
-  const readKey = () => 'ops_read_' + CFG.book;
-  const lastKey = () => 'ops_last_' + CFG.book;
+  const readKey = (bid) => 'ops_read_' + bid;
+  const lastKey = (bid) => 'ops_last_' + bid;
 
-  function loadRead() {
+  function loadRead(bid) {
     try {
-      const raw = localStorage.getItem(readKey());
-      state.read = new Set(raw ? JSON.parse(raw) : []);
-    } catch (e) { state.read = new Set(); }
+      const raw = localStorage.getItem(readKey(bid));
+      state.read[bid] = new Set(raw ? JSON.parse(raw) : []);
+    } catch (e) { state.read[bid] = new Set(); }
   }
 
-  function saveRead() {
-    try { localStorage.setItem(readKey(), JSON.stringify([...state.read])); } catch (e) {}
+  function saveRead(bid) {
+    try { localStorage.setItem(readKey(bid), JSON.stringify([...state.read[bid]])); } catch (e) {}
   }
 
   function loadFont() {
@@ -39,7 +41,6 @@
     if (v >= 0.85 && v <= 1.5) {
       document.documentElement.style.setProperty('--read-size', v + 'rem');
     }
-    return v;
   }
 
   function bumpFont(delta) {
@@ -64,42 +65,81 @@
   }
 
   function studyKey(pi, si) { return 'p' + pi + 's' + si; }
+  function isRead(bid, pi, si) { return state.read[bid] && state.read[bid].has(studyKey(pi, si)); }
 
-  function isRead(pi, si) { return state.read.has(studyKey(pi, si)); }
-
-  function partReadCount(pi) {
-    const part = state.data.parts[pi];
+  function partReadCount(bid, pi) {
+    const part = state.books[bid].parts[pi];
     let c = 0;
-    part.studies.forEach((_, si) => { if (isRead(pi, si)) c++; });
+    part.studies.forEach((_, si) => { if (isRead(bid, pi, si)) c++; });
     return c;
   }
 
-  function totalStudies() {
-    return state.flat.length;
+  function totalStudies(bid) { return (state.flat[bid] || []).length; }
+
+  function totalRead(bid) {
+    const d = state.books[bid];
+    let c = 0;
+    d.parts.forEach((p, pi) => p.studies.forEach((_, si) => { if (isRead(bid, pi, si)) c++; }));
+    return c;
   }
 
-  function totalRead() {
-    let c = 0;
-    state.data.parts.forEach((p, pi) => p.studies.forEach((_, si) => { if (isRead(pi, si)) c++; }));
-    return c;
+  // Content-specific part label ("Blok") wins when the UI language matches
+  // the content language; otherwise use the generic translated label.
+  function partLabel(d) {
+    const bd = BOOKS_DATA[d.book] || {};
+    if (d.part_label && bd.dataLang === CFG.lang) return d.part_label;
+    return T.sum_part;
+  }
+
+  function partsLabel(d) {
+    const bd = BOOKS_DATA[d.book] || {};
+    if (d.part_label_plural && bd.dataLang === CFG.lang) return d.part_label_plural;
+    return T.sum_parts;
+  }
+
+  function bookName(bid) {
+    const all = (CFG.books.ot || []).concat(CFG.books.nt || []);
+    const hit = all.filter((b) => b.id === bid)[0];
+    return hit ? hit.name : bid;
   }
 
   function setTitle(sub) {
     document.title = (sub ? sub + ' · ' : '') + (T.bible_summary || 'Bybel Opsomming');
   }
 
-  function scrollTop() { window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
+  function scrollTop() { window.scrollTo(0, 0); }
 
   function go(hash) { location.hash = hash; }
 
   // ---------- data ----------
-  function buildIndexes() {
-    state.flat = [];
-    state.searchIndex = [];
-    state.data.parts.forEach((part, pi) => {
+  const bookPromises = {};
+
+  function loadBook(bid) {
+    if (bookPromises[bid]) return bookPromises[bid];
+    bookPromises[bid] = fetch(BOOKS_DATA[bid].url)
+      .then((r) => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then((data) => {
+        data.book = bid;
+        state.books[bid] = data;
+        loadRead(bid);
+        buildIndexes(bid);
+        return data;
+      });
+    return bookPromises[bid];
+  }
+
+  function buildIndexes(bid) {
+    const d = state.books[bid];
+    const flat = [];
+    const idx = [];
+    d.parts.forEach((part, pi) => {
       part.studies.forEach((study, si) => {
-        state.flat.push({ pi, si, study });
+        flat.push({ pi, si, study });
         let text = '';
+        if (study.intro) study.intro.forEach((b) => { text += ' ' + blockText(b); });
         if (study.kind === 'study') {
           (study.sections || []).forEach((sec) => {
             if (sec.blocks) sec.blocks.forEach((b) => { text += ' ' + blockText(b); });
@@ -112,7 +152,7 @@
         } else {
           (study.blocks || []).forEach((b) => { text += ' ' + blockText(b); });
         }
-        state.searchIndex.push({
+        idx.push({
           pi, si,
           title: study.title,
           range: study.range || '',
@@ -122,6 +162,8 @@
         });
       });
     });
+    state.flat[bid] = flat;
+    state.searchIndex[bid] = idx;
   }
 
   function blockText(b) {
@@ -197,8 +239,9 @@
     return html;
   }
 
-  function langNotice() {
-    if (CFG.lang !== CFG.dataLang) {
+  function langNotice(bid) {
+    const bd = BOOKS_DATA[bid] || {};
+    if (bd.dataLang && bd.dataLang !== CFG.lang) {
       return '<div class="ops-notice"><span>🌍</span><span>' + esc(T.sum_af_only) + '</span></div>';
     }
     return '';
@@ -207,7 +250,6 @@
   // ---------- views ----------
   function viewBooks() {
     setTitle('');
-    const availableCount = (CFG.available || []).length;
     const totalBooks = CFG.books.ot.length + CFG.books.nt.length;
 
     const tabs =
@@ -219,15 +261,15 @@
     const list = CFG.books[state.tab] || [];
     let grid = '<div class="ops-books-grid ops-stagger">';
     list.forEach((b) => {
-      const avail = (CFG.available || []).indexOf(b.id) !== -1;
-      if (avail) {
-        const total = state.data ? totalStudies() : 0;
-        const read = state.data ? totalRead() : 0;
+      const d = state.books[b.id];
+      if (d) {
+        const total = totalStudies(b.id);
+        const read = totalRead(b.id);
         const pct = total ? Math.round((read / total) * 100) : 0;
         grid += '<button class="ops-book-card available" data-book="' + esc(b.id) + '">' +
           '<span class="ops-book-badge">' + esc(T.sum_available) + '</span>' +
           '<span class="ops-book-name">' + esc(b.name) + '</span>' +
-          '<span class="ops-book-state">' + esc(T.sum_parts) + ': 6 · ' + esc(T.sum_studies_label) + ': ' + total + '</span>' +
+          '<span class="ops-book-state">' + esc(partsLabel(d)) + ': ' + d.parts.length + ' · ' + esc(T.sum_studies_label) + ': ' + total + '</span>' +
           '<span class="ops-book-progress"><span style="width:' + pct + '%"></span></span>' +
           '</button>';
       } else {
@@ -246,9 +288,8 @@
       '<h2 class="ops-hero-title">' + esc(T.bible_summary) + '</h2>' +
       '<div class="ops-hero-ornament">✦</div>' +
       '</div>' +
-      langNotice() +
       tabs +
-      '<p class="ops-books-meta">' + esc(T.sum_books_available) + ': ' + availableCount + ' / ' + totalBooks + '</p>' +
+      '<p class="ops-books-meta">' + esc(T.sum_books_available) + ': ' + AVAILABLE.length + ' / ' + totalBooks + '</p>' +
       grid +
       '<div class="ops-foot-ornament">✦</div>' +
       '</div>';
@@ -261,16 +302,16 @@
     });
   }
 
-  function viewOverview() {
-    const d = state.data;
+  function viewOverview(bid) {
+    const d = state.books[bid];
     setTitle(d.title);
-    const total = totalStudies();
-    const read = totalRead();
+    const total = totalStudies(bid);
+    const read = totalRead(bid);
     const pct = total ? Math.round((read / total) * 100) : 0;
 
     let continueHtml = '';
     let last = null;
-    try { last = JSON.parse(localStorage.getItem(lastKey()) || 'null'); } catch (e) {}
+    try { last = JSON.parse(localStorage.getItem(lastKey(bid)) || 'null'); } catch (e) {}
     if (last && d.parts[last.pi] && d.parts[last.pi].studies[last.si]) {
       const st = d.parts[last.pi].studies[last.si];
       continueHtml =
@@ -282,15 +323,15 @@
 
     let parts = '<div class="ops-parts-grid ops-stagger">';
     d.parts.forEach((p, pi) => {
-      const readC = partReadCount(pi);
+      const readC = partReadCount(bid, pi);
       let dots = '';
       p.studies.forEach((_, si) => {
-        dots += '<i class="' + (isRead(pi, si) ? 'done' : '') + '"></i>';
+        dots += '<i class="' + (isRead(bid, pi, si) ? 'done' : '') + '"></i>';
       });
       parts +=
         '<button class="ops-part-card" data-pi="' + pi + '">' +
         '<span class="ops-part-roman">' + (ROMANS[pi] || pi + 1) + '</span>' +
-        '<span class="ops-part-eyebrow">' + esc(T.sum_part) + ' ' + p.n + '</span>' +
+        '<span class="ops-part-eyebrow">' + esc(partLabel(d)) + ' ' + p.n + '</span>' +
         '<span class="ops-part-title">' + esc(p.title) + '</span>' +
         '<span class="ops-part-range">' + esc(p.range) + '</span>' +
         '<span class="ops-part-foot">' +
@@ -300,16 +341,26 @@
     });
     parts += '</div>';
 
+    const hasIntro = d.intro && d.intro.blocks && d.intro.blocks.length;
+    const hasSymbols = d.symbols && d.symbols.items && d.symbols.items.length;
+    let chips = '';
+    if (hasIntro || hasSymbols) {
+      chips = '<div class="ops-chip-row">' +
+        (hasIntro ? '<button class="ops-chip" id="opsIntroChip">📖 ' + esc(T.sum_about_doc) + '</button>' : '') +
+        (hasSymbols ? '<button class="ops-chip" id="opsSymChip">🗝️ ' + esc(T.sum_symbol_key) + '</button>' : '') +
+        '</div>';
+    }
+
     app.innerHTML =
       '<div class="ops-view">' +
       '<button class="ops-back" id="opsBack">← ' + esc(T.choose_book) + '</button>' +
       '<div class="ops-hero">' +
-      '<p class="ops-hero-tagline">' + esc(d.tagline) + '</p>' +
+      (d.tagline ? '<p class="ops-hero-tagline">' + esc(d.tagline) + '</p>' : '') +
       '<h2 class="ops-hero-title">' + esc(d.title) + '</h2>' +
-      '<p class="ops-hero-sub">' + esc(d.subtitle) + '</p>' +
-      '<span class="ops-hero-note">📖 ' + esc(d.source_note) + '</span>' +
+      (d.subtitle ? '<p class="ops-hero-sub">' + esc(d.subtitle) + '</p>' : '') +
+      (d.source_note ? '<span class="ops-hero-note">📖 ' + esc(d.source_note) + '</span>' : '') +
       '</div>' +
-      langNotice() +
+      langNotice(bid) +
       '<div class="ops-search-wrap">' +
       '<input type="search" class="ops-search-input" id="opsSearch" placeholder="' + esc(T.sum_search_placeholder) + '" autocomplete="off">' +
       '<svg class="ops-search-icon" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
@@ -320,26 +371,25 @@
       '<div class="ops-progress-track"><span class="ops-progress-fill" style="width:' + pct + '%"></span></div>' +
       '<span class="ops-progress-text">' + read + '/' + total + ' · ' + pct + '%</span>' +
       '</div>' +
-      '<div class="ops-chip-row">' +
-      '<button class="ops-chip" id="opsIntroChip">📖 ' + esc(T.sum_about_doc) + '</button>' +
-      '<button class="ops-chip" id="opsSymChip">🗝️ ' + esc(T.sum_symbol_key) + '</button>' +
-      '</div>' +
+      chips +
       parts +
       '<div class="ops-foot-ornament">✦</div>' +
       '</div>';
 
     document.getElementById('opsBack').addEventListener('click', () => go('#/'));
-    document.getElementById('opsIntroChip').addEventListener('click', () => go('#/' + CFG.book + '/intro'));
-    document.getElementById('opsSymChip').addEventListener('click', () => go('#/' + CFG.book + '/simbole'));
+    const introChip = document.getElementById('opsIntroChip');
+    if (introChip) introChip.addEventListener('click', () => go('#/' + bid + '/intro'));
+    const symChip = document.getElementById('opsSymChip');
+    if (symChip) symChip.addEventListener('click', () => go('#/' + bid + '/simbole'));
     const cont = document.getElementById('opsContinue');
-    if (cont) cont.addEventListener('click', () => go('#/' + CFG.book + '/deel/' + (+cont.dataset.pi + 1) + '/studie/' + (+cont.dataset.si + 1)));
+    if (cont) cont.addEventListener('click', () => go('#/' + bid + '/deel/' + (+cont.dataset.pi + 1) + '/studie/' + (+cont.dataset.si + 1)));
     app.querySelectorAll('.ops-part-card').forEach((el) => {
-      el.addEventListener('click', () => go('#/' + CFG.book + '/deel/' + (+el.dataset.pi + 1)));
+      el.addEventListener('click', () => go('#/' + bid + '/deel/' + (+el.dataset.pi + 1)));
     });
-    bindSearch();
+    bindSearch(bid);
   }
 
-  function bindSearch() {
+  function bindSearch(bid) {
     const input = document.getElementById('opsSearch');
     const results = document.getElementById('opsSearchResults');
     if (!input) return;
@@ -349,7 +399,7 @@
       timer = setTimeout(() => {
         const q = input.value.trim().toLowerCase();
         if (q.length < 2) { results.innerHTML = ''; return; }
-        const hits = state.searchIndex.filter((it) => it.text.indexOf(q) !== -1).slice(0, 12);
+        const hits = (state.searchIndex[bid] || []).filter((it) => it.text.indexOf(q) !== -1).slice(0, 12);
         if (!hits.length) {
           results.innerHTML = '<p class="ops-empty">' + esc(T.sum_no_results) + '</p>';
           return;
@@ -369,21 +419,25 @@
             '</button>';
         }).join('');
         results.querySelectorAll('.ops-search-hit').forEach((el) => {
-          el.addEventListener('click', () => go('#/' + CFG.book + '/deel/' + (+el.dataset.pi + 1) + '/studie/' + (+el.dataset.si + 1)));
+          el.addEventListener('click', () => go('#/' + bid + '/deel/' + (+el.dataset.pi + 1) + '/studie/' + (+el.dataset.si + 1)));
         });
       }, 160);
     });
   }
 
-  function viewPart(pi) {
-    const d = state.data;
+  function viewPart(bid, pi) {
+    const d = state.books[bid];
     const part = d.parts[pi];
-    if (!part) { go('#/' + CFG.book); return; }
+    if (!part) { go('#/' + bid); return; }
     setTitle(part.title);
+
+    const intro = (part.intro && part.intro.length)
+      ? '<div class="ops-part-intro">' + renderBlocks(part.intro) + '</div>'
+      : '';
 
     let list = '<div class="ops-study-list ops-stagger">';
     part.studies.forEach((s, si) => {
-      const read = isRead(pi, si);
+      const read = isRead(bid, pi, si);
       list +=
         '<button class="ops-study-row' + (read ? ' read' : '') + '" data-si="' + si + '">' +
         '<span class="ops-study-num' + (s.kind === 'draad' ? ' draad' : '') + '">' + (s.n != null ? s.n : '🔗') + '</span>' +
@@ -401,17 +455,18 @@
       '<div class="ops-view">' +
       '<button class="ops-back" id="opsBack">← ' + esc(d.title) + '</button>' +
       '<div class="ops-part-head">' +
-      '<span class="ops-part-eyebrow">' + esc(T.sum_part) + ' ' + part.n + ' · ' + (ROMANS[pi] || '') + '</span>' +
+      '<span class="ops-part-eyebrow">' + esc(partLabel(d)) + ' ' + part.n + ' · ' + (ROMANS[pi] || '') + '</span>' +
       '<h2 class="ops-part-head-title">' + esc(part.title) + '</h2>' +
       '<p class="ops-part-head-range">' + esc(part.range) + ' · ' + part.studies.length + ' ' + esc(T.sum_studies_label) + '</p>' +
       '</div>' +
+      intro +
       list +
       '<div class="ops-foot-ornament">✦</div>' +
       '</div>';
 
-    document.getElementById('opsBack').addEventListener('click', () => go('#/' + CFG.book));
+    document.getElementById('opsBack').addEventListener('click', () => go('#/' + bid));
     app.querySelectorAll('.ops-study-row').forEach((el) => {
-      el.addEventListener('click', () => go('#/' + CFG.book + '/deel/' + (pi + 1) + '/studie/' + (+el.dataset.si + 1)));
+      el.addEventListener('click', () => go('#/' + bid + '/deel/' + (pi + 1) + '/studie/' + (+el.dataset.si + 1)));
     });
   }
 
@@ -422,16 +477,19 @@
     toepassing: { emoji: '🧭', key: 'sum_application' },
   };
 
-  function viewStudy(pi, si) {
-    const d = state.data;
+  function viewStudy(bid, pi, si) {
+    const d = state.books[bid];
     const part = d.parts[pi];
     const study = part && part.studies[si];
-    if (!study) { go('#/' + CFG.book); return; }
+    if (!study) { go('#/' + bid); return; }
     setTitle(study.title);
 
-    try { localStorage.setItem(lastKey(), JSON.stringify({ pi, si })); } catch (e) {}
+    try { localStorage.setItem(lastKey(bid), JSON.stringify({ pi, si })); } catch (e) {}
 
     let body = '';
+    if (study.intro && study.intro.length) {
+      body += '<div class="ops-study-intro">' + renderBlocks(study.intro) + '</div>';
+    }
     if (study.kind === 'study') {
       (study.sections || []).forEach((sec) => {
         const meta = SECTION_META[sec.k] || { emoji: '•', key: '' };
@@ -456,9 +514,10 @@
     }
 
     // prev/next across the whole book
-    const flatIdx = state.flat.findIndex((f) => f.pi === pi && f.si === si);
-    const prev = state.flat[flatIdx - 1];
-    const next = state.flat[flatIdx + 1];
+    const flat = state.flat[bid];
+    const flatIdx = flat.findIndex((f) => f.pi === pi && f.si === si);
+    const prev = flat[flatIdx - 1];
+    const next = flat[flatIdx + 1];
     let pager = '<div class="ops-pager">';
     if (prev) {
       pager += '<button class="ops-pager-btn prev" data-pi="' + prev.pi + '" data-si="' + prev.si + '">' +
@@ -472,14 +531,14 @@
     } else { pager += '<span class="ops-pager-spacer"></span>'; }
     pager += '</div>';
 
-    const read = isRead(pi, si);
+    const read = isRead(bid, pi, si);
 
     app.innerHTML =
       '<div class="ops-view ops-reader">' +
       '<div class="ops-reader-progress"><span id="opsReadProg"></span></div>' +
       '<div class="ops-reader-top">' +
       '<button class="ops-back" id="opsBack">←</button>' +
-      '<span class="ops-reader-crumb">' + esc(d.title) + ' · ' + esc(T.sum_part) + ' ' + part.n + ' · ' + esc(part.title) + '</span>' +
+      '<span class="ops-reader-crumb">' + esc(d.title) + ' · ' + esc(partLabel(d)) + ' ' + part.n + ' · ' + esc(part.title) + '</span>' +
       '<button class="ops-font-btn" id="opsFontMinus">A−</button>' +
       '<button class="ops-font-btn" id="opsFontPlus">A+</button>' +
       '</div>' +
@@ -488,7 +547,7 @@
       '<h2 class="ops-reader-title">' + esc(study.title) + '</h2>' +
       (study.range ? '<span class="ops-reader-range">' + esc(study.range) + '</span>' : '') +
       '</div>' +
-      langNotice() +
+      langNotice(bid) +
       body +
       '<div class="ops-reader-actions">' +
       '<button class="ops-mark-btn' + (read ? ' marked' : '') + '" id="opsMark">' +
@@ -498,16 +557,16 @@
       '<div class="ops-foot-ornament">✦</div>' +
       '</div>';
 
-    document.getElementById('opsBack').addEventListener('click', () => go('#/' + CFG.book + '/deel/' + (pi + 1)));
+    document.getElementById('opsBack').addEventListener('click', () => go('#/' + bid + '/deel/' + (pi + 1)));
     document.getElementById('opsFontMinus').addEventListener('click', () => bumpFont(-0.06));
     document.getElementById('opsFontPlus').addEventListener('click', () => bumpFont(0.06));
 
     const markBtn = document.getElementById('opsMark');
     markBtn.addEventListener('click', () => {
       const key = studyKey(pi, si);
-      if (state.read.has(key)) { state.read.delete(key); } else { state.read.add(key); }
-      saveRead();
-      const on = state.read.has(key);
+      if (state.read[bid].has(key)) { state.read[bid].delete(key); } else { state.read[bid].add(key); }
+      saveRead(bid);
+      const on = state.read[bid].has(key);
       markBtn.classList.toggle('marked', on);
       markBtn.innerHTML = '<span>' + (on ? '✓' : '○') + '</span><span>' + esc(on ? T.sum_marked_read : T.sum_mark_read) + '</span>';
     });
@@ -515,11 +574,11 @@
     app.querySelectorAll('.ops-pager-btn').forEach((el) => {
       el.addEventListener('click', () => {
         // moving forward marks the current study as read
-        if (el.classList.contains('next') && !state.read.has(studyKey(pi, si))) {
-          state.read.add(studyKey(pi, si));
-          saveRead();
+        if (el.classList.contains('next') && !state.read[bid].has(studyKey(pi, si))) {
+          state.read[bid].add(studyKey(pi, si));
+          saveRead(bid);
         }
-        go('#/' + CFG.book + '/deel/' + (+el.dataset.pi + 1) + '/studie/' + (+el.dataset.si + 1));
+        go('#/' + bid + '/deel/' + (+el.dataset.pi + 1) + '/studie/' + (+el.dataset.si + 1));
       });
     });
 
@@ -543,28 +602,30 @@
     onScroll();
   }
 
-  function viewIntro() {
-    const d = state.data;
+  function viewIntro(bid) {
+    const d = state.books[bid];
+    if (!d.intro || !d.intro.blocks || !d.intro.blocks.length) { go('#/' + bid); return; }
     setTitle(d.intro.title);
     app.innerHTML =
       '<div class="ops-view ops-reader">' +
       '<button class="ops-back" id="opsBack">← ' + esc(d.title) + '</button>' +
       '<div class="ops-reader-head">' +
       '<p class="ops-reader-eyebrow">📖</p>' +
-      '<h2 class="ops-reader-title">' + esc(d.intro.title) + '</h2>' +
+      '<h2 class="ops-reader-title">' + esc(d.intro.title || T.sum_about_doc) + '</h2>' +
       '</div>' +
-      langNotice() +
+      langNotice(bid) +
       '<div class="ops-prose">' + renderBlocks(d.intro.blocks) + '</div>' +
       '<div class="ops-foot-ornament">✦</div>' +
       '</div>';
-    document.getElementById('opsBack').addEventListener('click', () => go('#/' + CFG.book));
+    document.getElementById('opsBack').addEventListener('click', () => go('#/' + bid));
   }
 
-  function viewSymbols() {
-    const d = state.data;
+  function viewSymbols(bid) {
+    const d = state.books[bid];
+    if (!d.symbols || !d.symbols.items || !d.symbols.items.length) { go('#/' + bid); return; }
     setTitle(d.symbols.title);
     let grid = '<div class="ops-symbols-grid ops-stagger">';
-    (d.symbols.items || []).forEach((it) => {
+    d.symbols.items.forEach((it) => {
       grid += '<div class="ops-symbol-card">' +
         '<span class="ops-symbol-s">' + esc(it.s) + '</span>' +
         '<span class="ops-symbol-m">' + esc(it.m) + '</span></div>';
@@ -575,14 +636,14 @@
       '<button class="ops-back" id="opsBack">← ' + esc(d.title) + '</button>' +
       '<div class="ops-reader-head">' +
       '<p class="ops-reader-eyebrow">🗝️</p>' +
-      '<h2 class="ops-reader-title">' + esc(d.symbols.title) + '</h2>' +
+      '<h2 class="ops-reader-title">' + esc(d.symbols.title || T.sum_symbol_key) + '</h2>' +
       '</div>' +
-      langNotice() +
-      grid +
+      langNotice(bid) +
       (d.symbols.note ? '<div class="ops-symbols-note">' + fmt(d.symbols.note) + '</div>' : '') +
+      grid +
       '<div class="ops-foot-ornament">✦</div>' +
       '</div>';
-    document.getElementById('opsBack').addEventListener('click', () => go('#/' + CFG.book));
+    document.getElementById('opsBack').addEventListener('click', () => go('#/' + bid));
   }
 
   // ---------- router ----------
@@ -592,40 +653,37 @@
     scrollTop();
 
     if (!seg.length) { viewBooks(); return; }
-    if (seg[0] !== CFG.book || !state.data) { viewBooks(); return; }
+    const bid = seg[0];
+    if (AVAILABLE.indexOf(bid) === -1 || !state.books[bid]) { viewBooks(); return; }
 
-    if (seg.length === 1) { viewOverview(); return; }
-    if (seg[1] === 'intro') { viewIntro(); return; }
-    if (seg[1] === 'simbole') { viewSymbols(); return; }
+    if (seg.length === 1) { viewOverview(bid); return; }
+    if (seg[1] === 'intro') { viewIntro(bid); return; }
+    if (seg[1] === 'simbole') { viewSymbols(bid); return; }
     if (seg[1] === 'deel') {
       const pi = (parseInt(seg[2], 10) || 1) - 1;
       if (seg[3] === 'studie') {
         const si = (parseInt(seg[4], 10) || 1) - 1;
-        viewStudy(pi, si);
+        viewStudy(bid, pi, si);
         return;
       }
-      viewPart(pi);
+      viewPart(bid, pi);
       return;
     }
-    viewOverview();
+    viewOverview(bid);
   }
 
   // ---------- boot ----------
-  loadRead();
   loadFont();
 
-  fetch(CFG.dataUrl)
-    .then((r) => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then((data) => {
-      state.data = data;
-      buildIndexes();
-      window.addEventListener('hashchange', route);
-      route();
-    })
-    .catch((err) => {
-      app.innerHTML = '<p class="ops-empty">⚠️ ' + esc(String(err)) + '</p>';
-    });
+  Promise.all(AVAILABLE.map((bid) => loadBook(bid).catch((e) => {
+    console.error('opsomming: kon nie ' + bid + ' laai nie', e);
+    return null;
+  }))).then((results) => {
+    window.addEventListener('hashchange', route);
+    if (results.every((r) => r === null) && AVAILABLE.length) {
+      app.innerHTML = '<p class="ops-empty">⚠️ ' + esc(T.sum_no_results) + '</p>';
+      return;
+    }
+    route();
+  });
 })();

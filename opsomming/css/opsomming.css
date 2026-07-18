@@ -705,6 +705,39 @@ html {
   margin-top: 4px;
 }
 
+.ops-part-intro {
+  margin-bottom: 20px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--rose-gold);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(170deg, var(--bg-card), var(--bg-elevated));
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.ops-part-intro > * + * { margin-top: 12px; }
+.ops-part-intro strong { color: var(--rose-gold-light); }
+[data-theme="light"] .ops-part-intro strong { color: var(--rose-gold-dark); }
+
+.ops-study-intro {
+  margin-bottom: 20px;
+  padding: 12px 18px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--gold-soft);
+  font-family: var(--font-serif);
+  font-size: 0.94rem;
+  font-style: italic;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.ops-study-intro > * + * { margin-top: 8px; }
+
 .ops-study-list {
   display: flex;
   flex-direction: column;

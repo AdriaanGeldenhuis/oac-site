@@ -1,7 +1,7 @@
 <?php
 // =====================================================================
 // /opsomming/opsomming.php — Bybel Opsomming (Bible Summary)
-// Boek → 6 Dele → Studies met geestelike verklaring
+// Boek → Dele/Blokke → Studies met geestelike verklaring
 // =====================================================================
 require_once __DIR__ . '/../security/auth_gate.php';
 require_once __DIR__ . '/../includes/languages.php';
@@ -22,17 +22,26 @@ function t(string $key): string {
 function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 
 // ---------------------------------------------------------------------
-// Content resolution: try the user's language, fall back to Afrikaans.
-// Summaries are authored in Afrikaans first and translated over time.
+// Content resolution per book: try the user's language, fall back to
+// Afrikaans. Summaries are authored in Afrikaans first and translated
+// over time. A book is available when a data file for it exists.
 // ---------------------------------------------------------------------
-$book = 'genesis';
-$dataLang = $pageLang;
-$dataFile = __DIR__ . '/data/' . $dataLang . '/' . $book . '.json';
-if (!is_readable($dataFile)) {
-  $dataLang = 'af';
-  $dataFile = __DIR__ . '/data/af/' . $book . '.json';
+$availableBooks = ['genesis', 'exodus'];
+$bookConfig = [];
+foreach ($availableBooks as $b) {
+  $dl = $pageLang;
+  $df = __DIR__ . '/data/' . $dl . '/' . $b . '.json';
+  if (!is_readable($df)) {
+    $dl = 'af';
+    $df = __DIR__ . '/data/af/' . $b . '.json';
+  }
+  if (is_readable($df)) {
+    $bookConfig[$b] = [
+      'url' => '/opsomming/data/' . $dl . '/' . $b . '.json?v=' . filemtime($df),
+      'dataLang' => $dl,
+    ];
+  }
 }
-$dataUrl = '/opsomming/data/' . $dataLang . '/' . $book . '.json?v=' . (is_readable($dataFile) ? filemtime($dataFile) : time());
 
 // ---------------------------------------------------------------------
 // Bible books (Afrikaans 1933/53 names + English names).
@@ -65,7 +74,6 @@ $booksNT = [
   ['2petrus','2 Petrus','2 Peter'], ['1johannes','1 Johannes','1 John'], ['2johannes','2 Johannes','2 John'],
   ['3johannes','3 Johannes','3 John'], ['judas','Judas','Jude'], ['openbaring','Openbaring','Revelation'],
 ];
-$availableBooks = ['genesis'];
 
 // Book display name index: Afrikaans names for af, English otherwise
 $nameIdx = ($pageLang === 'af') ? 1 : 2;
@@ -116,10 +124,7 @@ $VER_JS  = filemtime(__DIR__ . '/js/opsomming.js');
   <script>
     window.OPSOMMING = {
       lang: <?= json_encode($pageLang) ?>,
-      dataLang: <?= json_encode($dataLang) ?>,
-      dataUrl: <?= json_encode($dataUrl) ?>,
-      book: <?= json_encode($book) ?>,
-      available: <?= json_encode($availableBooks) ?>,
+      booksData: <?= json_encode($bookConfig, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
       books: {
         ot: <?= json_encode($mapBooks($booksOT), JSON_UNESCAPED_UNICODE) ?>,
         nt: <?= json_encode($mapBooks($booksNT), JSON_UNESCAPED_UNICODE) ?>
