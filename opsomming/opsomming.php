@@ -26,7 +26,7 @@ function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE
 // Afrikaans. Summaries are authored in Afrikaans first and translated
 // over time. A book is available when a data file for it exists.
 // ---------------------------------------------------------------------
-$availableBooks = ['genesis', 'exodus', 'mattheus', 'markus', 'lukas', 'johannes', 'handelinge'];
+$availableBooks = ['genesis', 'exodus', 'mattheus', 'markus', 'lukas', 'johannes', 'handelinge', 'romeine'];
 $bookConfig = [];
 foreach ($availableBooks as $b) {
   $dl = $pageLang;
