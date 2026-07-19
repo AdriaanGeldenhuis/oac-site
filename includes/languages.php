@@ -4867,6 +4867,208 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Ingcinga Yosuku',
         'pt' => 'Pensamento do Dia',
         'st' => 'Mohopolo oa Letsatsi'
+    ],
+
+    // Bybel Opsomming (Bible Summary) module
+    'bible_summary' => [
+        'af' => 'Bybel Opsomming',
+        'en' => 'Bible Summary',
+        'zu' => 'Isifinyezo SeBhayibheli',
+        'xh' => 'Isishwankathelo SeBhayibhile',
+        'pt' => 'Resumo da Bíblia',
+        'st' => 'Khutsufatso ea Bibele'
+    ],
+    'bible_summary_tagline' => [
+        'af' => '’n Geestelike reis deur die Skrif',
+        'en' => 'A spiritual journey through Scripture',
+        'zu' => 'Uhambo lomoya eBhayibhelini',
+        'xh' => 'Uhambo lomoya eBhayibhileni',
+        'pt' => 'Uma jornada espiritual pelas Escrituras',
+        'st' => 'Leeto la moea ka Mangolo'
+    ],
+    'sum_available' => [
+        'af' => 'Beskikbaar',
+        'en' => 'Available',
+        'zu' => 'Iyatholakala',
+        'xh' => 'Iyafumaneka',
+        'pt' => 'Disponível',
+        'st' => 'E fumaneha'
+    ],
+    'sum_coming_soon' => [
+        'af' => 'Kom binnekort',
+        'en' => 'Coming soon',
+        'zu' => 'Iyeza maduze',
+        'xh' => 'Iyeza kungekudala',
+        'pt' => 'Em breve',
+        'st' => 'E tla haufinyane'
+    ],
+    'sum_part' => [
+        'af' => 'Deel',
+        'en' => 'Part',
+        'zu' => 'Ingxenye',
+        'xh' => 'Inxalenye',
+        'pt' => 'Parte',
+        'st' => 'Karolo'
+    ],
+    'sum_parts' => [
+        'af' => 'Dele',
+        'en' => 'Parts',
+        'zu' => 'Izingxenye',
+        'xh' => 'Iinxalenye',
+        'pt' => 'Partes',
+        'st' => 'Likarolo'
+    ],
+    'sum_studies_label' => [
+        'af' => 'studies',
+        'en' => 'studies',
+        'zu' => 'izifundo',
+        'xh' => 'izifundo',
+        'pt' => 'estudos',
+        'st' => 'lithuto'
+    ],
+    'sum_study_label' => [
+        'af' => 'Studie',
+        'en' => 'Study',
+        'zu' => 'Isifundo',
+        'xh' => 'Isifundo',
+        'pt' => 'Estudo',
+        'st' => 'Thuto'
+    ],
+    'sum_the_story' => [
+        'af' => 'Die verhaal',
+        'en' => 'The story',
+        'zu' => 'Indaba',
+        'xh' => 'Ibali',
+        'pt' => 'A história',
+        'st' => 'Pale'
+    ],
+    'sum_spiritual_meaning' => [
+        'af' => 'Kort geestelike verklaring',
+        'en' => 'Short spiritual explanation',
+        'zu' => 'Incazelo emfushane yokomoya',
+        'xh' => 'Ingcaciso emfutshane yokomoya',
+        'pt' => 'Breve explicação espiritual',
+        'st' => 'Tlhaloso e khutšoanyane ea moea'
+    ],
+    'sum_scripture' => [
+        'af' => 'Skrif',
+        'en' => 'Scripture',
+        'zu' => 'Umbhalo',
+        'xh' => 'Isibhalo',
+        'pt' => 'Escritura',
+        'st' => 'Lengolo'
+    ],
+    'sum_application' => [
+        'af' => 'Toepassing',
+        'en' => 'Application',
+        'zu' => 'Ukusetshenziswa',
+        'xh' => 'Ukusetyenziswa',
+        'pt' => 'Aplicação',
+        'st' => 'Tšebeliso'
+    ],
+    'sum_about_doc' => [
+        'af' => 'Oor hierdie leerstuk',
+        'en' => 'About this teaching',
+        'zu' => 'Mayelana nalesi sifundo',
+        'xh' => 'Malunga nesi sifundo',
+        'pt' => 'Sobre este ensino',
+        'st' => 'Ka thuto ena'
+    ],
+    'sum_symbol_key' => [
+        'af' => 'Sleutel van Simbole',
+        'en' => 'Key of Symbols',
+        'zu' => 'Ukhiye Wezimpawu',
+        'xh' => 'Isitshixo Seempawu',
+        'pt' => 'Chave de Símbolos',
+        'st' => 'Senotlolo sa Matšoao'
+    ],
+    'sum_af_only' => [
+        'af' => 'Hierdie opsomming is tans slegs in Afrikaans beskikbaar. Vertalings volg binnekort.',
+        'en' => 'This summary is currently only available in Afrikaans. Translations are coming soon.',
+        'zu' => 'Lesi sifinyezo sitholakala ngesiBhunu kuphela okwamanje. Ukuhunyushwa kuyeza maduze.',
+        'xh' => 'Esi sishwankathelo sifumaneka ngesiBhulu kuphela okwangoku. Iinguqulelo ziyeza kungekudala.',
+        'pt' => 'Este resumo está disponível apenas em africâner no momento. As traduções chegarão em breve.',
+        'st' => 'Khutsufatso ena e fumaneha ka Seafrikanse feela hajoale. Liphetolelo li tla haufinyane.'
+    ],
+    'sum_continue_reading' => [
+        'af' => 'Gaan voort met lees',
+        'en' => 'Continue reading',
+        'zu' => 'Qhubeka nokufunda',
+        'xh' => 'Qhubeka ufunda',
+        'pt' => 'Continuar a leitura',
+        'st' => 'Tsoela pele ho bala'
+    ],
+    'sum_start_reading' => [
+        'af' => 'Begin lees',
+        'en' => 'Start reading',
+        'zu' => 'Qala ukufunda',
+        'xh' => 'Qala ukufunda',
+        'pt' => 'Começar a ler',
+        'st' => 'Qala ho bala'
+    ],
+    'sum_mark_read' => [
+        'af' => 'Merk as gelees',
+        'en' => 'Mark as read',
+        'zu' => 'Maka njengokufundiwe',
+        'xh' => 'Phawula njengefundiweyo',
+        'pt' => 'Marcar como lido',
+        'st' => 'Tšoaea e le e baliloeng'
+    ],
+    'sum_marked_read' => [
+        'af' => 'Gelees',
+        'en' => 'Read',
+        'zu' => 'Kufundiwe',
+        'xh' => 'Ifundiwe',
+        'pt' => 'Lido',
+        'st' => 'E baliloe'
+    ],
+    'sum_next' => [
+        'af' => 'Volgende',
+        'en' => 'Next',
+        'zu' => 'Okulandelayo',
+        'xh' => 'Okulandelayo',
+        'pt' => 'Próximo',
+        'st' => 'E latelang'
+    ],
+    'sum_prev' => [
+        'af' => 'Vorige',
+        'en' => 'Previous',
+        'zu' => 'Okwedlule',
+        'xh' => 'Okwangaphambili',
+        'pt' => 'Anterior',
+        'st' => 'E fetileng'
+    ],
+    'sum_read_thread' => [
+        'af' => 'Die goue draad',
+        'en' => 'The golden thread',
+        'zu' => 'Umucu wegolide',
+        'xh' => 'Umsonto wegolide',
+        'pt' => 'O fio de ouro',
+        'st' => 'Khoele ea khauta'
+    ],
+    'sum_search_placeholder' => [
+        'af' => 'Soek in hierdie boek…',
+        'en' => 'Search in this book…',
+        'zu' => 'Sesha kule ncwadi…',
+        'xh' => 'Khangela kule ncwadi…',
+        'pt' => 'Pesquisar neste livro…',
+        'st' => 'Batla bukeng ena…'
+    ],
+    'sum_no_results' => [
+        'af' => 'Geen resultate gevind nie',
+        'en' => 'No results found',
+        'zu' => 'Ayikho imiphumela etholiwe',
+        'xh' => 'Akukho ziphumo zifunyenweyo',
+        'pt' => 'Nenhum resultado encontrado',
+        'st' => 'Ha ho liphetho tse fumanoeng'
+    ],
+    'sum_books_available' => [
+        'af' => 'Boeke beskikbaar',
+        'en' => 'Books available',
+        'zu' => 'Izincwadi ezitholakalayo',
+        'xh' => 'Iincwadi ezifumanekayo',
+        'pt' => 'Livros disponíveis',
+        'st' => 'Libuka tse fumanehang'
     ]
 ]);
 

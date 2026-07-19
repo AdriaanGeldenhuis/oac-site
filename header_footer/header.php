@@ -43,6 +43,8 @@ if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !
   $pageTitle = t_hdr('ai_smart_bible');
 } elseif ($isBiblePage) {
   $pageTitle = t_hdr('bible');
+} elseif (strpos($reqPath, '/opsomming/opsomming.php') !== false) {
+  $pageTitle = t_hdr('bible_summary');
 } elseif (strpos($reqPath, '/calendar/calendar.php') !== false) {
   $pageTitle = t_hdr('calendar');
 } elseif (strpos($reqPath, '/diary/diary.php') !== false) {
@@ -64,6 +66,7 @@ $navLinks = [
   ['/prayers/prayers.php', 'prayers'],
   ['/aislimbybel/aislimbybel.php', 'ai_smart_bible'],
   ['/bible/bible.php', 'bible'],
+  ['/opsomming/opsomming.php', 'bible_summary'],
   ['/calendar/calendar.php', 'calendar'],
   ['/diary/diary.php', 'diary'],
   ['/singemmanuel/singemmanuel.php', 'sing_emmanuel'],
