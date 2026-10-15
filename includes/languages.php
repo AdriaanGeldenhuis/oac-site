@@ -3633,6 +3633,46 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Pesquisar Canção',
         'st' => 'Batla Sefela'
     ],
+    'play_song' => [
+        'af' => 'Speel lied',
+        'en' => 'Play song',
+        'zu' => 'Dlala ingoma',
+        'xh' => 'Dlala ingoma',
+        'pt' => 'Tocar canção',
+        'st' => 'Bapala sefela'
+    ],
+    'player_play' => [
+        'af' => 'Speel',
+        'en' => 'Play',
+        'zu' => 'Dlala',
+        'xh' => 'Dlala',
+        'pt' => 'Tocar',
+        'st' => 'Bapala'
+    ],
+    'player_pause' => [
+        'af' => 'Pouse',
+        'en' => 'Pause',
+        'zu' => 'Misa okwesikhashana',
+        'xh' => 'Nqumama',
+        'pt' => 'Pausar',
+        'st' => 'Emisa hanyane'
+    ],
+    'player_loading' => [
+        'af' => 'Laai...',
+        'en' => 'Loading...',
+        'zu' => 'Iyalayisha...',
+        'xh' => 'Iyalayisha...',
+        'pt' => 'A carregar...',
+        'st' => 'E a kenya...'
+    ],
+    'player_error' => [
+        'af' => 'Kon nie die lied laai nie. Probeer weer.',
+        'en' => 'Could not load the song. Please try again.',
+        'zu' => 'Ayikwazanga ukulayisha ingoma. Zama futhi.',
+        'xh' => 'Ayikwazanga ukulayisha ingoma. Zama kwakhona.',
+        'pt' => 'Não foi possível carregar a canção. Tente novamente.',
+        'st' => 'Ha e a khona ho kenya sefela. Leka hape.'
+    ],
     'enter_song_number' => [
         'af' => 'Tik liednommer in',
         'en' => 'Enter song number',

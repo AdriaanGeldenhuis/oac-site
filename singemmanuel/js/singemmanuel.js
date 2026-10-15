@@ -12,6 +12,8 @@
   const grid = document.getElementById('songPickerGrid');
   const numberInput = document.getElementById('songNumberInput');
   const numberGoBtn = document.getElementById('songNumberGo');
+  const overlayContent = overlay ? overlay.querySelector('.se-overlay-content') : null;
+  const isTouch = !window.matchMedia('(hover: hover)').matches;
 
   // ===== SAVE SCROLL POSITION =====
   let savedScrollPosition = 0;
@@ -41,6 +43,7 @@
       if (numberInput) {
         numberInput.value = '';
         filterSongGrid('');
+        setTyping(false);
         // Only auto-focus on devices with a mouse/trackpad so the
         // on-screen keyboard doesn't cover the grid on phones
         if (window.matchMedia('(hover: hover)').matches) {
@@ -56,6 +59,12 @@
       document.body.style.overflow = '';
       window.scrollTo(0, savedScrollPosition);
     }
+  }
+
+  // Op fone: versteek die nommer-rooster terwyl die sleutelbord oop is,
+  // sodat mens nie per ongeluk 'n verkeerde nommer druk nie
+  function setTyping(on) {
+    if (overlayContent) overlayContent.classList.toggle('is-typing', on);
   }
 
   function filterSongGrid(value) {
@@ -137,6 +146,14 @@
         numberInput.value = digits;
       }
       filterSongGrid(digits);
+    });
+
+    numberInput.addEventListener('focus', function() {
+      if (isTouch) setTyping(true);
+    });
+
+    numberInput.addEventListener('blur', function() {
+      if (numberInput.value.trim() === '') setTyping(false);
     });
 
     numberInput.addEventListener('keydown', function(e) {

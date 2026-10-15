@@ -84,6 +84,14 @@ if (!$selectedSong && !empty($songs)) {
     $songParam = (string)$selectedSong['number'];
 }
 
+// Orrel-speler: slegs ampte 0-8 (Admin t/m Hulpkrag), en net as die MIDI bestaan.
+$stmt = $pdo->prepare("SELECT amp_id FROM users WHERE id = ? LIMIT 1");
+$stmt->execute([(int)$_SESSION['user_id']]);
+$myAmpId = $stmt->fetchColumn();
+$canPlay = $myAmpId !== false && $myAmpId !== null && (int)$myAmpId >= 0 && (int)$myAmpId <= 8;
+$hasMidi = $selectedSong && is_file(__DIR__ . '/media/' . sprintf('%03d', (int)$selectedSong['number']) . '.mid');
+$showPlayer = $canPlay && $hasMidi;
+
 $VER = time();
 ?><!doctype html>
 <html lang="<?= $lang ?>">
@@ -112,7 +120,20 @@ $VER = time();
   <main class="se-main">
     <!-- Language & Search Section -->
     <section class="se-section se-controls-section">
-      <h2 class="se-page-title">Sing Emmanuel<?php if ($selectedSong): ?> <span class="se-page-title-number"><?= t('hymn') ?> <?= htmlspecialchars((string)$selectedSong['number']) ?></span><?php endif; ?></h2>
+      <div class="se-title-row">
+        <h2 class="se-page-title">Sing Emmanuel<?php if ($selectedSong): ?> <span class="se-page-title-number"><?= t('hymn') ?> <?= htmlspecialchars((string)$selectedSong['number']) ?></span><?php endif; ?></h2>
+        <?php if ($showPlayer): ?>
+          <button type="button" class="se-play-open" id="openPlayer"
+                  data-song="<?= htmlspecialchars((string)$selectedSong['number']) ?>"
+                  aria-label="<?= t('play_song') ?>" title="<?= t('play_song') ?>">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="2"/>
+              <circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+        <?php endif; ?>
+      </div>
 
       <div class="se-controls-grid">
         <div class="se-language-toggle">
@@ -204,6 +225,36 @@ $VER = time();
       </div>
     </div>
   </div>
+
+  <?php if ($showPlayer): ?>
+  <!-- Orrel-speler Overlay -->
+  <div id="playerOverlay" class="se-overlay" hidden>
+    <div class="se-overlay-backdrop"></div>
+    <div class="se-overlay-content se-player-content" role="dialog" aria-modal="true" aria-labelledby="playerTitle">
+      <div class="se-overlay-header">
+        <h3 id="playerTitle"><?= t('hymn') ?> <?= htmlspecialchars((string)$selectedSong['number']) ?></h3>
+        <button class="se-overlay-close" id="closePlayer" aria-label="<?= t('close') ?>">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="se-player-body">
+        <button type="button" class="se-player-toggle" id="playerToggle" aria-pressed="false"
+                aria-label="<?= t('player_play') ?>"
+                data-label-play="<?= t('player_play') ?>" data-label-pause="<?= t('player_pause') ?>">
+          <svg class="se-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          <svg class="se-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>
+        </button>
+        <div class="se-player-progress" aria-hidden="true"><div class="se-player-bar" id="playerBar"></div></div>
+        <div class="se-player-time" id="playerTime">0:00</div>
+        <p class="se-player-status" id="playerStatus" role="status"
+           data-loading="<?= t('player_loading') ?>" data-error="<?= t('player_error') ?>"></p>
+      </div>
+    </div>
+  </div>
+  <script src="/singemmanuel/js/se-player.js?v=<?= $VER ?>"></script>
+  <?php endif; ?>
 
   <script src="/singemmanuel/js/singemmanuel.js?v=<?= $VER ?>"></script>
 
