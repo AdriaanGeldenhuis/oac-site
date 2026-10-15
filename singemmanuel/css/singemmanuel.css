@@ -859,6 +859,47 @@ html {
   transform: translateY(-1px) scale(1);
 }
 
+/* Lied-kieser: skermvullend onder die kopstuk, sodat die venster nie
+   skuif nie en al die nommers (tot 306) bereikbaar is */
+#songPickerOverlay {
+  top: var(--ghf-height, 70px);
+  bottom: 0;
+  height: auto;
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+#songPickerOverlay .se-overlay-content {
+  max-width: none;
+  max-height: none;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  padding: 20px 16px 0;
+  display: flex;
+  flex-direction: column;
+  animation: none;
+}
+
+#songPickerOverlay .se-overlay-header {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+}
+
+#songPickerOverlay .se-overlay-search {
+  flex-shrink: 0;
+}
+
+#songPickerOverlay .se-overlay-grid {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  align-content: start;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
 /* Terwyl die nommer getik word, versteek die rooster sodat mens nie
    per ongeluk 'n verkeerde nommer druk nie */
 .se-overlay-content.is-typing .se-overlay-grid {
