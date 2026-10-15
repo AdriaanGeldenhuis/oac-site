@@ -16,28 +16,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ${{ secrets.FTP_PROTOCOL || 'ftps' }}
-          port: ${{ secrets.FTP_PORT || 21 }}
-          server-dir: ${{ secrets.FTP_SERVER_DIR || './' }}
-          # Server-only data: never overwrite or delete these on the server.
-          exclude: |
-            **/.git*
-            **/.git*/**
-            .github/**
-            **/node_modules/**
-            **/config.php
-            **/secrets.php
-            **/email_config.php
-            **/firebase-service-account.json
-            *.env
-            uploads/**
-            storage/**
-            logs/**
-            data/notifications.db
-            App Files/**
+      - name: Set up SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${SSH_PORT:-2222}" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Rsync to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          # No --delete: server-only files are never removed.
+          rsync -rlptvz \
+            -e "ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-2222}" \
+            --exclude='.git' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='config.php' \
+            --exclude='secrets.php' \
+            --exclude='email_config.php' \
+            --exclude='firebase-service-account.json' \
+            --exclude='*.env' \
+            --exclude='/uploads/' \
+            --exclude='/storage/' \
+            --exclude='/logs/' \
+            --exclude='/data/notifications.db' \
+            --exclude='/App Files/' \
+            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
