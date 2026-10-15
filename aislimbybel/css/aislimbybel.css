@@ -60,55 +60,57 @@
   --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ===== LIGHT THEME - COMPLETE INVERSION ===== */
+/* ===== LIGHT THEME - TRI-CORE STYLE (warm white, charcoal ink, antique gold) ===== */
 [data-theme="light"] {
-  --color-black: #ffffff;
-  --color-glossy-black: #f8f8f8;
-  --color-charcoal: #f0f0f0;
-  --color-charcoal-light: #e0e0e0;
-  --color-rosegold: #c97d8a;
-  --color-rosegold-light: #d4939e;
-  --color-rosegold-dark: #9a5a64;
-  --color-peach: #000000;
-  --color-peach-light: #1a1a1a;
-  --color-silver: #2a2a2a;
-  --color-silver-dark: #4a4a4a;
-  --color-white: #000000;
-  
-  --bg-gradient-start: #ffffff;
-  --bg-gradient-mid: #f8f8f8;
-  --bg-gradient-end: #ffffff;
-  --bg-glow-1: rgba(183, 110, 121, 0.08);
-  --bg-glow-2: rgba(243, 195, 177, 0.05);
-  
-  --card-bg-start: rgba(255, 255, 255, 0.95);
-  --card-bg-end: rgba(248, 248, 248, 0.90);
-  --card-border: rgba(183, 110, 121, 0.4);
-  --card-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-  
-  --section-bg-start: rgba(255, 255, 255, 0.95);
-  --section-bg-end: rgba(248, 248, 248, 0.90);
-  --section-border: rgba(106, 106, 106, 0.3);
-  --section-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  
-  --text-primary: #000000;
-  --text-secondary: #1a1a1a;
-  --text-accent: #c97d8a;
-  --text-muted: #6a6a6a;
-  
-  --btn-bg-start: #f0f0f0;
-  --btn-bg-end: #e0e0e0;
-  --btn-border: #c0c0c0;
-  --btn-text: #2a2a2a;
-  
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.18);
-  
-  --glow-rosegold: 0 0 20px rgba(183, 110, 121, 0.3);
-  --glow-peach: 0 0 15px rgba(183, 110, 121, 0.2);
-  --glow-silver: 0 0 20px rgba(106, 106, 106, 0.2);
+  --color-black: #f6f5f1;
+  --color-glossy-black: #ffffff;
+  --color-charcoal: #eeece6;
+  --color-charcoal-light: #e4e1d9;
+  --color-rosegold: #a47c38;
+  --color-rosegold-light: #c7a15a;
+  --color-rosegold-dark: #8a6427;
+  --color-peach: #111827;
+  --color-peach-light: #1f2937;
+  --color-silver: #4a5361;
+  --color-silver-dark: #6b7482;
+  --color-white: #111827;
+
+  --bg-gradient-start: #f6f5f1;
+  --bg-gradient-mid: #f8f7f3;
+  --bg-gradient-end: #f1efe9;
+  --bg-glow-1: rgba(199, 161, 90, 0.16);
+  --bg-glow-2: rgba(199, 161, 90, 0.07);
+
+  --card-bg-start: #ffffff;
+  --card-bg-end: #fdfcf9;
+  --card-border: rgba(17, 24, 39, 0.10);
+  --card-shadow: 0 30px 70px -34px rgba(7, 17, 31, 0.30);
+
+  --section-bg-start: #ffffff;
+  --section-bg-end: #fbfaf7;
+  --section-border: rgba(17, 24, 39, 0.10);
+  --section-shadow: 0 24px 60px -32px rgba(7, 17, 31, 0.28);
+
+  --text-primary: #111827;
+  --text-secondary: #5a6474;
+  --text-accent: #8a6427;
+  --text-muted: #6b7482;
+
+  --btn-bg-start: #ffffff;
+  --btn-bg-end: #f6f5f1;
+  --btn-border: rgba(17, 24, 39, 0.18);
+  --btn-text: #111827;
+
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05), 0 6px 16px -10px rgba(7, 17, 31, 0.22);
+  --shadow-md: 0 2px 6px rgba(17, 24, 39, 0.05), 0 14px 30px -18px rgba(7, 17, 31, 0.28);
+  --shadow-lg: 0 30px 60px -30px rgba(7, 17, 31, 0.28);
+  --shadow-xl: 0 30px 80px -30px rgba(7, 17, 31, 0.32);
+
+  --glow-rosegold: 0 12px 28px -12px rgba(199, 161, 90, 0.55);
+  --glow-peach: 0 10px 24px -12px rgba(199, 161, 90, 0.40);
+  --glow-silver: 0 10px 24px -14px rgba(17, 24, 39, 0.25);
+
+  color-scheme: light;
 }
 
 /* ===== GLOBAL RESET ===== */
@@ -177,7 +179,13 @@ html {
 }
 
 [data-theme="light"] .sb-page-title {
-  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+  display: inline-block;
+  padding: 0 0.15em;
+  background: linear-gradient(115deg, #111827 0%, #5b4a26 42%, #a47c38 78%, #c7a15a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
 }
 
 .sb-main {
@@ -293,7 +301,8 @@ html {
 }
 
 [data-theme="light"] .sb-icon {
-  filter: drop-shadow(0 0 3px rgba(42, 42, 42, 0.3));
+  stroke: #8a6427;
+  filter: none;
 }
 
 .sb-section-title {
@@ -308,7 +317,8 @@ html {
 }
 
 [data-theme="light"] .sb-section-title {
-  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+  color: #111827;
+  text-shadow: none;
 }
 
 /* ===== LOADING INDICATOR ===== */
@@ -357,7 +367,9 @@ html {
 }
 
 [data-theme="light"] .sb-input {
-  box-shadow: var(--shadow-sm), inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: #f6f5f1;
+  border-color: rgba(17, 24, 39, 0.18);
+  box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.04);
 }
 
 .sb-input::placeholder {
@@ -467,7 +479,8 @@ html {
 }
 
 [data-theme="light"] .sb-btn-icon {
-  filter: drop-shadow(0 0 3px rgba(42, 42, 42, 0.3));
+  stroke: #07111f;
+  filter: none;
 }
 
 .sb-btn-text {
@@ -505,7 +518,8 @@ html {
 }
 
 [data-theme="light"] .sb-help-icon {
-  filter: drop-shadow(0 0 3px rgba(183, 110, 121, 0.3));
+  stroke: #8a6427;
+  filter: none;
 }
 
 .sb-help-text {
@@ -627,8 +641,8 @@ html {
 }
 
 [data-theme="light"] .sb-answer-content .sb-verse {
-  background: rgba(183, 110, 121, 0.08);
-  border-left-color: var(--color-rosegold);
+  background: rgba(164, 124, 56, 0.07);
+  border-left-color: #a47c38;
   color: var(--text-primary);
 }
 
@@ -642,7 +656,7 @@ html {
 }
 
 [data-theme="light"] .sb-answer-content .sb-heading {
-  color: var(--color-rosegold);
+  color: #8a6427;
 }
 
 .sb-answer-content strong {
@@ -651,7 +665,7 @@ html {
 }
 
 [data-theme="light"] .sb-answer-content strong {
-  color: var(--color-rosegold);
+  color: #111827;
 }
 
 .sb-answer-content em {
@@ -697,7 +711,8 @@ html {
 }
 
 [data-theme="light"] .sb-examples-title {
-  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+  color: #111827;
+  text-shadow: none;
 }
 
 .sb-examples-grid {
@@ -798,7 +813,7 @@ html {
 }
 
 [data-theme="light"] .sb-example-icon {
-  filter: drop-shadow(0 0 6px rgba(183, 110, 121, 0.3));
+  filter: none;
 }
 
 @keyframes icon-bob {
@@ -887,4 +902,128 @@ html {
     color: #000 !important;
     background: #fff !important;
   }
+}
+
+/* =====================================================================
+   LIGHT THEME - TRI-CORE FINISH
+   Light-only refinements: antique-gold accents instead of the rose glow,
+   hairline borders, soft long shadows, ivory fields and gold pill
+   buttons for the primary actions.
+   ===================================================================== */
+
+/* Sections */
+[data-theme="light"] .sb-section {
+  border-radius: 22px;
+  box-shadow: var(--section-shadow);
+}
+
+[data-theme="light"] .sb-section::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.08) 50%, transparent 100%);
+}
+
+[data-theme="light"] .sb-section:hover {
+  border-color: rgba(199, 161, 90, 0.45);
+  box-shadow: var(--shadow-xl);
+}
+
+[data-theme="light"] .sb-examples-section,
+[data-theme="light"] .sb-examples-section:hover {
+  border: none;
+  box-shadow: none;
+}
+
+[data-theme="light"] .sb-icon-wrapper {
+  background: linear-gradient(160deg, #fdfaf3 0%, #f6efe0 100%);
+  border: 1px solid rgba(164, 124, 56, 0.30);
+  box-shadow: 0 10px 22px -16px rgba(164, 124, 56, 0.55), inset 0 1px 0 #ffffff;
+}
+
+[data-theme="light"] .sb-icon-wrapper::before {
+  background: linear-gradient(45deg, transparent 30%, rgba(199, 161, 90, 0.22) 50%, transparent 70%);
+}
+
+[data-theme="light"] .sb-spinner {
+  border-color: rgba(17, 24, 39, 0.10);
+  border-top-color: #a47c38;
+  box-shadow: none;
+}
+
+/* Question field + ask button */
+[data-theme="light"] .sb-input:focus {
+  background: #ffffff;
+  border-color: #a47c38;
+  box-shadow: 0 0 0 4px rgba(164, 124, 56, 0.10);
+}
+
+[data-theme="light"] .sb-btn {
+  background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
+  border-color: rgba(168, 130, 63, 0.6);
+  border-radius: 999px;
+  color: #07111f;
+  box-shadow: 0 10px 30px -10px rgba(199, 161, 90, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="light"] .sb-btn .sb-btn-text {
+  font-weight: 700;
+}
+
+[data-theme="light"] .sb-btn::before,
+[data-theme="light"] .sb-btn-shine {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.45) 50%, transparent 100%);
+}
+
+[data-theme="light"] .sb-btn:hover {
+  border-color: #a8823f;
+  box-shadow: 0 18px 40px -12px rgba(199, 161, 90, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="light"] .sb-btn:active {
+  box-shadow: 0 6px 16px -8px rgba(199, 161, 90, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Help + answer */
+[data-theme="light"] .sb-help {
+  background: rgba(164, 124, 56, 0.06);
+  border-color: rgba(164, 124, 56, 0.25);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+[data-theme="light"] .sb-answer-panel {
+  border-width: 1px;
+  border-color: rgba(17, 24, 39, 0.09);
+  border-radius: 22px;
+}
+
+[data-theme="light"] .sb-answer-panel::before {
+  background: radial-gradient(circle, rgba(199, 161, 90, 0.07) 0%, transparent 70%);
+}
+
+/* Example cards - Tri-Core cards with a gold edge on hover */
+[data-theme="light"] .sb-example-card {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.09);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 18px 36px -26px rgba(7, 17, 31, 0.35);
+}
+
+[data-theme="light"] .sb-example-card::before {
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(199, 161, 90, 0.14) 0%, transparent 60%);
+}
+
+[data-theme="light"] .sb-card-shine {
+  background: linear-gradient(45deg, transparent 30%, rgba(199, 161, 90, 0.14) 50%, transparent 70%);
+}
+
+[data-theme="light"] .sb-example-card:hover {
+  border-color: rgba(199, 161, 90, 0.55);
+  box-shadow: 0 30px 60px -30px rgba(7, 17, 31, 0.30), 0 14px 30px -22px rgba(164, 124, 56, 0.45);
+}
+
+[data-theme="light"] .sb-example-card:active {
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.08), inset 0 2px 6px rgba(164, 124, 56, 0.10);
+}
+
+[data-theme="light"] .sb-example-text {
+  font-weight: 500;
 }

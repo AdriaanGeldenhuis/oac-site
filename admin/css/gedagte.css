@@ -175,3 +175,85 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =====================================================================
+   LIGHT THEME - TRI-CORE FINISH
+   Light-only refinements: antique-gold accents instead of the rose glow,
+   hairline borders, soft long shadows, ivory fields and gold pill
+   buttons for the primary actions.
+   ===================================================================== */
+
+[data-theme="light"] .gedagte-field label {
+  color: #5a6474;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[data-theme="light"] .gedagte-field textarea,
+[data-theme="light"] .gedagte-field input[type="text"],
+[data-theme="light"] .gedagte-field input[type="date"],
+[data-theme="light"] .gedagte-field input[type="time"] {
+  background: #f6f5f1;
+  border-color: rgba(17, 24, 39, 0.18);
+  color: #111827;
+}
+
+[data-theme="light"] .gedagte-field textarea:focus,
+[data-theme="light"] .gedagte-field input:focus {
+  background: #ffffff;
+  border-color: #a47c38;
+  box-shadow: 0 0 0 4px rgba(164, 124, 56, 0.10);
+}
+
+[data-theme="light"] .gedagte-list-section {
+  border-top-color: rgba(17, 24, 39, 0.10);
+}
+
+[data-theme="light"] .gedagte-list-title {
+  color: #8a6427;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+[data-theme="light"] .gedagte-item {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.09);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 14px 30px -24px rgba(7, 17, 31, 0.32);
+}
+
+[data-theme="light"] .gedagte-item--today {
+  border-color: #a47c38;
+  box-shadow: 0 0 0 3px rgba(199, 161, 90, 0.12), 0 14px 30px -24px rgba(7, 17, 31, 0.32);
+}
+
+[data-theme="light"] .gedagte-item-date {
+  color: #8a6427;
+  font-weight: 700;
+}
+
+[data-theme="light"] .gedagte-item-time {
+  color: #4a5361;
+  background: #eeece6;
+}
+
+[data-theme="light"] .gedagte-item-notif--sent {
+  color: #2e7d32;
+}
+
+[data-theme="light"] .gedagte-item-notif--pending {
+  color: #8a6427;
+  background: rgba(164, 124, 56, 0.10);
+}
+
+[data-theme="light"] .gedagte-delete-btn {
+  border-radius: 999px;
+  color: #c62828;
+  border-color: rgba(198, 40, 40, 0.35);
+}
+
+[data-theme="light"] .gedagte-delete-btn:hover {
+  background: rgba(198, 40, 40, 0.06);
+  border-color: #c62828;
+}

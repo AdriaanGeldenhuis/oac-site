@@ -149,17 +149,17 @@ $highlightColors = [
         }
 
         [data-theme="light"] {
-            --bg: #faf8f6;
+            --bg: #f6f5f1;
             --surface: #ffffff;
-            --surface-light: #f0eeec;
-            --primary: #c9847a;
-            --primary-dark: #a86860;
-            --peach: #1a1816;
-            --text: #1a1816;
-            --text-dim: #3d3835;
-            --border: rgba(169, 104, 96, 0.25);
+            --surface-light: #faf9f6;
+            --primary: #8a6427;
+            --primary-dark: #a47c38;
+            --peach: #111827;
+            --text: #111827;
+            --text-dim: #4a5361;
+            --border: rgba(17, 24, 39, 0.12);
             --editor-bg: #ffffff;
-            --editor-text: #1a1816;
+            --editor-text: #111827;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -466,7 +466,11 @@ $highlightColors = [
         [data-theme="light"] .editor font[color="white" i],
         [data-theme="light"] .editor font[color="#fae8e0" i],
         [data-theme="light"] .editor font[color="#f5d5c8" i],
-        [data-theme="light"] .editor font[color="#b8b8b8" i] {
+        [data-theme="light"] .editor font[color="#b8b8b8" i],
+        [data-theme="light"] .editor [style*="#c0c0c0" i],
+        [data-theme="light"] .editor [style*="rgb(192, 192, 192)"],
+        [data-theme="light"] .editor [style*="rgb(192,192,192)"],
+        [data-theme="light"] .editor font[color="#c0c0c0" i] {
             color: var(--editor-text) !important;
         }
 
@@ -477,7 +481,15 @@ $highlightColors = [
         [data-theme="light"] .editor [style*="rgb(201, 148, 133)"],
         [data-theme="light"] .editor [style*="rgb(201,148,133)"],
         [data-theme="light"] .editor font[color="#e8b4a8" i],
-        [data-theme="light"] .editor font[color="#c99485" i] {
+        [data-theme="light"] .editor font[color="#c99485" i],
+        [data-theme="light"] .editor [style*="#f3c3b1" i],
+        [data-theme="light"] .editor [style*="rgb(243, 195, 177)"],
+        [data-theme="light"] .editor [style*="rgb(243,195,177)"],
+        [data-theme="light"] .editor [style*="#b76e79" i],
+        [data-theme="light"] .editor [style*="rgb(183, 110, 121)"],
+        [data-theme="light"] .editor [style*="rgb(183,110,121)"],
+        [data-theme="light"] .editor font[color="#f3c3b1" i],
+        [data-theme="light"] .editor font[color="#b76e79" i] {
             color: var(--primary-dark) !important;
         }
 
@@ -584,12 +596,20 @@ $highlightColors = [
                 inset 0 1px 0 rgba(255, 255, 255, 0.14);
         }
         [data-theme="light"] .btn-primary {
-            background: linear-gradient(180deg, #ffffff 0%, #f6f4f1 100%);
-            border-color: rgba(176, 96, 84, 0.45);
+            background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
+            border-color: rgba(168, 130, 63, 0.6);
+            border-radius: 999px;
+            color: #07111f;
+            font-weight: 700;
             box-shadow:
-                0 2px 8px rgba(28, 22, 16, 0.08),
-                0 0 14px rgba(176, 96, 84, 0.12),
-                inset 0 1.5px 0 #ffffff;
+                0 10px 30px -10px rgba(199, 161, 90, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        [data-theme="light"] .btn-primary:hover {
+            border-color: #a8823f;
+            box-shadow:
+                0 18px 40px -12px rgba(199, 161, 90, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.45);
         }
 
         .btn:disabled, .tool-btn:disabled {
@@ -878,6 +898,93 @@ $highlightColors = [
             .editor { padding: 20px; min-height: 400px; }
             .actions { flex-direction: column; gap: 14px; }
             .actions .btn { width: 100%; justify-content: center; }
+        }
+
+        /* ===== LIGHT THEME - TRI-CORE FINISH ===== */
+        [data-theme="light"] body {
+            background:
+                radial-gradient(1000px 600px at 12% -10%, rgba(199, 161, 90, 0.14), transparent 60%),
+                #f6f5f1;
+        }
+        [data-theme="light"] .header {
+            border-radius: 22px;
+            box-shadow: 0 30px 70px -34px rgba(7, 17, 31, 0.30);
+        }
+        [data-theme="light"] .header h1 {
+            background: linear-gradient(115deg, #111827 0%, #5b4a26 42%, #a47c38 78%, #c7a15a 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .location {
+            background: #ffffff;
+            border-color: rgba(164, 124, 56, 0.45);
+            border-radius: 999px;
+        }
+        [data-theme="light"] .toolbar {
+            border-radius: 16px;
+            box-shadow: 0 14px 30px -24px rgba(7, 17, 31, 0.35);
+        }
+        [data-theme="light"] .tool-btn {
+            background: #ffffff;
+            border-radius: 8px;
+        }
+        [data-theme="light"] .tool-btn:hover {
+            border-color: #a47c38;
+            color: #8a6427;
+        }
+        [data-theme="light"] .tool-btn.active,
+        [data-theme="light"] .lang-tab.active {
+            background: rgba(164, 124, 56, 0.10);
+            border-color: #a47c38;
+            color: #8a6427;
+            box-shadow: none;
+        }
+        [data-theme="light"] .lang-tab {
+            border-radius: 999px;
+        }
+        [data-theme="light"] .editor-wrap,
+        [data-theme="light"] .modal-content {
+            box-shadow: 0 30px 70px -34px rgba(7, 17, 31, 0.30);
+        }
+        [data-theme="light"] .editor blockquote {
+            border-left-color: #a47c38;
+            background: rgba(164, 124, 56, 0.07);
+        }
+        [data-theme="light"] .editor hr {
+            background: linear-gradient(90deg, transparent, rgba(164, 124, 56, 0.55), transparent);
+        }
+        [data-theme="light"] .btn-secondary {
+            background: #ffffff;
+            border: 1px solid rgba(17, 24, 39, 0.20);
+            border-radius: 999px;
+            color: #111827;
+        }
+        [data-theme="light"] .btn-secondary:hover {
+            border-color: #a47c38;
+            color: #8a6427;
+        }
+        [data-theme="light"] .modal {
+            background: rgba(7, 17, 31, 0.40);
+        }
+        [data-theme="light"] .translate-overlay {
+            background: rgba(246, 245, 241, 0.94);
+        }
+        [data-theme="light"] .form-group label {
+            color: #5a6474;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+        [data-theme="light"] .form-control {
+            background: #f6f5f1;
+            border-color: rgba(17, 24, 39, 0.18);
+        }
+        [data-theme="light"] .form-control:focus {
+            background: #ffffff;
+            border-color: #a47c38;
+            box-shadow: 0 0 0 4px rgba(164, 124, 56, 0.10);
         }
     </style>
 </head>
