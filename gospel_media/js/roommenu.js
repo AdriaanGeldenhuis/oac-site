@@ -55,32 +55,32 @@
       
       /* ===== LIGHT THEME ===== */
       [data-theme="light"] {
-        --rm-overlay-bg: rgba(0, 0, 0, 0.3);
-        --rm-panel-bg-start: rgba(255, 255, 255, 0.98);
-        --rm-panel-bg-end: rgba(248, 248, 248, 0.95);
-        --rm-panel-border: rgba(183, 110, 121, 0.5);
-        --rm-panel-shadow: -8px 0 32px rgba(0, 0, 0, 0.15), 0 0 20px rgba(183, 110, 121, 0.3);
+        --rm-overlay-bg: rgba(7, 17, 31, 0.35);
+        --rm-panel-bg-start: rgba(246, 245, 241, 0.98);
+        --rm-panel-bg-end: rgba(238, 236, 230, 0.98);
+        --rm-panel-border: rgba(17, 24, 39, 0.11);
+        --rm-panel-shadow: -30px 0 80px -30px rgba(7, 17, 31, 0.35);
         
-        --rm-border-color: rgba(106, 106, 106, 0.3);
-        --rm-rosegold: #c97d8a;
-        --rm-rosegold-glow: rgba(183, 110, 121, 0.3);
-        --rm-peach: #000000;
-        --rm-silver: #2a2a2a;
-        --rm-silver-dark: #4a4a4a;
+        --rm-border-color: rgba(17, 24, 39, 0.10);
+        --rm-rosegold: #8a6427;
+        --rm-rosegold-glow: rgba(164, 124, 56, 0.45);
+        --rm-peach: #111827;
+        --rm-silver: #111827;
+        --rm-silver-dark: #6b7482;
         
-        --rm-btn-bg-start: #f0f0f0;
-        --rm-btn-bg-end: #e0e0e0;
-        --rm-btn-border: rgba(106, 106, 106, 0.4);
+        --rm-btn-bg-start: #ffffff;
+        --rm-btn-bg-end: #ffffff;
+        --rm-btn-border: rgba(17, 24, 39, 0.18);
         
-        --rm-item-bg-start: rgba(245, 245, 245, 0.9);
-        --rm-item-bg-end: rgba(240, 240, 240, 0.8);
-        --rm-item-hover-start: rgba(240, 240, 240, 0.95);
-        --rm-item-hover-end: rgba(235, 235, 235, 0.9);
-        --rm-item-active-start: rgba(183, 110, 121, 0.15);
-        --rm-item-active-end: rgba(183, 110, 121, 0.08);
+        --rm-item-bg-start: #ffffff;
+        --rm-item-bg-end: #ffffff;
+        --rm-item-hover-start: #fffdf8;
+        --rm-item-hover-end: #faf4e6;
+        --rm-item-active-start: rgba(164, 124, 56, 0.12);
+        --rm-item-active-end: rgba(164, 124, 56, 0.06);
         
-        --rm-scrollbar-track: rgba(240, 240, 240, 0.8);
-        --rm-scrollbar-thumb: linear-gradient(180deg, #c97d8a 0%, #8a8a8a 100%);
+        --rm-scrollbar-track: rgba(238, 236, 230, 0.8);
+        --rm-scrollbar-thumb: linear-gradient(180deg, #c7a15a 0%, #a47c38 100%);
       }
       
       /* ===== BASE STYLES ===== */
@@ -144,7 +144,7 @@
       }
       
       [data-theme="light"] #roommenu .rmx-hbubble{
-        text-shadow: 0 2px 6px var(--rm-rosegold-glow);
+        text-shadow: none;
       }
       
       #roommenu .rmx-close{
@@ -165,7 +165,25 @@
       }
       
       [data-theme="light"] #roommenu .rmx-close{
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 50%;
+        box-shadow: 0 1px 2px rgba(17,24,39,0.05), 0 10px 22px -14px rgba(7,17,31,0.3);
+      }
+
+      [data-theme="light"] #roommenu .rmx-close:hover{
+        border-color: #a47c38;
+        color: #8a6427;
+        box-shadow: 0 12px 26px -14px var(--rm-rosegold-glow);
+      }
+
+      [data-theme="light"] #roommenu .rmx-section-title{
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        border-bottom-color: rgba(17,24,39,0.11);
+      }
+
+      [data-theme="light"] #roommenu .rmx-link{
+        font-weight: 500;
       }
       
       #roommenu .rmx-close:hover{
@@ -227,7 +245,16 @@
       }
       
       [data-theme="light"] #roommenu .rmx-item{
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        box-shadow: 0 1px 2px rgba(17,24,39,0.04), 0 12px 26px -20px rgba(7,17,31,0.35);
+      }
+
+      [data-theme="light"] #roommenu .rmx-item:hover{
+        border-color: rgba(164,124,56,0.5);
+        box-shadow: 0 16px 32px -20px var(--rm-rosegold-glow);
+      }
+
+      [data-theme="light"] #roommenu .rmx-item.active{
+        border-color: #a47c38;
       }
       
       #roommenu .rmx-item:hover{
@@ -301,7 +328,9 @@
       }
       
       [data-theme="light"] #roommenu .rmx-badge.joined {
-        background: rgba(244, 162, 97, 0.15);
+        background: rgba(164, 124, 56, 0.10);
+        color: #8a6427;
+        border-color: rgba(164, 124, 56, 0.45);
       }
       
       #roommenu .rmx-empty{
@@ -339,7 +368,15 @@
       }
       
       [data-theme="light"] #roommenu .rmx-chip{
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 999px;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(17,24,39,0.05);
+      }
+
+      [data-theme="light"] #roommenu .rmx-chip:hover{
+        border-color: #a47c38;
+        color: #8a6427;
+        box-shadow: 0 12px 26px -16px var(--rm-rosegold-glow);
       }
       
       #roommenu .rmx-chip:hover{

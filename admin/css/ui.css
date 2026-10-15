@@ -59,10 +59,9 @@
 }
 
 [data-theme="light"] .oac-toast {
-  background: linear-gradient(180deg, #ffffff 0%, #f7f5f2 100%);
-  box-shadow:
-    0 8px 28px rgba(28, 22, 16, 0.16),
-    inset 0 1.5px 0 #ffffff;
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.12);
+  box-shadow: 0 24px 50px -20px rgba(7, 17, 31, 0.40);
 }
 
 .oac-toast-icon {
@@ -102,7 +101,10 @@
 [data-theme="light"] .oac-toast--success .oac-toast-icon { color: #2e7d32; }
 [data-theme="light"] .oac-toast--error { border-color: rgba(198, 40, 40, 0.4); }
 [data-theme="light"] .oac-toast--error .oac-toast-icon { color: #c62828; }
-[data-theme="light"] .oac-toast--info .oac-toast-icon { color: var(--rose-gold-dark, #8f4a3f); }
+[data-theme="light"] .oac-toast--info .oac-toast-icon {
+  color: #8a6427;
+  background: rgba(164, 124, 56, 0.12);
+}
 
 /* ===== CONFIRM DIALOG ===== */
 .oac-dialog-overlay {
@@ -124,7 +126,9 @@
 }
 
 [data-theme="light"] .oac-dialog-overlay {
-  background: rgba(40, 32, 26, 0.35);
+  background: rgba(7, 17, 31, 0.38);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .oac-dialog {
@@ -147,10 +151,10 @@
 }
 
 [data-theme="light"] .oac-dialog {
-  background: linear-gradient(160deg, #fffdf9 0%, #ffffff 55%, #f7f5f2 100%);
-  box-shadow:
-    0 24px 60px rgba(28, 22, 16, 0.22),
-    inset 0 1.5px 0 #ffffff;
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.10);
+  border-radius: 22px;
+  box-shadow: 0 40px 90px -30px rgba(7, 17, 31, 0.45);
 }
 
 .oac-dialog-msg {
@@ -218,13 +222,12 @@
 }
 
 [data-theme="light"] .oac-dialog-ok {
-  background: linear-gradient(180deg, #ffffff 0%, #f6f4f1 100%);
-  border-color: rgba(176, 96, 84, 0.45);
-  color: var(--rose-gold-dark, #8f4a3f);
-  box-shadow:
-    0 2px 8px rgba(28, 22, 16, 0.08),
-    0 0 14px var(--glow-rose, rgba(176, 96, 84, 0.16)),
-    inset 0 1.5px 0 #ffffff;
+  background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
+  border-color: rgba(168, 130, 63, 0.6);
+  border-radius: 999px;
+  color: #07111f;
+  font-weight: 700;
+  box-shadow: 0 10px 30px -10px rgba(199, 161, 90, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .oac-dialog-ok--danger,
@@ -246,12 +249,10 @@
 }
 
 [data-theme="light"] .oac-dialog-ok--danger {
-  background: linear-gradient(180deg, #ffffff 0%, #f8f3f2 100%);
+  background: #ffffff;
+  border-color: rgba(198, 40, 40, 0.45);
   color: #c62828;
-  box-shadow:
-    0 2px 8px rgba(28, 22, 16, 0.08),
-    0 0 14px rgba(198, 40, 40, 0.15),
-    inset 0 1.5px 0 #ffffff;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05);
 }
 
 @media (max-width: 640px) {
@@ -271,4 +272,38 @@
   .oac-dialog-overlay {
     transition-duration: 0.01ms !important;
   }
+}
+
+/* =====================================================================
+   LIGHT THEME - TRI-CORE FINISH
+   Light-only refinements: antique-gold accents instead of the rose glow,
+   hairline borders, soft long shadows, ivory fields and gold pill
+   buttons for the primary actions.
+   ===================================================================== */
+
+[data-theme="light"] .oac-toast--info {
+  border-color: rgba(164, 124, 56, 0.45);
+}
+
+[data-theme="light"] .oac-dialog-cancel {
+  border-color: rgba(17, 24, 39, 0.20);
+  border-radius: 999px;
+  color: #111827;
+  font-weight: 600;
+}
+
+[data-theme="light"] .oac-dialog-cancel:hover {
+  border-color: #a47c38;
+  color: #8a6427;
+}
+
+[data-theme="light"] .oac-dialog-ok:hover {
+  border-color: #a8823f;
+  box-shadow: 0 18px 40px -12px rgba(199, 161, 90, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="light"] .oac-dialog-ok--danger:hover {
+  background: rgba(198, 40, 40, 0.06);
+  border-color: #c62828;
+  box-shadow: 0 12px 26px -16px rgba(198, 40, 40, 0.5);
 }

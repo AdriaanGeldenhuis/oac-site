@@ -45,32 +45,34 @@
 
 /* ===== LIGHT THEME ===== */
 [data-theme="light"] {
-  --bg-base: #faf8f6;
+  --bg-base: #f6f5f1;
   --bg-elevated: #ffffff;
   --bg-card: #ffffff;
-  --bg-surface: #f5f2ef;
+  --bg-surface: #eeece6;
 
-  --rose-gold: #c9847a;
-  --rose-gold-light: #d99e95;
-  --rose-gold-dark: #a86860;
-  --peach: #1a1816;
-  --peach-light: #2a2826;
+  --rose-gold: #8a6427;
+  --rose-gold-light: #a47c38;
+  --rose-gold-dark: #a47c38;
+  --peach: #111827;
+  --peach-light: #1f2937;
 
-  --silver: #4a4a4a;
-  --silver-dark: #6a6a6a;
+  --silver: #4a5361;
+  --silver-dark: #6b7482;
 
-  --text-primary: #1a1816;
-  --text-secondary: #3d3835;
-  --text-muted: #6a6560;
+  --text-primary: #111827;
+  --text-secondary: #4a5361;
+  --text-muted: #6b7482;
 
-  --border: rgba(169, 104, 96, 0.2);
-  --border-light: rgba(0, 0, 0, 0.06);
-  --glow-rose: rgba(169, 104, 96, 0.15);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --border: rgba(164, 124, 56, 0.28);
+  --border-light: rgba(17, 24, 39, 0.09);
+  --glow-rose: rgba(199, 161, 90, 0.18);
+  --shadow: 0 30px 80px -30px rgba(7, 17, 31, 0.25);
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04), 0 18px 40px -24px rgba(7, 17, 31, 0.28);
 
-  --verse-hl: rgba(201, 132, 122, 0.12);
-  --gold-soft: rgba(201, 132, 122, 0.07);
+  --verse-hl: rgba(199, 161, 90, 0.14);
+  --gold-soft: rgba(164, 124, 56, 0.07);
+
+  color-scheme: light;
 }
 
 /* ===== BASE ===== */
@@ -1290,4 +1292,106 @@ html {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   html { scroll-behavior: auto; }
+}
+
+/* =====================================================================
+   LIGHT THEME - TRI-CORE FINISH
+   Light-only refinements: antique-gold accents instead of the rose glow,
+   hairline borders, soft long shadows, ivory fields and gold pill
+   buttons for the primary actions.
+   ===================================================================== */
+
+[data-theme="light"] .ops-hero-title {
+  background: linear-gradient(115deg, #111827 0%, #5b4a26 42%, #a47c38 78%, #c7a15a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .ops-hero-note,
+[data-theme="light"] .ops-tabs,
+[data-theme="light"] .ops-back,
+[data-theme="light"] .ops-search-input,
+[data-theme="light"] .ops-chip,
+[data-theme="light"] .ops-font-btn,
+[data-theme="light"] .ops-mark-btn {
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05);
+}
+
+[data-theme="light"] .ops-search-input:focus {
+  border-color: #a47c38;
+  box-shadow: 0 0 0 4px rgba(164, 124, 56, 0.10);
+}
+
+/* Filled gold states - Tri-Core gold with navy ink */
+[data-theme="light"] .ops-tab.active,
+[data-theme="light"] .ops-book-badge,
+[data-theme="light"] .ops-study-row.read .ops-study-check,
+[data-theme="light"] .ops-mark-btn.marked {
+  background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
+  border-color: #a8823f;
+  color: #07111f;
+  font-weight: 700;
+  box-shadow: 0 8px 22px -10px rgba(199, 161, 90, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+/* Book cards */
+[data-theme="light"] .ops-book-card {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+[data-theme="light"] .ops-book-card.available {
+  box-shadow: 0 0 0 1px rgba(164, 124, 56, 0.28), 0 18px 36px -26px rgba(7, 17, 31, 0.35);
+}
+
+[data-theme="light"] .ops-book-card.available:hover {
+  box-shadow: 0 0 0 1px #a47c38, 0 26px 50px -28px rgba(7, 17, 31, 0.35);
+}
+
+[data-theme="light"] .ops-book-card.available::before {
+  background: radial-gradient(ellipse 120% 90% at 50% -20%, rgba(199, 161, 90, 0.16), transparent 60%);
+}
+
+/* Progress */
+[data-theme="light"] .ops-book-progress span,
+[data-theme="light"] .ops-progress-fill,
+[data-theme="light"] .ops-reader-progress span {
+  background: linear-gradient(90deg, #a8823f 0%, #c7a15a 60%, #e2c27f 100%);
+  box-shadow: none;
+}
+
+[data-theme="light"] .ops-part-mini-progress i.done {
+  background: #a47c38;
+  border-color: #a47c38;
+  box-shadow: none;
+}
+
+/* Cards */
+[data-theme="light"] .ops-continue,
+[data-theme="light"] .ops-part-card,
+[data-theme="light"] .ops-study-row,
+[data-theme="light"] .ops-section,
+[data-theme="light"] .ops-symbol-card,
+[data-theme="light"] .ops-prose,
+[data-theme="light"] .ops-search-hit,
+[data-theme="light"] .ops-pager-btn {
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 16px 34px -26px rgba(7, 17, 31, 0.32);
+}
+
+[data-theme="light"] .ops-part-card:hover,
+[data-theme="light"] .ops-continue:hover {
+  border-color: rgba(199, 161, 90, 0.50);
+  box-shadow: 0 30px 60px -30px rgba(7, 17, 31, 0.28);
+}
+
+[data-theme="light"] .ops-study-row:hover,
+[data-theme="light"] .ops-pager-btn:hover,
+[data-theme="light"] .ops-search-hit:hover {
+  border-color: rgba(199, 161, 90, 0.50);
+  box-shadow: 0 20px 40px -26px rgba(7, 17, 31, 0.32);
+}
+
+[data-theme="light"] .ops-search-hit mark {
+  color: #111827;
 }

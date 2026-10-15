@@ -41,20 +41,33 @@
 
 /* ===== LIGHT THEME ===== */
 [data-theme="light"] {
-  --profile-bg: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
-  --profile-text: #1a1a1a;
-  --profile-card-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 248, 248, 0.90) 100%);
-  --profile-card-border: rgba(183, 110, 121, 0.3);
-  --profile-item-bg: rgba(248, 248, 248, 0.8);
-  --profile-item-hover: rgba(240, 240, 240, 0.9);
-  --profile-btn-bg: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+  --color-black: #f6f5f1;
+  --color-glossy-black: #ffffff;
+  --color-charcoal: #eeece6;
+  --color-charcoal-light: #e4e1d9;
+  --color-rosegold: #a47c38;
+  --color-rosegold-light: #c7a15a;
+  --color-peach: #111827;
+  --color-silver: #4a5361;
+  --color-silver-dark: #6b7482;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.18);
+  --profile-bg: linear-gradient(180deg, #f6f5f1 0%, #f1efe9 100%);
+  --profile-text: #111827;
+  --profile-card-bg: #ffffff;
+  --profile-card-border: rgba(17, 24, 39, 0.10);
+  --profile-item-bg: #faf9f6;
+  --profile-item-hover: #ffffff;
+  --profile-btn-bg: #ffffff;
 
-  --glow-rosegold: 0 0 20px rgba(183, 110, 121, 0.25);
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05), 0 6px 16px -10px rgba(7, 17, 31, 0.22);
+  --shadow-md: 0 2px 6px rgba(17, 24, 39, 0.05), 0 14px 30px -18px rgba(7, 17, 31, 0.28);
+  --shadow-lg: 0 30px 60px -30px rgba(7, 17, 31, 0.28);
+  --shadow-xl: 0 30px 80px -30px rgba(7, 17, 31, 0.32);
+
+  --glow-rosegold: 0 12px 28px -12px rgba(199, 161, 90, 0.55);
+  --glow-peach: none;
+
+  color-scheme: light;
 }
 
 * {
@@ -90,8 +103,8 @@
 
 [data-theme="light"] .profile-body::before {
   background:
-    radial-gradient(circle at 20% 30%, rgba(183, 110, 121, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(183, 110, 121, 0.04) 0%, transparent 50%);
+  radial-gradient(circle at 15% 0%, rgba(199, 161, 90, 0.16) 0%, transparent 50%),
+  radial-gradient(circle at 85% 100%, rgba(199, 161, 90, 0.07) 0%, transparent 50%);
 }
 
 /* ===== MAIN ===== */
@@ -239,7 +252,10 @@
 }
 
 [data-theme="light"] .profile-btn {
-  border-color: rgba(183, 110, 121, 0.3);
+  border-color: rgba(17, 24, 39, 0.20);
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05);
 }
 
 .profile-btn::before {
@@ -806,4 +822,217 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* =====================================================================
+   LIGHT THEME - TRI-CORE FINISH
+   Light-only refinements: antique-gold accents instead of the rose glow,
+   hairline borders, soft long shadows, ivory fields and gold pill
+   buttons for the primary actions.
+   ===================================================================== */
+
+/* Hero */
+[data-theme="light"] .profile-hero-glow {
+  background: radial-gradient(ellipse at center, rgba(199, 161, 90, 0.20) 0%, transparent 70%);
+}
+
+[data-theme="light"] .profile-hero-content {
+  border-radius: 22px;
+  box-shadow: var(--shadow-xl);
+}
+
+[data-theme="light"] .profile-avatar-large {
+  border-width: 3px;
+  border-color: #c7a15a;
+  box-shadow: 0 0 0 5px #ffffff, 0 24px 48px -20px rgba(7, 17, 31, 0.45);
+}
+
+[data-theme="light"] .profile-avatar-large:hover {
+  box-shadow: 0 0 0 5px #ffffff, 0 28px 56px -20px rgba(164, 124, 56, 0.55);
+}
+
+[data-theme="light"] .profile-avatar-initials {
+  background: linear-gradient(160deg, #fdfaf3 0%, #f3ead6 100%);
+  color: #8a6427;
+  text-shadow: none;
+}
+
+[data-theme="light"] .profile-hero-name {
+  display: inline-block;
+  padding: 0 0.15em;
+  background: linear-gradient(115deg, #111827 0%, #5b4a26 42%, #a47c38 78%, #c7a15a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+[data-theme="light"] .profile-hero-amp {
+  color: #8a6427;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  opacity: 1;
+}
+
+/* Buttons */
+[data-theme="light"] .profile-btn::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.16) 50%, transparent 100%);
+}
+
+[data-theme="light"] .profile-btn:hover {
+  border-color: #a47c38;
+  color: #8a6427;
+  box-shadow: 0 12px 26px -16px rgba(164, 124, 56, 0.55);
+}
+
+[data-theme="light"] .profile-btn-primary {
+  background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
+  border-color: rgba(168, 130, 63, 0.6);
+  color: #07111f;
+  font-weight: 700;
+  box-shadow: 0 10px 30px -10px rgba(199, 161, 90, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="light"] .profile-btn-primary:hover {
+  border-color: #a8823f;
+  color: #07111f;
+  box-shadow: 0 18px 40px -12px rgba(199, 161, 90, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="light"] .profile-btn-danger {
+  background: #ffffff;
+  border-color: rgba(194, 65, 12, 0.45);
+  color: #c2410c;
+}
+
+[data-theme="light"] .profile-btn-danger:hover {
+  background: rgba(194, 65, 12, 0.06);
+  border-color: #c2410c;
+  color: #c2410c;
+  box-shadow: 0 12px 26px -16px rgba(194, 65, 12, 0.5);
+}
+
+/* Cards */
+[data-theme="light"] .profile-card,
+[data-theme="light"] .profile-actions {
+  border-radius: 22px;
+}
+
+[data-theme="light"] .profile-card::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.08) 50%, transparent 100%);
+}
+
+[data-theme="light"] .profile-card:hover {
+  border-color: rgba(199, 161, 90, 0.45);
+  box-shadow: var(--shadow-xl);
+}
+
+[data-theme="light"] .profile-card-title {
+  color: #111827;
+  text-shadow: none;
+}
+
+[data-theme="light"] .profile-info-item:hover,
+[data-theme="light"] .profile-spouse-card:hover {
+  border-color: rgba(199, 161, 90, 0.45);
+  box-shadow: 0 14px 30px -22px rgba(7, 17, 31, 0.35);
+}
+
+[data-theme="light"] .profile-icon {
+  stroke: #8a6427;
+}
+
+[data-theme="light"] .profile-info-label {
+  color: #6b7482;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+[data-theme="light"] .profile-info-highlight {
+  color: #8a6427;
+  text-shadow: none;
+}
+
+[data-theme="light"] .profile-spouse-avatar {
+  border-color: #c7a15a;
+  box-shadow: 0 0 0 3px #ffffff, 0 10px 22px -12px rgba(7, 17, 31, 0.35);
+}
+
+[data-theme="light"] .profile-spouse-name {
+  color: #8a6427;
+}
+
+/* Modal */
+[data-theme="light"] .profile-modal-overlay {
+  background: rgba(7, 17, 31, 0.38);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+[data-theme="light"] .profile-modal-content {
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 22px;
+  box-shadow: 0 40px 90px -30px rgba(7, 17, 31, 0.45);
+}
+
+[data-theme="light"] .profile-modal-header {
+  background: #faf9f6;
+  border-bottom-color: rgba(17, 24, 39, 0.08);
+}
+
+[data-theme="light"] .profile-modal-title {
+  color: #111827;
+  text-shadow: none;
+}
+
+[data-theme="light"] .profile-modal-close:hover {
+  color: #8a6427;
+}
+
+[data-theme="light"] .profile-form-group label {
+  color: #5a6474;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[data-theme="light"] .profile-form-select {
+  background: #f6f5f1;
+  border-color: rgba(17, 24, 39, 0.18);
+  color: #111827;
+  box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+[data-theme="light"] .profile-form-select:focus {
+  background: #ffffff;
+  border-color: #a47c38;
+  box-shadow: 0 0 0 4px rgba(164, 124, 56, 0.10);
+}
+
+[data-theme="light"] .profile-modal-content::-webkit-scrollbar-track {
+  background: #eeece6;
+}
+
+/* Toast + loading */
+[data-theme="light"] .profile-toast {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.12);
+  border-radius: 14px;
+  color: #111827;
+  box-shadow: 0 24px 50px -20px rgba(7, 17, 31, 0.40);
+}
+
+[data-theme="light"] .profile-toast-success { border-color: rgba(46, 125, 50, 0.55); box-shadow: 0 24px 50px -20px rgba(7, 17, 31, 0.40); }
+[data-theme="light"] .profile-toast-error { border-color: rgba(194, 65, 12, 0.55); box-shadow: 0 24px 50px -20px rgba(7, 17, 31, 0.40); }
+
+[data-theme="light"] .profile-loading {
+  color: #8a6427;
+}
+
+[data-theme="light"] .profile-loading::after {
+  border-color: rgba(17, 24, 39, 0.10);
+  border-top-color: #a47c38;
 }

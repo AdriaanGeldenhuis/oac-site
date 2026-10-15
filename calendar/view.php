@@ -346,6 +346,81 @@ $VER = time();
       border-color: #2196f3;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(33, 150, 243, 0.4);
     }
+
+    /* Light theme - Tri-Core finish (warm white, charcoal ink, antique gold) */
+    [data-theme="light"] .calendar-body .cal-user-header {
+      background: #ffffff;
+      border-color: rgba(17, 24, 39, 0.10);
+      border-radius: 22px;
+      box-shadow: 0 30px 70px -34px rgba(7, 17, 31, 0.30);
+    }
+
+    [data-theme="light"] .calendar-body .cal-user-header::before {
+      background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.08) 50%, transparent 100%);
+    }
+
+    [data-theme="light"] .calendar-body .cal-user-avatar {
+      border-color: #c7a15a;
+      box-shadow: 0 0 0 3px #ffffff, 0 10px 22px -12px rgba(7, 17, 31, 0.35);
+    }
+
+    [data-theme="light"] .calendar-body .cal-user-avatar:hover {
+      box-shadow: 0 0 0 3px #ffffff, 0 16px 30px -14px rgba(164, 124, 56, 0.55);
+    }
+
+    [data-theme="light"] .calendar-body .cal-user-name {
+      color: #8a6427;
+      text-shadow: none;
+    }
+
+    [data-theme="light"] .calendar-body .cal-user-amp {
+      color: #5a6474;
+    }
+
+    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn {
+      background: #ffffff;
+      border-color: rgba(17, 24, 39, 0.18);
+      border-radius: 999px;
+      color: #111827;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05);
+    }
+
+    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn::before {
+      background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.16) 50%, transparent 100%);
+    }
+
+    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn:hover {
+      border-color: #a47c38;
+      color: #8a6427;
+      box-shadow: 0 12px 26px -16px rgba(164, 124, 56, 0.55);
+    }
+
+    [data-theme="light"] .calendar-body .cal-btn-export,
+    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn-export {
+      background: rgba(46, 125, 50, 0.08);
+      border-color: rgba(46, 125, 50, 0.45);
+      color: #2e7d32;
+    }
+
+    [data-theme="light"] .calendar-body .cal-btn-export:hover,
+    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn-export:hover {
+      background: rgba(46, 125, 50, 0.12);
+      border-color: #2e7d32;
+      color: #2e7d32;
+      box-shadow: 0 12px 26px -16px rgba(46, 125, 50, 0.5);
+    }
+
+    [data-theme="light"] .cal-toast {
+      background: #ffffff;
+      border-color: rgba(17, 24, 39, 0.12);
+      color: #111827;
+      box-shadow: 0 24px 50px -20px rgba(7, 17, 31, 0.40);
+    }
+
+    [data-theme="light"] .cal-toast-success { border-color: rgba(46, 125, 50, 0.55); }
+    [data-theme="light"] .cal-toast-error { border-color: rgba(194, 65, 12, 0.55); }
+    [data-theme="light"] .cal-toast-info { border-color: rgba(33, 150, 243, 0.55); }
     </style>
 </head>
 <body class="calendar-body">

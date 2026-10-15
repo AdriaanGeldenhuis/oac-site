@@ -135,6 +135,64 @@
   height: 16px;
 }
 
+/* ===== Light theme - Tri-Core style ===== */
+[data-theme="light"] .gedagtes-body {
+  background:
+    radial-gradient(1000px 600px at 12% -10%, var(--ambient-1), transparent 60%),
+    radial-gradient(900px 600px at 88% 115%, var(--ambient-2), transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+}
+
+[data-theme="light"] .gedagtes-title {
+  display: inline-block;
+  padding-right: 0.15em;
+  background: linear-gradient(115deg, #111827 0%, #5b4a26 42%, #a47c38 78%, #c7a15a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .gedagtes-card {
+  position: relative;
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.09);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .gedagtes-card:hover {
+  border-color: rgba(199, 161, 90, 0.45);
+  box-shadow: 0 30px 60px -30px rgba(7, 17, 31, 0.28);
+}
+
+[data-theme="light"] .gedagtes-card--today {
+  border-color: rgba(164, 124, 56, 0.55);
+  background:
+    radial-gradient(140% 90% at 0% 0%, rgba(199, 161, 90, 0.10) 0%, transparent 55%),
+    #ffffff;
+  box-shadow: 0 0 0 3px rgba(199, 161, 90, 0.10), var(--shadow-sm);
+}
+
+[data-theme="light"] .gedagtes-card-date {
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--rose-gold-dark);
+}
+
+[data-theme="light"] .gedagtes-card-author {
+  color: var(--rose-gold-dark);
+  font-weight: 500;
+}
+
+[data-theme="light"] .gedagtes-back {
+  color: var(--rose-gold-dark);
+  font-weight: 600;
+}
+
+[data-theme="light"] .gedagtes-back:hover {
+  color: #111827;
+}
+
 /* ===== Mobile ===== */
 @media (max-width: 640px) {
   .gedagtes-body {

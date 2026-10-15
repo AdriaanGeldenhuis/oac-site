@@ -9,8 +9,8 @@
 }
 
 [data-theme="light"] {
-  --input-bg: rgba(255, 255, 255, 0.8);
-  --input-border: #c0c0c0;
+  --input-bg: #f6f5f1;
+  --input-border: rgba(17, 24, 39, 0.18);
 }
 
 .afsprake-section {
@@ -284,7 +284,9 @@
 }
 
 [data-theme="light"] .afsprake-group-title {
-  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+  color: #111827;
+  text-shadow: none;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.11);
 }
 
 .afsprake-grid {
@@ -370,7 +372,9 @@
 }
 
 [data-theme="light"] .afsprake-avatar-initials {
-  background: linear-gradient(135deg, rgba(183, 110, 121, 0.15) 0%, rgba(183, 110, 121, 0.08) 100%);
+  background: linear-gradient(160deg, #fdfaf3 0%, #f3ead6 100%);
+  color: #8a6427;
+  text-shadow: none;
 }
 
 .afsprake-info {
@@ -512,7 +516,9 @@
 }
 
 [data-theme="light"] .afsprake-modal-overlay {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(7, 17, 31, 0.38);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .afsprake-modal-content {
@@ -662,13 +668,12 @@
 }
 
 [data-theme="light"] .afsprake-btn-primary {
-  background: linear-gradient(180deg, #ffffff 0%, #f6f4f1 100%);
-  border-color: rgba(176, 96, 84, 0.45);
-  color: var(--color-rosegold-dark);
-  box-shadow:
-    0 2px 8px rgba(28, 22, 16, 0.08),
-    0 0 14px rgba(176, 96, 84, 0.12),
-    inset 0 1.5px 0 #ffffff;
+  background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
+  border-color: rgba(168, 130, 63, 0.6);
+  border-radius: 999px;
+  color: #07111f;
+  font-weight: 700;
+  box-shadow: 0 10px 30px -10px rgba(199, 161, 90, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .afsprake-btn-secondary {
@@ -713,4 +718,148 @@
   .afsprake-modal-content {
     width: 95%;
   }
+}
+
+/* =====================================================================
+   LIGHT THEME - TRI-CORE FINISH
+   Light-only refinements: antique-gold accents instead of the rose glow,
+   hairline borders, soft long shadows, ivory fields and gold pill
+   buttons for the primary actions.
+   ===================================================================== */
+
+[data-theme="light"] .afsprake-subtitle {
+  color: #8a6427;
+}
+
+[data-theme="light"] .afsprake-card,
+[data-theme="light"] .afsprake-card-person {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.09);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 16px 34px -26px rgba(7, 17, 31, 0.32);
+}
+
+[data-theme="light"] .afsprake-card::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.08) 50%, transparent 100%);
+}
+
+[data-theme="light"] .afsprake-card-person::before {
+  background: radial-gradient(circle, rgba(199, 161, 90, 0.08) 0%, transparent 70%);
+}
+
+[data-theme="light"] .afsprake-card:hover,
+[data-theme="light"] .afsprake-card-person:hover {
+  border-color: rgba(199, 161, 90, 0.50);
+  box-shadow: 0 26px 50px -28px rgba(7, 17, 31, 0.30);
+}
+
+[data-theme="light"] .afsprake-header {
+  border-bottom-color: rgba(17, 24, 39, 0.08);
+}
+
+[data-theme="light"] .afsprake-header strong,
+[data-theme="light"] .afsprake-notes strong,
+[data-theme="light"] .afsprake-role {
+  color: #8a6427;
+}
+
+[data-theme="light"] .afsprake-detail-item svg {
+  stroke: #a47c38;
+}
+
+[data-theme="light"] .afsprake-notes {
+  background: rgba(164, 124, 56, 0.06);
+  border-left-color: #a47c38;
+}
+
+[data-theme="light"] .afsprake-btn {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+[data-theme="light"] .afsprake-btn::before,
+[data-theme="light"] .afsprake-btn-icon::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.16) 50%, transparent 100%);
+}
+
+[data-theme="light"] .afsprake-search-input:focus,
+[data-theme="light"] .afsprake-form-control:focus,
+[data-theme="light"] .afsprake-form-textarea:focus {
+  background: #ffffff;
+  border-color: #a47c38;
+  box-shadow: 0 0 0 4px rgba(164, 124, 56, 0.10);
+}
+
+[data-theme="light"] .afsprake-avatar {
+  border-color: #c7a15a;
+  box-shadow: 0 0 0 3px #ffffff, 0 10px 22px -12px rgba(7, 17, 31, 0.35);
+}
+
+[data-theme="light"] .afsprake-btn-icon {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.14);
+  border-radius: 50%;
+}
+
+[data-theme="light"] .afsprake-btn-icon:hover {
+  background: #ffffff;
+  border-color: #a47c38;
+  color: #8a6427;
+  box-shadow: 0 10px 22px -14px rgba(164, 124, 56, 0.55);
+}
+
+[data-theme="light"] .afsprake-btn-calendar {
+  color: #8a6427;
+}
+
+[data-theme="light"] .afsprake-btn-calendar:hover {
+  background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
+  border-color: #a8823f;
+  color: #07111f;
+}
+
+[data-theme="light"] .afsprake-modal-content {
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 22px;
+  box-shadow: 0 40px 90px -30px rgba(7, 17, 31, 0.45);
+}
+
+[data-theme="light"] .afsprake-modal-header {
+  border-bottom-color: rgba(17, 24, 39, 0.08);
+}
+
+[data-theme="light"] .afsprake-modal-header h3 {
+  color: #111827;
+}
+
+[data-theme="light"] .afsprake-modal-close:hover {
+  color: #8a6427;
+}
+
+[data-theme="light"] .afsprake-form-group label {
+  color: #5a6474;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[data-theme="light"] .afsprake-display-field {
+  background: #faf9f6;
+  border-color: rgba(17, 24, 39, 0.10);
+}
+
+[data-theme="light"] .afsprake-btn-primary:hover {
+  border-color: #a8823f;
+  box-shadow: 0 18px 40px -12px rgba(199, 161, 90, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="light"] .afsprake-btn-secondary {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.20);
+}
+
+[data-theme="light"] .afsprake-btn-secondary:hover {
+  border-color: #a47c38;
+  color: #8a6427;
 }

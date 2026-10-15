@@ -59,55 +59,57 @@
   --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ===== LIGHT THEME - COMPLETE INVERSION ===== */
+/* ===== LIGHT THEME - TRI-CORE STYLE (warm white, charcoal ink, antique gold) ===== */
 [data-theme="light"] {
-  --color-black: #ffffff;
-  --color-glossy-black: #f8f8f8;
-  --color-charcoal: #f0f0f0;
-  --color-charcoal-light: #e0e0e0;
-  --color-rosegold: #c97d8a;
-  --color-rosegold-light: #d4939e;
-  --color-rosegold-dark: #9a5a64;
-  --color-peach: #000000;
-  --color-peach-light: #1a1a1a;
-  --color-silver: #2a2a2a;
-  --color-silver-dark: #4a4a4a;
-  --color-white: #000000;
-  
-  --bg-gradient-start: #ffffff;
-  --bg-gradient-mid: #f8f8f8;
-  --bg-gradient-end: #ffffff;
-  --bg-glow-1: rgba(183, 110, 121, 0.08);
-  --bg-glow-2: rgba(243, 195, 177, 0.05);
-  
-  --card-bg-start: rgba(255, 255, 255, 0.95);
-  --card-bg-end: rgba(248, 248, 248, 0.90);
-  --card-border: rgba(183, 110, 121, 0.4);
-  --card-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-  
-  --section-bg-start: rgba(255, 255, 255, 0.95);
-  --section-bg-end: rgba(248, 248, 248, 0.90);
-  --section-border: rgba(106, 106, 106, 0.3);
-  --section-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  
-  --text-primary: #000000;
-  --text-secondary: #1a1a1a;
-  --text-accent: #c97d8a;
-  --text-muted: #6a6a6a;
-  
-  --btn-bg-start: #f0f0f0;
-  --btn-bg-end: #e0e0e0;
-  --btn-border: #c0c0c0;
-  --btn-text: #2a2a2a;
-  
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.18);
-  
-  --glow-rosegold: 0 0 20px rgba(183, 110, 121, 0.3);
-  --glow-peach: 0 0 15px rgba(183, 110, 121, 0.2);
-  --glow-silver: 0 0 20px rgba(106, 106, 106, 0.2);
+  --color-black: #f6f5f1;
+  --color-glossy-black: #ffffff;
+  --color-charcoal: #eeece6;
+  --color-charcoal-light: #e4e1d9;
+  --color-rosegold: #a47c38;
+  --color-rosegold-light: #c7a15a;
+  --color-rosegold-dark: #8a6427;
+  --color-peach: #111827;
+  --color-peach-light: #1f2937;
+  --color-silver: #4a5361;
+  --color-silver-dark: #6b7482;
+  --color-white: #111827;
+
+  --bg-gradient-start: #f6f5f1;
+  --bg-gradient-mid: #f8f7f3;
+  --bg-gradient-end: #f1efe9;
+  --bg-glow-1: rgba(199, 161, 90, 0.16);
+  --bg-glow-2: rgba(199, 161, 90, 0.07);
+
+  --card-bg-start: #ffffff;
+  --card-bg-end: #fdfcf9;
+  --card-border: rgba(17, 24, 39, 0.10);
+  --card-shadow: 0 30px 70px -34px rgba(7, 17, 31, 0.30);
+
+  --section-bg-start: #ffffff;
+  --section-bg-end: #fbfaf7;
+  --section-border: rgba(17, 24, 39, 0.10);
+  --section-shadow: 0 24px 60px -32px rgba(7, 17, 31, 0.28);
+
+  --text-primary: #111827;
+  --text-secondary: #5a6474;
+  --text-accent: #8a6427;
+  --text-muted: #6b7482;
+
+  --btn-bg-start: #ffffff;
+  --btn-bg-end: #f6f5f1;
+  --btn-border: rgba(17, 24, 39, 0.18);
+  --btn-text: #111827;
+
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05), 0 6px 16px -10px rgba(7, 17, 31, 0.22);
+  --shadow-md: 0 2px 6px rgba(17, 24, 39, 0.05), 0 14px 30px -18px rgba(7, 17, 31, 0.28);
+  --shadow-lg: 0 30px 60px -30px rgba(7, 17, 31, 0.28);
+  --shadow-xl: 0 30px 80px -30px rgba(7, 17, 31, 0.32);
+
+  --glow-rosegold: 0 12px 28px -12px rgba(199, 161, 90, 0.55);
+  --glow-peach: 0 10px 24px -12px rgba(199, 161, 90, 0.40);
+  --glow-silver: 0 10px 24px -14px rgba(17, 24, 39, 0.25);
+
+  color-scheme: light;
 }
 
 /* ===== GLOBAL RESET ===== */
@@ -174,7 +176,7 @@ html {
 }
 
 [data-theme="light"] .cal-hero-glow {
-  background: radial-gradient(ellipse at center, rgba(183, 110, 121, 0.12) 0%, rgba(243, 195, 177, 0.04) 40%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(199, 161, 90, 0.20) 0%, rgba(199, 161, 90, 0.06) 40%, transparent 70%);
 }
 
 @keyframes pulse-glow {
@@ -221,7 +223,7 @@ html {
 }
 
 [data-theme="light"] .cal-hero-title {
-  text-shadow: 0 2px 8px rgba(183, 110, 121, 0.3);
+  text-shadow: none;
   animation: none;
 }
 
@@ -332,7 +334,7 @@ html {
 }
 
 [data-theme="light"] .cal-user-name {
-  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+  text-shadow: none;
 }
 
 .cal-user-amp {
@@ -523,7 +525,7 @@ html {
 }
 
 [data-theme="light"] .cal-section-title {
-  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+  text-shadow: none;
 }
 
 /* ===== VIEWS ===== */
@@ -852,7 +854,7 @@ html {
 }
 
 [data-theme="light"] .cal-quick-title {
-  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+  text-shadow: none;
 }
 
 .cal-quick-btn {
@@ -961,7 +963,7 @@ html {
 }
 
 [data-theme="light"] .cal-modal-title {
-  text-shadow: 0 2px 6px rgba(183, 110, 121, 0.2);
+  text-shadow: none;
 }
 
 .cal-modal-close {
@@ -1583,4 +1585,328 @@ textarea:focus-visible {
     border-color: black;
     box-shadow: none;
   }
+}
+
+/* =====================================================================
+   LIGHT THEME - TRI-CORE FINISH
+   Light-only refinements: antique-gold accents instead of the rose glow,
+   hairline borders, soft long shadows, ivory fields and gold pill
+   buttons for the primary actions.
+   ===================================================================== */
+
+/* Hero */
+[data-theme="light"] .cal-hero-content {
+  border-radius: 22px;
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="light"] .cal-hero-title {
+  background: linear-gradient(115deg, #111827 0%, #5b4a26 42%, #a47c38 78%, #c7a15a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding: 0 0.15em;
+  text-shadow: none;
+  animation: none;
+}
+
+[data-theme="light"] .cal-section-title,
+[data-theme="light"] .cal-quick-title,
+[data-theme="light"] .cal-modal-title {
+  color: #111827;
+  text-shadow: none;
+}
+
+[data-theme="light"] .cal-user-name {
+  color: #8a6427;
+  text-shadow: none;
+}
+
+/* Cards / panels */
+[data-theme="light"] .cal-user-header {
+  border-color: rgba(17, 24, 39, 0.10);
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="light"] .cal-user-header::before,
+[data-theme="light"] .cal-section::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.08) 50%, transparent 100%);
+}
+
+[data-theme="light"] .cal-user-avatar {
+  border-color: #c7a15a;
+  box-shadow: 0 0 0 3px #ffffff, 0 10px 22px -12px rgba(7, 17, 31, 0.35);
+}
+
+[data-theme="light"] .cal-user-avatar::after {
+  background: linear-gradient(135deg, transparent 0%, rgba(199, 161, 90, 0.22) 100%);
+}
+
+[data-theme="light"] .cal-controls,
+[data-theme="light"] .cal-section {
+  border-radius: 22px;
+  box-shadow: var(--section-shadow);
+}
+
+[data-theme="light"] .cal-section:hover {
+  border-color: rgba(199, 161, 90, 0.45);
+  box-shadow: var(--shadow-xl);
+}
+
+/* View / nav / quick buttons - outline pills */
+[data-theme="light"] .cal-view-btn,
+[data-theme="light"] .cal-nav-btn,
+[data-theme="light"] .cal-quick-btn,
+[data-theme="light"] .cal-toggle-btn,
+[data-theme="light"] .cal-btn {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.18);
+  color: #111827;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05);
+}
+
+[data-theme="light"] .cal-view-btn,
+[data-theme="light"] .cal-btn {
+  border-radius: 999px;
+}
+
+[data-theme="light"] .cal-view-btn::before,
+[data-theme="light"] .cal-quick-btn::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.16) 50%, transparent 100%);
+}
+
+[data-theme="light"] .cal-view-btn:hover,
+[data-theme="light"] .cal-nav-btn:hover,
+[data-theme="light"] .cal-quick-btn:hover,
+[data-theme="light"] .cal-toggle-btn:hover,
+[data-theme="light"] .cal-btn:hover {
+  border-color: #a47c38;
+  color: #8a6427;
+  box-shadow: 0 12px 26px -16px rgba(164, 124, 56, 0.55);
+}
+
+[data-theme="light"] .cal-view-btn svg,
+[data-theme="light"] .cal-view-btn:hover svg,
+[data-theme="light"] .cal-nav-btn:hover svg,
+[data-theme="light"] .cal-quick-btn:hover svg {
+  filter: none;
+}
+
+[data-theme="light"] .cal-view-btn.active,
+[data-theme="light"] .cal-toggle-btn.active {
+  background: rgba(164, 124, 56, 0.10);
+  border-color: #a47c38;
+  color: #8a6427;
+  box-shadow: none;
+}
+
+/* Primary action - Tri-Core gold */
+[data-theme="light"] .cal-btn-primary {
+  background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
+  border-color: rgba(168, 130, 63, 0.6);
+  color: #07111f;
+  font-weight: 700;
+  box-shadow: 0 10px 30px -10px rgba(199, 161, 90, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="light"] .cal-btn-primary:hover {
+  border-color: #a8823f;
+  color: #07111f;
+  box-shadow: 0 18px 40px -12px rgba(199, 161, 90, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="light"] .cal-btn-shine {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.45) 50%, transparent 100%);
+}
+
+[data-theme="light"] .cal-btn-danger {
+  border-color: rgba(194, 65, 12, 0.45);
+  color: #c2410c;
+}
+
+[data-theme="light"] .cal-btn-danger:hover {
+  background: rgba(194, 65, 12, 0.06);
+  border-color: #c2410c;
+  color: #c2410c;
+  box-shadow: 0 12px 26px -16px rgba(194, 65, 12, 0.5);
+}
+
+[data-theme="light"] .cal-btn-export {
+  background: rgba(46, 125, 50, 0.08);
+  border-color: rgba(46, 125, 50, 0.45);
+  color: #2e7d32;
+}
+
+[data-theme="light"] .cal-btn-export:hover {
+  background: rgba(46, 125, 50, 0.12);
+  border-color: #2e7d32;
+  color: #2e7d32;
+  box-shadow: 0 12px 26px -16px rgba(46, 125, 50, 0.5);
+}
+
+/* Day / week / month grid */
+[data-theme="light"] .cal-hour-label {
+  background: #faf9f6;
+  border-bottom-color: rgba(17, 24, 39, 0.06);
+}
+
+[data-theme="light"] .cal-hour-slot {
+  border-bottom-color: rgba(17, 24, 39, 0.06);
+}
+
+[data-theme="light"] .cal-hour-slot:hover {
+  background: rgba(199, 161, 90, 0.07);
+}
+
+[data-theme="light"] .cal-week-day,
+[data-theme="light"] .cal-day {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.08);
+}
+
+[data-theme="light"] .cal-week-day:hover,
+[data-theme="light"] .cal-day:hover {
+  background: #fffdf8;
+  border-color: rgba(199, 161, 90, 0.50);
+  box-shadow: 0 12px 24px -18px rgba(7, 17, 31, 0.35);
+}
+
+[data-theme="light"] .cal-week-day.sunday {
+  background: #fbf8f1;
+}
+
+[data-theme="light"] .cal-week-day.today,
+[data-theme="light"] .cal-day.today {
+  background: linear-gradient(180deg, #fffdf8 0%, #faf3e3 100%);
+  border-color: #a47c38;
+  box-shadow: 0 0 0 3px rgba(199, 161, 90, 0.14);
+}
+
+[data-theme="light"] .cal-day.today .cal-day-number {
+  color: #8a6427;
+  font-weight: 700;
+}
+
+[data-theme="light"] .cal-week-day-header,
+[data-theme="light"] .cal-month-weekdays > div {
+  color: #8a6427;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+[data-theme="light"] .cal-month-weekdays {
+  background: #faf9f6;
+  border-bottom-width: 1px;
+}
+
+[data-theme="light"] .cal-event {
+  box-shadow: 0 4px 10px -6px rgba(7, 17, 31, 0.45);
+}
+
+/* Overlays + modals */
+[data-theme="light"] .cal-quick-overlay,
+[data-theme="light"] .cal-modal-overlay {
+  background: rgba(7, 17, 31, 0.38);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+[data-theme="light"] .cal-quick-panel,
+[data-theme="light"] .cal-modal-content {
+  border-width: 1px;
+  border-color: rgba(17, 24, 39, 0.10);
+  border-radius: 22px;
+  box-shadow: 0 40px 90px -30px rgba(7, 17, 31, 0.45);
+}
+
+[data-theme="light"] .cal-modal-header {
+  border-bottom-color: rgba(17, 24, 39, 0.08);
+}
+
+[data-theme="light"] .cal-modal-close:hover {
+  color: #8a6427;
+}
+
+[data-theme="light"] .cal-modal-body::-webkit-scrollbar-track,
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #eeece6;
+}
+
+[data-theme="light"] .cal-modal-body::-webkit-scrollbar-thumb,
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #c7a15a 0%, #a47c38 100%);
+}
+
+/* Forms - Tri-Core fields */
+[data-theme="light"] .cal-form-label {
+  color: #5a6474;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[data-theme="light"] .cal-form-input,
+[data-theme="light"] .cal-form-select,
+[data-theme="light"] .cal-form-textarea {
+  background: #f6f5f1;
+  border-color: rgba(17, 24, 39, 0.18);
+  box-shadow: inset 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+[data-theme="light"] .cal-form-input:focus,
+[data-theme="light"] .cal-form-select:focus,
+[data-theme="light"] .cal-form-textarea:focus {
+  background: #ffffff;
+  border-color: #a47c38;
+  box-shadow: 0 0 0 4px rgba(164, 124, 56, 0.10);
+}
+
+/* Toasts + loading */
+[data-theme="light"] .cal-toast {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 24px 50px -20px rgba(7, 17, 31, 0.40);
+}
+
+[data-theme="light"] .cal-toast-success {
+  border-color: rgba(46, 125, 50, 0.55);
+}
+
+[data-theme="light"] .cal-toast-error {
+  border-color: rgba(194, 65, 12, 0.55);
+}
+
+[data-theme="light"] .cal-loading {
+  color: #8a6427;
+}
+
+[data-theme="light"] .cal-loading::after {
+  border-color: rgba(17, 24, 39, 0.10);
+  border-top-color: #a47c38;
+}
+
+/* Focus + selection */
+[data-theme="light"] button:focus-visible,
+[data-theme="light"] input:focus-visible,
+[data-theme="light"] select:focus-visible,
+[data-theme="light"] textarea:focus-visible {
+  outline-color: #a47c38;
+}
+
+[data-theme="light"] .cal-view-btn:focus,
+[data-theme="light"] .cal-nav-btn:focus,
+[data-theme="light"] .cal-quick-btn:focus,
+[data-theme="light"] .cal-btn:focus {
+  box-shadow: 0 0 0 3px rgba(199, 161, 90, 0.35);
+}
+
+[data-theme="light"] ::selection {
+  background: rgba(199, 161, 90, 0.35);
+  color: #07111f;
 }
