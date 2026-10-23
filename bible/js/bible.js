@@ -546,15 +546,6 @@
     }
   }
 
-  // Onthou die leesposisie vir "Gaan voort met lees" op die tuisblad.
-  // Net ná werklike blaai/navigasie, nie by die eerste laai van Genesis 1 nie.
-  function rememberReadingPosition() {
-    if (!state.viewRef) return;
-    try {
-      localStorage.setItem('oac_last_read', JSON.stringify({ ref: state.viewRef, t: Date.now() }));
-    } catch (e) { /* storage unavailable */ }
-  }
-
   // ===== PROGRESSIVE RENDERING =====
   function renderInitialChapters() {
     state.currentBookIndex = 0;
@@ -801,7 +792,6 @@
         }
 
         updateHeaderRef();
-        rememberReadingPosition();
 
         // Periodically check for gaps
         clearTimeout(checkTimeout);
@@ -1204,10 +1194,7 @@
       }
       // Refresh after the smooth scroll has settled so the title matches
       // wherever the user actually landed (in case scroll snaps elsewhere).
-      setTimeout(() => {
-        updateHeaderRef();
-        rememberReadingPosition();
-      }, 700);
+      setTimeout(updateHeaderRef, 700);
     }, 100);
   }
 
@@ -2220,17 +2207,6 @@
         if (refParam) {
           setTimeout(() => goToReference(refParam), 100);
         }
-
-        // Deep links from the home page: ?q=<soekterm>, ?panel=bookmarks|notes
-        const qParam = (urlParams.get('q') || '').trim().slice(0, 120);
-        if (qParam && els.searchInput) {
-          showPanel(els.searchPanel);
-          els.searchInput.value = qParam;
-          handleSearch();
-        }
-        const panelParam = urlParams.get('panel');
-        if (panelParam === 'bookmarks') els.bookmarksToggle?.click();
-        else if (panelParam === 'notes') els.notesToggle?.click();
       }, 500);
 
     } catch (e) {
