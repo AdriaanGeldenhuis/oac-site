@@ -570,72 +570,73 @@ body.ghf-open .ghf-drawer {
   visibility: visible;
 }
 
-/* The rose window, turning slowly behind the menu (only while it is open) */
-.ghf-drawer-window {
+/* A wooden cross with a halo and slowly turning rays behind the menu.
+   The rays only turn while the menu is open, so a closed menu costs nothing. */
+.ghf-drawer-cross {
+  --cw: calc(var(--cross-h) * 0.7143);         /* image is 400 x 560 */
+  --cross-h: min(74vmin, 480px);
   position: absolute;
-  top: -14vmin;
-  right: -28vmin;
-  width: min(108vmin, 640px);
-  height: min(108vmin, 640px);
-  opacity: 0.34;
+  top: calc(var(--ghf-height) * 0.5);
+  right: max(3vmin, 14px);
+  width: var(--cw);
+  height: var(--cross-h);
+  opacity: 0.5;
   pointer-events: none;
   z-index: 0;
-  -webkit-mask-image: radial-gradient(circle, #000 88%, transparent 100%);
-          mask-image: radial-gradient(circle, #000 88%, transparent 100%);
+  isolation: isolate;
 }
 
-[data-theme="light"] .ghf-drawer-window {
-  opacity: 0.5;
-}
-
-.ghf-drawer-window svg {
-  position: absolute;
-  inset: 0;
+.ghf-drawer-cross img {
+  display: block;
   width: 100%;
   height: 100%;
-  animation: ghf-spin 260s linear infinite paused;
+  /* the foot dissolves into the dark */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 95%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 95%);
+}
+
+/* halo */
+.ghf-drawer-cross::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 30.36%;
+  width: calc(var(--cross-h) * 1.5);
+  height: calc(var(--cross-h) * 1.5);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(var(--ghf-amber-rgb), 0.45), rgba(var(--ghf-amber-rgb), 0.14) 45%, transparent 100%);
+}
+
+/* rays, centred where the beams meet */
+.ghf-drawer-cross::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 30.36%;
+  width: calc(var(--cross-h) * 3);
+  height: calc(var(--cross-h) * 3);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 6deg at 50% 50%, rgba(var(--ghf-amber-rgb), 0.22) 0deg 2.2deg, transparent 2.2deg 12deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.45) 30%, transparent 58%);
+          mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.45) 30%, transparent 58%);
+  animation: ghf-rays 300s linear infinite paused;
   will-change: transform;
 }
 
-body.ghf-open .ghf-drawer-window svg {
+body.ghf-open .ghf-drawer-cross::before {
   animation-play-state: running;
 }
 
-@keyframes ghf-spin {
-  to { transform: rotate(360deg); }
+@keyframes ghf-rays {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-.ghf-w-line {
-  fill: none;
-  stroke: rgba(var(--ghf-rose-rgb), 0.65);
-  stroke-width: 1.3;
-}
-
-.ghf-w-line--thin {
-  stroke-width: 0.7;
-  stroke-opacity: 0.6;
-}
-
-.ghf-w-lancets use,
-.ghf-w-inner use {
-  stroke: rgba(var(--ghf-rose-rgb), 0.65);
-  stroke-width: 1.1;
-  stroke-linejoin: round;
-}
-
-.ghf-w-lancets use:nth-child(6n+1) { fill: rgba(var(--ghf-ruby-rgb), 0.26); }
-.ghf-w-lancets use:nth-child(6n+2) { fill: rgba(var(--ghf-amber-rgb), 0.28); }
-.ghf-w-lancets use:nth-child(6n+3) { fill: rgba(var(--ghf-sapphire-rgb), 0.26); }
-.ghf-w-lancets use:nth-child(6n+4) { fill: rgba(var(--ghf-emerald-rgb), 0.22); }
-.ghf-w-lancets use:nth-child(6n+5) { fill: rgba(var(--ghf-amethyst-rgb), 0.26); }
-.ghf-w-lancets use:nth-child(6n)   { fill: rgba(var(--ghf-amber-rgb), 0.18); }
-.ghf-w-inner use:nth-child(odd)    { fill: rgba(var(--ghf-amber-rgb), 0.32); }
-.ghf-w-inner use:nth-child(even)   { fill: rgba(var(--ghf-ruby-rgb), 0.26); }
-
-.ghf-w-roundels circle {
-  fill: rgba(var(--ghf-amber-rgb), 0.22);
-  stroke: rgba(var(--ghf-rose-rgb), 0.6);
-  stroke-width: 1;
+[data-theme="light"] .ghf-drawer-cross {
+  opacity: 0.65;
 }
 
 .ghf-drawer-header {
@@ -1233,7 +1234,7 @@ body.ghf-open .ghf-nav-list li {
     animation: none;
   }
 
-  .ghf-drawer-window svg {
+  .ghf-drawer-cross::before {
     animation: none;
   }
 

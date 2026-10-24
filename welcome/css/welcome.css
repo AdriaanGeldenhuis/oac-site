@@ -184,14 +184,12 @@ html {
   overflow: hidden;
 }
 
-/* Warm bloom behind the window */
+/* Faint warmth in the opposite corner */
 .wc-aura::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(60vmax 60vmax at 82% 12%, rgba(var(--aura-rgb), 0.16), transparent 62%),
-    radial-gradient(50vmax 50vmax at 4% 108%, rgba(var(--aura-rgb), 0.07), transparent 60%);
+  background: radial-gradient(50vmax 50vmax at 4% 108%, rgba(var(--aura-rgb), 0.07), transparent 60%);
   opacity: var(--aura-op);
   transition: opacity 0.6s ease;
 }
@@ -200,20 +198,21 @@ html {
   to { transform: rotate(360deg); }
 }
 
-@keyframes wc-spin-rev {
-  to { transform: rotate(-360deg); }
+/* The cross, its halo and the rays all share one point: where the beams meet
+   (30.36% down the image, which has a margin for its baked-in glow). --ch is the
+   image height (the cross itself is 89% of it).
+   Small screens: the cross stands centred above the greeting, its foot fading into
+   the dark. From 1000px up it moves to the right of the greeting instead. */
+.welcome-body.wc-home {
+  --ch: clamp(280px, 87vmin, 380px);
+  --cw: calc(var(--ch) * 0.7143);                                  /* image is 400 x 560 */
+  --cx: 50%;
+  --cy: calc(var(--ghf-height, 70px) + 14px + var(--ch) * 0.25);  /* cross top sits 14px under the header */
 }
 
-/* Rose window + rays share one centre point, tucked into the top-right */
-.wc-aura {
-  --win: min(118vmin, 780px);
-  --cx: calc(100% + 34vmin - var(--win) / 2);
-  --cy: calc(var(--ghf-height, 70px) + 22vmin);
-}
-
-/* God-rays fanning out of the window */
+/* God-rays fanning out from behind the cross */
 .wc-rays {
-  --size: 150vmin;
+  --size: 170vmin;
   position: absolute;
   left: calc(var(--cx) - var(--size) / 2);
   top: calc(var(--cy) - var(--size) / 2);
@@ -222,80 +221,63 @@ html {
   border-radius: 50%;
   background: repeating-conic-gradient(
     from 6deg at 50% 50%,
-    rgba(var(--aura-rgb), 0.17) 0deg 2.5deg,
-    transparent 2.5deg 14deg
+    rgba(var(--aura-rgb), 0.16) 0deg 2.2deg,
+    transparent 2.2deg 12deg
   );
-  -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.45) 32%, transparent 62%);
-          mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.45) 32%, transparent 62%);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.5) 30%, transparent 60%);
+          mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.5) 30%, transparent 60%);
   opacity: var(--aura-op);
-  animation: wc-spin 260s linear infinite;
+  animation: wc-spin 300s linear infinite;
   will-change: transform;
 }
 
-/* The rose window itself */
-.wc-window {
+/* A soft halo of light, breathing very slowly */
+.wc-halo {
+  --hs: calc(var(--ch) * 1.52);
   position: absolute;
-  left: calc(var(--cx) - var(--win) / 2);
-  top: calc(var(--cy) - var(--win) / 2);
-  width: var(--win);
-  height: var(--win);
-  opacity: calc(0.58 * var(--aura-op));
-  transform: translate3d(calc(var(--px, 0) * -16px), calc(var(--sy, 0) * -0.14px + var(--py, 0) * -12px), 0);
-  transition: transform 0.35s ease-out;
-  /* Keep the frame and roundels visible so it reads as a window, not a flower */
-  -webkit-mask-image: radial-gradient(circle, #000 90%, transparent 100%);
-          mask-image: radial-gradient(circle, #000 90%, transparent 100%);
+  left: calc(var(--cx) - var(--hs) / 2);
+  top: calc(var(--cy) - var(--hs) / 2);
+  width: var(--hs);
+  height: var(--hs);
+  background: radial-gradient(closest-side, rgba(var(--aura-rgb), 0.50) 0%, rgba(var(--aura-rgb), 0.20) 38%, rgba(var(--aura-rgb), 0.06) 68%, transparent 100%);
+  opacity: var(--aura-op);
+  animation: wc-breathe-halo 9s ease-in-out infinite alternate;
+  will-change: transform, opacity;
 }
 
-.wc-window-svg {
+@keyframes wc-breathe-halo {
+  from { transform: scale(0.94); opacity: calc(var(--aura-op) * 0.78); }
+  to   { transform: scale(1.04); opacity: var(--aura-op); }
+}
+
+/* The cross itself: upright, still, and lit from behind */
+.wc-cross {
   position: absolute;
-  inset: 0;
+  left: calc(var(--cx) - var(--cw) / 2);
+  top: calc(var(--cy) - var(--ch) * 0.3036);   /* the beams meet 30.36% down the image */
+  width: var(--cw);
+  height: var(--ch);
+  transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--sy, 0) * -0.14px + var(--py, 0) * -8px), 0);
+  transition: transform 0.35s ease-out;
+  /* own GPU layer: painted once, then only moved while scrolling.
+     NB: the glow and shadow are baked into the SVG. A CSS drop-shadow here cost
+     half the frame rate in software-rendered browsers. */
+  will-change: transform;
+}
+
+.wc-cross img {
+  display: block;
   width: 100%;
   height: 100%;
-  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+  /* the foot dissolves into the dark, so the greeting can sit over it */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 95%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 95%);
 }
 
-.wc-window-svg--outer { animation: wc-spin 240s linear infinite; }
-.wc-window-svg--inner { animation: wc-spin-rev 150s linear infinite; }
-
-.wc-w-line {
-  fill: none;
-  stroke: rgba(var(--line-rgb), 0.6);
-  stroke-width: 1.3;
-}
-
-.wc-w-line--thin {
-  stroke-width: 0.7;
-  stroke: rgba(var(--line-rgb), 0.4);
-}
-
-.wc-w-lancets use,
-.wc-w-inner use {
-  stroke: rgba(var(--line-rgb), 0.62);
-  stroke-width: 1.1;
-  stroke-linejoin: round;
-}
-
-.wc-w-lancets use:nth-child(6n+1) { fill: rgba(var(--ruby-rgb), 0.24); }
-.wc-w-lancets use:nth-child(6n+2) { fill: rgba(var(--amber-rgb), 0.26); }
-.wc-w-lancets use:nth-child(6n+3) { fill: rgba(var(--sapphire-rgb), 0.24); }
-.wc-w-lancets use:nth-child(6n+4) { fill: rgba(var(--emerald-rgb), 0.2); }
-.wc-w-lancets use:nth-child(6n+5) { fill: rgba(var(--amethyst-rgb), 0.24); }
-.wc-w-lancets use:nth-child(6n)   { fill: rgba(var(--amber-rgb), 0.16); }
-
-.wc-w-inner use:nth-child(odd)  { fill: rgba(var(--amber-rgb), 0.3); }
-.wc-w-inner use:nth-child(even) { fill: rgba(var(--ruby-rgb), 0.24); }
-
-.wc-w-roundels circle {
-  fill: rgba(var(--amber-rgb), 0.2);
-  stroke: rgba(var(--line-rgb), 0.55);
-  stroke-width: 1;
-}
-
-.wc-w-heart circle {
-  fill: rgba(var(--aura-rgb), 0.5);
-  stroke: rgba(var(--line-rgb), 0.7);
-  stroke-width: 1;
+[data-theme="light"] .wc-cross {
+  opacity: 0.92;
 }
 
 /* Embers drifting up like sparks from a candle */
@@ -361,14 +343,17 @@ html {
 /* ===== HERO ===== */
 .wc-hero {
   position: relative;
-  padding: 30px 0 26px;
+  padding: calc(var(--ch) * 0.717) 0 26px;  /* leaves the stage for the cross */
+  text-align: center;
 }
 
 .wc-eyebrow {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   max-width: 34rem;
+  margin: 0 auto;
   font-size: 0.74rem;
   font-weight: 600;
   line-height: 1.5;
@@ -414,8 +399,7 @@ html {
 
 .wc-hello-name {
   display: block;
-  padding: 0.02em 0.22em 0.14em 0.14em;  /* room for the script flourish, both sides */
-  margin-left: -0.14em;                  /* ...without shifting the text off the grid */
+  padding: 0.02em 0.14em 0.14em;         /* room for the script flourish, both sides */
   font-size: clamp(3.6rem, 16vw, 6.6rem);
   background: var(--name-grad);
   -webkit-background-clip: text;
@@ -431,8 +415,7 @@ html {
 
 .wc-hello--solo .wc-hello-greet {
   font-size: clamp(3.2rem, 14vw, 5.6rem);
-  padding: 0.02em 0.22em 0.14em 0.14em;
-  margin-left: -0.14em;
+  padding: 0.02em 0.14em 0.14em;
   background: var(--name-grad);
   -webkit-background-clip: text;
   background-clip: text;
@@ -445,6 +428,7 @@ html {
 .wc-meta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
   animation: wc-rise 0.8s var(--ease) 0.26s both;
 }
@@ -1689,7 +1673,7 @@ html {
   }
 
   .wc-hero {
-    padding: 56px 0 40px;
+    padding-bottom: 40px;
   }
 
   .wc-today {
@@ -1769,9 +1753,38 @@ html {
 
 }
 
+/* Desktop: the cross stands to the right of a left-aligned greeting */
 @media (min-width: 1000px) {
-  .wc-aura {
-    --cx: calc(100% + 24vmin - var(--win) / 2);
+  .welcome-body.wc-home {
+    --ch: min(103vmin, 672px);
+    /* position by the VISIBLE cross (57% of the image width), not the image with its glow margin */
+    --cx: calc(100% - var(--ch) * 0.5714 / 2 - 9vmin);
+    --cy: calc(var(--ghf-height, 70px) + var(--ch) * 0.268);
+  }
+
+  .wc-cross img {
+    -webkit-mask-image: none;
+            mask-image: none;
+  }
+
+  .wc-hero {
+    padding-top: 56px;
+    text-align: left;
+  }
+
+  .wc-eyebrow {
+    justify-content: flex-start;
+    margin: 0;
+  }
+
+  .wc-meta {
+    justify-content: flex-start;
+  }
+
+  .wc-hello-name,
+  .wc-hello--solo .wc-hello-greet {
+    padding-left: 0.14em;
+    margin-left: -0.14em;
   }
 }
 

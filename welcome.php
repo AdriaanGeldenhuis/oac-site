@@ -242,45 +242,12 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
     </defs>
   </svg>
 
-  <!-- Atmosphere: rose window, light rays and rising embers (purely decorative) -->
+  <!-- Atmosphere: a wooden cross in a halo of light, rays and rising embers (purely decorative) -->
   <div class="wc-aura" id="wcAura" data-tod="<?= $tod ?>" aria-hidden="true">
     <div class="wc-rays"></div>
-    <div class="wc-window">
-      <!-- Outer ring: lancets and roundels, turning slowly clockwise -->
-      <svg class="wc-window-svg wc-window-svg--outer" viewBox="0 0 400 400" focusable="false">
-        <defs>
-          <path id="wcLancet" d="M200 200C171 160 171 104 200 52C229 104 229 160 200 200Z"/>
-          <path id="wcLobe" d="M200 200C189 182 189 158 200 136C211 158 211 182 200 200Z"/>
-        </defs>
-        <circle class="wc-w-line" cx="200" cy="200" r="197"/>
-        <circle class="wc-w-line wc-w-line--thin" cx="200" cy="200" r="187"/>
-        <g class="wc-w-lancets">
-          <?php for ($i = 0; $i < 12; $i++): ?>
-            <use href="#wcLancet" transform="rotate(<?= $i * 30 ?> 200 200)"/>
-          <?php endfor; ?>
-        </g>
-        <g class="wc-w-roundels">
-          <?php for ($i = 0; $i < 12; $i++): ?>
-            <circle cx="200" cy="30" r="11" transform="rotate(<?= 15 + $i * 30 ?> 200 200)"/>
-          <?php endfor; ?>
-        </g>
-      </svg>
-      <!-- Inner rosette + quatrefoil heart, turning the other way -->
-      <svg class="wc-window-svg wc-window-svg--inner" viewBox="0 0 400 400" focusable="false">
-        <g class="wc-w-inner">
-          <?php for ($i = 0; $i < 8; $i++): ?>
-            <use href="#wcLobe" transform="rotate(<?= $i * 45 ?> 200 200)"/>
-          <?php endfor; ?>
-          <circle class="wc-w-line" cx="200" cy="200" r="66"/>
-          <circle class="wc-w-line wc-w-line--thin" cx="200" cy="200" r="28"/>
-        </g>
-        <g class="wc-w-heart">
-          <circle cx="200" cy="189" r="9"/>
-          <circle cx="200" cy="211" r="9"/>
-          <circle cx="189" cy="200" r="9"/>
-          <circle cx="211" cy="200" r="9"/>
-        </g>
-      </svg>
+    <div class="wc-halo"></div>
+    <div class="wc-cross">
+      <img src="/assets/img/wood-cross.svg" alt="" width="320" height="500" decoding="async">
     </div>
     <div class="wc-embers" id="wcEmbers"></div>
   </div>
