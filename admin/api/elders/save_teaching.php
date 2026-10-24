@@ -1,211 +1,156 @@
 <?php
 declare(strict_types=1);
 
-// Load dependencies
+/**
+ * Save the Teaching of the Month for the elder's own town - all languages
+ * in one request.
+ *
+ * POST (application/x-www-form-urlencoded)
+ *   content_af, content_en, content_zu, content_xh, content_pt, content_st
+ *   Header: X-CSRF-Token
+ *
+ * A language sent empty REMOVES that language's file, so members fall back
+ * to another language instead of seeing last month's teaching.
+ */
+
 require_once dirname(__DIR__, 3) . '/security/config.php';
 require_once dirname(__DIR__, 3) . '/security/session.php';
+require_once dirname(__DIR__, 3) . '/security/csrf.php';
 require_once dirname(__DIR__, 3) . '/security/auth.php';
 require_once dirname(__DIR__, 3) . '/includes/languages.php';
+require_once dirname(__DIR__, 3) . '/includes/teaching.php';
 
-// Headers after session
 ob_start();
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store');
 
-// Auth check
+function save_teaching_fail(int $code, string $error): void {
+    ob_end_clean();
+    http_response_code($code);
+    echo json_encode(['success' => false, 'error' => $error], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if (!auth_logged_in()) {
-    ob_end_clean();
-    http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-    exit;
+    save_teaching_fail(401, 'Unauthorized');
 }
 
-// Method guard
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    ob_end_clean();
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
+    save_teaching_fail(405, 'Method not allowed');
 }
 
-$userId = auth_user_id();
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? ''))) {
+    save_teaching_fail(403, 'Invalid CSRF token - reload the page');
+}
 
-// Check Elder permissions and get the user's own town
+$userId = (int)auth_user_id();
+
+// Elder permissions + the elder's own town. The town is NEVER taken from the
+// client, otherwise an elder could overwrite another town's teaching.
 try {
-    $stmt = $pdo->prepare('SELECT amp_id, town_id FROM users WHERE id = ? LIMIT 1');
+    $stmt = $pdo->prepare('
+        SELECT u.amp_id, u.town_id, t.name AS town_name, p.name AS province_name
+        FROM users u
+        LEFT JOIN towns t ON t.id = u.town_id
+        LEFT JOIN provinces p ON p.id = t.province_id
+        WHERE u.id = ?
+        LIMIT 1
+    ');
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$user) {
-        ob_end_clean();
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'User not found']);
-        exit;
-    }
-
-    $ampId = (int)($user['amp_id'] ?? 0);
-    if ($ampId < 1 || $ampId > 5) {
-        ob_end_clean();
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
-        exit;
-    }
 } catch (Throwable $e) {
     error_log('save_teaching: DB error: ' . $e->getMessage());
-    ob_end_clean();
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error']);
-    exit;
+    save_teaching_fail(500, 'Database error');
 }
 
-/**
- * Sanitize HTML content - remove dangerous tags and attributes
- * Keeps safe HTML like <p>, <h1-h6>, <strong>, <em>, <span>, <sup>, <br>
- */
-function sanitize_html(string $html): string {
-    if (trim($html) === '') {
-        return '';
-    }
-
-    // Dangerous tags to remove completely (with content)
-    $dangerousTags = ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select'];
-    foreach ($dangerousTags as $tag) {
-        $html = preg_replace('/<' . $tag . '\b[^>]*>.*?<\/' . $tag . '>/is', '', $html);
-        $html = preg_replace('/<' . $tag . '\b[^>]*\/?>/i', '', $html);
-    }
-
-    // Remove all on* event handlers (onclick, onload, onerror, etc.)
-    $html = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/i', '', $html);
-    $html = preg_replace('/\s+on\w+\s*=\s*[^\s>]+/i', '', $html);
-
-    // Remove javascript: and data: URLs from href/src attributes
-    $html = preg_replace('/\s+(href|src)\s*=\s*["\']?\s*javascript:[^"\'>\s]*/i', '', $html);
-    $html = preg_replace('/\s+(href|src)\s*=\s*["\']?\s*data:[^"\'>\s]*/i', '', $html);
-
-    // Remove style expressions (IE-specific XSS vector)
-    $html = preg_replace('/expression\s*\([^)]*\)/i', '', $html);
-
-    return $html;
+if (!$user) {
+    save_teaching_fail(403, 'User not found');
 }
 
-// Get inputs for all supported languages
+$ampId = (int)($user['amp_id'] ?? 0);
+if ($ampId < 1 || $ampId > 5) {
+    save_teaching_fail(403, 'Insufficient permissions');
+}
+
+$townId = (int)($user['town_id'] ?? 0);
+$province = (string)($user['province_name'] ?? '');
+$town = (string)($user['town_name'] ?? '');
+
+// ---------------------------------------------------------------------------
+// Validate + sanitize every language
+// ---------------------------------------------------------------------------
 $contents = [];
 foreach (SUPPORTED_LANGS as $code) {
-    $raw = trim((string)($_POST['content_' . $code] ?? ''));
-    $contents[$code] = sanitize_html($raw);
-}
-
-// Always use the elder's own town - never trust a town id from the client,
-// otherwise an elder could overwrite another town's teaching.
-$townId = (int)($user['town_id'] ?? 0);
-
-// Check if at least one language has content
-$hasAnyContent = false;
-foreach ($contents as $content) {
-    if ($content !== '') {
-        $hasAnyContent = true;
-        break;
+    $raw = (string)($_POST['content_' . $code] ?? '');
+    if (strlen($raw) > TEACHING_MAX_BYTES) {
+        save_teaching_fail(413, 'Content too large (' . strtoupper($code) . ')');
     }
+    $clean = teaching_sanitize_html($raw);
+    $contents[$code] = teaching_has_content($clean) ? $clean : '';
 }
 
-if (!$hasAnyContent) {
-    ob_end_clean();
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'No content provided']);
-    exit;
+// Refuse to wipe every language at once - almost always a mistake
+if (implode('', $contents) === '') {
+    save_teaching_fail(400, 'No content provided');
 }
 
-// Get location
-$province = '';
-$town = '';
+// ---------------------------------------------------------------------------
+// Write files (atomic: temp file + rename, readers never see half a file)
+// ---------------------------------------------------------------------------
+$targetDir = teaching_dir($province, $town);
 
-if ($townId > 0) {
-    try {
-        $stmt = $pdo->prepare('
-            SELECT t.name AS town_name, p.name AS province_name
-            FROM towns t
-            LEFT JOIN provinces p ON p.id = t.province_id
-            WHERE t.id = ?
-            LIMIT 1
-        ');
-        $stmt->execute([$townId]);
-        $location = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($location) {
-            $province = $location['province_name'] ?? '';
-            $town = $location['town_name'] ?? '';
-        }
-    } catch (Throwable $e) {
-        error_log('save_teaching: Location fetch failed: ' . $e->getMessage());
-    }
+if (!is_dir($targetDir) && !@mkdir($targetDir, 0755, true) && !is_dir($targetDir)) {
+    error_log('save_teaching: Failed to create: ' . $targetDir);
+    save_teaching_fail(500, 'Failed to create directory');
 }
 
-// Build path - MUST match the slug logic in welcome.php and admin/elders.php
-function slugify(string $text): string {
-    $text = strtolower(trim($text));
-    $text = preg_replace('/[^a-z0-9]+/', '_', $text);
-    return trim($text, '_') ?: 'unknown';
-}
-
-$baseDir = dirname(__DIR__, 3) . '/welcome';
-$targetDir = $baseDir;
-
-if ($province !== '' && $town !== '') {
-    $targetDir .= '/south_africa/' . slugify($province) . '/' . slugify($town);
-}
-
-// Create directory
-if (!is_dir($targetDir)) {
-    if (!@mkdir($targetDir, 0755, true)) {
-        error_log('save_teaching: Failed to create: ' . $targetDir);
-        ob_end_clean();
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to create directory']);
-        exit;
-    }
-}
-
-// File naming convention per language
-// AF: lering_content.html
-// Others: teaching_content.<lang>.html
-$fileNames = [
-    'af' => 'lering_content.html',
-    'en' => 'teaching_content.en.html',
-    'zu' => 'teaching_content.zu.html',
-    'xh' => 'teaching_content.xh.html',
-    'pt' => 'teaching_content.pt.html',
-    'st' => 'teaching_content.st.html'
-];
-
-// Write files
 $written = [];
+$removed = [];
 $hasContent = [];
 
 try {
     foreach (SUPPORTED_LANGS as $code) {
-        if (!isset($fileNames[$code])) {
-            throw new Exception("No file name configured for language: {$code}");
-        }
-        if ($contents[$code] !== '') {
-            $filePath = $targetDir . '/' . $fileNames[$code];
-            if (file_put_contents($filePath, $contents[$code]) === false) {
-                throw new Exception("Failed to write {$code} file");
-            }
-            $written[] = $fileNames[$code];
-            $hasContent[$code] = 1;
-        } else {
+        $file = teaching_file($targetDir, $code);
+
+        if ($contents[$code] === '') {
             $hasContent[$code] = 0;
+            if (is_file($file)) {
+                if (!@unlink($file)) {
+                    throw new RuntimeException('Failed to remove ' . basename($file));
+                }
+                $removed[] = basename($file);
+            }
+            continue;
         }
+
+        $tmp = $file . '.tmp-' . bin2hex(random_bytes(4));
+        if (file_put_contents($tmp, $contents[$code], LOCK_EX) === false) {
+            throw new RuntimeException('Failed to write ' . $code);
+        }
+        @chmod($tmp, 0644);
+        if (!@rename($tmp, $file)) {
+            @unlink($tmp);
+            throw new RuntimeException('Failed to replace ' . basename($file));
+        }
+        $written[] = basename($file);
+        $hasContent[$code] = 1;
+    }
+
+    // The legacy English file was shown in the English tab; it is now either
+    // saved as teaching_content.en.html or was deliberately cleared
+    $legacy = $targetDir . '/' . TEACHING_LEGACY_EN_FILE;
+    if (is_file($legacy) && @unlink($legacy)) {
+        $removed[] = TEACHING_LEGACY_EN_FILE;
     }
 } catch (Throwable $e) {
     error_log('save_teaching: Write error: ' . $e->getMessage());
-    ob_end_clean();
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Failed to write files']);
-    exit;
+    save_teaching_fail(500, 'Failed to write files');
 }
 
-// Log to DB
+// ---------------------------------------------------------------------------
+// Log to DB (best effort - the files are the source of truth)
+// ---------------------------------------------------------------------------
 try {
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS teachings (
@@ -260,15 +205,15 @@ try {
     error_log('save_teaching: DB log failed: ' . $e->getMessage());
 }
 
-// SUCCESS
 ob_end_clean();
 http_response_code(200);
 echo json_encode([
-    'success' => true,
-    'dir' => $targetDir,
-    'files' => $written,
+    'success'  => true,
+    'files'    => $written,
+    'removed'  => $removed,
+    'has'      => $hasContent,
     'province' => $province,
-    'town' => $town
+    'town'     => $town,
+    'saved_at' => date('c')
 ], JSON_UNESCAPED_UNICODE);
-
 exit;

@@ -1402,6 +1402,58 @@ html {
   text-underline-offset: 2px;
 }
 
+/* Kept by "paste with formatting" (Word / Google Docs / web) */
+.wc-teaching-content li > ul,
+.wc-teaching-content li > ol {
+  margin: 8px 0 0;
+}
+
+.wc-teaching-content u {
+  text-underline-offset: 2px;
+}
+
+.wc-teaching-content sup,
+.wc-teaching-content sub {
+  font-size: 0.7em;
+}
+
+.wc-teaching-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.wc-teaching-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 0 0 20px;
+  font-size: 0.95em;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wc-teaching-content th,
+.wc-teaching-content td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.wc-teaching-content th {
+  font-weight: 500;
+  color: var(--rose-gold);
+  background: rgba(var(--rose-rgb), 0.06);
+}
+
+.wc-teaching-content td > p:last-child,
+.wc-teaching-content th > p:last-child {
+  margin-bottom: 0;
+}
+
 [data-theme="light"] .wc-teaching-content blockquote {
   border-left-color: #a47c38;
   background: rgba(164, 124, 56, 0.07);

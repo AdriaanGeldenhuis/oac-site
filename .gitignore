@@ -10,3 +10,6 @@ vendor/
 .DS_Store
 *.log
 logs/*.log
+# Teaching of the Month - written by elders on the server (admin/elders.php)
+welcome/south_africa/
+welcome/*.html

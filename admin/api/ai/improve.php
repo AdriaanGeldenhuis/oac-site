@@ -4,6 +4,7 @@ declare(strict_types=1);
 // Load dependencies
 require_once dirname(__DIR__, 3) . '/security/config.php';
 require_once dirname(__DIR__, 3) . '/security/session.php';
+require_once dirname(__DIR__, 3) . '/security/csrf.php';
 require_once dirname(__DIR__, 3) . '/security/auth.php';
 require_once dirname(__DIR__, 3) . '/includes/languages.php';
 require_once dirname(__DIR__, 2) . '/config/ai_config.php';
@@ -29,6 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean();
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit;
+}
+
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
+    ob_end_clean();
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Invalid CSRF token - reload the page']);
     exit;
 }
 
