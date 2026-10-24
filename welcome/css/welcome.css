@@ -154,10 +154,6 @@ html {
   background-attachment: fixed;
 }
 
-.welcome-body.wc-lock {
-  overflow: hidden;
-}
-
 ::selection {
   background: rgba(232, 180, 168, 0.30);
 }
@@ -168,8 +164,7 @@ html {
 }
 
 /* Hidden attribute must win over the display rules below */
-.wc-main [hidden],
-.wc-qm[hidden] {
+.wc-main [hidden] {
   display: none !important;
 }
 
@@ -554,8 +549,12 @@ html {
 
 /* ===== THOUGHT OF THE DAY — a pane of leaded glass ===== */
 .wc-thought {
+  --fold-h: 224px;           /* quote mark + about five lines */
   margin: 0;
-  padding: 44px 30px 28px 30px;
+}
+
+.wc-thought-main {
+  padding: 44px 30px 24px 30px;
 }
 
 /* Lead-line border in jewel colours */
@@ -1096,272 +1095,13 @@ html {
   }
 }
 
-/* ===== A QUIET MOMENT ===== */
-.wc-quiet {
-  margin-bottom: 52px;
-}
-
-.wc-quiet-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  width: 100%;
-  padding: 20px 20px 20px 18px;
-  font: inherit;
-  text-align: left;
-  color: #f1ecff;
-  background:
-    radial-gradient(90% 140% at 0% 50%, rgba(255, 190, 140, 0.18), transparent 60%),
-    linear-gradient(120deg, #1b1538 0%, #2b1840 55%, #3a1c3d 100%);
-  border: 1px solid rgba(var(--amethyst-rgb), 0.35);
-  border-radius: var(--wc-radius);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.3s var(--ease), box-shadow 0.4s ease, border-color 0.3s ease;
-}
-
-.wc-quiet-card:active {
-  transform: scale(0.985);
-}
-
-.wc-quiet-card:focus-visible {
-  outline: 2px solid rgb(var(--amethyst-rgb));
-  outline-offset: 3px;
-}
-
-.wc-quiet-orb {
-  position: relative;
-  flex: none;
-  width: 58px;
-  height: 58px;
-}
-
-.wc-quiet-orb i {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  animation: wc-breathe 7s ease-in-out infinite;
-}
-
-.wc-quiet-orb i:nth-child(1) {
-  inset: 12px;
-  background: radial-gradient(circle at 50% 42%, #fff1c9 0%, #ffc07a 50%, #e48aa6 100%);
-  box-shadow: 0 0 22px rgba(255, 190, 120, 0.7);
-}
-
-.wc-quiet-orb i:nth-child(2) {
-  border: 1px solid rgba(255, 214, 170, 0.5);
-  animation-delay: -0.5s;
-}
-
-.wc-quiet-orb i:nth-child(3) {
-  inset: -8px;
-  border: 1px solid rgba(var(--amethyst-rgb), 0.4);
-  animation-delay: -1s;
-}
-
-@keyframes wc-breathe {
-  0%, 100% { transform: scale(0.88); opacity: 0.75; }
-  40%      { transform: scale(1.12); opacity: 1; }
-}
-
-.wc-quiet-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.wc-quiet-text strong {
-  font-family: var(--font-serif);
-  font-size: 1.5rem;
-  font-weight: 600;
-  font-style: italic;
-  line-height: 1.15;
-  color: #fff;
-}
-
-.wc-quiet-text small {
-  font-size: 0.86rem;
-  font-weight: 300;
-  line-height: 1.45;
-  color: rgba(241, 236, 255, 0.78);
-}
-
-.wc-quiet-go {
-  flex: none;
-  width: 22px;
-  height: 22px;
-  color: rgba(255, 214, 170, 0.9);
-  transition: transform 0.35s var(--ease);
-}
-
-@media (hover: hover) {
-  .wc-quiet-card:hover {
-    border-color: rgba(var(--amethyst-rgb), 0.7);
-    box-shadow: var(--shadow-sm), 0 0 40px -10px rgba(var(--amethyst-rgb), 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-
-  .wc-quiet-card:hover .wc-quiet-go {
-    transform: translateX(5px);
-  }
-}
-
-[data-theme="light"] .wc-quiet-card {
-  color: #2a1f4a;
-  background:
-    radial-gradient(90% 140% at 0% 50%, rgba(255, 190, 120, 0.3), transparent 60%),
-    linear-gradient(120deg, #efe9ff 0%, #f6ebf4 55%, #fbe9e6 100%);
-  border-color: rgba(var(--amethyst-rgb), 0.28);
-  box-shadow: var(--shadow-sm);
-}
-
-[data-theme="light"] .wc-quiet-text strong {
-  color: #2a1f4a;
-}
-
-[data-theme="light"] .wc-quiet-text small {
-  color: #5a4f78;
-}
-
-[data-theme="light"] .wc-quiet-go {
-  color: #8a6427;
-}
-
-/* ===== QUIET MOMENT OVERLAY ===== */
-.wc-qm {
-  position: fixed;
-  inset: 0;
-  z-index: calc(var(--ghf-z, 10000) + 20);   /* above the fixed header + its menus */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #f1ecff;
-  background: radial-gradient(120% 90% at 50% 38%, #251c52 0%, #0e0b24 58%, #05040f 100%);
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-
-.wc-qm.is-open {
-  opacity: 1;
-}
-
-.wc-qm-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  color: #f1ecff;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s var(--ease);
-}
-
-.wc-qm-close svg {
-  width: 20px;
-  height: 20px;
-}
-
-.wc-qm-close:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.wc-qm-close:focus-visible {
-  outline: 2px solid #ffd7a8;
-  outline-offset: 3px;
-}
-
-.wc-qm-stage {
-  --o: min(46vw, 190px, 26vh);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* the orb swells to 1.7x, so leave room for the extra 0.35x on each side */
-  gap: calc(var(--o) * 0.35 + 34px);
-  padding: 24px;
-  text-align: center;
-}
-
-.wc-qm-title {
-  order: -1;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(255, 214, 170, 0.85);
-}
-
-.wc-qm-orb {
-  position: relative;
-  width: var(--o);
-  height: var(--o);
-  will-change: transform;
-}
-
-.wc-qm-orb i {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-}
-
-.wc-qm-orb i:nth-child(1) {
-  background: radial-gradient(circle at 50% 42%, #fff4d4 0%, #ffc88a 38%, #ea94ae 78%, #cf86b4 100%);
-}
-
-/* Glows are gradients, not blurred box-shadows: those get clipped to a box while scaling */
-.wc-qm-orb i:nth-child(2) {
-  inset: -34%;
-  background: radial-gradient(closest-side, rgba(255, 196, 140, 0.55) 58%, rgba(190, 140, 255, 0.22) 80%, transparent);
-}
-
-.wc-qm-orb i:nth-child(3) {
-  inset: -80%;
-  background: radial-gradient(closest-side, rgba(255, 190, 140, 0.16), transparent);
-}
-
-.wc-qm-label {
-  position: relative;
-  width: 80vw;
-  max-width: 420px;
-  height: 2.4em;
-  font-family: var(--font-serif);
-  font-size: clamp(1.8rem, 7vw, 2.6rem);
-  font-style: italic;
-  font-weight: 500;
-  line-height: 1.2;
-  color: #fff;
-}
-
-.wc-qm-in,
-.wc-qm-out {
-  position: absolute;
-  left: 0;
-  right: 0;
-  opacity: 0;
-  transition: opacity 0.9s ease;
-}
-
-.wc-qm[data-phase="in"]  .wc-qm-in,
-.wc-qm[data-phase="out"] .wc-qm-out {
-  opacity: 1;
-}
-
 /* ===== TEACHING OF THE MONTH ===== */
 .wc-teaching-section {
   margin-bottom: 52px;
 }
 
 .wc-teaching-card {
+  --fold-h: 340px;
   border-color: var(--border-light);
   scroll-margin-top: 84px;     /* clear the fixed header when scrolled into view */
 }
@@ -1450,7 +1190,7 @@ html {
 }
 
 .wc-size-btn:focus-visible,
-.wc-teach-toggle:focus-visible {
+.wc-fold-toggle:focus-visible {
   outline: 2px solid var(--rose-gold);
   outline-offset: 2px;
 }
@@ -1459,18 +1199,20 @@ html {
   color: var(--rose-gold-dark);
 }
 
-.wc-teach-body {
+/* ----- Foldable cards (teaching + thought of the day) -----
+   The collapsed height is the card's own --fold-h; the JS reads it from here. */
+.wc-fold-body {
   position: relative;
   overflow: hidden;
   transition: max-height 0.6s var(--ease);
 }
 
 /* Collapsed until JS has measured the content */
-.wc-js .wc-teaching-card:not(.is-static) .wc-teach-body {
-  max-height: 340px;
+.wc-js .wc-foldable:not(.is-static) .wc-fold-body {
+  max-height: var(--fold-h, 340px);
 }
 
-.wc-teach-fade {
+.wc-fold-fade {
   position: absolute;
   left: 0;
   right: 0;
@@ -1482,11 +1224,11 @@ html {
   transition: opacity 0.4s ease;
 }
 
-.wc-teaching-card.is-collapsed .wc-teach-fade {
+.wc-foldable.is-collapsed .wc-fold-fade {
   opacity: 1;
 }
 
-.wc-teach-toggle {
+.wc-fold-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1508,22 +1250,22 @@ html {
   transition: background 0.25s ease;
 }
 
-.wc-teach-toggle svg {
+.wc-fold-toggle svg {
   width: 18px;
   height: 18px;
   transition: transform 0.4s var(--ease);
 }
 
-.wc-teach-toggle[aria-expanded="true"] svg {
+.wc-fold-toggle[aria-expanded="true"] svg {
   transform: rotate(180deg);
 }
 
-[data-theme="light"] .wc-teach-toggle {
+[data-theme="light"] .wc-fold-toggle {
   color: var(--rose-gold-dark);
 }
 
 @media (hover: hover) {
-  .wc-teach-toggle:hover {
+  .wc-fold-toggle:hover {
     background: rgba(var(--rose-rgb), 0.07);
   }
 }
@@ -1959,8 +1701,8 @@ html {
     grid-template-columns: 1fr;
   }
 
-  .wc-thought {
-    padding: 50px 40px 32px 44px;
+  .wc-thought-main {
+    padding: 50px 40px 28px 44px;
   }
 
   .wc-bento {
@@ -2025,13 +1767,6 @@ html {
     padding: 16px 22px 0;
   }
 
-  .wc-quiet-card {
-    padding: 24px 28px 24px 24px;
-  }
-
-  .wc-quiet-text strong {
-    font-size: 1.75rem;
-  }
 }
 
 @media (min-width: 1000px) {
@@ -2047,8 +1782,8 @@ html {
     padding-right: 14px;
   }
 
-  .wc-thought {
-    padding: 42px 22px 24px;
+  .wc-thought-main {
+    padding: 42px 22px 22px;
   }
 
   .wc-tile-label {
@@ -2085,12 +1820,10 @@ html {
 @media print {
   .wc-aura,
   .wc-apps,
-  .wc-quiet,
-  .wc-qm,
   .wc-flare,
   .wc-toast,
   .wc-teach-tools,
-  .wc-teach-toggle,
+  .wc-fold-toggle,
   .wc-thought-share {
     display: none !important;
   }
@@ -2100,11 +1833,11 @@ html {
     transform: none;
   }
 
-  .wc-js .wc-teaching-card:not(.is-static) .wc-teach-body {
+  .wc-js .wc-foldable:not(.is-static) .wc-fold-body {
     max-height: none !important;
   }
 
-  .wc-teach-fade {
+  .wc-fold-fade {
     display: none;
   }
 

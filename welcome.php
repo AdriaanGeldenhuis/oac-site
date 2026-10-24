@@ -43,6 +43,9 @@ function wc_e(string $s): string {
 }
 
 $firstName = '';
+$surname = '';
+$ampId = 10;          // 10 = Broer/Suster, the same default the calendar API uses
+$gender = 'man';
 $town = '';
 $province = '';
 $townId = null;
@@ -52,6 +55,9 @@ try {
     $stmt = $pdo->prepare('
         SELECT
             u.name AS first_name,
+            u.surname AS surname,
+            u.amp_id AS amp_id,
+            u.gender AS gender,
             t.id AS town_id,
             t.name AS town,
             p.id AS province_id,
@@ -66,6 +72,9 @@ try {
 
     if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $firstName = trim((string)($row['first_name'] ?? ''));
+        $surname = trim((string)($row['surname'] ?? ''));
+        $ampId = (int)($row['amp_id'] ?? 0) ?: 10;
+        $gender = (string)($row['gender'] ?? '') ?: 'man';
         $town = $row['town'] ?? '';
         $province = $row['province'] ?? '';
         $townId = $row['town_id'] ?? null;
@@ -195,9 +204,15 @@ $todIcons = [
     'evening'   => '<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>',
 ];
 
-$hasName = $firstName !== '';
+// Addressed by office and surname, e.g. "Oudste Geldenhuis" / "Broer Geldenhuis" /
+// "Priester Geldenhuis". Same title lookup the profile page uses. If the surname
+// is missing we fall back to the first name so we never greet "Oudste" on its own.
+$callName    = $surname !== '' ? $surname : $firstName;
+$officeTitle = get_translated_office($ampId, $gender, $lang);
+$displayName = $callName !== '' ? trim($officeTitle . ' ' . $callName) : '';
+$hasName     = $displayName !== '';
 // Long names scale down rather than taking over the screen
-$nameLen  = function_exists('mb_strlen') ? mb_strlen($firstName, 'UTF-8') : strlen($firstName);
+$nameLen  = function_exists('mb_strlen') ? mb_strlen($displayName, 'UTF-8') : strlen($displayName);
 $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' : '');
 ?><!doctype html>
 <html lang="<?= wc_e($lang) ?>">
@@ -281,7 +296,7 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
       <h2 class="wc-hello<?= $hasName ? $nameSize : ' wc-hello--solo' ?>" id="wcHello">
         <span class="wc-hello-greet"><?= wc_e($greeting) ?><?= $hasName ? ',' : '' ?></span>
         <?php if ($hasName): ?>
-          <span class="wc-hello-name"><?= wc_e($firstName) ?></span>
+          <span class="wc-hello-name"><?= wc_e($displayName) ?></span>
         <?php endif; ?>
       </h2>
       <div class="wc-meta">
@@ -304,14 +319,25 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
       <?php if ($dailyThought): ?>
       <section class="wc-thought-section wc-reveal" aria-labelledby="wcThoughtLabel">
         <h3 class="wc-label" id="wcThoughtLabel"><?= wc_e(t('thought_of_day')) ?></h3>
-        <figure class="wc-card wc-thought" id="wcThought">
+        <figure class="wc-card wc-thought wc-foldable" id="wcThought">
           <button class="wc-thought-share" id="wcShare" type="button" aria-label="<?= wc_e(t('share')) ?>" title="<?= wc_e(t('share')) ?>">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13"/></svg>
           </button>
-          <blockquote class="wc-thought-text" id="wcThoughtText"><?= wc_e($dailyThought['content']) ?></blockquote>
-          <?php if (!empty($dailyThought['author'])): ?>
-            <figcaption class="wc-thought-author" id="wcThoughtAuthor"><?= wc_e($dailyThought['author']) ?></figcaption>
-          <?php endif; ?>
+
+          <div class="wc-fold-body" id="wcThoughtBody">
+            <div class="wc-thought-main">
+              <blockquote class="wc-thought-text" id="wcThoughtText"><?= wc_e($dailyThought['content']) ?></blockquote>
+              <?php if (!empty($dailyThought['author'])): ?>
+                <figcaption class="wc-thought-author" id="wcThoughtAuthor"><?= wc_e($dailyThought['author']) ?></figcaption>
+              <?php endif; ?>
+            </div>
+            <div class="wc-fold-fade" aria-hidden="true"></div>
+          </div>
+
+          <button type="button" class="wc-fold-toggle" id="wcThoughtToggle" aria-expanded="false" aria-controls="wcThoughtBody" hidden>
+            <span class="wc-fold-label"><?= wc_e(t('read_more')) ?></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
         </figure>
       </section>
       <?php endif; ?>
@@ -347,23 +373,11 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
       </div>
     </section>
 
-    <!-- A quiet moment -->
-    <section class="wc-quiet wc-reveal">
-      <button class="wc-quiet-card" id="wcQuietOpen" type="button" aria-haspopup="dialog">
-        <span class="wc-quiet-orb" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="wc-quiet-text">
-          <strong><?= wc_e(t('quiet_moment')) ?></strong>
-          <small><?= wc_e(t('quiet_moment_hint')) ?></small>
-        </span>
-        <svg class="wc-quiet-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
-    </section>
-
     <!-- Teaching of the month -->
     <section class="wc-teaching-section wc-reveal" aria-labelledby="wcTeachLabel">
       <h3 class="wc-label" id="wcTeachLabel"><?= wc_e(t('teaching_of_month')) ?></h3>
       <p class="wc-sub"><?= wc_e(t('grow_faith')) ?></p>
-      <article class="wc-card wc-teaching-card" id="wcTeach">
+      <article class="wc-card wc-teaching-card wc-foldable" id="wcTeach">
         <div class="wc-read-progress" aria-hidden="true"><i id="wcReadBar"></i></div>
         <div class="wc-card-decoration"></div>
 
@@ -372,7 +386,7 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
           <button type="button" class="wc-size-btn wc-size-btn--lg" id="wcSizeUp" aria-label="<?= wc_e(t('increase')) ?>" title="<?= wc_e(t('increase')) ?>">A</button>
         </div>
 
-        <div class="wc-teach-body" id="wcTeachBody">
+        <div class="wc-fold-body" id="wcTeachBody">
           <div class="wc-teaching-content">
             <?php
               if ($contentFile && is_readable($contentFile)) {
@@ -387,11 +401,11 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
               }
             ?>
           </div>
-          <div class="wc-teach-fade" aria-hidden="true"></div>
+          <div class="wc-fold-fade" aria-hidden="true"></div>
         </div>
 
-        <button type="button" class="wc-teach-toggle" id="wcTeachToggle" aria-expanded="false" aria-controls="wcTeachBody" hidden>
-          <span id="wcTeachToggleText"><?= wc_e(t('read_more')) ?></span>
+        <button type="button" class="wc-fold-toggle" id="wcTeachToggle" aria-expanded="false" aria-controls="wcTeachBody" hidden>
+          <span class="wc-fold-label" id="wcTeachToggleText"><?= wc_e(t('read_more')) ?></span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
       </article>
@@ -407,21 +421,6 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
     </section>
 
   </main>
-
-  <!-- Quiet moment: full-screen breathing guide -->
-  <div class="wc-qm" id="wcQm" role="dialog" aria-modal="true" aria-labelledby="wcQmTitle" data-phase="in" hidden>
-    <button type="button" class="wc-qm-close" id="wcQmClose" aria-label="<?= wc_e(t('close')) ?>">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
-    <div class="wc-qm-stage">
-      <div class="wc-qm-orb" id="wcQmOrb" aria-hidden="true"><i></i><i></i><i></i></div>
-      <h2 class="wc-qm-title" id="wcQmTitle"><?= wc_e(t('quiet_moment')) ?></h2>
-      <p class="wc-qm-label" aria-hidden="true">
-        <span class="wc-qm-in"><?= wc_e(t('breathe_in')) ?></span>
-        <span class="wc-qm-out"><?= wc_e(t('breathe_out')) ?></span>
-      </p>
-    </div>
-  </div>
 
   <div class="wc-flare" id="wcFlare" aria-hidden="true"></div>
   <div class="wc-toast" id="wcToast" role="status" aria-live="polite"></div>

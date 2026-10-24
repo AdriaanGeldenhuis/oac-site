@@ -311,26 +311,6 @@ define('UI_TRANSLATIONS', [
         'en' => 'Read less',
         'pt' => 'Ler menos'
     ],
-    'quiet_moment' => [
-        'af' => 'Stil oomblik',
-        'en' => 'A quiet moment',
-        'pt' => 'Um momento de silêncio'
-    ],
-    'quiet_moment_hint' => [
-        'af' => 'Neem \'n oomblik om voor God stil te word.',
-        'en' => 'Take a moment to be still before God.',
-        'pt' => 'Reserve um momento para ficar em silêncio diante de Deus.'
-    ],
-    'breathe_in' => [
-        'af' => 'Asem in',
-        'en' => 'Breathe in',
-        'pt' => 'Inspire'
-    ],
-    'breathe_out' => [
-        'af' => 'Asem uit',
-        'en' => 'Breathe out',
-        'pt' => 'Expire'
-    ],
 
     // ==================== ADMIN SECTION ====================
     'admin_dashboard' => [
