@@ -43,7 +43,6 @@
     let pasteMode = 'rich';
     let forcePlainUntil = 0;
     let lastPaste = null;
-    let draftBlocked = false;  // an older draft is waiting for a decision
     let statusHold = 0;        // a flashed message stays until this time
     let statusTimer = 0;
     let draftTimer = 0;
@@ -64,7 +63,7 @@
     // =================================================================
 
     // Blocks the formatting commands act on
-    const BLOCK_TAGS = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'PRE', 'DIV'];
+    const BLOCK_TAGS = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'PRE', 'DIV', 'TD', 'TH'];
 
     // Everything that starts a new line (used for paste + structure)
     const BLOCK_LEVEL = new Set([
@@ -76,7 +75,7 @@
 
     const isBlockEl = n => !!n && n.nodeType === 1 && BLOCK_LEVEL.has(n.nodeName.toUpperCase());
 
-    const INVISIBLE = /[\s ​﻿]/g;
+    const INVISIBLE = /[\s\u00a0\u200b\ufeff]/g;
 
     // Anything a reader would actually see?
     function hasRealContent(node) {
@@ -297,6 +296,14 @@
         // Stray inline nodes directly in the editor get a paragraph
         wrapLooseInline(ed);
         ensureParagraph(ed);
+
+        // A teaching that ends with a divider / table: a line below it to
+        // type on (not saved while it stays empty)
+        if (ed.lastElementChild && /^(HR|TABLE)$/.test(ed.lastElementChild.nodeName)) {
+            const p = document.createElement('p');
+            p.appendChild(document.createElement('br'));
+            ed.appendChild(p);
+        }
     }
 
     // Placeholder (CSS) only while the editor is really empty
@@ -399,6 +406,12 @@
             Array.from(p.childNodes).forEach(n => {
                 if (n.nodeType === 1 && STRUCT_BLOCKS.test(n.nodeName)) {
                     run = null;
+                    // a list made inside an indented / centred paragraph keeps that look
+                    if (/^(UL|OL|BLOCKQUOTE|TABLE)$/.test(n.nodeName)) {
+                        ['marginLeft', 'textAlign', 'lineHeight', 'fontSize'].forEach(prop => {
+                            if (p.style[prop] && !n.style[prop]) n.style[prop] = p.style[prop];
+                        });
+                    }
                     parent.insertBefore(n, p);
                 } else {
                     if (!run) {
@@ -445,6 +458,155 @@
         });
     }
 
+    // ---------- caret kept by text position ----------
+    // DOM paths break when nodes move; the text before the caret does not.
+    function textOffset(ed, container, offset) {
+        const r = document.createRange();
+        r.setStart(ed, 0);
+        try { r.setEnd(container, offset); } catch (e) { return 0; }
+        return r.toString().length;
+    }
+
+    function saveCaret(ed) {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return null;
+        const r = sel.getRangeAt(0);
+        if (!ed.contains(r.startContainer) || !ed.contains(r.endContainer)) return null;
+        const blk = closestTag(r.startContainer, BLOCK_TAGS, ed);
+        return {
+            s: textOffset(ed, r.startContainer, r.startOffset),
+            e: textOffset(ed, r.endContainer, r.endOffset),
+            collapsed: r.collapsed,
+            emptyBlock: blk && !hasText(blk) ? blk : null,
+            atEnd: r.collapsed && textOffset(ed, r.startContainer, r.startOffset) >= ed.textContent.length,
+            // at a block boundary the caret belongs to the start of the next text
+            preferLater: r.startOffset === 0
+        };
+    }
+
+    function pointAt(ed, n, preferLater) {
+        const w = document.createTreeWalker(ed, NodeFilter.SHOW_TEXT);
+        let node, pos = 0, candidate = null;
+        while ((node = w.nextNode())) {
+            const len = node.nodeValue.length;
+            if (candidate && n === pos) return [node, 0];
+            if (n < pos + len) return [node, n - pos];
+            if (n === pos + len) {
+                if (!preferLater) return [node, len];
+                candidate = [node, len];
+            }
+            pos += len;
+        }
+        return candidate;
+    }
+
+    function restoreCaret(ed, c) {
+        if (!c) return;
+        const sel = window.getSelection();
+        const r = document.createRange();
+        if (c.emptyBlock && c.emptyBlock.isConnected && ed.contains(c.emptyBlock)) {
+            r.setStart(c.emptyBlock, 0);
+            r.collapse(true);
+        } else if (c.atEnd) {
+            placeCaretAtEnd(ed);
+            return;
+        } else {
+            const a = pointAt(ed, c.s, c.preferLater);
+            if (!a) { placeCaretAtEnd(ed); return; }
+            r.setStart(a[0], a[1]);
+            const b = c.collapsed ? a : pointAt(ed, c.e, false);
+            if (b) r.setEnd(b[0], b[1]); else r.collapse(true);
+        }
+        sel.removeAllRanges();
+        sel.addRange(r);
+    }
+
+    // ---------- live tidy ----------
+    // Native editing (Backspace/Delete merges, dragging text, typing where
+    // formatted text was deleted) makes Chrome add inline styles that copy
+    // the old look: background boxes, heading sizes, theme colours. Those
+    // elements are new, so they are recognised by not having existed before
+    // the edit, and cleaned - the elder sees exactly what will be saved.
+    const KEEP_BLOCK_CSS = ['text-align', 'margin-left', 'line-height', 'font-size'];
+    let elementsBefore = null;
+
+    function rememberElements(ed) {
+        elementsBefore = new WeakSet(ed.querySelectorAll('*'));
+    }
+
+    function tidyNewElements(ed, inputType) {
+        const before = elementsBefore;
+        elementsBefore = null;
+        if (!before) return false;
+        const fresh = Array.from(ed.querySelectorAll('*')).filter(el => !before.has(el));
+        if (!fresh.length) return false;
+
+        // Merges and drops copy the look of where the text came from: drop it
+        const moved = /^(delete|insertFromDrop|insertReplacementText)/.test(inputType || '');
+        const caret = saveCaret(ed);
+        let moves = false;
+
+        fresh.forEach(el => {
+            if (!el.isConnected) return;
+            if ((el.nodeName === 'SPAN' || el.nodeName === 'FONT') && moved) {
+                unwrap(el);
+                moves = true;
+                return;
+            }
+            if (isBlockEl(el) && el.hasAttribute('style')) {
+                const keep = KEEP_BLOCK_CSS.filter(prop => el.style.getPropertyValue(prop))
+                    .map(prop => [prop, el.style.getPropertyValue(prop)]);
+                el.removeAttribute('style');
+                keep.forEach(([prop, val]) => {
+                    if (prop === 'margin-left' && !parseFloat(val)) return;
+                    el.style.setProperty(prop, val);
+                });
+                if (!el.getAttribute('style')) el.removeAttribute('style');
+            }
+        });
+
+        // Typing-style leftovers (theme colours, default sizes) in new spans/fonts
+        fresh.forEach(el => {
+            if (!el.isConnected || (el.nodeName !== 'SPAN' && el.nodeName !== 'FONT')) return;
+            const c = (el.style.color || el.getAttribute('color') || '').toLowerCase().replace(/\s+/g, '');
+            if (c && THEME_INK.includes(c)) {
+                el.style.color = '';
+                el.removeAttribute('color');
+            }
+            JUNK_CSS.forEach(prop => el.style.removeProperty(prop));
+            if (!el.getAttribute('style')) el.removeAttribute('style');
+            if (!el.attributes.length) {
+                unwrap(el);
+                moves = true;
+            }
+        });
+        if (moves) restoreCaret(ed, caret);
+        return true;
+    }
+
+    // Structure the browser builds that the saved HTML would not keep
+    // (lists inside paragraphs, a list directly in a list, loose text,
+    // nothing to type into after a final divider) - fixed in the editor too
+    function tidyStructure(ed) {
+        const probe = ed.cloneNode(true);
+        fixStructure(probe);
+        wrapLooseInline(probe);
+        const needsEnd = ed.lastElementChild && /^(HR|TABLE)$/.test(ed.lastElementChild.nodeName);
+        if (probe.innerHTML === ed.innerHTML && !needsEnd) return false;
+        const caret = saveCaret(ed);
+        if (probe.innerHTML !== ed.innerHTML) {
+            fixStructure(ed);
+            wrapLooseInline(ed);
+        }
+        if (ed.lastElementChild && /^(HR|TABLE)$/.test(ed.lastElementChild.nodeName)) {
+            const p = document.createElement('p');
+            p.appendChild(document.createElement('br'));
+            ed.appendChild(p);
+        }
+        restoreCaret(ed, caret);
+        return true;
+    }
+
     function editorHasContent(code) {
         return hasText(editors[code]);
     }
@@ -472,7 +634,8 @@
                 const n = a.name.toLowerCase();
                 if (n.indexOf('on') === 0 || n === 'srcdoc' || n === 'formaction') {
                     el.removeAttribute(a.name);
-                } else if ((n === 'href' || n === 'src' || n === 'xlink:href') && /^\s*(javascript|vbscript|data|file):/i.test(a.value)) {
+                } else if ((n === 'href' || n === 'src' || n === 'xlink:href') &&
+                           /^(javascript|vbscript|data|file):/.test(a.value.replace(/[\x00-\x20]+/g, '').toLowerCase())) {
                     el.removeAttribute(a.name);
                 }
             });
@@ -716,6 +879,7 @@
         recordHistory(code);
         hidePastePop();
         fn(ctx);
+        tidyStructure(ctx.editor);
         recordHistory(code);
         afterContentChange(code);
     }
@@ -775,13 +939,26 @@
         return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
     }
 
+    // The app's own text colours: both pages remap them per theme, so
+    // they always stay (e.g. copied from another teaching)
+    const PALETTE_INK = ['232,180,168', '201,148,133', '245,213,200', '184,184,184', '61,56,53',
+        '243,195,177', '183,110,121', '192,192,192'];
+    const CARD_DARK = { r: 23, g: 21, b: 20 };   // welcome teaching card, dark theme
+    const CARD_LIGHT = { r: 255, g: 255, b: 255 };
+
+    function contrast(a, b) {
+        const x = relLum(a), y = relLum(b);
+        return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    }
+
     // Black, white and greys are just "normal text" in the source - the
-    // theme decides those. Real colours stay, unless they would vanish on
-    // the dark (too dark) or light (too light) theme.
+    // theme decides those. A real colour stays only if it can still be read
+    // on BOTH the dark and the light card (navy vanishes on dark, yellow on
+    // white - those become normal text).
     function keepTextColor(c) {
         if (c.a < 0.35) return false;
-        const lum = relLum(c);
-        return colorHsl(c).s >= 0.2 && lum >= 0.035 && lum <= 0.65;
+        if (PALETTE_INK.includes(Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b))) return true;
+        return colorHsl(c).s >= 0.2 && contrast(c, CARD_DARK) >= 2.5 && contrast(c, CARD_LIGHT) >= 2.5;
     }
 
     // Highlights stay (softened so text reads on both themes); white /
@@ -880,11 +1057,13 @@
             const ignore = Array.from(p.querySelectorAll('[style]'))
                 .find(el => /mso-list\s*:\s*ignore/i.test(el.getAttribute('style') || ''));
             if (ignore) {
-                marker = ignore.textContent.replace(/[\s ]+/g, ' ').trim();
+                marker = ignore.textContent.replace(/[\s\u00a0]+/g, ' ').trim();
                 ignore.remove();
             }
             let type = 'ul', olType = '', start = 1;
-            const m = marker.match(/^\(?([0-9]+|[a-zA-Z]{1,4})[.)]$/) || marker.match(/^([0-9]+)$/);
+            // "1.1." / "2.3.1" (multi-level) counts as decimal numbering too
+            const m = marker.match(/^\(?([0-9]+|[a-zA-Z]{1,4})[.)]$/) || marker.match(/^([0-9]+)$/)
+                || (/^\d+(\.\d+)+\.?$/.test(marker) ? [marker, '1'] : null);
             if (m) {
                 type = 'ol';
                 const t = m[1];
@@ -897,6 +1076,15 @@
             }
             return { level, type, olType, start };
         };
+
+        // Numbered headings ("1. Inleiding") stay headings: keep the number,
+        // drop Word's run of spacing after it
+        doc.body.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(h => {
+            if (!isListPara(h)) return;
+            const ignore = Array.from(h.querySelectorAll('[style]'))
+                .find(el => /mso-list\s*:\s*ignore/i.test(el.getAttribute('style') || ''));
+            if (ignore) ignore.replaceWith(doc.createTextNode(ignore.textContent.replace(/[\s\u00a0]+/g, ' ').trim() + ' '));
+        });
 
         const paras = Array.from(doc.body.querySelectorAll('p'));
         const done = new Set();
@@ -991,14 +1179,10 @@
         return [f.strong, f.em, f.u, f.s, f.sup, f.sub, f.color, f.bg, (f.sup || f.sub) ? '' : emFor(f.px, blockPx)].join('|');
     }
 
+    // The colour span goes INSIDE <strong>/<em>: bold has its own colour
+    // in the stylesheet, which would otherwise win over the pasted colour
     function wrapRun(doc, text, f, blockPx, heading) {
         let node = doc.createTextNode(text);
-        ['sub', 'sup', 's', 'u', 'em', 'strong'].forEach(m => {
-            if (!f[m] || (heading && m === 'strong')) return;
-            const w = doc.createElement(m);
-            w.appendChild(node);
-            node = w;
-        });
         if (!heading) {
             const style = [];
             if (f.color) style.push('color: ' + f.color);
@@ -1012,6 +1196,12 @@
                 node = s;
             }
         }
+        ['sub', 'sup', 's', 'u', 'em', 'strong'].forEach(m => {
+            if (!f[m] || (heading && m === 'strong')) return;
+            const w = doc.createElement(m);
+            w.appendChild(node);
+            node = w;
+        });
         return node;
     }
 
@@ -1163,11 +1353,12 @@
                 const res = [];
                 node.nodeValue.replace(/\r\n?/g, '\n').split('\n').forEach((part, i) => {
                     if (i) res.push({ t: 'br' });
-                    if (part) res.push({ t: 'text', text: part.replace(/ /g, ' '), f: ctx.f });
+                    // keep the indentation of preformatted lines
+                    if (part) res.push({ t: 'text', text: part.replace(/\u00a0/g, ' ').replace(/^ +| {2,}/g, m => '\u00a0'.repeat(m.length)), f: ctx.f });
                 });
                 return res;
             }
-            const text = node.nodeValue.replace(/[\r\n]+/g, ' ').replace(/ /g, ' ');
+            const text = node.nodeValue.replace(/[\r\n]+/g, ' ').replace(/\u00a0/g, ' ');
             return text ? [{ t: 'text', text, f: ctx.f }] : [];
         }
         if (node.nodeType !== 1) return [];
@@ -1190,8 +1381,33 @@
         const heading = ctx.heading || isHeading;
         const ownPx = isHeading ? ctx.px : (fontPxOf(node, ctx.px) || ctx.px);
 
+        // Bible verse blocks (copied from a teaching) keep only their class:
+        // colours / sizes copied from the screen would freeze one theme in
+        const isVerseBlock = tag === 'P' && !!node.classList &&
+            (node.classList.contains('vref') || node.classList.contains('vtxt'));
+        if (ctx.verse || isVerseBlock) {
+            const vf = { px: ctx.px, sup: tag === 'SUP' || !!(ctx.verse && ctx.f.sup) };
+            const vctx = Object.assign({}, ctx, { f: vf, verse: true });
+            const vkids = cleanChildren(node, vctx);
+            if (!isVerseBlock) return vkids;
+            const line = trimItems(inlineOnly(vkids));
+            if (!itemsHaveContent(line)) return [];
+            const vp = doc.createElement('p');
+            vp.className = node.classList.contains('vref') ? 'vref' : 'vtxt';
+            appendAll(vp, renderInline(doc, line, ctx.px, false));
+            return [vp];
+        }
+
         // Effective formatting for everything inside this element
         const f = Object.assign({}, ctx.f, { px: ownPx });
+        if (tag === 'A') {
+            const href = safeHref(node.getAttribute('href'));
+            if (href) {
+                f.href = href;
+                f.u = false;   // links get the site's link style
+                f.color = '';
+            }
+        }
 
         const fw = String(st.fontWeight || '').toLowerCase();
         const fwNum = parseInt(fw, 10);
@@ -1210,24 +1426,19 @@
         else if (fs === 'normal') f.em = false;
 
         const deco = (String(st.textDecorationLine || '') + ' ' + String(st.textDecoration || '')).toLowerCase();
-        if (tag === 'U' || tag === 'INS' || (tag !== 'A' && deco.indexOf('underline') !== -1)) f.u = true;
+        if (!f.href && (tag === 'U' || tag === 'INS' || deco.indexOf('underline') !== -1)) f.u = true;
         if (tag === 'S' || tag === 'STRIKE' || tag === 'DEL' || deco.indexOf('line-through') !== -1) f.s = true;
 
         const va = String(st.verticalAlign || '').toLowerCase();
         if (tag === 'SUP' || va === 'super') { f.sup = true; f.sub = false; }
         else if (tag === 'SUB' || va === 'sub') { f.sub = true; f.sup = false; }
 
-        const c = parseColor(st.color || (tag === 'FONT' ? node.getAttribute('color') : ''));
+        const c = f.href ? null : parseColor(st.color || (tag === 'FONT' ? node.getAttribute('color') : ''));
         if (c) f.color = keepTextColor(c) ? 'rgb(' + Math.round(c.r) + ', ' + Math.round(c.g) + ', ' + Math.round(c.b) + ')' : '';
         const bgRaw = st.backgroundColor || (tag === 'MARK' ? 'rgb(255, 235, 59)' : '');
         const bg = parseColor(bgRaw);
         if (bg) f.bg = keepBackground(bg) ? 'rgba(' + Math.round(bg.r) + ', ' + Math.round(bg.g) + ', ' + Math.round(bg.b) + ', 0.4)' : '';
         else if (/^transparent$/i.test(String(bgRaw).trim())) f.bg = '';
-
-        if (tag === 'A') {
-            const href = safeHref(node.getAttribute('href'));
-            if (href) f.href = href;
-        }
 
         const childCtx = Object.assign({}, ctx, { f, px: ownPx, heading, pre: ctx.pre || tag === 'PRE' });
         const kids = cleanChildren(node, childCtx);
@@ -1379,8 +1590,6 @@
             if (indent) p.style.marginLeft = indent + 'px';
             const em = emFor(ownPx, ctx.base);
             if (em) p.style.fontSize = em;
-            // Bible verse blocks copied from another teaching keep their look
-            ['vref', 'vtxt'].forEach(cls => { if (node.classList && node.classList.contains(cls)) p.classList.add(cls); });
             return [p];
         }
 
@@ -1473,16 +1682,25 @@
         let cur = '';
         let prefix = '';
         const flush = () => {
-            const t = cur.replace(/[ \t ]+/g, ' ').replace(/ ?\n ?/g, '\n').replace(/^\n+|\n+$/g, '').trim();
+            const t = cur.replace(/[ \t\u00a0]+/g, ' ').replace(/ ?\n ?/g, '\n').replace(/^\n+|\n+$/g, '').trim();
             if (t) {
                 blocks.push(prefix + t);
                 prefix = '';
             }
             cur = '';
         };
+        const typeMap = { 'lower-alpha': 'a', 'lower-latin': 'a', 'upper-alpha': 'A', 'upper-latin': 'A', 'lower-roman': 'i', 'upper-roman': 'I' };
+        const listType = list => {
+            const attr = list.getAttribute('type') || '';
+            if (/^[1aAiI]$/.test(attr)) return attr;
+            const first = list.querySelector('li');
+            const lst = String((list.style && list.style.listStyleType) || (first && first.style.listStyleType) || '').toLowerCase();
+            return typeMap[lst] || '1';
+        };
+        let inPre = 0;
         const walk = node => {
             if (node.nodeType === 3) {
-                cur += node.nodeValue.replace(/[\r\n]+/g, ' ');
+                cur += inPre ? node.nodeValue.replace(/\r\n?/g, '\n') : node.nodeValue.replace(/[\r\n]+/g, ' ');
                 return;
             }
             if (node.nodeType !== 1) return;
@@ -1495,7 +1713,7 @@
                 Array.from(node.childNodes).forEach(li => {
                     if (li.nodeType === 1 && li.nodeName.toUpperCase() === 'LI') {
                         flush();
-                        prefix = tag === 'OL' ? listMarker(node.getAttribute('type') || '1', n++) + ' ' : '• ';
+                        prefix = tag === 'OL' ? listMarker(listType(node), n++) + ' ' : '• ';
                         Array.from(li.childNodes).forEach(walk);
                         flush();
                         prefix = '';
@@ -1516,7 +1734,9 @@
             }
             const block = BLOCK_LEVEL.has(tag);
             if (block) flush();
+            if (tag === 'PRE') inPre++;
             Array.from(node.childNodes).forEach(walk);
+            if (tag === 'PRE') inPre--;
             if (block) flush();
         };
         walk(doc.body);
@@ -1527,11 +1747,37 @@
     // Clipboard text without HTML (WhatsApp, Notepad, PDF viewers...):
     // blank lines separate paragraphs, single line breaks stay line breaks
     function textToHtml(text) {
-        const norm = String(text || '').replace(/\r\n?/g, '\n').replace(/ /g, ' ');
+        const norm = String(text || '').replace(/\r\n?/g, '\n').replace(/\u00a0/g, ' ');
         const paras = norm.split(/\n[ \t]*\n+/)
-            .map(p => p.replace(/[ \t]+$/gm, '').replace(/^\n+|\n+$/g, ''))
+            .map(p => joinHardWraps(p.replace(/[ \t]+$/gm, '').replace(/^\n+|\n+$/g, '')))
             .filter(p => p.trim());
         return blocksToHtml(paras);
+    }
+
+    // Text copied from a PDF breaks every line where the page did. When
+    // almost every line of a paragraph is (nearly) full width, those breaks
+    // are the page's, not the writer's: join them. A short line, or a line
+    // that ends a sentence before a capital, keeps its break (WhatsApp-style
+    // text keeps its own lines).
+    function joinHardWraps(para) {
+        const lines = para.split('\n');
+        if (lines.length < 3) return para;
+        const lens = lines.map(l => l.trim().length);
+        const max = Math.max.apply(null, lens);
+        if (max < 35) return para;
+        const body = lens.slice(0, -1);
+        if (body.filter(n => n >= max * 0.7).length < body.length * 0.8) return para;
+        let out = lines[0].trim();
+        for (let i = 1; i < lines.length; i++) {
+            const prev = lines[i - 1].trim();
+            const cur = lines[i].trim();
+            const prevFull = lens[i - 1] >= max * 0.7;
+            const sentenceEnd = /[.!?:;"”’)]$/.test(prev) && /^[A-ZÀ-Ý0-9"“‘(]/.test(cur);
+            if (!prevFull || sentenceEnd) out += '\n' + cur;
+            else if (/-$/.test(prev)) out += cur;
+            else out += ' ' + cur;
+        }
+        return out;
     }
 
     function buildPasteVersions(html, text) {
@@ -1617,8 +1863,16 @@
             return;
         }
 
-        // In a list item: pasted lines become list items
+        // In a list item: pasted lines become list items, a divider goes
+        // below the whole list
         const li = closestTag(sc, ['LI'], ed);
+        if (li && nodes.every(n => n.nodeName === 'HR')) {
+            let top = li;
+            while (top.parentNode && top.parentNode !== ed) top = top.parentNode;
+            ed.insertBefore(frag, top.nextSibling);
+            finishBlockCaret(ed, last);
+            return;
+        }
         if (li) {
             insertIntoList(li, range, nodes);
             return;
@@ -1733,7 +1987,7 @@
         }
 
         recordHistory(code); // "before" step (includes the selection being replaced)
-        const beforeIndex = hist(code).index;
+        const before = hist(code).stack[hist(code).index];
         hidePastePop();
         insertHtmlAtCaret(chosen);
         recordHistory(code);
@@ -1742,7 +1996,7 @@
         if (versions.droppedImages) flash('error', STR.paste_no_images);
 
         if (versions.differs) {
-            lastPaste = { code, beforeIndex, versions, mode };
+            lastPaste = { code, before, after: hist(code).stack[hist(code).index], versions, mode };
             showPastePop(mode);
         }
     }
@@ -1779,8 +2033,25 @@
             b.setAttribute('aria-pressed', b.dataset.pasteSwitch === mode ? 'true' : 'false');
         });
         pastePop.hidden = false;
+        const live = $('paste-pop-live');
+        if (live) live.textContent = (STR.paste_options || '') + ': ' + (mode === 'plain' ? STR.paste_plain : STR.paste_rich);
+        placePastePop();
         clearTimeout(pastePopTimer);
         pastePopTimer = setTimeout(hidePastePop, 15000);
+    }
+
+    // iOS Safari (and browsers ignoring interactive-widget) lay the
+    // keyboard over the page: lift the bar by the part that is covered
+    function placePastePop() {
+        if (!pastePop || !window.visualViewport) return;
+        const vv = window.visualViewport;
+        const covered = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+        pastePop.style.setProperty('--kb', Math.round(covered) + 'px');
+    }
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', placePastePop);
+        window.visualViewport.addEventListener('scroll', placePastePop);
     }
 
     function hidePastePop() {
@@ -1796,13 +2067,15 @@
         if (lp.mode === mode) return;
         const h = hist(lp.code);
         recordHistory(lp.code);
-        if (h.index !== lp.beforeIndex + 1) { hidePastePop(); return; } // edited since
+        const bi = h.stack.indexOf(lp.before);
+        if (bi < 0 || h.stack[h.index] !== lp.after) { hidePastePop(); return; } // edited since
 
-        h.index = lp.beforeIndex;
+        h.index = bi;
         h.stack.length = h.index + 1;
         restoreSnapshot(lp.code, h.stack[h.index], true);
         insertHtmlAtCaret(lp.versions[mode]);
         recordHistory(lp.code);
+        lp.after = h.stack[h.index];
         afterContentChange(lp.code);
 
         lp.mode = mode;
@@ -1881,27 +2154,37 @@
     }
 
     // ----- Block type (H1 / H2 / H3 / P) -----
-    // Uses the browser's formatBlock (handles multi-block selections and
-    // lists correctly), then strips inline font sizes inside headings so
-    // the site's heading styles actually show
+    // Every selected paragraph changes on its own (the browser's formatBlock
+    // glues a multi-paragraph selection into one block with <br>s). Clicking
+    // the active heading turns it back into a paragraph.
+    const RETYPE_BLOCKS = /^(P|H[1-6]|DIV|PRE|BLOCKQUOTE)$/;
+
     function setBlockType(tag) {
         runEdit(ctx => {
+            const ed = ctx.editor;
+            const blocks = getSelectedBlocks().filter(b =>
+                RETYPE_BLOCKS.test(b.nodeName) &&
+                !(b.nodeName === 'BLOCKQUOTE' && Array.from(b.childNodes).some(isBlockEl)));
             let target = tag.toUpperCase();
-            const cur = closestBlock(ctx.sel.anchorNode);
-            if (target !== 'P' && cur && cur.tagName === target) {
-                target = 'P'; // clicking the active heading toggles back to paragraph
+            if (!blocks.length) {
+                document.execCommand('formatBlock', false, '<' + target + '>');
+                return;
             }
-            document.execCommand('formatBlock', false, '<' + target + '>');
+            if (target !== 'P' && blocks.every(b => b.nodeName === target)) target = 'P';
 
-            if (/^H[1-6]$/.test(target)) {
-                getSelectedBlocks().forEach(blk => {
-                    if (!/^H[1-6]$/.test(blk.tagName)) return;
-                    blk.style.fontSize = '';
-                    blk.removeAttribute('class');
-                    if (!blk.getAttribute('style')) blk.removeAttribute('style');
-                    clearSizesInside(blk);
+            const caret = saveCaret(ed);
+            blocks.forEach(b => {
+                if (b.nodeName === target) return;
+                const el = document.createElement(target.toLowerCase());
+                ['text-align', 'margin-left', 'line-height'].concat(target === 'P' ? ['font-size'] : []).forEach(prop => {
+                    const v = b.style ? b.style.getPropertyValue(prop) : '';
+                    if (v) el.style.setProperty(prop, v);
                 });
-            }
+                while (b.firstChild) el.appendChild(b.firstChild);
+                if (/^H[1-6]$/.test(target)) clearSizesInside(el);
+                b.replaceWith(el);
+            });
+            restoreCaret(ed, caret);
         });
     }
 
@@ -1959,12 +2242,32 @@
     }
 
     // ----- Colors -----
+    // color '' = back to the theme's own text colour: paint with a marker
+    // colour (so the browser splits the text exactly at the selection), then
+    // remove every colour on and inside the marked text
+    const COLOR_MARK = 'rgb(1, 2, 3)';
+
     function applyColor(color) {
         runEdit(ctx => {
             expandToBlockIfCollapsed(ctx.sel);
             document.execCommand('styleWithCSS', false, true);
-            document.execCommand('foreColor', false, color);
+            document.execCommand('foreColor', false, color || COLOR_MARK);
             document.execCommand('styleWithCSS', false, false);
+            if (color) return;
+            const marked = Array.from(ctx.editor.querySelectorAll('[style*="color"], font[color]')).filter(el =>
+                (el.style.color || '').replace(/\s+/g, '') === COLOR_MARK.replace(/\s+/g, '') ||
+                (el.getAttribute('color') || '').toLowerCase() === '#010203');
+            marked.forEach(el => {
+                [el].concat(Array.from(el.querySelectorAll('[style*="color"], font[color]'))).forEach(x => {
+                    x.style.color = '';
+                    x.removeAttribute('color');
+                    if (!x.getAttribute('style')) x.removeAttribute('style');
+                });
+            });
+            const caret = saveCaret(ctx.editor);
+            marked.concat(Array.from(ctx.editor.querySelectorAll('span:not([style]):not([class]), font:not([color]):not([size])')))
+                .forEach(x => { if (x.isConnected && (x.nodeName === 'SPAN' || x.nodeName === 'FONT') && !x.attributes.length) unwrap(x); });
+            restoreCaret(ctx.editor, caret);
         });
     }
 
@@ -1982,22 +2285,51 @@
     }
 
     // ----- Quote block toggle -----
+    // Quote: the selected paragraphs go into ONE quote, each staying a
+    // paragraph. Unquote: the paragraphs come back out.
     function toggleQuote() {
         runEdit(ctx => {
-            let el = ctx.sel.anchorNode;
-            if (el && el.nodeType === 3) el = el.parentElement;
-            const bq = el && el.closest ? el.closest('blockquote') : null;
+            const ed = ctx.editor;
+            if (closestTag(ctx.sel.anchorNode, ['TD', 'TH'], ed)) return;
+            const blocks = getSelectedBlocks();
+            if (!blocks.length) return;
+            const caret = saveCaret(ed);
 
-            if (bq && ctx.editor.contains(bq)) {
-                document.execCommand('formatBlock', false, '<P>');
-                // Some browsers leave the old blockquote wrapper behind
-                let el2 = window.getSelection().anchorNode;
-                if (el2 && el2.nodeType === 3) el2 = el2.parentElement;
-                const left = el2 && el2.closest ? el2.closest('blockquote') : null;
-                if (left && ctx.editor.contains(left)) unwrap(left);
+            const quoteOf = b => (b.nodeName === 'BLOCKQUOTE' ? b : closestTag(b, ['BLOCKQUOTE'], ed));
+            if (blocks.every(quoteOf)) {
+                new Set(blocks.map(quoteOf)).forEach(q => {
+                    if (Array.from(q.childNodes).some(isBlockEl)) {
+                        liftIndent(q, 0, '');
+                    } else {
+                        const p = document.createElement('p');
+                        while (q.firstChild) p.appendChild(q.firstChild);
+                        q.replaceWith(p);
+                    }
+                });
             } else {
-                document.execCommand('formatBlock', false, '<BLOCKQUOTE>');
+                const topOf = n => { while (n.parentNode && n.parentNode !== ed) n = n.parentNode; return n; };
+                const first = topOf(blocks[0]);
+                const last = topOf(blocks[blocks.length - 1]);
+                const bq = document.createElement('blockquote');
+                ed.insertBefore(bq, first);
+                let n = first;
+                while (n) {
+                    const next = n.nextSibling;
+                    if (n.nodeName === 'BLOCKQUOTE') {
+                        while (n.firstChild) bq.appendChild(n.firstChild);
+                        n.remove();
+                    } else if (n.nodeType === 1 && !isBlockEl(n)) {
+                        const p = document.createElement('p');
+                        p.appendChild(n);
+                        bq.appendChild(p);
+                    } else {
+                        bq.appendChild(n);
+                    }
+                    if (n === last) break;
+                    n = next;
+                }
             }
+            restoreCaret(ed, caret);
         });
     }
 
@@ -2012,7 +2344,7 @@
                 return;
             }
             getSelectedBlocks().forEach(b => {
-                if (b.tagName === 'LI') return;
+                if (/^(LI|TD|TH)$/.test(b.tagName)) return;
                 const cur = parseFloat(b.style.marginLeft) || 0;
                 const next = Math.max(0, Math.min(200, cur + dir * 40));
                 b.style.marginLeft = next ? next + 'px' : '';
@@ -2163,6 +2495,7 @@
     }
 
     let internalDrag = false;
+    let tabLeaves = false;
 
     Object.keys(editors).forEach(code => {
         const ed = editors[code];
@@ -2171,20 +2504,26 @@
         ed.addEventListener('paste', onPaste);
 
         ed.addEventListener('input', e => {
-            if (e.inputType === 'insertParagraph') fixNewParagraph();
+            const type = e.inputType || '';
+            if (type === 'insertParagraph') fixNewParagraph();
             if (!ed.firstChild || ed.innerHTML === '<br>') {
+                elementsBefore = null;
                 ed.innerHTML = '<p><br></p>';
                 placeCaretAtStart(ed.firstChild);
-            } else if (/^delete/.test(e.inputType || '')) {
-                resetIfEmptied(ed);
+            } else if (/^delete/.test(type) && resetIfEmptied(ed)) {
+                elementsBefore = null;
+            } else {
+                tidyNewElements(ed, type);
+                if (/^(delete|insertParagraph|insertFromDrop|insertLineBreak)/.test(type)) tidyStructure(ed);
             }
             scheduleHistory(code);
             afterContentChange(code);
         });
 
         ed.addEventListener('beforeinput', e => {
-            if (e.inputType === 'historyUndo') { e.preventDefault(); undo(); }
-            else if (e.inputType === 'historyRedo') { e.preventDefault(); redo(); }
+            if (e.inputType === 'historyUndo') { e.preventDefault(); undo(); return; }
+            if (e.inputType === 'historyRedo') { e.preventDefault(); redo(); return; }
+            rememberElements(ed);
         });
 
         ed.addEventListener('keydown', e => {
@@ -2199,11 +2538,18 @@
             // Ctrl+Shift+V = always plain text (the paste event follows)
             if (mod && e.shiftKey && k === 'v') { forcePlainUntil = Date.now() + 1500; return; }
 
+            if (e.key === 'Escape') {
+                tabLeaves = true;
+                return;
+            }
             if (e.key === 'Tab') {
+                // Esc then Tab moves on to the next control (no keyboard trap)
+                if (tabLeaves) { tabLeaves = false; return; }
                 e.preventDefault();
                 indent(e.shiftKey ? -1 : 1);
                 return;
             }
+            if (!/^(Shift|Control|Meta|Alt|CapsLock)$/.test(e.key)) tabLeaves = false;
             if (!/^(Shift|Control|Meta|Alt|CapsLock)$/.test(e.key) && !mod) hidePastePop();
         });
 
@@ -2287,34 +2633,34 @@
         if (el) el.classList.toggle('active', !!isOn);
     }
 
-    function reflectFontSize(px) {
-        const sel = $('font-size');
-        const custom = $('fs-custom');
-        const val = px + 'px';
-        if (Array.from(sel.options).some(o => o !== custom && o.value === val)) {
-            custom.textContent = '';
-            sel.value = val;
-        } else {
-            custom.value = val;
-            custom.textContent = px;
-            sel.value = val;
+    // A value that is not in the list gets its own option for as long as it
+    // is needed (a hidden <option> shows as a blank row in iOS pickers)
+    function showSelectValue(sel, value, label, matches) {
+        const customId = sel.id + '-custom';
+        let custom = $(customId);
+        const match = Array.from(sel.options).find(o => o !== custom && matches(o.value));
+        if (match) {
+            if (custom) custom.remove();
+            sel.value = match.value;
+            return;
         }
+        if (!custom) {
+            custom = document.createElement('option');
+            custom.id = customId;
+            sel.insertBefore(custom, sel.firstChild);
+        }
+        custom.value = value;
+        custom.textContent = label;
+        sel.value = value;
+    }
+
+    function reflectFontSize(px) {
+        showSelectValue($('font-size'), px + 'px', String(px), v => v === px + 'px');
     }
 
     function reflectLineSpacing(ratio) {
-        const sel = $('line-spacing');
-        const custom = $('ls-custom');
-        const match = Array.from(sel.options).find(o =>
-            o !== custom && Math.abs(parseFloat(o.value) - ratio) < 0.05);
-        if (match) {
-            custom.textContent = '';
-            sel.value = match.value;
-        } else {
-            const v = (Math.round(ratio * 10) / 10).toString();
-            custom.value = v;
-            custom.textContent = v;
-            sel.value = v;
-        }
+        const v = (Math.round(ratio * 10) / 10).toString();
+        showSelectValue($('line-spacing'), v, v, o => Math.abs(parseFloat(o) - ratio) < 0.05);
     }
 
     function updateWordCount() {
@@ -2594,6 +2940,21 @@
         }
     }
 
+    // While the AI works nothing can be typed: the answer replaces the
+    // content that was sent, so anything typed meanwhile would be lost
+    let busy = false;
+    function setBusy(on) {
+        busy = on;
+        const box = document.querySelector('.container');
+        if (on && document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        LANGS.forEach(c => { if (editors[c]) editors[c].setAttribute('contenteditable', on ? 'false' : 'true'); });
+        if (box) {
+            if (on) box.setAttribute('inert', '');
+            else box.removeAttribute('inert');
+            box.setAttribute('aria-busy', on ? 'true' : 'false');
+        }
+    }
+
     // Replace one editor's content as a single undoable step
     function replaceEditorContent(code, html) {
         const ed = editors[code];
@@ -2614,21 +2975,32 @@
         }
 
         const btn = $('btn-improve');
+        const ed = editors[code];
+        const caret = saveCaret(ed);
         btn.disabled = true;
         btn.textContent = STR.improving;
         showStatus('saving', STR.improving);
+        hidePastePop();
+        setBusy(true);
 
+        let improved = null;
         try {
             const data = await postForm('/admin/api/ai/improve.php', { content, lang: code });
             if (!data.improved || !String(data.improved).trim()) throw new Error(STR.editor_empty);
-            hidePastePop();
-            replaceEditorContent(code, data.improved);
-            flash('saved', STR.improved);
+            improved = data.improved;
         } catch (e) {
             flash('error', e.message, 8000);
         } finally {
+            setBusy(false);
             btn.disabled = false;
             btn.textContent = STR.improve;
+        }
+        if (improved !== null) {
+            replaceEditorContent(code, improved);
+            // back to (about) the same place in the text
+            try { ed.focus({ preventScroll: true }); } catch (e) { ed.focus(); }
+            restoreCaret(ed, caret);
+            flash('saved', STR.improved);
         }
     });
 
@@ -2650,6 +3022,7 @@
         const overlayText = overlay.querySelector('.translate-text');
         const overlayTextDefault = overlayText.textContent;
         overlay.classList.add('show');
+        setBusy(true);
 
         document.querySelectorAll('.translate-progress .lang-badge').forEach(b => {
             b.classList.remove('active', 'done');
@@ -2686,7 +3059,7 @@
             }
 
             overlayText.textContent = STR.saving;
-            const saved = await saveAll();
+            const saved = await saveAll(true);
             if (saved) flash('saved', STR.translations_done_saved);
         } catch (e) {
             console.error('Translation error:', e);
@@ -2699,6 +3072,7 @@
         } finally {
             overlayText.textContent = overlayTextDefault;
             overlay.classList.remove('show');
+            setBusy(false);
         }
     });
 
@@ -2706,8 +3080,8 @@
     // SAVE
     // Shared by the save button, Ctrl+S and the translate flow.
     // ===================================================================
-    async function saveAll() {
-        if (isSaving) return false;
+    async function saveAll(fromTranslate) {
+        if (isSaving || (busy && !fromTranslate)) return false;
 
         LANGS.forEach(c => recordHistory(c));
         const payload = {};
@@ -2790,10 +3164,14 @@
     // ===================================================================
     // DRAFT - local backup until the teaching is saved
     // ===================================================================
-    function readDraft() {
+    // The draft offered in the bar. It is parked under ":prev" so the work
+    // done while the bar is still showing keeps being backed up as normal.
+    let offeredDraft = null;
+
+    function readDraft(key) {
         if (!DRAFT_KEY) return null;
         try {
-            const d = JSON.parse(store.get(DRAFT_KEY) || 'null');
+            const d = JSON.parse(store.get(key || DRAFT_KEY) || 'null');
             return d && d.contents ? d : null;
         } catch (e) {
             return null;
@@ -2801,7 +3179,7 @@
     }
 
     function writeDraftNow() {
-        if (!DRAFT_KEY || draftBlocked) return;
+        if (!DRAFT_KEY) return;
         const contents = {};
         let differs = false;
         LANGS.forEach(c => {
@@ -2823,18 +3201,21 @@
     function hideDraftBar() {
         const bar = $('draft-bar');
         if (bar) bar.hidden = true;
-        draftBlocked = false;
+        offeredDraft = null;
+        if (DRAFT_KEY) store.del(DRAFT_KEY + ':prev');
     }
 
     function offerDraft() {
-        const d = readDraft();
-        if (!d) return;
-        const differs = LANGS.some(c => (d.contents[c] || '') !== (savedHtml[c] || ''));
-        if (!differs) {
+        const differsFromSaved = d => d && LANGS.some(c => (d.contents[c] || '') !== (savedHtml[c] || ''));
+        let d = readDraft();
+        if (!differsFromSaved(d)) d = readDraft(DRAFT_KEY + ':prev');
+        if (!differsFromSaved(d)) {
             store.del(DRAFT_KEY);
+            store.del(DRAFT_KEY + ':prev');
             return;
         }
-        draftBlocked = true;
+        offeredDraft = d;
+        store.set(DRAFT_KEY + ':prev', JSON.stringify(d));
         const time = $('draft-time');
         if (time) {
             try {
@@ -2847,7 +3228,7 @@
     }
 
     on('btn-draft-restore', () => {
-        const d = readDraft();
+        const d = offeredDraft;
         hideDraftBar();
         if (!d) return;
         LANGS.forEach(c => {
@@ -2860,9 +3241,8 @@
     });
 
     on('btn-draft-discard', () => {
-        store.del(DRAFT_KEY);
         hideDraftBar();
-        scheduleDraft();
+        writeDraftNow();
     });
 
     // ===================================================================

@@ -234,12 +234,73 @@ function teaching_sanitize_html(string $html): string {
     }
 
     teaching_clean_children($root);
+    teaching_merge_split_lists($root);
 
     $out = '';
     for ($child = $root->firstChild; $child !== null; $child = $child->nextSibling) {
         $out .= $doc->saveHTML($child);
     }
     return trim($out);
+}
+
+/**
+ * Lists that were pasted one item at a time, with blank lines between them
+ * (<ol><li>a</li></ol><p>&nbsp;</p><ol><li>b</li></ol>), number 1, 1, 1.
+ * Join them so the numbering runs 1, 2, 3. At most two blank paragraphs may
+ * sit between the pieces, and a list with its own different start number
+ * is left alone.
+ */
+function teaching_merge_split_lists(DOMNode $root): void {
+    $isBlankP = static function (DOMNode $n): bool {
+        if (!($n instanceof DOMElement) || strtolower($n->nodeName) !== 'p') {
+            return false;
+        }
+        $text = preg_replace('/[\s\x{00A0}\x{200B}\x{FEFF}]+/u', '', (string)$n->textContent);
+        return $text === '' || $text === null;
+    };
+
+    for ($list = $root->firstChild; $list !== null; $list = $list->nextSibling) {
+        if (!($list instanceof DOMElement)) {
+            continue;
+        }
+        $tag = strtolower($list->nodeName);
+        if ($tag !== 'ol' && $tag !== 'ul') {
+            continue;
+        }
+        while (true) {
+            $between = [];
+            $next = $list->nextSibling;
+            while ($next !== null && (($next instanceof DOMText && trim($next->textContent) === '') || $isBlankP($next))) {
+                if ($next instanceof DOMElement) {
+                    $between[] = $next;
+                }
+                $next = $next->nextSibling;
+            }
+            if (!($next instanceof DOMElement) || strtolower($next->nodeName) !== $tag
+                || count($between) > 2 || $next->getAttribute('type') !== $list->getAttribute('type')) {
+                break;
+            }
+            if ($tag === 'ol' && $next->hasAttribute('start')) {
+                $count = 0;
+                foreach ($list->childNodes as $c) {
+                    if ($c instanceof DOMElement && strtolower($c->nodeName) === 'li') {
+                        $count++;
+                    }
+                }
+                $expected = (int)($list->getAttribute('start') ?: 1) + $count;
+                if ((int)$next->getAttribute('start') !== $expected) {
+                    break;
+                }
+            }
+            while ($next->firstChild) {
+                $list->appendChild($next->firstChild);
+            }
+            foreach ($between as $b) {
+                $root->removeChild($b);
+            }
+            $root->removeChild($next);
+        }
+    }
 }
 
 // Walks the live child list (no array of all nodes at once: a 250 KB file

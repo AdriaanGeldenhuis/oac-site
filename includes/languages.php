@@ -1604,6 +1604,22 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Não é possível colar imagens aqui',
         'st' => 'Litšoantšo li ke ke tsa khomaretsoa mona'
     ],
+    'default_color' => [
+        'af' => 'Gewone kleur',
+        'en' => 'Default colour',
+        'zu' => 'Umbala ojwayelekile',
+        'xh' => 'Umbala oqhelekileyo',
+        'pt' => 'Cor padrão',
+        'st' => 'Mmala o tloaelehileng'
+    ],
+    'editor_keys_hint' => [
+        'af' => 'Tab keep in. Druk Esc en dan Tab om die teks te verlaat.',
+        'en' => 'Tab indents. Press Esc, then Tab, to leave the text.',
+        'zu' => 'U-Tab uyangenisa. Cindezela u-Esc bese u-Tab ukuze uphume embhalweni.',
+        'xh' => 'I-Tab iyangenisa. Cofa u-Esc, emva koko i-Tab, ukuze uphume kumbhalo.',
+        'pt' => 'Tab aumenta o recuo. Pressione Esc e depois Tab para sair do texto.',
+        'st' => 'Tab e kenya ka hare. Tobetsa Esc ebe Tab ho tsoa mongolong.'
+    ],
     'draft_found' => [
         'af' => "Daar is 'n ongestoorde konsep van hierdie lering",
         'en' => 'There is an unsaved draft of this teaching',

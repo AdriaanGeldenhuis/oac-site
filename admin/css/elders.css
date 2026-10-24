@@ -83,7 +83,32 @@ body {
     font-size: 0.85rem;
 }
 
+/* Screen-reader-only text */
+.sr-only {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* ===== TOOLBAR ===== */
+/* Both rows stay under the fixed site header while a long teaching scrolls */
+.toolbar-dock {
+    position: sticky;
+    top: var(--ghf-height, 70px);
+    z-index: 50;
+    margin: -8px 0 8px;
+    padding: 8px 0;
+    background: var(--bg);
+}
+.toolbar-dock .toolbar { margin-bottom: 8px; }
+.toolbar-dock .toolbar:last-child { margin-bottom: 0; }
+
 .toolbar {
     display: flex;
     align-items: center;
@@ -189,6 +214,15 @@ body {
 .color-swatch:hover {
     transform: scale(1.15);
     border-color: var(--primary);
+}
+
+/* "Default colour" swatch - the theme's own text colour */
+.color-swatch.swatch-default {
+    display: inline-grid;
+    place-items: center;
+    background: var(--surface-light);
+    color: var(--text);
+    font: 600 0.8rem/1 system-ui, -apple-system, sans-serif;
 }
 
 /* "Remove highlight" swatch - diagonal red line */
@@ -348,6 +382,13 @@ body {
     font-weight: 500;
     color: var(--c-strong);
 }
+/* Bold inside a coloured run keeps that colour (same rule on the welcome page) */
+.editor [style^="color"] strong, .editor [style^="color"] b,
+.editor [style*="; color"] strong, .editor [style*="; color"] b,
+.editor [style*=";color"] strong, .editor [style*=";color"] b,
+.editor font[color] strong, .editor font[color] b {
+    color: inherit;
+}
 .editor u { text-underline-offset: 2px; }
 .editor sup, .editor sub { font-size: 0.7em; }
 .editor table {
@@ -374,6 +415,7 @@ body {
 }
 .editor td > p:last-child,
 .editor th > p:last-child { margin-bottom: 0; }
+.editor caption { color: var(--c-td); }
 .editor blockquote {
     margin: 0 0 20px;
     padding: 14px 20px;
@@ -851,7 +893,8 @@ body {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    /* --kb: height of an on-screen keyboard covering the page (set by JS) */
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px) + var(--kb, 0px));
     width: max-content;
     max-width: calc(100% - 32px);
     margin: 0 auto;
@@ -911,10 +954,45 @@ body {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .header { flex-direction: column; gap: 20px; }
+    /* Compact title block, so the editor starts higher up the screen */
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+    .header h1 { font-size: 1.9rem; margin-bottom: 4px; }
+    .lang-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin-bottom: 0;
+    }
+    .lang-tabs::-webkit-scrollbar { display: none; }
+    .lang-tab { flex-shrink: 0; }
+    .container { margin-top: 12px; padding: 0 12px 100px; }
 
-    /* Toolbars: one swipeable row each instead of a tall wrapped
-       block, so the editor stays right under your thumb */
+
+    .form-grid { grid-template-columns: 1fr; }
+    .editor { padding: 20px; min-height: 400px; }
+    .editor.is-empty::before { top: 20px; left: 20px; right: 20px; }
+    .seg-btn { min-height: 34px; }
+    /* Above the floating back / notification buttons */
+    .paste-pop {
+        bottom: calc(100px + env(safe-area-inset-bottom, 0px) + var(--kb, 0px));
+        padding: 8px 8px 8px 12px;
+        gap: 6px;
+    }
+    .paste-pop .seg-btn { padding: 4px 10px; }
+    .paste-pop { flex-wrap: nowrap; }
+    .actions { flex-direction: column; gap: 14px; }
+    .actions .btn { width: 100%; justify-content: center; }
+}
+
+/* Phones, tablets and narrow windows: one swipeable row per toolbar
+   instead of a tall wrapped block, so the editor stays in view */
+@media (max-width: 1024px), (pointer: coarse) {
     .toolbar {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -924,7 +1002,6 @@ body {
         scrollbar-color: var(--primary-dark) transparent;
         padding: 10px 12px;
         gap: 8px;
-        margin-bottom: 10px;
         scroll-snap-type: x proximity;
     }
     .toolbar::-webkit-scrollbar { height: 4px; }
@@ -936,35 +1013,29 @@ body {
         flex-shrink: 0;
         scroll-snap-align: start;
     }
-    .toolbar .sep { flex-shrink: 0; }
-    /* Comfortable touch targets */
-    .toolbar .tool-btn {
-        min-width: 40px;
-        min-height: 40px;
-        flex-shrink: 0;
-    }
-    .toolbar .color-swatch {
-        width: 28px;
-        height: 28px;
-        flex-shrink: 0;
-    }
+    .toolbar .sep,
+    .toolbar .tool-btn,
+    .toolbar .color-swatch { flex-shrink: 0; }
     .btn-translate { min-width: 0; }
+}
 
-    .form-grid { grid-template-columns: 1fr; }
-    .lang-tabs { flex-wrap: wrap; }
-    .editor { padding: 20px; min-height: 400px; }
-    .editor.is-empty::before { top: 20px; left: 20px; right: 20px; }
-    .seg-btn { min-height: 34px; }
-    /* Above the floating back / notification buttons */
-    .paste-pop {
-        bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-        padding: 8px 8px 8px 12px;
-        gap: 6px;
+/* Touch screens (phones AND tablets): 44px targets everywhere */
+@media (pointer: coarse) {
+    .tool-btn,
+    .toolbar .tool-btn {
+        min-width: 44px;
+        min-height: 44px;
     }
-    .paste-pop .seg-btn { padding: 4px 10px; }
-    .paste-pop { flex-wrap: nowrap; }
-    .actions { flex-direction: column; gap: 14px; }
-    .actions .btn { width: 100%; justify-content: center; }
+    .tool-group select { min-height: 44px; }
+    .color-swatch,
+    .toolbar .color-swatch {
+        width: 40px;
+        height: 40px;
+    }
+    .seg-btn,
+    .paste-pop .seg-btn { min-height: 44px; }
+    .lang-tab { min-height: 44px; }
+    .paste-pop-close { width: 44px; height: 44px; }
 }
 
 /* Small phones: the two choices + close on one row */

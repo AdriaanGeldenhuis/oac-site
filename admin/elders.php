@@ -56,15 +56,15 @@ function e(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }
 
-// Site colors for toolbar
+// Site colors for toolbar. Every one of them is remapped per theme on the
+// welcome page, so the text stays readable in dark and light mode. Plain
+// white / black are not here: that is the theme's own text colour, which
+// the "default colour" swatch gives back.
 $siteColors = [
     ['name' => 'Rose Gold', 'value' => '#e8b4a8'],
     ['name' => 'Rose Gold Dark', 'value' => '#c99485'],
     ['name' => 'Peach', 'value' => '#f5d5c8'],
-    ['name' => 'Peach Light', 'value' => '#fae8e0'],
     ['name' => 'Silver', 'value' => '#b8b8b8'],
-    ['name' => 'White', 'value' => '#ffffff'],
-    ['name' => 'Black', 'value' => '#1a1816'],
     ['name' => 'Dark Gray', 'value' => '#3d3835'],
 ];
 
@@ -106,6 +106,9 @@ $editorData = [
         'characters' => t('characters'),
         'link_prompt' => t('link_prompt'),
         'paste_no_images' => t('paste_no_images'),
+        'paste_options' => t('paste_options'),
+        'paste_rich' => t('paste_rich'),
+        'paste_plain' => t('paste_plain'),
     ],
 ];
 
@@ -115,7 +118,9 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
 <html lang="<?= e($lang) ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- resizes-content: the on-screen keyboard shrinks the page, so the
+         toolbar and the paste bar stay visible above it -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
     <title><?= e(t('edit_teaching')) ?></title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -152,6 +157,8 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
             </span>
         </div>
 
+        <!-- Both toolbars stay in view while scrolling a long teaching -->
+        <div class="toolbar-dock">
         <!-- TOOLBAR ROW 1: History, Paste mode, Blocks & Text Formatting -->
         <div class="toolbar" role="toolbar">
             <div class="tool-group">
@@ -198,7 +205,6 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
             <div class="tool-group">
                 <label for="font-size"><?= t('size') ?></label>
                 <select id="font-size">
-                    <option value="" id="fs-custom" hidden></option>
                     <option value="12px">12</option>
                     <option value="14px">14</option>
                     <option value="16px" selected>16</option>
@@ -215,7 +221,6 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
             <div class="tool-group">
                 <label for="line-spacing"><?= t('line_spacing') ?></label>
                 <select id="line-spacing">
-                    <option value="" id="ls-custom" hidden></option>
                     <option value="1">1.0</option>
                     <option value="1.5" selected>1.5</option>
                     <option value="1.8">1.8</option>
@@ -259,6 +264,11 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
         <div class="toolbar" role="toolbar">
             <div class="tool-group">
                 <label><?= t('text_color') ?></label>
+                <button type="button" class="color-swatch swatch-default"
+                        data-color=""
+                        data-type="text"
+                        title="<?= e(t('default_color')) ?>"
+                        aria-label="<?= e(t('default_color')) ?>">A</button>
                 <?php foreach ($siteColors as $color): ?>
                 <button type="button" class="color-swatch"
                         style="background: <?= e($color['value']) ?>"
@@ -317,6 +327,9 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
                 <?= t('translate_all') ?>
             </button>
         </div>
+        </div>
+
+        <p class="sr-only" id="editor-keys-hint"><?= e(t('editor_keys_hint')) ?></p>
 
         <!-- Editors for each language -->
         <div class="editor-wrap">
@@ -331,6 +344,7 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
                  aria-label="<?= e(t('monthly_teaching') . ' - ' . LANG_NAMES[$code]) ?>"
                  data-lang="<?= $code ?>"
                  data-placeholder="<?= e($placeholders[$code]) ?>"
+                 aria-describedby="editor-keys-hint"
                  <?= $code !== 'af' ? 'hidden' : '' ?>><?= $contents[$code] ?></div>
             <?php endforeach; ?>
         </div>
@@ -349,7 +363,8 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
 
     <!-- Shown right after a paste: switch between the two versions -->
     <div class="paste-pop" id="paste-pop" role="group" aria-label="<?= e(t('paste_options')) ?>" hidden>
-        <span class="paste-pop-title"><?= e(t('paste_options')) ?>:</span>
+        <span class="paste-pop-title" aria-hidden="true"><?= e(t('paste_options')) ?>:</span>
+        <span class="sr-only" id="paste-pop-live" aria-live="polite"></span>
         <span class="seg">
             <button type="button" class="seg-btn" aria-pressed="false" data-paste-switch="rich" title="<?= e(t('paste_rich_hint')) ?>"><span class="seg-ico" aria-hidden="true">Aa</span><?= e(t('paste_rich')) ?></button>
             <button type="button" class="seg-btn" aria-pressed="false" data-paste-switch="plain" title="<?= e(t('paste_plain_hint')) ?>"><span class="seg-ico" aria-hidden="true">T</span><?= e(t('paste_plain')) ?></button>
