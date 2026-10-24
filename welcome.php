@@ -5,6 +5,7 @@ header('Cache-Control: no-cache, must-revalidate');
 header('Pragma: no-cache');
 require_once __DIR__ . '/security/auth_gate.php';
 require_once __DIR__ . '/includes/languages.php';
+require_once __DIR__ . '/includes/teaching.php';
 require_once __DIR__ . '/security/config.php';
 
 // Handle language change via GET parameter - redirect to apply cleanly
@@ -84,45 +85,9 @@ try {
     error_log("Welcome page - DB error: " . $e->getMessage());
 }
 
-// Slug function
-$slug = function($s) {
-    $s = strtolower(trim($s));
-    $s = preg_replace('/[^a-z0-9]+/', '_', $s);
-    return trim($s, '_');
-};
-
-$provSlug = $slug($province);
-$townSlug = $slug($town);
-$cityDir = ($provSlug && $townSlug) ? (__DIR__ . '/welcome/south_africa/' . $provSlug . '/' . $townSlug) : '';
-
-// Choose content file based on language with proper fallback
-// Afrikaans: lering_content.html
-// Other languages: teaching_content.<lang>.html
-$contentFile = null;
-
-if ($lang === 'af') {
-    // Afrikaans fallback chain
-    $candidates = [
-        $cityDir ? ($cityDir . '/lering_content.html') : '',
-        __DIR__ . '/welcome/lering_content.html'
-    ];
-} else {
-    // Other languages fallback chain
-    $candidates = [
-        $cityDir ? ($cityDir . '/teaching_content.' . $lang . '.html') : '',
-        $cityDir ? ($cityDir . '/teaching_content.html') : '',
-        __DIR__ . '/welcome/teaching_content.' . $lang . '.html',
-        __DIR__ . '/welcome/teaching_content.html'
-    ];
-}
-
-// Find first readable file
-foreach ($candidates as $cand) {
-    if ($cand && is_readable($cand)) {
-        $contentFile = $cand;
-        break;
-    }
-}
+// Teaching of the month: the town's own teaching in the reader's language,
+// falling back to English, then Afrikaans (see includes/teaching.php)
+$teachingHtml = teaching_reader_html(teaching_dir((string)$province, (string)$town), $lang);
 
 // Fetch today's thought (only if display_time has passed or is NULL)
 $dailyThought = null;
@@ -356,8 +321,9 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
         <div class="wc-fold-body" id="wcTeachBody">
           <div class="wc-teaching-content">
             <?php
-              if ($contentFile && is_readable($contentFile)) {
-                readfile($contentFile);
+              // Sanitized on the way out too, so older files are just as safe
+              if ($teachingHtml !== '') {
+                echo $teachingHtml;
               } else {
                 echo '<div class="wc-no-content">
                         <svg viewBox="0 0 24 24" fill="currentColor">

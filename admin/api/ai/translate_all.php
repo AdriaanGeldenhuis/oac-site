@@ -41,6 +41,7 @@ $baseDir = dirname(__DIR__, 3);
 $requiredFiles = [
     'security/config.php',
     'security/session.php',
+    'security/csrf.php',
     'security/auth.php',
     'includes/languages.php'
 ];
@@ -67,6 +68,7 @@ if (!file_exists($aiConfigPath)) {
 try {
     require_once $baseDir . '/security/config.php';
     require_once $baseDir . '/security/session.php';
+    require_once $baseDir . '/security/csrf.php';
     require_once $baseDir . '/security/auth.php';
     require_once $baseDir . '/includes/languages.php';
     require_once $aiConfigPath;
@@ -93,6 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean();
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit;
+}
+
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
+    ob_end_clean();
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Invalid CSRF token - reload the page']);
     exit;
 }
 

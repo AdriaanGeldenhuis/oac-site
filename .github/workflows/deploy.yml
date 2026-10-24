@@ -35,6 +35,8 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           # No --delete: server-only files are never removed.
+          # The teaching files under /welcome are written by elders on the
+          # server - never ship copies from git over them.
           rsync -rlptvz \
             -e "ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-2222}" \
             --exclude='.git' \
@@ -50,4 +52,6 @@ jobs:
             --exclude='/logs/' \
             --exclude='/data/notifications.db' \
             --exclude='/App Files/' \
+            --exclude='/welcome/south_africa/' \
+            --exclude='/welcome/*.html' \
             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"

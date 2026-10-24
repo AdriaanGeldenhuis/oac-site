@@ -1535,6 +1535,87 @@ define('UI_TRANSLATIONS', [
         'pt' => 'caracteres',
         'st' => 'litlhaku'
     ],
+    // Teaching editor - paste choice & draft recovery
+    'paste_label' => [
+        'af' => 'Plak',
+        'en' => 'Paste',
+        'zu' => 'Namathisela',
+        'xh' => 'Ncamathisela',
+        'pt' => 'Colar',
+        'st' => 'Khomaretsa'
+    ],
+    'paste_rich' => [
+        'af' => 'Met formaat',
+        'en' => 'With formatting',
+        'zu' => 'Nokufomatha',
+        'xh' => 'Nolungiselelo',
+        'pt' => 'Com formatação',
+        'st' => 'Le sebopeho'
+    ],
+    'paste_plain' => [
+        'af' => 'Gewone teks',
+        'en' => 'Plain text',
+        'zu' => 'Umbhalo kuphela',
+        'xh' => 'Umbhalo kuphela',
+        'pt' => 'Texto simples',
+        'st' => 'Mongolo feela'
+    ],
+    'paste_rich_hint' => [
+        'af' => 'Hou die voorkoms van die bron: vet, skuins, opskrifte, lyste, kleure en tabelle',
+        'en' => 'Keep the look of the source: bold, italic, headings, lists, colours and tables',
+        'zu' => 'Gcina ukubukeka komthombo: okugqamile, okutshekile, izihloko, uhlu, imibala namathebula',
+        'xh' => 'Gcina inkangeleko yomthombo: ngqindilili, thambeka, izihloko, uluhlu, imibala neetafile',
+        'pt' => 'Manter a aparência da origem: negrito, itálico, títulos, listas, cores e tabelas',
+        'st' => 'Boloka ponahalo ea mohloli: e teteaneng, e sekameng, lihlooho, manane, mebala le litafole'
+    ],
+    'paste_plain_hint' => [
+        'af' => 'Plak net die teks en kies self die formaat (Ctrl+Shift+V plak altyd as gewone teks)',
+        'en' => 'Paste only the text and choose the formatting yourself (Ctrl+Shift+V always pastes plain text)',
+        'zu' => 'Namathisela umbhalo kuphela bese uzikhethela ukufomatha (Ctrl+Shift+V uhlala unamathisela umbhalo kuphela)',
+        'xh' => 'Ncamathisela umbhalo kuphela uze uzikhethele ulungiselelo (Ctrl+Shift+V ihlala incamathisela umbhalo kuphela)',
+        'pt' => 'Colar apenas o texto e escolher a formatação você mesmo (Ctrl+Shift+V cola sempre texto simples)',
+        'st' => 'Khomaretsa mongolo feela ebe u ikhethela sebopeho (Ctrl+Shift+V kamehla e khomaretsa mongolo feela)'
+    ],
+    'paste_options' => [
+        'af' => 'Geplak as',
+        'en' => 'Pasted as',
+        'zu' => 'Kunamathiselwe njenge',
+        'xh' => 'Kuncamathiselwe njenge',
+        'pt' => 'Colado como',
+        'st' => 'E khomaretsoe e le'
+    ],
+    'paste_no_images' => [
+        'af' => 'Prente kan nie hier geplak word nie',
+        'en' => 'Images cannot be pasted here',
+        'zu' => 'Izithombe azikwazi ukunamathiselwa lapha',
+        'xh' => 'Imifanekiso ayinakuncamathiselwa apha',
+        'pt' => 'Não é possível colar imagens aqui',
+        'st' => 'Litšoantšo li ke ke tsa khomaretsoa mona'
+    ],
+    'draft_found' => [
+        'af' => "Daar is 'n ongestoorde konsep van hierdie lering",
+        'en' => 'There is an unsaved draft of this teaching',
+        'zu' => 'Kukhona uhlaka olungagciniwe lwale mfundiso',
+        'xh' => 'Kukho uyilo olungagcinwanga lwale mfundiso',
+        'pt' => 'Existe um rascunho não salvo deste ensino',
+        'st' => 'Ho na le moralo o sa bolokoang oa thuto ena'
+    ],
+    'restore_draft' => [
+        'af' => 'Herstel',
+        'en' => 'Restore',
+        'zu' => 'Buyisela',
+        'xh' => 'Buyisela',
+        'pt' => 'Restaurar',
+        'st' => 'Khutlisa'
+    ],
+    'discard_draft' => [
+        'af' => 'Gooi weg',
+        'en' => 'Discard',
+        'zu' => 'Lahla',
+        'xh' => 'Lahla',
+        'pt' => 'Descartar',
+        'st' => 'Lahla'
+    ],
     'book' => [
         'af' => 'Boek',
         'en' => 'Book',
