@@ -3673,6 +3673,30 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Não foi possível carregar a canção. Tente novamente.',
         'st' => 'Ha e a khona ho kenya sefela. Leka hape.'
     ],
+    'player_verses_prompt' => [
+        'af' => 'Hoeveel verse?',
+        'en' => 'How many verses?',
+        'zu' => 'Mangaki amavesi?',
+        'xh' => 'Zingaphi iivesi?',
+        'pt' => 'Quantas estrofes?',
+        'st' => 'Litemana tse kae?'
+    ],
+    'player_1_verse' => [
+        'af' => '1 vers',
+        'en' => '1 verse',
+        'zu' => 'Ivesi eli-1',
+        'xh' => 'Ivesi e-1',
+        'pt' => '1 estrofe',
+        'st' => 'Temana e 1'
+    ],
+    'player_2_verses' => [
+        'af' => '2 verse',
+        'en' => '2 verses',
+        'zu' => 'Amavesi ama-2',
+        'xh' => 'Iivesi ezi-2',
+        'pt' => '2 estrofes',
+        'st' => 'Litemana tse 2'
+    ],
     'enter_song_number' => [
         'af' => 'Tik liednommer in',
         'en' => 'Enter song number',

@@ -15,6 +15,9 @@
   const statusEl = document.getElementById('playerStatus');
   const barEl = document.getElementById('playerBar');
   const timeEl = document.getElementById('playerTime');
+  const choiceEl = document.getElementById('playerChoice');
+  const bodyEl = document.getElementById('playerBody');
+  const versesEl = document.getElementById('playerVerses');
   const song = openBtn.getAttribute('data-song');
 
   const LABEL_PLAY = playBtn.getAttribute('data-label-play');
@@ -31,6 +34,8 @@
   let timer = null;
   let playing = false;
   let wakeLock = null;
+  let verses = '1';        // '1' = 002.mid, '2' = 002R.mid
+  let loadSeq = 0;         // ignoreer laaie wat deur 'n nuwe keuse vervang is
 
   // ===== MIDI PARSER =====
 
@@ -190,12 +195,8 @@
 
   async function toggle() {
     if (!parsed) {
-      try {
-        await load();
-      } catch (e) {
-        statusEl.textContent = TXT_ERROR;
-        return;
-      }
+      await load();
+      if (!parsed) return;
     }
     if (!ctx) {
       startFresh();
@@ -212,17 +213,24 @@
   }
 
   async function load() {
+    const seq = ++loadSeq;
+    parsed = null;
     statusEl.textContent = TXT_LOADING;
     playBtn.disabled = true;
     try {
-      const res = await fetch('/singemmanuel/api/midi.php?song=' + encodeURIComponent(song), { credentials: 'same-origin' });
+      const url = '/singemmanuel/api/midi.php?song=' + encodeURIComponent(song) + '&verses=' + verses;
+      const res = await fetch(url, { credentials: 'same-origin' });
       if (!res.ok) throw new Error('http ' + res.status);
-      parsed = parseMidi(await res.arrayBuffer());
-      if (!parsed.notes.length) throw new Error('empty');
+      const data = parseMidi(await res.arrayBuffer());
+      if (!data.notes.length) throw new Error('empty');
+      if (seq !== loadSeq) return;
+      parsed = data;
       statusEl.textContent = '';
       updateProgress(0);
+    } catch (e) {
+      if (seq === loadSeq) statusEl.textContent = TXT_ERROR;
     } finally {
-      playBtn.disabled = false;
+      if (seq === loadSeq) playBtn.disabled = false;
     }
   }
 
@@ -260,14 +268,37 @@
     if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
   }
 
+  // Eers vra hoeveel verse; die speler wys eers ná die keuse
   function openPlayer() {
+    choiceEl.hidden = false;
+    bodyEl.hidden = true;
     overlay.hidden = false;
     document.body.style.overflow = 'hidden';
-    playBtn.focus();
+    const first = choiceEl.querySelector('.se-verse-btn');
+    if (first) first.focus();
+  }
+
+  function chooseVerses(btn) {
+    verses = btn.getAttribute('data-verses') === '2' ? '2' : '1';
+    versesEl.textContent = btn.textContent;
+    choiceEl.hidden = true;
+    bodyEl.hidden = false;
+    load().then(function() {
+      // Die knoppie is gedeaktiveer terwyl dit laai; gee fokus daarna terug
+      if (!bodyEl.hidden && (document.activeElement === document.body || document.activeElement === playBtn)) {
+        playBtn.focus();
+      }
+    });
   }
 
   function closePlayer() {
     stop();
+    loadSeq++;
+    parsed = null;
+    playBtn.disabled = false;
+    statusEl.textContent = '';
+    barEl.style.width = '0%';
+    timeEl.textContent = '0:00';
     overlay.hidden = true;
     document.body.style.overflow = '';
     openBtn.focus();
@@ -276,6 +307,13 @@
   openBtn.addEventListener('click', function(e) {
     e.preventDefault();
     openPlayer();
+  });
+
+  choiceEl.addEventListener('click', function(e) {
+    const btn = e.target.closest('.se-verse-btn');
+    if (!btn) return;
+    e.preventDefault();
+    chooseVerses(btn);
   });
 
   closeBtn.addEventListener('click', function(e) {
