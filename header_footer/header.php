@@ -154,33 +154,9 @@ function isActive($url, $currentPath) {
 
 <!-- Navigation Drawer -->
 <nav class="ghf-drawer" id="ghfDrawer" aria-hidden="true">
-  <!-- Decorative rose window, turning slowly while the menu is open -->
-  <div class="ghf-drawer-window" aria-hidden="true">
-    <svg viewBox="0 0 400 400" focusable="false">
-      <defs>
-        <path id="ghfLancet" d="M200 200C171 160 171 104 200 52C229 104 229 160 200 200Z"/>
-        <path id="ghfLobe" d="M200 200C189 182 189 158 200 136C211 158 211 182 200 200Z"/>
-      </defs>
-      <circle class="ghf-w-line" cx="200" cy="200" r="197"/>
-      <circle class="ghf-w-line ghf-w-line--thin" cx="200" cy="200" r="187"/>
-      <g class="ghf-w-lancets">
-        <?php for ($i = 0; $i < 12; $i++): ?>
-          <use href="#ghfLancet" transform="rotate(<?= $i * 30 ?> 200 200)"/>
-        <?php endfor; ?>
-      </g>
-      <g class="ghf-w-roundels">
-        <?php for ($i = 0; $i < 12; $i++): ?>
-          <circle cx="200" cy="30" r="11" transform="rotate(<?= 15 + $i * 30 ?> 200 200)"/>
-        <?php endfor; ?>
-      </g>
-      <g class="ghf-w-inner">
-        <?php for ($i = 0; $i < 8; $i++): ?>
-          <use href="#ghfLobe" transform="rotate(<?= $i * 45 ?> 200 200)"/>
-        <?php endfor; ?>
-        <circle class="ghf-w-line" cx="200" cy="200" r="66"/>
-        <circle class="ghf-w-line ghf-w-line--thin" cx="200" cy="200" r="28"/>
-      </g>
-    </svg>
+  <!-- Decorative wooden cross in a halo of light (the same image as the welcome page) -->
+  <div class="ghf-drawer-cross" aria-hidden="true">
+    <img src="/assets/img/wood-cross.svg" alt="" width="320" height="500" decoding="async">
   </div>
 
   <div class="ghf-drawer-header">

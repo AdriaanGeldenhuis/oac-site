@@ -1,0 +1,304 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 -30 400 560" width="400" height="560" role="img" aria-label="Wooden cross">
+  <defs>
+  <filter id="woodV" x="-6%" y="-3%" width="112%" height="106%" color-interpolation-filters="sRGB">
+    <!-- 1. roughen the silhouette a little: hand-hewn, not machined -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="14" result="edgeNoise"/>
+    <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="2.1" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+
+    <!-- 2. large figure: soft darker/lighter streaks -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.016 0.0012" numOctaves="2" seed="11" result="figure"/>
+    <!-- 3. growth rings: contrast-stretch the streaks, then band them -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.075 0.0026" numOctaves="2" seed="12" result="grainN"/>
+    <feColorMatrix in="grainN" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1" result="grainG"/>
+    <feComponentTransfer in="grainG" result="rings">
+      <feFuncR type="linear" slope="2.6" intercept="-.8"/>
+      <feFuncG type="linear" slope="2.6" intercept="-.8"/>
+      <feFuncB type="linear" slope="2.6" intercept="-.8"/>
+    </feComponentTransfer>
+    <feComponentTransfer in="rings" result="bands">
+      <feFuncR type="table" tableValues="0.30 0.78 0.40 0.86 0.34 0.74 0.42 0.82 0.36 0.78 0.40"/>
+      <feFuncG type="table" tableValues="0.30 0.78 0.40 0.86 0.34 0.74 0.42 0.82 0.36 0.78 0.40"/>
+      <feFuncB type="table" tableValues="0.30 0.78 0.40 0.86 0.34 0.74 0.42 0.82 0.36 0.78 0.40"/>
+    </feComponentTransfer>
+    <!-- 4. fine fibres -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.55 0.006" numOctaves="2" seed="13" result="fibreN"/>
+    <feColorMatrix in="fibreN" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1" result="fibre"/>
+
+    <!-- 5. colour: warm oak/walnut ramp driven by the figure + bands + fibres -->
+    <feComposite in="bands" in2="figure" operator="arithmetic" k1="0" k2=".62" k3=".5" k4="-.22" result="tone0"/>
+    <feComposite in="tone0" in2="fibre" operator="arithmetic" k1="0" k2=".8" k3=".38" k4="-.2" result="tone"/>
+    <feColorMatrix in="tone" type="matrix" values="
+        1.00 0 0 0 .13
+        0 .56 0 0 .055
+        0 0 .27 0 .02
+        0 0 0 0 1" result="colour"/>
+
+    <!-- 6. relief: grain as a height map, lit from the upper left -->
+    <feColorMatrix in="tone" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  .9 .0 0 0 0" result="height"/>
+    <feDiffuseLighting in="height" surfaceScale="2.2" diffuseConstant="1.15" lighting-color="#fff4e2" result="lit">
+      <feDistantLight azimuth="235" elevation="58"/>
+    </feDiffuseLighting>
+    <feBlend in="colour" in2="lit" mode="multiply" result="textured"/>
+
+    <!-- 7. rounded bevel from the silhouette itself -->
+    <feGaussianBlur in="rough" stdDeviation="3.4" result="blurA"/>
+    <feColorMatrix in="blurA" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="alphaH"/>
+    <feDiffuseLighting in="alphaH" surfaceScale="9" diffuseConstant="1.05" lighting-color="#ffffff" result="bevelLit">
+      <feDistantLight azimuth="235" elevation="52"/>
+    </feDiffuseLighting>
+    <feBlend in="textured" in2="bevelLit" mode="multiply" result="shaded"/>
+
+    <!-- 8. a little sheen on the high points -->
+    <feSpecularLighting in="height" surfaceScale="2.4" specularConstant=".55" specularExponent="22" lighting-color="#ffdca8" result="spec">
+      <feDistantLight azimuth="235" elevation="46"/>
+    </feSpecularLighting>
+    <feComposite in="spec" in2="rough" operator="in" result="specIn"/>
+    <feComposite in="shaded" in2="specIn" operator="arithmetic" k1="0" k2="1" k3=".55" k4="0" result="withSpec"/>
+
+    <!-- 9. backlight: a thin warm rim around the whole silhouette -->
+    <feMorphology in="rough" operator="erode" radius="1.1" result="inner"/>
+    <feGaussianBlur in="inner" stdDeviation="1.1" result="innerSoft"/>
+    <feComposite in="rough" in2="innerSoft" operator="out" result="rimMask"/>
+    <feFlood flood-color="#ffcf8c" flood-opacity=".55" result="rimCol"/>
+    <feComposite in="rimCol" in2="rimMask" operator="in" result="rim"/>
+    <feGaussianBlur in="rim" stdDeviation=".7" result="rimSoft"/>
+
+    <!-- 10. clip to the roughened beam and add the rim -->
+    <feComposite in="withSpec" in2="rough" operator="in" result="beam"/>
+    <feMerge>
+      <feMergeNode in="beam"/>
+      <feMergeNode in="rimSoft"/>
+    </feMerge>
+  </filter>
+  
+  <filter id="woodH" x="-6%" y="-3%" width="112%" height="106%" color-interpolation-filters="sRGB">
+    <!-- 1. roughen the silhouette a little: hand-hewn, not machined -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="44" result="edgeNoise"/>
+    <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="2.1" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+
+    <!-- 2. large figure: soft darker/lighter streaks -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.0012 0.016" numOctaves="2" seed="41" result="figure"/>
+    <!-- 3. growth rings: contrast-stretch the streaks, then band them -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.0026 0.075" numOctaves="2" seed="42" result="grainN"/>
+    <feColorMatrix in="grainN" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1" result="grainG"/>
+    <feComponentTransfer in="grainG" result="rings">
+      <feFuncR type="linear" slope="2.6" intercept="-.8"/>
+      <feFuncG type="linear" slope="2.6" intercept="-.8"/>
+      <feFuncB type="linear" slope="2.6" intercept="-.8"/>
+    </feComponentTransfer>
+    <feComponentTransfer in="rings" result="bands">
+      <feFuncR type="table" tableValues="0.30 0.78 0.40 0.86 0.34 0.74 0.42 0.82 0.36 0.78 0.40"/>
+      <feFuncG type="table" tableValues="0.30 0.78 0.40 0.86 0.34 0.74 0.42 0.82 0.36 0.78 0.40"/>
+      <feFuncB type="table" tableValues="0.30 0.78 0.40 0.86 0.34 0.74 0.42 0.82 0.36 0.78 0.40"/>
+    </feComponentTransfer>
+    <!-- 4. fine fibres -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.006 0.55" numOctaves="2" seed="43" result="fibreN"/>
+    <feColorMatrix in="fibreN" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1" result="fibre"/>
+
+    <!-- 5. colour: warm oak/walnut ramp driven by the figure + bands + fibres -->
+    <feComposite in="bands" in2="figure" operator="arithmetic" k1="0" k2=".62" k3=".5" k4="-.22" result="tone0"/>
+    <feComposite in="tone0" in2="fibre" operator="arithmetic" k1="0" k2=".8" k3=".38" k4="-.2" result="tone"/>
+    <feColorMatrix in="tone" type="matrix" values="
+        1.00 0 0 0 .13
+        0 .56 0 0 .055
+        0 0 .27 0 .02
+        0 0 0 0 1" result="colour"/>
+
+    <!-- 6. relief: grain as a height map, lit from the upper left -->
+    <feColorMatrix in="tone" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  .9 .0 0 0 0" result="height"/>
+    <feDiffuseLighting in="height" surfaceScale="2.2" diffuseConstant="1.15" lighting-color="#fff4e2" result="lit">
+      <feDistantLight azimuth="235" elevation="58"/>
+    </feDiffuseLighting>
+    <feBlend in="colour" in2="lit" mode="multiply" result="textured"/>
+
+    <!-- 7. rounded bevel from the silhouette itself -->
+    <feGaussianBlur in="rough" stdDeviation="3.4" result="blurA"/>
+    <feColorMatrix in="blurA" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="alphaH"/>
+    <feDiffuseLighting in="alphaH" surfaceScale="9" diffuseConstant="1.05" lighting-color="#ffffff" result="bevelLit">
+      <feDistantLight azimuth="235" elevation="52"/>
+    </feDiffuseLighting>
+    <feBlend in="textured" in2="bevelLit" mode="multiply" result="shaded"/>
+
+    <!-- 8. a little sheen on the high points -->
+    <feSpecularLighting in="height" surfaceScale="2.4" specularConstant=".55" specularExponent="22" lighting-color="#ffdca8" result="spec">
+      <feDistantLight azimuth="235" elevation="46"/>
+    </feSpecularLighting>
+    <feComposite in="spec" in2="rough" operator="in" result="specIn"/>
+    <feComposite in="shaded" in2="specIn" operator="arithmetic" k1="0" k2="1" k3=".55" k4="0" result="withSpec"/>
+
+    <!-- 9. backlight: a thin warm rim around the whole silhouette -->
+    <feMorphology in="rough" operator="erode" radius="1.1" result="inner"/>
+    <feGaussianBlur in="inner" stdDeviation="1.1" result="innerSoft"/>
+    <feComposite in="rough" in2="innerSoft" operator="out" result="rimMask"/>
+    <feFlood flood-color="#ffcf8c" flood-opacity=".55" result="rimCol"/>
+    <feComposite in="rimCol" in2="rimMask" operator="in" result="rim"/>
+    <feGaussianBlur in="rim" stdDeviation=".7" result="rimSoft"/>
+
+    <!-- 10. clip to the roughened beam and add the rim -->
+    <feComposite in="withSpec" in2="rough" operator="in" result="beam"/>
+    <feMerge>
+      <feMergeNode in="beam"/>
+      <feMergeNode in="rimSoft"/>
+    </feMerge>
+  </filter>
+
+  <!-- Baked once into the picture: a warm backlight glow and a soft shadow under the cross.
+       (Doing this with CSS drop-shadow made scrolling janky in software-rendered WebViews.) -->
+  <filter id="lightWrap" x="-30%" y="-12%" width="160%" height="124%" color-interpolation-filters="sRGB">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="glowBlur"/>
+    <feFlood flood-color="#ffc784" flood-opacity=".75"/>
+    <feComposite in2="glowBlur" operator="in" result="glow"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="shadowBlur"/>
+    <feOffset in="shadowBlur" dx="3" dy="15" result="shadowOff"/>
+    <feFlood flood-color="#0b0502" flood-opacity=".5"/>
+    <feComposite in2="shadowOff" operator="in" result="shadow"/>
+    <feMerge>
+      <feMergeNode in="shadow"/>
+      <feMergeNode in="glow"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+  <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4"/></filter>
+  <filter id="shadowBlur" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+
+  <radialGradient id="knotCore" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#1c0e05"/><stop offset=".6" stop-color="#3a2010"/><stop offset="1" stop-color="#4b2c16" stop-opacity=".0"/>
+  </radialGradient>
+  <radialGradient id="knotHalo" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#1a0d04" stop-opacity=".55"/><stop offset="1" stop-color="#1a0d04" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="iron" cx="38%" cy="32%" r="75%">
+    <stop offset="0" stop-color="#9a948c"/><stop offset=".45" stop-color="#4a4640"/><stop offset="1" stop-color="#17140f"/>
+  </radialGradient>
+  <linearGradient id="castShadow" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#0d0602" stop-opacity=".85"/><stop offset="1" stop-color="#0d0602" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="formV" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#fff0d6" stop-opacity=".20"/><stop offset=".38" stop-color="#fff0d6" stop-opacity="0"/>
+    <stop offset=".7" stop-color="#120802" stop-opacity=".12"/><stop offset="1" stop-color="#120802" stop-opacity=".48"/>
+  </linearGradient>
+  <linearGradient id="formH" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff0d6" stop-opacity=".22"/><stop offset=".4" stop-color="#fff0d6" stop-opacity="0"/>
+    <stop offset=".72" stop-color="#120802" stop-opacity=".14"/><stop offset="1" stop-color="#120802" stop-opacity=".5"/>
+  </linearGradient>
+  <linearGradient id="endFade" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#120802" stop-opacity=".35"/><stop offset=".12" stop-color="#120802" stop-opacity="0"/>
+    <stop offset=".88" stop-color="#120802" stop-opacity="0"/><stop offset="1" stop-color="#120802" stop-opacity=".35"/>
+  </linearGradient>
+  <clipPath id="clipV"><path d="M137.60 9.79 L159.88 8.23 L182.16 6.65 L182.61 33.58 L183.00 60.51 L182.31 87.45 L181.90 114.38 L182.80 141.32 L181.47 168.25 L182.45 195.19 L182.42 222.12 L182.73 249.05 L180.99 275.99 L181.43 302.92 L181.15 329.86 L181.59 356.79 L182.61 383.73 L182.05 410.66 L181.72 437.59 L182.38 464.53 L181.66 491.46 L159.98 491.58 L138.37 493.33 L138.09 466.47 L137.66 439.61 L138.81 412.74 L137.52 385.88 L138.93 359.01 L138.03 332.15 L138.16 305.29 L137.74 278.43 L137.96 251.56 L137.38 224.70 L137.06 197.84 L138.51 170.97 L137.34 144.11 L138.27 117.25 L137.20 90.38 L138.53 63.52 L138.35 36.66 Z"/></clipPath>
+  <clipPath id="clipH"><path d="M26.03 119.52 L52.87 119.03 L79.71 118.52 L106.55 119.01 L133.38 118.26 L160.22 118.27 L187.06 118.63 L213.90 118.71 L240.74 118.50 L267.57 117.25 L294.41 117.74 L295.14 139.04 L294.46 160.35 L267.67 161.02 L240.87 160.82 L214.08 160.63 L187.29 160.97 L160.49 161.03 L133.71 161.86 L106.91 162.06 L80.13 162.88 L53.33 163.12 L26.54 163.10 L25.82 141.32 Z"/></clipPath>
+  </defs>
+
+  <g filter="url(#lightWrap)">
+  <!-- upright -->
+  <path d="M137.60 9.79 L159.88 8.23 L182.16 6.65 L182.61 33.58 L183.00 60.51 L182.31 87.45 L181.90 114.38 L182.80 141.32 L181.47 168.25 L182.45 195.19 L182.42 222.12 L182.73 249.05 L180.99 275.99 L181.43 302.92 L181.15 329.86 L181.59 356.79 L182.61 383.73 L182.05 410.66 L181.72 437.59 L182.38 464.53 L181.66 491.46 L159.98 491.58 L138.37 493.33 L138.09 466.47 L137.66 439.61 L138.81 412.74 L137.52 385.88 L138.93 359.01 L138.03 332.15 L138.16 305.29 L137.74 278.43 L137.96 251.56 L137.38 224.70 L137.06 197.84 L138.51 170.97 L137.34 144.11 L138.27 117.25 L137.20 90.38 L138.53 63.52 L138.35 36.66 Z" fill="#7a4a28" filter="url(#woodV)"/>
+
+  <!-- shadow the cross-beam throws on the upright -->
+  <g clip-path="url(#clipV)">
+    <rect x="134" y="4" width="52" height="492" fill="url(#formV)"/>
+    <rect x="134" y="159" width="52" height="30" fill="url(#castShadow)"/>
+    <rect x="134" y="106" width="52" height="14" fill="#0d0602" fill-opacity=".22" filter="url(#shadowBlur)"/>
+  </g>
+
+  <!-- details on the upright -->
+  <g clip-path="url(#clipV)">
+    <path d="M150.00 196.00 L149.48 209.33 L149.57 222.67 L149.31 236.00 L149.52 249.33 L149.77 262.67 L148.91 276.00 L147.94 289.33 L148.61 302.67 L148.13 316.00" fill="none" stroke="#150a03" stroke-opacity=".75" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M150.90 196.50 L150.38 209.83 L150.47 223.17 L150.21 236.50 L150.42 249.83 L150.67 263.17 L149.81 276.50 L148.84 289.83 L149.51 303.17 L149.03 316.50" fill="none" stroke="#e0a770" stroke-opacity=".28" stroke-width=".6" stroke-linecap="round"/>
+    <path d="M168.00 300.00 L167.46 316.67 L168.37 333.33 L167.63 350.00 L168.04 366.67 L167.22 383.33 L166.72 400.00 L167.71 416.67 L167.13 433.33 L167.41 450.00" fill="none" stroke="#150a03" stroke-opacity=".7" stroke-width=".8" stroke-linecap="round"/>
+    <path d="M168.80 300.50 L168.26 317.17 L169.17 333.83 L168.43 350.50 L168.84 367.17 L168.02 383.83 L167.52 400.50 L168.51 417.17 L167.93 433.83 L168.21 450.50" fill="none" stroke="#e0a770" stroke-opacity=".25" stroke-width=".55" stroke-linecap="round"/>
+    <path d="M156.00 40.00 L155.22 46.22 L155.62 52.44 L155.92 58.67 L156.80 64.89 L156.34 71.11 L155.86 77.33 L156.32 83.56 L156.64 89.78 L156.25 96.00" fill="none" stroke="#150a03" stroke-opacity=".6" stroke-width=".7" stroke-linecap="round"/>
+    
+  <g transform="translate(163 252) rotate(4)">
+    <ellipse rx="8.3" ry="12.4" fill="url(#knotHalo)"/>
+    <ellipse rx="3.6" ry="5.4" fill="url(#knotCore)"/>
+    <ellipse rx="5.6" ry="8.4" fill="none" stroke="#2c180a" stroke-opacity=".55" stroke-width=".9"/>
+    <ellipse rx="7.4" ry="11.1" fill="none" stroke="#2c180a" stroke-opacity=".28" stroke-width=".7"/>
+    <ellipse rx="2.0" ry="2.7" cx="-.6" cy="-.6" fill="#e6b27a" fill-opacity=".22"/>
+  </g>
+    
+  <g transform="translate(151 398) rotate(-6)">
+    <ellipse rx="6.0" ry="9.7" fill="url(#knotHalo)"/>
+    <ellipse rx="2.6" ry="4.2" fill="url(#knotCore)"/>
+    <ellipse rx="4.0" ry="6.5" fill="none" stroke="#2c180a" stroke-opacity=".55" stroke-width=".9"/>
+    <ellipse rx="5.3" ry="8.6" fill="none" stroke="#2c180a" stroke-opacity=".28" stroke-width=".7"/>
+    <ellipse rx="1.4" ry="2.1" cx="-.6" cy="-.6" fill="#e6b27a" fill-opacity=".22"/>
+  </g>
+    
+  <g transform="translate(166 72) rotate(3)">
+    <ellipse rx="5.1" ry="7.8" fill="url(#knotHalo)"/>
+    <ellipse rx="2.2" ry="3.4" fill="url(#knotCore)"/>
+    <ellipse rx="3.4" ry="5.3" fill="none" stroke="#2c180a" stroke-opacity=".55" stroke-width=".9"/>
+    <ellipse rx="4.5" ry="7.0" fill="none" stroke="#2c180a" stroke-opacity=".28" stroke-width=".7"/>
+    <ellipse rx="1.2" ry="1.7" cx="-.6" cy="-.6" fill="#e6b27a" fill-opacity=".22"/>
+  </g>
+  </g>
+
+  <!-- cross-beam -->
+  <path d="M26.03 119.52 L52.87 119.03 L79.71 118.52 L106.55 119.01 L133.38 118.26 L160.22 118.27 L187.06 118.63 L213.90 118.71 L240.74 118.50 L267.57 117.25 L294.41 117.74 L295.14 139.04 L294.46 160.35 L267.67 161.02 L240.87 160.82 L214.08 160.63 L187.29 160.97 L160.49 161.03 L133.71 161.86 L106.91 162.06 L80.13 162.88 L53.33 163.12 L26.54 163.10 L25.82 141.32 Z" fill="#7a4a28" filter="url(#woodH)"/>
+  <g clip-path="url(#clipH)">
+    <rect x="22" y="114" width="276" height="52" fill="url(#formH)"/>
+    <rect x="22" y="114" width="276" height="52" fill="url(#endFade)"/>
+    <path d="M48.00 131.00 L57.56 131.24 L67.11 131.72 L76.67 132.31 L86.22 133.18 L95.78 133.66 L105.33 134.49 L114.89 133.56 L124.44 133.49 L134.00 134.37" fill="none" stroke="#150a03" stroke-opacity=".75" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M48.50 131.90 L58.06 132.14 L67.61 132.62 L77.17 133.21 L86.72 134.08 L96.28 134.56 L105.83 135.39 L115.39 134.46 L124.94 134.39 L134.50 135.27" fill="none" stroke="#e0a770" stroke-opacity=".28" stroke-width=".6" stroke-linecap="round"/>
+    <path d="M206.00 150.00 L214.00 149.93 L222.00 149.68 L230.00 148.96 L238.00 149.69 L246.00 148.71 L254.00 148.71 L262.00 149.50 L270.00 148.67 L278.00 148.78" fill="none" stroke="#150a03" stroke-opacity=".7" stroke-width=".8" stroke-linecap="round"/>
+    
+  <g transform="translate(238 138) rotate(2)">
+    <ellipse rx="12.4" ry="7.8" fill="url(#knotHalo)"/>
+    <ellipse rx="5.4" ry="3.4" fill="url(#knotCore)"/>
+    <ellipse rx="8.4" ry="5.3" fill="none" stroke="#2c180a" stroke-opacity=".55" stroke-width=".9"/>
+    <ellipse rx="11.1" ry="7.0" fill="none" stroke="#2c180a" stroke-opacity=".28" stroke-width=".7"/>
+    <ellipse rx="3.0" ry="1.7" cx="-.6" cy="-.6" fill="#e6b27a" fill-opacity=".22"/>
+  </g>
+    
+  <g transform="translate(78 148) rotate(-3)">
+    <ellipse rx="8.7" ry="5.5" fill="url(#knotHalo)"/>
+    <ellipse rx="3.8" ry="2.4" fill="url(#knotCore)"/>
+    <ellipse rx="5.9" ry="3.7" fill="none" stroke="#2c180a" stroke-opacity=".55" stroke-width=".9"/>
+    <ellipse rx="7.8" ry="4.9" fill="none" stroke="#2c180a" stroke-opacity=".28" stroke-width=".7"/>
+    <ellipse rx="2.1" ry="1.2" cx="-.6" cy="-.6" fill="#e6b27a" fill-opacity=".22"/>
+  </g>
+  </g>
+
+  <!-- iron nails: one at the joint, one near each end -->
+  
+  <g>
+    <ellipse cx="161.80" cy="143.96" rx="8.28" ry="6.48" fill="#000" fill-opacity=".45" filter="url(#softBlur)"/>
+    <circle cx="160.0" cy="140.0" r="7.2" fill="url(#iron)" stroke="#15151a" stroke-width=".8"/>
+    <circle cx="160.0" cy="140.0" r="4.46" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".6"/>
+    <circle cx="157.70" cy="137.26" r="2.02" fill="#fff" fill-opacity=".55"/>
+    <path d="M163.60 142.88 l3.60 9.36" stroke="#7a3b1c" stroke-opacity=".5" stroke-width="1.1" stroke-linecap="round"/>
+  </g>
+  
+  <g>
+    <ellipse cx="160.90" cy="29.98" rx="4.14" ry="3.24" fill="#000" fill-opacity=".45" filter="url(#softBlur)"/>
+    <circle cx="160" cy="28" r="3.6" fill="url(#iron)" stroke="#15151a" stroke-width=".8"/>
+    <circle cx="160" cy="28" r="2.23" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".6"/>
+    <circle cx="158.85" cy="26.63" r="1.01" fill="#fff" fill-opacity=".55"/>
+    
+  </g>
+  
+  <g>
+    <ellipse cx="160.90" cy="473.98" rx="4.14" ry="3.24" fill="#000" fill-opacity=".45" filter="url(#softBlur)"/>
+    <circle cx="160" cy="472" r="3.6" fill="url(#iron)" stroke="#15151a" stroke-width=".8"/>
+    <circle cx="160" cy="472" r="2.23" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".6"/>
+    <circle cx="158.85" cy="470.63" r="1.01" fill="#fff" fill-opacity=".55"/>
+    
+  </g>
+  
+  <g>
+    <ellipse cx="44.90" cy="141.98" rx="4.14" ry="3.24" fill="#000" fill-opacity=".45" filter="url(#softBlur)"/>
+    <circle cx="44" cy="140.0" r="3.6" fill="url(#iron)" stroke="#15151a" stroke-width=".8"/>
+    <circle cx="44" cy="140.0" r="2.23" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".6"/>
+    <circle cx="42.85" cy="138.63" r="1.01" fill="#fff" fill-opacity=".55"/>
+    
+  </g>
+  
+  <g>
+    <ellipse cx="276.90" cy="141.98" rx="4.14" ry="3.24" fill="#000" fill-opacity=".45" filter="url(#softBlur)"/>
+    <circle cx="276" cy="140.0" r="3.6" fill="url(#iron)" stroke="#15151a" stroke-width=".8"/>
+    <circle cx="276" cy="140.0" r="2.23" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".6"/>
+    <circle cx="274.85" cy="138.63" r="1.01" fill="#fff" fill-opacity=".55"/>
+    
+  </g>
+  </g>
+</svg>
