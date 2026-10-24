@@ -255,6 +255,83 @@ define('UI_TRANSLATIONS', [
         'st' => 'Mattheu 18:20'
     ],
 
+    // Welcome page redesign.
+    // zu/xh/st are intentionally omitted where no reviewed translation exists:
+    // __t() falls back to English for those, which beats showing a wrong word.
+    // The greetings use the standard all-day greeting for zu/xh/st.
+    'greeting_morning' => [
+        'af' => 'Goeiemôre',
+        'en' => 'Good morning',
+        'zu' => 'Sawubona',
+        'xh' => 'Molo',
+        'pt' => 'Bom dia',
+        'st' => 'Dumela'
+    ],
+    'greeting_afternoon' => [
+        'af' => 'Goeiemiddag',
+        'en' => 'Good afternoon',
+        'zu' => 'Sawubona',
+        'xh' => 'Molo',
+        'pt' => 'Boa tarde',
+        'st' => 'Dumela'
+    ],
+    'greeting_evening' => [
+        'af' => 'Goeienaand',
+        'en' => 'Good evening',
+        'zu' => 'Sawubona',
+        'xh' => 'Molo',
+        'pt' => 'Boa noite',
+        'st' => 'Dumela'
+    ],
+    'up_next' => [
+        'af' => 'Volgende',
+        'en' => 'Up next',
+        'pt' => 'A seguir'
+    ],
+    'tomorrow' => [
+        'af' => 'Môre',
+        'en' => 'Tomorrow',
+        'zu' => 'Kusasa',
+        'xh' => 'Ngomso',
+        'pt' => 'Amanhã',
+        'st' => 'Hosane'
+    ],
+    'copied' => [
+        'af' => 'Gekopieer',
+        'en' => 'Copied',
+        'pt' => 'Copiado'
+    ],
+    'read_more' => [
+        'af' => 'Lees meer',
+        'en' => 'Read more',
+        'pt' => 'Ler mais'
+    ],
+    'read_less' => [
+        'af' => 'Lees minder',
+        'en' => 'Read less',
+        'pt' => 'Ler menos'
+    ],
+    'quiet_moment' => [
+        'af' => 'Stil oomblik',
+        'en' => 'A quiet moment',
+        'pt' => 'Um momento de silêncio'
+    ],
+    'quiet_moment_hint' => [
+        'af' => 'Neem \'n oomblik om voor God stil te word.',
+        'en' => 'Take a moment to be still before God.',
+        'pt' => 'Reserve um momento para ficar em silêncio diante de Deus.'
+    ],
+    'breathe_in' => [
+        'af' => 'Asem in',
+        'en' => 'Breathe in',
+        'pt' => 'Inspire'
+    ],
+    'breathe_out' => [
+        'af' => 'Asem uit',
+        'en' => 'Breathe out',
+        'pt' => 'Expire'
+    ],
+
     // ==================== ADMIN SECTION ====================
     'admin_dashboard' => [
         'af' => 'Admin Bestuur',
