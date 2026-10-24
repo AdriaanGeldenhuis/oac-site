@@ -59,22 +59,23 @@ if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !
   $pageTitle = t_hdr('admin');
 }
 
-// Navigation links with translation keys
+// Navigation links: [href, translation key, jewel colour, icon path]
+// Colours/icons match the quick-navigation tiles on the welcome page.
 $navLinks = [
-  ['/welcome.php', 'welcome'],
-  ['/gospel_media/gospel.php', 'gospel_media'],
-  ['/prayers/prayers.php', 'prayers'],
-  ['/aislimbybel/aislimbybel.php', 'ai_smart_bible'],
-  ['/bible/bible.php', 'bible'],
-  ['/opsomming/opsomming.php', 'bible_summary'],
-  ['/calendar/calendar.php', 'calendar'],
-  ['/diary/diary.php', 'diary'],
-  ['/singemmanuel/singemmanuel.php', 'sing_emmanuel'],
-  ['/notifications/notifications.php', 'notifications'],
-  ['/gedagtes/gedagtes.php', 'thought_history'],
-  ['/admin/index.php', 'admin'],
-  ['/policy/', 'privacy_policy'],
-  ['/logout.php', 'logout']
+  ['/welcome.php', 'welcome', 'rose', '<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>'],
+  ['/gospel_media/gospel.php', 'gospel_media', 'ruby', '<path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zM10 15l5.5-4.5L10 6v9z"/>'],
+  ['/prayers/prayers.php', 'prayers', 'amethyst', '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>'],
+  ['/aislimbybel/aislimbybel.php', 'ai_smart_bible', 'emerald', '<path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>'],
+  ['/bible/bible.php', 'bible', 'amber', '<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>'],
+  ['/opsomming/opsomming.php', 'bible_summary', 'rose', '<path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S3.45 4.9 2 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C4.1 20.45 6.05 20 7.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>'],
+  ['/calendar/calendar.php', 'calendar', 'sapphire', '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>'],
+  ['/diary/diary.php', 'diary', 'amber', '<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>'],
+  ['/singemmanuel/singemmanuel.php', 'sing_emmanuel', 'ruby', '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>'],
+  ['/notifications/notifications.php', 'notifications', 'sapphire', '<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>'],
+  ['/gedagtes/gedagtes.php', 'thought_history', 'amethyst', '<path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>'],
+  ['/admin/index.php', 'admin', 'emerald', '<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>'],
+  ['/policy/', 'privacy_policy', 'sapphire', '<path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/>'],
+  ['/logout.php', 'logout', 'ruby', '<path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>']
 ];
 
 function isActive($url, $currentPath) {
@@ -95,7 +96,7 @@ function isActive($url, $currentPath) {
     </button>
 
     <!-- Page Title -->
-    <h1 class="ghf-title"><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
+    <h1 class="ghf-title<?= $isBiblePage ? ' ghf-title--ref' : '' ?>"><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
 
     <!-- Right-side actions -->
     <div class="ghf-actions">
@@ -153,6 +154,35 @@ function isActive($url, $currentPath) {
 
 <!-- Navigation Drawer -->
 <nav class="ghf-drawer" id="ghfDrawer" aria-hidden="true">
+  <!-- Decorative rose window, turning slowly while the menu is open -->
+  <div class="ghf-drawer-window" aria-hidden="true">
+    <svg viewBox="0 0 400 400" focusable="false">
+      <defs>
+        <path id="ghfLancet" d="M200 200C171 160 171 104 200 52C229 104 229 160 200 200Z"/>
+        <path id="ghfLobe" d="M200 200C189 182 189 158 200 136C211 158 211 182 200 200Z"/>
+      </defs>
+      <circle class="ghf-w-line" cx="200" cy="200" r="197"/>
+      <circle class="ghf-w-line ghf-w-line--thin" cx="200" cy="200" r="187"/>
+      <g class="ghf-w-lancets">
+        <?php for ($i = 0; $i < 12; $i++): ?>
+          <use href="#ghfLancet" transform="rotate(<?= $i * 30 ?> 200 200)"/>
+        <?php endfor; ?>
+      </g>
+      <g class="ghf-w-roundels">
+        <?php for ($i = 0; $i < 12; $i++): ?>
+          <circle cx="200" cy="30" r="11" transform="rotate(<?= 15 + $i * 30 ?> 200 200)"/>
+        <?php endfor; ?>
+      </g>
+      <g class="ghf-w-inner">
+        <?php for ($i = 0; $i < 8; $i++): ?>
+          <use href="#ghfLobe" transform="rotate(<?= $i * 45 ?> 200 200)"/>
+        <?php endfor; ?>
+        <circle class="ghf-w-line" cx="200" cy="200" r="66"/>
+        <circle class="ghf-w-line ghf-w-line--thin" cx="200" cy="200" r="28"/>
+      </g>
+    </svg>
+  </div>
+
   <div class="ghf-drawer-header">
     <h2 class="ghf-drawer-title"><?= t_hdr('navigation') ?></h2>
     <button class="ghf-drawer-close" id="ghfDrawerClose" type="button" aria-label="<?= t_hdr('close') ?>">
@@ -162,11 +192,11 @@ function isActive($url, $currentPath) {
     </button>
   </div>
   <ul class="ghf-nav-list">
-    <?php foreach ($navLinks as $link): ?>
-      <?php $active = isActive($link[0], $reqPath) ? ' active' : ''; ?>
-      <li>
-        <a href="<?= htmlspecialchars($link[0], ENT_QUOTES, 'UTF-8') ?>" class="ghf-nav-link<?= $active ?>">
-          <span class="ghf-nav-shine"></span>
+    <?php foreach ($navLinks as $i => $link): ?>
+      <?php $isCurrent = isActive($link[0], $reqPath); ?>
+      <li style="--i:<?= $i ?>">
+        <a href="<?= htmlspecialchars($link[0], ENT_QUOTES, 'UTF-8') ?>" class="ghf-nav-link ghf-nav-link--<?= $link[2] ?><?= $isCurrent ? ' active' : '' ?>"<?= $isCurrent ? ' aria-current="page"' : '' ?>>
+          <span class="ghf-nav-orb"><svg viewBox="0 0 24 24" aria-hidden="true"><?= $link[3] ?></svg></span>
           <span class="ghf-nav-text"><?= htmlspecialchars(t_hdr($link[1]), ENT_QUOTES, 'UTF-8') ?></span>
         </a>
       </li>
