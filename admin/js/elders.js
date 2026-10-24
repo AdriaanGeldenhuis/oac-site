@@ -88,6 +88,12 @@
         return node.textContent.replace(INVISIBLE, '') !== '';
     }
 
+    // Text a reader would see - what counts as "this language has a
+    // teaching" (same rule as teaching_has_content() on the server)
+    function hasText(node) {
+        return !!node && node.textContent.replace(INVISIBLE, '') !== '';
+    }
+
     function unwrap(el) {
         const parent = el.parentNode;
         if (!parent) return;
@@ -156,9 +162,11 @@
     // on the opposite theme. Strip them so the text adapts to any theme.
     const THEME_INK = [
         'rgb(255,255,255)', '#ffffff', '#fff', 'white', 'rgb(26,24,22)', '#1a1816',
-        // the editor's own text colours (dark + light theme, normal + dim),
-        // which Chrome copies into spans when blocks are merged
-        'rgb(245,235,230)', 'rgb(17,24,39)', 'rgb(200,192,186)', 'rgb(74,83,97)'
+        // the editor's own text colours (normal, bold, dim - both themes),
+        // which Chrome copies into spans when blocks are merged or when you
+        // type where formatted text was just deleted
+        'rgb(245,235,230)', 'rgb(250,232,224)', '#fae8e0', 'rgb(200,192,186)',
+        'rgb(17,24,39)', 'rgb(31,41,55)', 'rgb(90,100,116)', 'rgb(74,83,97)'
     ];
 
     function stripThemeInkColors(root) {
@@ -206,6 +214,7 @@
             if (!el.getAttribute('style') || !el.getAttribute('style').trim()) el.removeAttribute('style');
             if (el.tagName === 'SPAN' && !el.attributes.length) unwrap(el);
         });
+        root.querySelectorAll('font').forEach(f => { if (!f.attributes.length) unwrap(f); });
     }
 
     // Unwrap an indent wrapper, moving its left margin onto the blocks inside
@@ -248,10 +257,11 @@
 
     // After deleting everything the browser can leave an empty list /
     // heading / quote behind, so the next text lands in it. Start clean.
+    // Also drops Chrome's "typing style": after select-all + delete it
+    // would give the new text the colour of the deleted (bold) text.
     function resetIfEmptied(ed) {
         if (hasRealContent(ed)) return false;
-        if (ed.children.length === 1 && ed.firstElementChild.nodeName === 'P') return false;
-        ed.innerHTML = '<p><br></p>';
+        if (ed.innerHTML !== '<p><br></p>') ed.innerHTML = '<p><br></p>';
         placeCaretAtStart(ed.firstChild);
         return true;
     }
@@ -285,24 +295,7 @@
         });
 
         // Stray inline nodes directly in the editor get a paragraph
-        let wrap = null;
-        Array.from(ed.childNodes).forEach(node => {
-            if (isBlockEl(node)) {
-                wrap = null;
-                return;
-            }
-            if (node.nodeType === 8) {
-                node.remove();
-                return;
-            }
-            if (node.nodeType === 3 && !node.nodeValue.trim()) return;
-            if (!wrap) {
-                wrap = document.createElement('p');
-                ed.insertBefore(wrap, node);
-            }
-            wrap.appendChild(node);
-        });
-
+        wrapLooseInline(ed);
         ensureParagraph(ed);
     }
 
@@ -329,11 +322,131 @@
             : (n.nodeType !== 1 || (n.nodeName !== 'HR' && !hasRealContent(n)));
         while (clone.firstChild && isJunk(clone.firstChild)) clone.firstChild.remove();
         while (clone.lastChild && isJunk(clone.lastChild)) clone.lastChild.remove();
-        return hasRealContent(clone) ? clone.innerHTML.trim() : '';
+        fixStructure(clone);
+        wrapLooseInline(clone);
+        // <p></p> without a <br> has no height in the editor - don't let it
+        // turn into a gap on the welcome page (<p><br></p> = a real blank line)
+        clone.querySelectorAll('p').forEach(p => { if (p.innerHTML.trim() === '') p.remove(); });
+        return hasText(clone) ? clone.innerHTML.trim() : '';
+    }
+
+    // Text sitting directly in the editor (not in a block) gets a paragraph
+    function wrapLooseInline(root) {
+        let wrap = null;
+        Array.from(root.childNodes).forEach(node => {
+            if (isBlockEl(node)) {
+                wrap = null;
+                return;
+            }
+            if (node.nodeType === 8) {
+                node.remove();
+                return;
+            }
+            if (node.nodeType === 3 && !node.nodeValue.trim()) return;
+            if (!wrap) {
+                wrap = document.createElement('p');
+                root.insertBefore(wrap, node);
+            }
+            wrap.appendChild(node);
+        });
+    }
+
+    // The server parses with libxml (HTML4 rules), which tears apart some
+    // structures the browser happily builds while editing:
+    //   <ol><li>a</li><ul>..</ul></ol>  (Chrome's list indent)
+    //   <p>..<ol>..</ol>..</p>          (list commands inside a paragraph)
+    //   <b><p>..</p></b>                (formatting around a block)
+    // Rewrite them into the equivalent valid HTML before saving.
+    const STRUCT_BLOCKS = /^(P|H[1-6]|UL|OL|LI|BLOCKQUOTE|PRE|DIV|TABLE|HR)$/;
+    const STRUCT_INLINE = /^(B|STRONG|I|EM|U|S|STRIKE|DEL|INS|SUB|SUP|SPAN|FONT|A|SMALL|MARK|CODE)$/;
+
+    function fixStructure(root) {
+        // 1. Inline formatting wrapped around blocks: push it into the blocks
+        Array.from(root.querySelectorAll('*')).reverse().forEach(el => {
+            if (!STRUCT_INLINE.test(el.nodeName) || !el.parentNode) return;
+            if (!Array.from(el.childNodes).some(n => n.nodeType === 1 && STRUCT_BLOCKS.test(n.nodeName))) return;
+            const parent = el.parentNode;
+            let run = null;
+            Array.from(el.childNodes).forEach(n => {
+                if (n.nodeType === 1 && STRUCT_BLOCKS.test(n.nodeName)) {
+                    run = null;
+                    const target = /^(UL|OL)$/.test(n.nodeName) ? Array.from(n.querySelectorAll('li')) : [n];
+                    target.forEach(t => {
+                        if (t.nodeName === 'HR' || t.nodeName === 'TABLE') return;
+                        const w = el.cloneNode(false);
+                        while (t.firstChild) w.appendChild(t.firstChild);
+                        t.appendChild(w);
+                    });
+                    parent.insertBefore(n, el);
+                } else {
+                    if (!run) {
+                        run = el.cloneNode(false);
+                        parent.insertBefore(run, el);
+                    }
+                    run.appendChild(n);
+                }
+            });
+            el.remove();
+        });
+
+        // 2. Blocks inside a paragraph / heading: split the paragraph around them
+        Array.from(root.querySelectorAll('p, h1, h2, h3, h4, h5, h6')).reverse().forEach(p => {
+            if (!p.parentNode) return;
+            if (!Array.from(p.childNodes).some(n => n.nodeType === 1 && STRUCT_BLOCKS.test(n.nodeName))) return;
+            const parent = p.parentNode;
+            const runs = [];
+            let run = null;
+            Array.from(p.childNodes).forEach(n => {
+                if (n.nodeType === 1 && STRUCT_BLOCKS.test(n.nodeName)) {
+                    run = null;
+                    parent.insertBefore(n, p);
+                } else {
+                    if (!run) {
+                        run = p.cloneNode(false);
+                        parent.insertBefore(run, p);
+                        runs.push(run);
+                    }
+                    run.appendChild(n);
+                }
+            });
+            p.remove();
+            runs.forEach(r => { if (!hasRealContent(r)) r.remove(); });
+        });
+
+        // 3. A list directly inside a list belongs to the item before it
+        Array.from(root.querySelectorAll('ul, ol')).forEach(list => {
+            const parent = list.parentNode;
+            if (!parent || !/^(UL|OL)$/.test(parent.nodeName)) return;
+            let prev = list.previousElementSibling;
+            if (!prev || prev.nodeName !== 'LI') {
+                prev = document.createElement('li');
+                parent.insertBefore(prev, list);
+            }
+            prev.appendChild(list);
+        });
+
+        // 4. Anything else loose in a list goes into an item
+        Array.from(root.querySelectorAll('ul, ol')).forEach(list => {
+            Array.from(list.childNodes).forEach(n => {
+                if (n.nodeType === 1 && n.nodeName === 'LI') return;
+                if (n.nodeType === 3 && !n.nodeValue.trim()) return;
+                const li = document.createElement('li');
+                list.insertBefore(li, n);
+                li.appendChild(n);
+            });
+        });
+
+        // 5. Items outside any list get one
+        Array.from(root.querySelectorAll('li')).forEach(li => {
+            if (!li.parentNode || /^(UL|OL)$/.test(li.parentNode.nodeName)) return;
+            const ul = document.createElement('ul');
+            li.parentNode.insertBefore(ul, li);
+            while (ul.nextSibling && ul.nextSibling.nodeName === 'LI') ul.appendChild(ul.nextSibling);
+        });
     }
 
     function editorHasContent(code) {
-        return hasRealContent(editors[code]);
+        return hasText(editors[code]);
     }
 
     // Green dot on tabs that already have real content
@@ -353,7 +466,7 @@
 
     function sanitizeOwnHtml(html) {
         const doc = new DOMParser().parseFromString('<!DOCTYPE html><html><body>' + String(html || '') + '</body></html>', 'text/html');
-        doc.body.querySelectorAll(Array.from(DROP_TAGS).map(t => t.toLowerCase()).join(',')).forEach(el => el.remove());
+        doc.body.querySelectorAll(Array.from(DROP_TAGS).map(t => t.toLowerCase()).join(',') + ',img,picture').forEach(el => el.remove());
         doc.body.querySelectorAll('*').forEach(el => {
             Array.from(el.attributes).forEach(a => {
                 const n = a.name.toLowerCase();
@@ -909,7 +1022,6 @@
         while (i < items.length) {
             const it = items[i];
             if (it.t === 'br') { out.push(doc.createElement('br')); i++; continue; }
-            if (it.t === 'img') { out.push(it.el); i++; continue; }
             if (it.t !== 'text') { i++; continue; }
 
             // Links group their runs into one <a>
@@ -981,7 +1093,7 @@
         return list;
     }
 
-    const itemsHaveContent = items => items.some(it => it.t === 'img' || (it.t === 'text' && it.text.replace(INVISIBLE, '') !== ''));
+    const itemsHaveContent = items => items.some(it => it.t === 'text' && it.text.replace(INVISIBLE, '') !== '');
 
     function appendAll(parent, nodes) {
         nodes.forEach(n => parent.appendChild(n));
@@ -1066,17 +1178,11 @@
         if (isHiddenEl(node)) return [];
         if (tag === 'BR') return [{ t: 'br' }];
         if (tag === 'HR') return [doc.createElement('hr')];
-        if (tag === 'IMG') {
-            const src = (node.getAttribute('src') || '').trim();
-            if (!/^https:\/\//i.test(src)) {
-                ctx.stats.droppedImages++;
-                return [];
-            }
-            const img = doc.createElement('img');
-            img.setAttribute('src', src);
-            const alt = (node.getAttribute('alt') || '').trim();
-            if (alt) img.setAttribute('alt', alt.slice(0, 200));
-            return [{ t: 'img', el: img }];
+        if (tag === 'IMG' || tag === 'PICTURE') {
+            // A teaching is text: image links from Word/Docs/web expire or
+            // point at other sites, so they are not kept (the elder is told)
+            ctx.stats.droppedImages++;
+            return [];
         }
 
         const st = node.style || {};

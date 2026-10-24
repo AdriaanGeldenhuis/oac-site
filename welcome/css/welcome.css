@@ -1417,12 +1417,6 @@ html {
   font-size: 0.7em;
 }
 
-.wc-teaching-content img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 10px;
-}
-
 .wc-teaching-content table {
   display: block;
   max-width: 100%;

@@ -350,11 +350,6 @@ body {
 }
 .editor u { text-underline-offset: 2px; }
 .editor sup, .editor sub { font-size: 0.7em; }
-.editor img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
-}
 .editor table {
     display: block;
     max-width: 100%;

@@ -10,19 +10,23 @@ declare(strict_types=1);
 // ALWAYS output JSON
 header('Content-Type: application/json; charset=utf-8');
 
-// Global error handler to catch all PHP errors and return JSON
+// Turn PHP warnings into exceptions so they come back as JSON - but leave
+// @-silenced ones alone (the session handler relies on @unserialize; making
+// that throw stopped the session from being saved, losing the CSRF token)
 set_error_handler(function($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        return false;
+    }
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
 set_exception_handler(function($e) {
+    error_log('translate_all: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'PHP Error',
-        'detail' => $e->getMessage(),
-        'file' => basename($e->getFile()) . ':' . $e->getLine(),
-        'trace' => $e->getTraceAsString()
+        'error' => 'Translation failed',
+        'detail' => 'Server error - see the PHP error log'
     ], JSON_UNESCAPED_UNICODE);
     exit;
 });
@@ -51,7 +55,7 @@ foreach ($requiredFiles as $file) {
     $fullPath = $baseDir . '/' . $file;
     if (!file_exists($fullPath)) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Missing file: ' . $file, 'path' => $fullPath]);
+        echo json_encode(['success' => false, 'error' => 'Missing file: ' . $file]);
         exit;
     }
 }
@@ -60,7 +64,7 @@ foreach ($requiredFiles as $file) {
 $aiConfigPath = dirname(__DIR__, 2) . '/config/ai_config.php';
 if (!file_exists($aiConfigPath)) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Missing file: ai_config.php', 'path' => $aiConfigPath]);
+    echo json_encode(['success' => false, 'error' => 'Missing file: ai_config.php']);
     exit;
 }
 
@@ -74,7 +78,8 @@ try {
     require_once $aiConfigPath;
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Failed to load: ' . $e->getMessage(), 'file' => basename($e->getFile()) . ':' . $e->getLine()]);
+    error_log('translate_all: failed to load: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Server configuration error']);
     exit;
 }
 
@@ -122,14 +127,22 @@ if (!defined('OPENAI_API_KEY') || OPENAI_API_KEY === '') {
 }
 
 // Get inputs
-$content = trim((string)($_POST['content'] ?? ''));
-$sourceLang = trim((string)($_POST['source_lang'] ?? 'af'));
-$targetLang = trim((string)($_POST['target_lang'] ?? ''));
+$content = ai_post_str('content');
+$sourceLang = ai_post_str('source_lang', 'af');
+$targetLang = ai_post_str('target_lang');
 
 if ($content === '') {
     ob_end_clean();
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'No content provided']);
+    exit;
+}
+
+$limitError = ai_limit_error((int)auth_user_id(), $content);
+if ($limitError) {
+    ob_end_clean();
+    http_response_code($limitError[0]);
+    echo json_encode(['success' => false, 'error' => $limitError[1]]);
     exit;
 }
 
