@@ -91,6 +91,8 @@ $myAmpId = $stmt->fetchColumn();
 $canPlay = $myAmpId !== false && $myAmpId !== null && (int)$myAmpId >= 0 && (int)$myAmpId <= 8;
 $hasMidi = $selectedSong && is_file(__DIR__ . '/media/' . sprintf('%03d', (int)$selectedSong['number']) . '.mid');
 $showPlayer = $canPlay && $hasMidi;
+// 'n R-lêer (bv. 002R.mid) bevat 2 verse; anders is net 1 vers beskikbaar.
+$hasTwoVerses = $showPlayer && is_file(__DIR__ . '/media/' . sprintf('%03d', (int)$selectedSong['number']) . 'R.mid');
 
 $VER = time();
 ?><!doctype html>
@@ -239,7 +241,17 @@ $VER = time();
           </svg>
         </button>
       </div>
-      <div class="se-player-body">
+      <div class="se-verse-choice" id="playerChoice">
+        <p class="se-verse-choice-label" id="playerChoiceLabel"><?= t('player_verses_prompt') ?></p>
+        <div class="se-verse-choice-btns" role="group" aria-labelledby="playerChoiceLabel">
+          <button type="button" class="se-verse-btn" data-verses="1"><?= t('player_1_verse') ?></button>
+          <?php if ($hasTwoVerses): ?>
+            <button type="button" class="se-verse-btn" data-verses="2"><?= t('player_2_verses') ?></button>
+          <?php endif; ?>
+        </div>
+      </div>
+      <div class="se-player-body" id="playerBody" hidden>
+        <p class="se-player-verses" id="playerVerses"></p>
         <button type="button" class="se-player-toggle" id="playerToggle" aria-pressed="false"
                 aria-label="<?= t('player_play') ?>"
                 data-label-play="<?= t('player_play') ?>" data-label-pause="<?= t('player_pause') ?>">

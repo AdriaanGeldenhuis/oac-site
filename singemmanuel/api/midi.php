@@ -19,7 +19,14 @@ if (!is_string($song) || !preg_match('/^[0-9]{1,4}$/', $song) || (int)$song < 1)
     exit;
 }
 
-$path = __DIR__ . '/../media/' . sprintf('%03d', (int)$song) . '.mid';
+// 1 vers = 002.mid, 2 verse = 002R.mid
+$verses = $_GET['verses'] ?? '1';
+if ($verses !== '1' && $verses !== '2') {
+    http_response_code(400);
+    exit;
+}
+
+$path = __DIR__ . '/../media/' . sprintf('%03d', (int)$song) . ($verses === '2' ? 'R' : '') . '.mid';
 if (!is_file($path)) {
     http_response_code(404);
     exit;
