@@ -472,122 +472,26 @@
   }
 
   // ---------------------------------------------------------------------
-  // A quiet moment: full-screen breathing guide (4 s in, 6 s out).
-  // The orb is driven by the Web Animations API and the label follows the
-  // animation clock, so the words and the orb can never drift apart.
+  // Foldable cards: teaching of the month + thought of the day.
+  // Collapsed by default, remembers what the reader chose, and only folds
+  // content that is genuinely long. The collapsed height is the card's own
+  // CSS variable --fold-h, so the number lives in one place (the stylesheet).
   // ---------------------------------------------------------------------
-  function initQuiet() {
-    var openBtn = byId('wcQuietOpen');
-    var qm = byId('wcQm');
-    var closeBtn = byId('wcQmClose');
-    var orb = byId('wcQmOrb');
-    if (!openBtn || !qm || !closeBtn || !orb) { return; }
+  function makeFoldable(card, opts) {
+    var body = card.querySelector('.wc-fold-body');
+    var content = body ? body.querySelector(opts.content) : null;
+    var toggle = card.querySelector('.wc-fold-toggle');
+    var label = toggle ? toggle.querySelector('.wc-fold-label') : null;
+    if (!body || !content || !toggle) { return null; }
 
-    var CYCLE = 10000;
-    var INHALE = 4000;
-    var anim = null;
-    var raf = 0;
-    var t0 = 0;
-    var phase = '';
-    var lastFocus = null;
-    var hideTimer = 0;
-
-    function setPhase(p) {
-      if (p !== phase) {
-        phase = p;
-        qm.setAttribute('data-phase', p);
-      }
-    }
-
-    function tick() {
-      var t = anim ? Number(anim.currentTime) : (win.performance.now() - t0);
-      setPhase((t % CYCLE) < INHALE ? 'in' : 'out');
-      raf = win.requestAnimationFrame(tick);
-    }
-
-    function open() {
-      win.clearTimeout(hideTimer);
-      lastFocus = doc.activeElement;
-      qm.hidden = false;
-      void qm.offsetWidth;                       // let the fade start from 0
-      qm.classList.add('is-open');
-      doc.body.classList.add('wc-lock');
-
-      t0 = win.performance.now();
-      phase = '';
-      if (!reduceMotion && orb.animate) {
-        anim = orb.animate([
-          { transform: 'scale(1)', easing: 'ease-in-out' },
-          { transform: 'scale(1.7)', offset: 0.4, easing: 'ease-in-out' },
-          { transform: 'scale(1)' }
-        ], { duration: CYCLE, iterations: Infinity });
-      }
-      tick();
-      closeBtn.focus({ preventScroll: true });
-    }
-
-    function close() {
-      win.cancelAnimationFrame(raf);
-      if (anim) { anim.cancel(); anim = null; }
-      qm.classList.remove('is-open');
-      doc.body.classList.remove('wc-lock');
-      hideTimer = win.setTimeout(function () { qm.hidden = true; }, 650);
-      if (lastFocus && lastFocus.focus) { lastFocus.focus({ preventScroll: true }); }
-    }
-
-    openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-
-    doc.addEventListener('keydown', function (e) {
-      if (qm.hidden) { return; }
-      if (e.key === 'Escape' || e.key === 'Esc') {
-        close();
-      } else if (e.key === 'Tab') {
-        // The close button is the only control: keep focus on it
-        e.preventDefault();
-        closeBtn.focus({ preventScroll: true });
-      }
-    });
-  }
-
-  // ---------------------------------------------------------------------
-  // Teaching of the month: collapsed by default, remembers if you opened it,
-  // adjustable text size, and a reading-progress line along the top edge
-  // ---------------------------------------------------------------------
-  function initTeaching() {
-    var card = byId('wcTeach');
-    var body = byId('wcTeachBody');
-    var toggle = byId('wcTeachToggle');
-    var toggleText = byId('wcTeachToggleText');
-    var tools = byId('wcTeachTools');
-    var sizeDown = byId('wcSizeDown');
-    var sizeUp = byId('wcSizeUp');
-    if (!card || !body || !toggle) { return; }
-
-    var content = body.querySelector('.wc-teaching-content');
-    if (!content || content.querySelector('.wc-no-content')) {
-      card.classList.add('is-static');
-      return;
-    }
-
-    var COLLAPSED = 340;          // keep in step with .wc-teach-body max-height
-    var WORTH_FOLDING = 90;       // don't fold content that barely overflows
-    var SCALES = [0.9, 1, 1.12, 1.26, 1.42];
-
-    var scaleIndex = SCALES.indexOf(parseFloat(store.get('wc_read_scale')));
-    if (scaleIndex < 0) { scaleIndex = 1; }
-    var isOpen = store.get('wc_teach_open') === '1';
-    var mode = '';
+    var isOpen = store.get(opts.storeKey) === '1';
     var settleTimer = 0;
 
-    function applyScale() {
-      card.style.setProperty('--wc-read-scale', String(SCALES[scaleIndex]));
-      if (sizeDown) { sizeDown.disabled = scaleIndex === 0; }
-      if (sizeUp) { sizeUp.disabled = scaleIndex === SCALES.length - 1; }
+    function collapsedHeight() {
+      return parseFloat(win.getComputedStyle(card).getPropertyValue('--fold-h')) || 340;
     }
 
     function setMode(next, immediate) {
-      mode = next;
       win.clearTimeout(settleTimer);
 
       if (next === 'static') {
@@ -599,15 +503,16 @@
       }
 
       var expanded = next === 'expanded';
+      var collapsed = collapsedHeight();
       card.classList.remove('is-static');
       card.classList.toggle('is-collapsed', !expanded);
       toggle.hidden = false;
       toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-      if (toggleText) { toggleText.textContent = expanded ? (T.readLess || '') : (T.readMore || ''); }
+      if (label) { label.textContent = expanded ? (T.readLess || '') : (T.readMore || ''); }
 
       if (immediate) {
         body.style.transition = 'none';
-        body.style.maxHeight = expanded ? 'none' : COLLAPSED + 'px';
+        body.style.maxHeight = expanded ? 'none' : collapsed + 'px';
         void body.offsetHeight;
         body.style.transition = '';
         return;
@@ -619,14 +524,74 @@
         settleTimer = win.setTimeout(function () { body.style.maxHeight = 'none'; }, 650);
       } else {
         void body.offsetHeight;
-        body.style.maxHeight = COLLAPSED + 'px';
+        body.style.maxHeight = collapsed + 'px';
       }
     }
 
     // (Re)decide between static / collapsed / expanded from the real height
     function refresh() {
-      var needsFold = content.offsetHeight > COLLAPSED + WORTH_FOLDING;
+      var needsFold = content.offsetHeight > collapsedHeight() + opts.worth;
       setMode(needsFold ? (isOpen ? 'expanded' : 'collapsed') : 'static', true);
+    }
+
+    toggle.addEventListener('click', function () {
+      isOpen = !isOpen;
+      store.set(opts.storeKey, isOpen ? '1' : '0');
+      setMode(isOpen ? 'expanded' : 'collapsed');
+      if (!isOpen) {
+        // Closing from deep in the text would strand you mid-air: go back to the top
+        var r = card.getBoundingClientRect();
+        if (r.top < 0) {
+          card.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        }
+      }
+      if (opts.onChange) { opts.onChange(); }
+    });
+
+    refresh();
+
+    // Fonts/images can change the height after first paint
+    win.addEventListener('load', refresh);
+    var resizeTimer = 0;
+    win.addEventListener('resize', function () {
+      win.clearTimeout(resizeTimer);
+      resizeTimer = win.setTimeout(refresh, 200);
+    });
+
+    return { refresh: refresh };
+  }
+
+  // Thought of the day
+  function initThoughtFold() {
+    var card = byId('wcThought');
+    if (!card) { return; }
+    makeFoldable(card, { content: '.wc-thought-main', storeKey: 'wc_thought_open', worth: 70 });
+  }
+
+  // Teaching of the month: adds adjustable text size and a reading-progress
+  // line along the top edge on top of the shared fold behaviour
+  function initTeaching() {
+    var card = byId('wcTeach');
+    var tools = byId('wcTeachTools');
+    var sizeDown = byId('wcSizeDown');
+    var sizeUp = byId('wcSizeUp');
+    if (!card) { return; }
+
+    var content = card.querySelector('.wc-teaching-content');
+    if (!content || content.querySelector('.wc-no-content')) {
+      card.classList.add('is-static');
+      return;
+    }
+
+    var SCALES = [0.9, 1, 1.12, 1.26, 1.42];
+    var scaleIndex = SCALES.indexOf(parseFloat(store.get('wc_read_scale')));
+    if (scaleIndex < 0) { scaleIndex = 1; }
+    var fold = null;
+
+    function applyScale() {
+      card.style.setProperty('--wc-read-scale', String(SCALES[scaleIndex]));
+      if (sizeDown) { sizeDown.disabled = scaleIndex === 0; }
+      if (sizeUp) { sizeUp.disabled = scaleIndex === SCALES.length - 1; }
     }
 
     function updateProgress() {
@@ -639,47 +604,25 @@
       card.style.setProperty('--p', p.toFixed(3));
     }
 
-    applyScale();
-    if (tools) { tools.hidden = false; }
-    refresh();
-    updateProgress();
-
-    toggle.addEventListener('click', function () {
-      isOpen = !isOpen;
-      store.set('wc_teach_open', isOpen ? '1' : '0');
-      setMode(isOpen ? 'expanded' : 'collapsed');
-      if (!isOpen) {
-        // Closing from deep in the text would strand you mid-air: go back to the top
-        var r = card.getBoundingClientRect();
-        if (r.top < 0) {
-          card.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-        }
-      }
-      updateProgress();
-    });
-
     function changeScale(step) {
       var next = clamp(scaleIndex + step, 0, SCALES.length - 1);
       if (next === scaleIndex) { return; }
       scaleIndex = next;
       store.set('wc_read_scale', String(SCALES[scaleIndex]));
       applyScale();
-      refresh();
+      if (fold) { fold.refresh(); }
       updateProgress();
     }
+
+    applyScale();
+    if (tools) { tools.hidden = false; }
+    fold = makeFoldable(card, { content: '.wc-teaching-content', storeKey: 'wc_teach_open', worth: 90, onChange: updateProgress });
+    updateProgress();
 
     if (sizeDown) { sizeDown.addEventListener('click', function () { changeScale(-1); }); }
     if (sizeUp) { sizeUp.addEventListener('click', function () { changeScale(1); }); }
 
     scrollSubs.push(updateProgress);
-
-    // Fonts/images can change the height after first paint
-    win.addEventListener('load', refresh);
-    var resizeTimer = 0;
-    win.addEventListener('resize', function () {
-      win.clearTimeout(resizeTimer);
-      resizeTimer = win.setTimeout(refresh, 200);
-    });
   }
 
   // ---------------------------------------------------------------------
@@ -687,7 +630,7 @@
   // ---------------------------------------------------------------------
   var features = [
     initReveal, initEmbers, initParallax, initTiles, initNotifBadge,
-    initUpNext, initThought, initQuiet, initTeaching
+    initUpNext, initThought, initThoughtFold, initTeaching
   ];
 
   for (var f = 0; f < features.length; f++) {
