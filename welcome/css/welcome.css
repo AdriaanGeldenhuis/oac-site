@@ -1467,8 +1467,9 @@ html {
   color: var(--rose-gold-dark);
 }
 
+/* Verse blocks keep their own gold / soft colours (they are <p> too) */
 [data-theme="light"] .wc-teaching-content,
-[data-theme="light"] .wc-teaching-content p,
+[data-theme="light"] .wc-teaching-content p:not(.vref):not(.vtxt),
 [data-theme="light"] .wc-teaching-content li {
   color: #1f2937 !important;
 }

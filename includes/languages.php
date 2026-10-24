@@ -286,7 +286,10 @@ define('UI_TRANSLATIONS', [
     'up_next' => [
         'af' => 'Volgende',
         'en' => 'Up next',
-        'pt' => 'A seguir'
+        'zu' => 'Okulandelayo',
+        'xh' => 'Okulandelayo',
+        'pt' => 'A seguir',
+        'st' => 'Se latelang'
     ],
     'tomorrow' => [
         'af' => 'Môre',
@@ -299,17 +302,26 @@ define('UI_TRANSLATIONS', [
     'copied' => [
         'af' => 'Gekopieer',
         'en' => 'Copied',
-        'pt' => 'Copiado'
+        'zu' => 'Kukopishiwe',
+        'xh' => 'Kukhutshelwe',
+        'pt' => 'Copiado',
+        'st' => 'E kopilitsoe'
     ],
     'read_more' => [
         'af' => 'Lees meer',
         'en' => 'Read more',
-        'pt' => 'Ler mais'
+        'zu' => 'Funda kabanzi',
+        'xh' => 'Funda ngakumbi',
+        'pt' => 'Ler mais',
+        'st' => 'Bala haholoanyane'
     ],
     'read_less' => [
         'af' => 'Lees minder',
         'en' => 'Read less',
-        'pt' => 'Ler menos'
+        'zu' => 'Bonisa okuncane',
+        'xh' => 'Bonisa okuncinci',
+        'pt' => 'Ler menos',
+        'st' => 'Bontsha hanyane'
     ],
 
     // ==================== ADMIN SECTION ====================
