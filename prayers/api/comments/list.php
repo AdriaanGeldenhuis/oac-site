@@ -1,77 +1,29 @@
 <?php
-require_once __DIR__ . '/../../../security/auth_gate.php';
-require_once __DIR__ . '/../../../includes/languages.php';
+declare(strict_types=1);
+/**
+ * GET /prayers/api/comments/list.php?post_id=N
+ * The comments on a prayer, oldest first (a conversation), with what I may do.
+ */
 
-global $pdo;
-header('Content-Type: application/json; charset=utf-8');
+require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/lib/prayers.php';
 
-$userId = $_SESSION['user_id'] ?? 0;
-$userApte = $_SESSION['apte'] ?? 8;
-$pageLang = $_SESSION['language'] ?? 'af';
-
-if (!$userId) {
-  http_response_code(401);
-  echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-  exit;
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    pr_fail('db_unavailable', 500);
 }
 
 $postId = (int)($_GET['post_id'] ?? 0);
-
-if (!$postId) {
-  echo json_encode(['success' => false, 'error' => 'Invalid post ID']);
-  exit;
-}
+if (!pr_post_row($pdo, $postId)) pr_fail('not_found', 404);
 
 try {
-  $stmt = $pdo->prepare("
-    SELECT
-      c.*,
-      u.name as user_name,
-      u.surname as user_surname,
-      u.amp_id,
-      u.gender,
-      u.photo as user_pic
-    FROM prayers_comments c
-    JOIN users u ON c.user_id = u.id
-    WHERE c.post_id = ?
-    ORDER BY c.created_at ASC
-  ");
-  $stmt->execute([$postId]);
-  $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-  $isAdmin = ($userApte >= 2 && $userApte <= 7);
-
-  foreach ($comments as &$comment) {
-    $comment['created_at'] = date('Y-m-d H:i', strtotime($comment['created_at']));
-    $comment['user_pic'] = $comment['user_pic'] ?: null;
-
-    // Build username with office title
-    $ampId = (int)($comment['amp_id'] ?? 10);
-    $gender = $comment['gender'] ?? 'man';
-    $officeTitle = get_translated_office($ampId, $gender, $pageLang);
-    $fullName = trim($comment['user_name'] . ' ' . $comment['user_surname']);
-    $comment['username'] = $officeTitle . ' ' . $fullName;
-
-    // Generate initials
-    $nameParts = preg_split('/\s+/', $fullName);
-    if (count($nameParts) >= 2) {
-        $comment['initials'] = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[count($nameParts) - 1], 0, 1));
-    } elseif (count($nameParts) === 1 && !empty($nameParts[0])) {
-        $comment['initials'] = strtoupper(mb_substr($nameParts[0], 0, 2));
-    } else {
-        $comment['initials'] = '??';
-    }
-
-    // Clean up fields not needed in response
-    unset($comment['user_name'], $comment['user_surname'], $comment['amp_id'], $comment['gender']);
-
-    $comment['can_edit'] = ($comment['user_id'] == $userId || $isAdmin);
-    $comment['can_delete'] = ($comment['user_id'] == $userId || $isAdmin);
-  }
-  
-  echo json_encode(['success' => true, 'comments' => $comments]);
-} catch (Exception $e) {
-  error_log('Prayers comment list error: ' . $e->getMessage());
-  http_response_code(500);
-  echo json_encode(['success' => false, 'error' => 'server_error']);
+    $lang = pr_lang();
+    $st = $pdo->prepare(pr_comment_select() . ' WHERE c.post_id = ? ORDER BY c.id ASC LIMIT 500');
+    $st->execute([$postId]);
+    pr_json([
+        'success' => true,
+        'comments' => array_map(fn($r) => pr_comment_out($r, $pdo, $lang), $st->fetchAll(PDO::FETCH_ASSOC)),
+    ]);
+} catch (Throwable $e) {
+    error_log('Prayers comment list error: ' . $e->getMessage());
+    pr_fail('server_error', 500);
 }

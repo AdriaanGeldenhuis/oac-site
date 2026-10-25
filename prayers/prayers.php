@@ -1,174 +1,150 @@
 <?php
+declare(strict_types=1);
+/**
+ * Gebede — "Light Through Glass", amethyst edition.
+ * The welcome page's atmosphere lit in amethyst, the colour the prayers
+ * carry on the welcome tiles. One prayer wall for the church: share a
+ * need, pray along, send a heart, write an encouraging word.
+ *
+ * The feed, the composer, the comments and "who prays along" are drawn by
+ * prayers.js; every write goes through api/ with the session CSRF token.
+ * Links: #post-ID shows a prayer, #post-ID-c opens its comments.
+ */
 
-require_once __DIR__ . '/../security/auth_gate.php';
-require_once __DIR__ . '/../includes/languages.php';
+require_once dirname(__DIR__) . '/security/auth_gate.php';
+require_once __DIR__ . '/lib/prayers.php';
 
-global $pdo;
-if (!isset($pdo)) {
-  die('Database connection not available');
-}
-
-$pageLang = $_SESSION['language'] ?? 'af';
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
-  $_SESSION['language'] = $_GET['lang'];
-  $pageLang = $_GET['lang'];
-  header('Location: /prayers/prayers.php');
-  exit;
+    $_SESSION['language'] = $_GET['lang'];
+    // The prayer asked for lives in the #hash, which the browser keeps across this redirect
+    header('Location: /prayers/prayers.php');
+    exit;
 }
 
-// Translation helper using central 5-language system
-function t(string $key): string {
-  global $pageLang;
-  return __t($key, $pageLang);
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    http_response_code(500);
+    die('Database connection failed');
 }
 
-$currentUserId = $_SESSION['user_id'] ?? 0;
-$VER = '2.2.0';
+$lang = pr_lang();
+$me = pr_me($pdo);
+$myName = pr_full_name($me);
+$myPhoto = pr_photo_url($me['photo'] ?? null);
+$myInitials = pr_initials($myName);
+$myTown = trim((string)($me['town_name'] ?? ''));
 
-function esc($s) {
-  return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); 
-}
-
-$stmt = $pdo->prepare("SELECT name, surname, photo FROM users WHERE id = ?");
-$stmt->execute([$currentUserId]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$currentUser = [
-  'username' => trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? '')) ?: 'User',
-  'profile_picture' => $user['photo'] ?? '/assets/default-avatar.png'
+$config = [
+    'lang' => $lang,
+    'csrf' => csrf_token(),
+    'userId' => pr_user_id(),
+    'me' => ['name' => $myName, 'initials' => $myInitials, 'photo' => $myPhoto],
+    'town' => $myTown,
+    'limits' => ['text' => PR_TEXT_MAX, 'comment' => PR_COMMENT_MAX],
+    't' => pr_js_strings($lang),
 ];
 
+$icons = [
+    'prayer' => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>',
+    'photo' => '<path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>',
+    'pin' => '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>',
+    'person' => '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>',
+    'globe' => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>',
+];
 ?><!doctype html>
-<html lang="<?= $pageLang ?>">
+<html lang="<?= pr_e($lang) ?>">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= esc(t('prayers_testimonies')) ?></title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <style>
-    @font-face {
-      font-family: 'Parisienne';
-      src: url('/assets/fonts/Parisienne-Regular.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-  </style>
-  
-  <link rel="stylesheet" href="/prayers/css/prayers.css?v=<?= $VER ?>">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= pr_e(__t('prayers', $lang)) ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Parisienne&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= pr_asset('/prayers/css/prayers.css') ?>">
+    <script>window.PRAYERS = <?= pr_json_for_script($config) ?>;</script>
 </head>
-<body class="prayers-body">
-  <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
+<body class="pr-body">
+    <?php require_once dirname(__DIR__) . '/header_footer/header.php'; ?>
 
-  <div class="pr-hero">
-    <div class="pr-hero-glow"></div>
-    <div class="pr-hero-content">
-      <h1 class="pr-hero-title"><?= esc(t('prayers_testimonies')) ?></h1>
-      <p class="pr-hero-subtitle"><?= esc(t('prayers_subtitle')) ?></p>
-      <div class="pr-hero-actions">
-        <button id="open-composer" class="pr-hero-btn" type="button">
-          <svg class="pr-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <span><?= esc(t('share_prayer_testimony')) ?></span>
-        </button>
-      </div>
-    </div>
-    <div class="pr-sparkles">
-      <span class="pr-sparkle" style="--x: 20%; --y: 30%; --delay: 0s;"></span>
-      <span class="pr-sparkle" style="--x: 80%; --y: 20%; --delay: 1s;"></span>
-      <span class="pr-sparkle" style="--x: 50%; --y: 70%; --delay: 2s;"></span>
-      <span class="pr-sparkle" style="--x: 10%; --y: 80%; --delay: 1.5s;"></span>
-      <span class="pr-sparkle" style="--x: 90%; --y: 60%; --delay: 0.5s;"></span>
-    </div>
-  </div>
+    <svg class="pr-sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+        <?php foreach ($icons as $id => $path): ?>
+        <symbol id="pr-i-<?= $id ?>" viewBox="0 0 24 24" fill="currentColor"><?= $path ?></symbol>
+        <?php endforeach; ?>
+    </defs></svg>
 
-  <main class="pr-main">
-    <!-- FILTER SECTION REMOVED -->
+    <div class="pr-aura" aria-hidden="true"><div class="pr-rays"></div><div class="pr-halo"></div></div>
 
-    <section class="pr-section pr-feed-section">
-      <div id="postsContainer" class="pr-posts-grid">
-        <div class="pr-loading">
-          <div class="pr-spinner"></div>
-          <p><?= esc(t('loading_prayers')) ?></p>
+    <main class="pr-main" id="prMain">
+        <section class="pr-hero" aria-labelledby="prTitle">
+            <p class="pr-eyebrow">
+                <svg class="pr-eyebrow-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#pr-i-prayer"/></svg>
+                <span><?= pr_e(__t('pr_eyebrow', $lang)) ?></span>
+            </p>
+            <h2 class="pr-title" id="prTitle"><span><?= pr_e(__t('prayers', $lang)) ?></span></h2>
+            <p class="pr-sub"><?= pr_e(__t('prayers_subtitle', $lang)) ?></p>
+        </section>
+
+        <!-- "What can we pray about together?" opens the composer -->
+        <div class="pr-card pr-prompt">
+            <button class="pr-prompt-main" type="button" id="prPrompt">
+                <?php if ($myPhoto !== null): ?>
+                    <img class="pr-avatar pr-prompt-avatar" src="<?= pr_e($myPhoto) ?>" alt="" width="44" height="44" decoding="async">
+                <?php else: ?>
+                    <span class="pr-avatar pr-prompt-avatar pr-initials" aria-hidden="true"><?= pr_e($myInitials) ?></span>
+                <?php endif; ?>
+                <span class="pr-prompt-text"><?= pr_e(__t('pr_prompt', $lang)) ?></span>
+            </button>
+            <button class="pr-prompt-tool" type="button" id="prPromptPhoto" aria-label="<?= pr_e(__t('pr_add_photo', $lang)) ?>" title="<?= pr_e(__t('pr_add_photo', $lang)) ?>">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pr-i-photo"/></svg>
+            </button>
         </div>
-      </div>
-    </section>
-  </main>
 
-  <div id="commentsModal" class="pr-modal" hidden>
-    <div class="pr-modal-overlay"></div>
-    <div class="pr-modal-content">
-      <div class="pr-modal-header">
-        <h3 class="pr-modal-title"><?= esc(t('comments')) ?></h3>
-        <button class="pr-modal-close" id="closeModal" type="button">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="pr-modal-body">
-        <div id="commentsContainer" class="pr-comments-list"></div>
-        <form id="addCommentForm" class="pr-comment-form">
-          <input type="hidden" id="commentPostId" name="post_id">
-          <textarea 
-            id="commentText" 
-            name="text" 
-            class="pr-comment-input" 
-            placeholder="<?= esc(t('write_encouraging_word')) ?>" 
-            rows="2" 
-            required
-          ></textarea>
-          <button type="submit" class="pr-btn pr-btn-sm pr-btn-primary">
-            <span class="pr-btn-shine"></span>
-            <span class="pr-btn-text"><?= esc(t('send')) ?></span>
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
+        <nav class="pr-filters" id="prFilters" aria-label="<?= pr_e(__t('filter', $lang)) ?>">
+            <button class="pr-chip" type="button" data-filter="all" aria-pressed="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pr-i-globe"/></svg>
+                <span><?= pr_e(__t('all', $lang)) ?></span>
+            </button>
+            <?php if ($myTown !== ''): ?>
+            <button class="pr-chip" type="button" data-filter="town" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pr-i-pin"/></svg>
+                <span><?= pr_e($myTown) ?></span>
+            </button>
+            <?php endif; ?>
+            <button class="pr-chip" type="button" data-filter="mine" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pr-i-person"/></svg>
+                <span><?= pr_e(__t('pr_filter_mine', $lang)) ?></span>
+            </button>
+        </nav>
 
-  <script>
-    window.PRAYERS_LANG = <?= json_encode($pageLang) ?>;
-    window.CURRENT_USER_ID = <?= (int)$currentUserId ?>;
-    window.CURRENT_USER_NAME = <?= json_encode($currentUser['username']) ?>;
-    window.CURRENT_USER_PIC = <?= json_encode($currentUser['profile_picture']) ?>;
-    window.JS_T = {
-      edit: <?= json_encode(__t('js_edit', $pageLang)) ?>,
-      delete: <?= json_encode(__t('js_delete', $pageLang)) ?>,
-      cancel: <?= json_encode(__t('js_cancel', $pageLang)) ?>,
-      error: <?= json_encode(__t('js_error', $pageLang)) ?>,
-      share: <?= json_encode(__t('js_share', $pageLang)) ?>,
-      update: <?= json_encode(__t('js_update', $pageLang)) ?>,
-      posting: <?= json_encode(__t('js_posting', $pageLang)) ?>,
-      choose_photo: <?= json_encode(__t('js_choose_photo', $pageLang)) ?>,
-      prayer_shared: <?= json_encode(__t('js_prayer_shared', $pageLang)) ?>,
-      could_not_post: <?= json_encode(__t('js_could_not_post', $pageLang)) ?>,
-      post_updated: <?= json_encode(__t('js_post_updated', $pageLang)) ?>,
-      could_not_update: <?= json_encode(__t('js_could_not_update', $pageLang)) ?>,
-      remove_photo: <?= json_encode(__t('js_remove_photo', $pageLang)) ?>,
-      delete_photo: <?= json_encode(__t('js_delete_photo', $pageLang)) ?>,
-      photo_removed: <?= json_encode(__t('js_photo_removed', $pageLang)) ?>,
-      could_not_remove: <?= json_encode(__t('js_could_not_remove', $pageLang)) ?>,
-      delete_post: <?= json_encode(__t('js_delete_post', $pageLang)) ?>,
-      post_deleted: <?= json_encode(__t('js_post_deleted', $pageLang)) ?>,
-      could_not_delete: <?= json_encode(__t('js_could_not_delete', $pageLang)) ?>,
-      loading_prayers: <?= json_encode(__t('js_loading_prayers', $pageLang)) ?>,
-      no_prayers: <?= json_encode(__t('js_no_prayers', $pageLang)) ?>,
-      could_not_load: <?= json_encode(__t('js_could_not_load', $pageLang)) ?>,
-      prayer: <?= json_encode(__t('js_prayer', $pageLang)) ?>,
-      testimony: <?= json_encode(__t('js_testimony', $pageLang)) ?>,
-      comment_posted: <?= json_encode(__t('js_comment_posted', $pageLang)) ?>,
-      comment_updated: <?= json_encode(__t('js_comment_updated', $pageLang)) ?>,
-      comment_deleted: <?= json_encode(__t('js_comment_deleted', $pageLang)) ?>,
-      delete_comment: <?= json_encode(__t('js_delete_comment', $pageLang)) ?>,
-      no_comments: <?= json_encode(__t('js_no_comments', $pageLang)) ?>
-    };
-  </script>
-  <script src="/prayers/js/prayers.js?v=<?= $VER ?>"></script>
+        <section class="pr-feed" id="prFeed" aria-busy="true" aria-label="<?= pr_e(__t('prayers', $lang)) ?>">
+            <div class="pr-skel" aria-hidden="true"><i></i><i></i></div>
+            <p class="pr-sr"><?= pr_e(__t('loading_prayers', $lang)) ?></p>
+        </section>
 
-  <?php require_once __DIR__ . '/../header_footer/footer.php'; ?>
+        <div class="pr-more" id="prMoreWrap" hidden>
+            <button class="pr-btn pr-btn--glass" id="prMore" type="button"><span><?= pr_e(__t('pr_load_more', $lang)) ?></span></button>
+        </div>
+
+        <!-- Closing verse, by candlelight -->
+        <section class="pr-bene">
+            <div class="pr-candle" aria-hidden="true"><i class="pr-flame"></i><i class="pr-wick"></i><i class="pr-wax"></i></div>
+            <blockquote class="pr-quote">
+                <p class="pr-quote-text"><?= pr_e(__t('pr_verse', $lang)) ?></p>
+                <cite class="pr-quote-source"><?= pr_e(__t('pr_verse_ref', $lang)) ?></cite>
+            </blockquote>
+        </section>
+    </main>
+
+    <!-- New prayer on phones: the same glass circle and slot as Gospel Media's new-post button -->
+    <button class="global-back-btn global-post-btn pr-fab" id="prFab" type="button" aria-label="<?= pr_e(__t('share_prayer_testimony', $lang)) ?>">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <div class="pr-toast" id="prToast" role="status" aria-live="polite"></div>
+
+    <script defer src="<?= pr_asset('/prayers/js/prayers.js') ?>"></script>
+
+    <?php require_once dirname(__DIR__) . '/header_footer/footer.php'; ?>
 </body>
 </html>

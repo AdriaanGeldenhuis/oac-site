@@ -12,6 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Every write carries the session CSRF token (X-CSRF-Token), as the rest of the site
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'csrf']);
+    exit;
+}
+
 try {
     $db = new PDO('sqlite:' . __DIR__ . '/../../data/notifications.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

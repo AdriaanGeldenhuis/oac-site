@@ -53,6 +53,8 @@ if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !
   $pageTitle = t_hdr('sing_emmanuel');
 } elseif (strpos($reqPath, '/gedagtes/gedagtes.php') !== false) {
   $pageTitle = t_hdr('thought_history');
+} elseif (strpos($reqPath, '/notifications/notifications.php') !== false) {
+  $pageTitle = t_hdr('notifications');
 } elseif (strpos($reqPath, '/policy') !== false) {
   $pageTitle = t_hdr('privacy_policy');
 } elseif (strpos($reqPath, '/admin/') !== false) {

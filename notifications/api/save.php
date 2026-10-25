@@ -13,6 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Every write carries the session CSRF token (X-CSRF-Token), as the rest of the site
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'csrf']);
+    exit;
+}
+
 try {
     // Get JSON input
     $json = file_get_contents('php://input');

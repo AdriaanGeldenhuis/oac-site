@@ -1,68 +1,44 @@
 <?php
-require_once __DIR__ . '/../../../security/auth_gate.php';
+declare(strict_types=1);
+/**
+ * POST /prayers/api/posts/delete.php  {"post_id": N}  (X-CSRF-Token)
+ * The writer, or an officer (amp 1-6), deletes a prayer with its comments
+ * and reactions, in one transaction; the photo file goes afterwards.
+ */
 
-global $pdo;
-header('Content-Type: application/json; charset=utf-8');
+require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/lib/prayers.php';
 
-$userId = $_SESSION['user_id'] ?? 0;
-$userApte = $_SESSION['apte'] ?? 8;
-
-if (!$userId) {
-  http_response_code(401);
-  echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-  exit;
+pr_require_post();
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    pr_fail('db_unavailable', 500);
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-$postId = (int)($input['post_id'] ?? 0);
-
-if (!$postId) {
-  echo json_encode(['success' => false, 'error' => 'Invalid post ID']);
-  exit;
-}
+$in = pr_input();
+$postId = (int)($in['post_id'] ?? 0);
+if ($postId <= 0) pr_fail('invalid_input');
 
 try {
-  $stmt = $pdo->prepare("SELECT user_id, photo_url FROM prayers_posts WHERE id = ?");
-  $stmt->execute([$postId]);
-  $post = $stmt->fetch();
-  
-  if (!$post) {
-    echo json_encode(['success' => false, 'error' => 'Post not found']);
-    exit;
-  }
-  
-  $isAdmin = ($userApte >= 2 && $userApte <= 7);
-  $isOwner = ($post['user_id'] == $userId);
-  
-  if (!$isOwner && !$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Permission denied']);
-    exit;
-  }
-  
-  $pdo->beginTransaction();
+    $pdo->beginTransaction();
+    $post = pr_post_row($pdo, $postId, true);
+    if (!$post) {
+        $pdo->rollBack();
+        pr_fail('not_found', 404);
+    }
+    if ((int)$post['user_id'] !== pr_user_id() && !pr_is_moderator($pdo)) {
+        $pdo->rollBack();
+        pr_fail('forbidden', 403);
+    }
 
-  $stmt = $pdo->prepare("DELETE FROM prayers_comments WHERE post_id = ?");
-  $stmt->execute([$postId]);
-
-  $stmt = $pdo->prepare("DELETE FROM prayers_reactions WHERE post_id = ?");
-  $stmt->execute([$postId]);
-
-  $stmt = $pdo->prepare("DELETE FROM prayers_posts WHERE id = ?");
-  $stmt->execute([$postId]);
-
-  $pdo->commit();
-
-  // Delete photo file after successful DB transaction
-  if ($post['photo_url']) {
-    $photoPath = __DIR__ . '/../../../' . ltrim($post['photo_url'], '/');
-    if (file_exists($photoPath)) @unlink($photoPath);
-  }
-
-  echo json_encode(['success' => true]);
-} catch (Exception $e) {
-  if ($pdo->inTransaction()) $pdo->rollBack();
-  error_log('Prayers delete error: ' . $e->getMessage());
-  http_response_code(500);
-  echo json_encode(['success' => false, 'error' => 'server_error']);
+    $pdo->prepare('DELETE FROM prayers_comments WHERE post_id = ?')->execute([$postId]);
+    $pdo->prepare('DELETE FROM prayers_reactions WHERE post_id = ?')->execute([$postId]);
+    $pdo->prepare('DELETE FROM prayers_posts WHERE id = ?')->execute([$postId]);
+    $pdo->commit();
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log('Prayers delete error: ' . $e->getMessage());
+    pr_fail('server_error', 500);
 }
+
+pr_photo_delete($post['photo_url'] ?? null);
+pr_json(['success' => true]);

@@ -6847,7 +6847,976 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Kukho umoya',
         'pt' => 'Ventoso',
         'st' => 'Ho na le moea'
+    ],
+
+    // ===== Shared: relative times (prayers, notifications, thoughts) =====
+    'time_yesterday' => [
+        'af' => 'Gister',
+        'en' => 'Yesterday',
+        'zu' => 'Izolo',
+        'xh' => 'Izolo',
+        'pt' => 'Ontem',
+        'st' => 'Maobane'
+    ],
+    'time_minutes_ago' => [
+        'af' => '{n} min. gelede',
+        'en' => '{n} min ago',
+        'zu' => '{n} min. edlule',
+        'xh' => '{n} min. edlulileyo',
+        'pt' => 'há {n} min',
+        'st' => 'metsotso e {n} e fetileng'
+    ],
+    'time_hours_ago' => [
+        'af' => '{n} uur gelede',
+        'en' => '{n} h ago',
+        'zu' => 'amahora angu-{n} edlule',
+        'xh' => 'iiyure ezi-{n} ezidlulileyo',
+        'pt' => 'há {n} h',
+        'st' => 'lihora tse {n} tse fetileng'
+    ],
+
+    // ===== Gedagtes (gedagtes/) =====
+    'gd_tagline' => [
+        'af' => 'Een gedagte vir elke dag, hier bewaar',
+        'en' => 'One thought for every day, kept here',
+        'zu' => 'Umcabango owodwa wosuku ngalunye, ugcinwe lapha',
+        'xh' => 'Ingcinga enye yosuku ngalunye, igcinwe apha',
+        'pt' => 'Um pensamento para cada dia, guardado aqui',
+        'st' => 'Monahano o le mong bakeng sa letsatsi ka leng, o bolokiloe mona'
+    ],
+    'gd_copy' => [
+        'af' => 'Kopieer',
+        'en' => 'Copy',
+        'zu' => 'Kopisha',
+        'xh' => 'Khuphela',
+        'pt' => 'Copiar',
+        'st' => 'Kopitsa'
+    ],
+    'gd_copy_failed' => [
+        'af' => 'Kon nie kopieer nie',
+        'en' => 'Could not copy',
+        'zu' => 'Akukwazekanga ukukopisha',
+        'xh' => 'Akukwazekanga ukukhuphela',
+        'pt' => 'Não foi possível copiar',
+        'st' => 'Ha ea khona ho kopitsa'
+    ],
+    'gd_pending' => [
+        'af' => 'Vandag se gedagte verskyn om {time}',
+        'en' => 'Today\'s thought appears at {time}',
+        'zu' => 'Umcabango wanamuhla uzovela ngo-{time}',
+        'xh' => 'Ingcinga yanamhlanje iza kuvela ngo-{time}',
+        'pt' => 'O pensamento de hoje aparece às {time}',
+        'st' => 'Monahano oa kajeno o tla hlaha ka {time}'
+    ],
+    'gd_none_today' => [
+        'af' => 'Daar is nog nie \'n gedagte vir vandag nie',
+        'en' => 'There is no thought for today yet',
+        'zu' => 'Akukabi khona umcabango wanamuhla',
+        'xh' => 'Akukabikho ngcinga yanamhlanje',
+        'pt' => 'Ainda não há pensamento para hoje',
+        'st' => 'Ha ho e-so be le monahano oa kajeno'
+    ],
+    'gd_none_today_hint' => [
+        'af' => 'Hieronder is die gedagtes van vorige dae.',
+        'en' => 'Below are the thoughts of earlier days.',
+        'zu' => 'Ngezansi kunemicabango yezinsuku ezedlule.',
+        'xh' => 'Ngezantsi kukho iingcinga zeentsuku ezidlulileyo.',
+        'pt' => 'Abaixo estão os pensamentos dos dias anteriores.',
+        'st' => 'Ka tlase ho na le menahano ea matsatsi a fetileng.'
+    ],
+    'gd_earlier' => [
+        'af' => 'Vorige gedagtes',
+        'en' => 'Earlier thoughts',
+        'zu' => 'Imicabango edlule',
+        'xh' => 'Iingcinga zangaphambili',
+        'pt' => 'Pensamentos anteriores',
+        'st' => 'Menahano e fetileng'
+    ],
+    'gd_search_ph' => [
+        'af' => 'Soek in die gedagtes',
+        'en' => 'Search the thoughts',
+        'zu' => 'Sesha emicabangweni',
+        'xh' => 'Khangela kwiingcinga',
+        'pt' => 'Pesquisar nos pensamentos',
+        'st' => 'Batla menahanong'
+    ],
+    'gd_clear_search' => [
+        'af' => 'Maak soektog skoon',
+        'en' => 'Clear search',
+        'zu' => 'Sula usesho',
+        'xh' => 'Cima ukhangelo',
+        'pt' => 'Limpar pesquisa',
+        'st' => 'Hlakola patlo'
+    ],
+    'gd_count_n' => [
+        'af' => '{n} gedagtes',
+        'en' => '{n} thoughts',
+        'zu' => 'Imicabango: {n}',
+        'xh' => 'Iingcinga: {n}',
+        'pt' => '{n} pensamentos',
+        'st' => 'Menahano: {n}'
+    ],
+    'gd_count_one' => [
+        'af' => '1 gedagte',
+        'en' => '1 thought',
+        'zu' => 'Imicabango: 1',
+        'xh' => 'Iingcinga: 1',
+        'pt' => '1 pensamento',
+        'st' => 'Menahano: 1'
+    ],
+    'gd_found_n' => [
+        'af' => '{n} gevind',
+        'en' => '{n} found',
+        'zu' => 'Okutholakele: {n}',
+        'xh' => 'Ezifunyenweyo: {n}',
+        'pt' => '{n} encontrados',
+        'st' => 'Tse fumanoeng: {n}'
+    ],
+    'gd_found_one' => [
+        'af' => '1 gevind',
+        'en' => '1 found',
+        'zu' => 'Okutholakele: 1',
+        'xh' => 'Ezifunyenweyo: 1',
+        'pt' => '1 encontrado',
+        'st' => 'Tse fumanoeng: 1'
+    ],
+    'gd_none_found' => [
+        'af' => 'Niks gevind nie',
+        'en' => 'Nothing found',
+        'zu' => 'Akukho okutholakele',
+        'xh' => 'Akukho nto ifunyenweyo',
+        'pt' => 'Nada encontrado',
+        'st' => 'Ha ho letho le fumanoeng'
+    ],
+    'gd_none_found_hint' => [
+        'af' => 'Probeer ander woorde.',
+        'en' => 'Try other words.',
+        'zu' => 'Zama amanye amagama.',
+        'xh' => 'Zama amanye amagama.',
+        'pt' => 'Tente outras palavras.',
+        'st' => 'Leka mantsoe a mang.'
+    ],
+    'gd_show_all' => [
+        'af' => 'Wys alles',
+        'en' => 'Show all',
+        'zu' => 'Bonisa konke',
+        'xh' => 'Bonisa konke',
+        'pt' => 'Mostrar tudo',
+        'st' => 'Bontša tsohle'
+    ],
+    'gd_empty' => [
+        'af' => 'Nog geen vorige gedagtes nie',
+        'en' => 'No earlier thoughts yet',
+        'zu' => 'Ayikabi khona imicabango edlule',
+        'xh' => 'Akukabikho ngcinga zangaphambili',
+        'pt' => 'Ainda não há pensamentos anteriores',
+        'st' => 'Ha ho e-so be le menahano e fetileng'
+    ],
+    'gd_empty_hint' => [
+        'af' => 'Elke dag se gedagte word hier bewaar.',
+        'en' => 'Every day\'s thought is kept here.',
+        'zu' => 'Umcabango wosuku ngalunye ugcinwa lapha.',
+        'xh' => 'Ingcinga yosuku ngalunye igcinwa apha.',
+        'pt' => 'O pensamento de cada dia fica guardado aqui.',
+        'st' => 'Monahano oa letsatsi ka leng o bolokoa mona.'
+    ],
+    'gd_load_failed' => [
+        'af' => 'Kon nie die gedagtes laai nie',
+        'en' => 'Could not load the thoughts',
+        'zu' => 'Akukwazekanga ukulayisha imicabango',
+        'xh' => 'Akukwazekanga ukulayisha iingcinga',
+        'pt' => 'Não foi possível carregar os pensamentos',
+        'st' => 'Ha ea khona ho kenya menahano'
+    ],
+    'gd_retry' => [
+        'af' => 'Probeer weer',
+        'en' => 'Try again',
+        'zu' => 'Zama futhi',
+        'xh' => 'Zama kwakhona',
+        'pt' => 'Tentar novamente',
+        'st' => 'Leka hape'
+    ],
+    'gd_load_more' => [
+        'af' => 'Wys meer',
+        'en' => 'Show more',
+        'zu' => 'Bonisa okwengeziwe',
+        'xh' => 'Bonisa ezingakumbi',
+        'pt' => 'Mostrar mais',
+        'st' => 'Bontša tse ling'
+    ],
+    'gd_share_label' => [
+        'af' => 'Deel hierdie gedagte',
+        'en' => 'Share this thought',
+        'zu' => 'Yabelana ngalo mcabango',
+        'xh' => 'Yabelana ngale ngcinga',
+        'pt' => 'Partilhar este pensamento',
+        'st' => 'Arolelana monahano ona'
+    ],
+
+    // ===== Kennisgewings (notifications/) =====
+    'nt_unread_n' => [
+        'af' => '{n} ongelees',
+        'en' => '{n} unread',
+        'zu' => 'Okungafundiwe: {n}',
+        'xh' => 'Ezingafundwanga: {n}',
+        'pt' => '{n} por ler',
+        'st' => 'Tse sa balloang: {n}'
+    ],
+    'nt_unread_one' => [
+        'af' => '1 ongelees',
+        'en' => '1 unread',
+        'zu' => 'Okungafundiwe: 1',
+        'xh' => 'Ezingafundwanga: 1',
+        'pt' => '1 por ler',
+        'st' => 'Tse sa balloang: 1'
+    ],
+    'nt_all_read' => [
+        'af' => 'Alles gelees — jy is op datum',
+        'en' => 'All read — you\'re up to date',
+        'zu' => 'Konke kufundiwe',
+        'xh' => 'Zonke zifundiwe',
+        'pt' => 'Tudo lido — está em dia',
+        'st' => 'Tsohle li baliloe'
+    ],
+    'nt_unread_label' => [
+        'af' => 'Ongelees',
+        'en' => 'Unread',
+        'zu' => 'Akufundiwe',
+        'xh' => 'Ayifundwanga',
+        'pt' => 'Por ler',
+        'st' => 'Ha e so baloe'
+    ],
+    'nt_deleted' => [
+        'af' => 'Kennisgewing verwyder',
+        'en' => 'Notification deleted',
+        'zu' => 'Isaziso sisusiwe',
+        'xh' => 'Isaziso sicinyiwe',
+        'pt' => 'Notificação apagada',
+        'st' => 'Tsebiso e hlakotsoe'
+    ],
+    'nt_deleted_n' => [
+        'af' => '{n} kennisgewings verwyder',
+        'en' => '{n} notifications deleted',
+        'zu' => 'Izaziso ezisusiwe: {n}',
+        'xh' => 'Izaziso ezicinyiweyo: {n}',
+        'pt' => '{n} notificações apagadas',
+        'st' => 'Litsebiso tse hlakotsoeng: {n}'
+    ],
+    'nt_undo' => [
+        'af' => 'Ontdoen',
+        'en' => 'Undo',
+        'zu' => 'Hlehlisa',
+        'xh' => 'Buyisela',
+        'pt' => 'Desfazer',
+        'st' => 'Khutlisa'
+    ],
+    'nt_all_marked' => [
+        'af' => 'Alles is as gelees gemerk',
+        'en' => 'Everything is marked as read',
+        'zu' => 'Konke kuphawulwe njengokufundiwe',
+        'xh' => 'Zonke ziphawulwe njengezifundiweyo',
+        'pt' => 'Tudo marcado como lido',
+        'st' => 'Tsohle li tšoailoe hore li baliloe'
+    ],
+    'nt_clear_read' => [
+        'af' => 'Vee geleeste uit',
+        'en' => 'Clear read ones',
+        'zu' => 'Sula ezifundiwe',
+        'xh' => 'Cima ezifundiweyo',
+        'pt' => 'Apagar as lidas',
+        'st' => 'Hlakola tse baliloeng'
+    ],
+    'nt_clear_read_q' => [
+        'af' => 'Vee alle geleeste kennisgewings uit?',
+        'en' => 'Clear all read notifications?',
+        'zu' => 'Sula zonke izaziso ezifundiwe?',
+        'xh' => 'Cima zonke izaziso ezifundiweyo?',
+        'pt' => 'Apagar todas as notificações lidas?',
+        'st' => 'Hlakola litsebiso tsohle tse baliloeng?'
+    ],
+    'nt_clear_read_text' => [
+        'af' => '{n} kennisgewings wat jy reeds gelees het, word verwyder. Ongeleeste bly.',
+        'en' => '{n} notifications you have already read will be deleted. Unread ones stay.',
+        'zu' => 'Izaziso osuzifundile zizosuswa ({n}). Ezingafundiwe zizosala.',
+        'xh' => 'Izaziso osele uzifundile ziya kucinywa ({n}). Ezingafundwanga ziyahlala.',
+        'pt' => '{n} notificações que já leu serão apagadas. As não lidas ficam.',
+        'st' => 'Litsebiso tseo u seng u li badile li tla hlakoloa ({n}). Tse sa balloang li tla sala.'
+    ],
+    'nt_cleared_n' => [
+        'af' => '{n} verwyder',
+        'en' => '{n} deleted',
+        'zu' => 'Kususiwe: {n}',
+        'xh' => 'Kucinyiwe: {n}',
+        'pt' => '{n} apagadas',
+        'st' => 'Tse hlakotsoeng: {n}'
+    ],
+    'nt_nothing_to_clear' => [
+        'af' => 'Niks om uit te vee nie',
+        'en' => 'Nothing to clear',
+        'zu' => 'Akukho okokusula',
+        'xh' => 'Akukho nto yokucima',
+        'pt' => 'Nada para apagar',
+        'st' => 'Ha ho letho la ho hlakola'
+    ],
+    'nt_empty' => [
+        'af' => 'Nog geen kennisgewings nie',
+        'en' => 'No notifications yet',
+        'zu' => 'Azikabi khona izaziso',
+        'xh' => 'Akukabikho zaziso',
+        'pt' => 'Ainda não há notificações',
+        'st' => 'Ha ho e-so be le litsebiso'
+    ],
+    'nt_empty_hint' => [
+        'af' => 'Wanneer iemand vir jou bid, op jou plasing reageer of jou iets laat weet, sien jy dit hier.',
+        'en' => 'When someone prays for you, responds to your post or lets you know something, you\'ll see it here.',
+        'zu' => 'Uma othile ekuthandazela, esabela kokuthunyelwe nguwe noma ekwazisa okuthile, uzokubona lapha.',
+        'xh' => 'Xa umntu ekuthandazela, esabela kwinto oyithumeleyo okanye ekwazisa into, uya kuyibona apha.',
+        'pt' => 'Quando alguém orar por si, reagir à sua publicação ou lhe avisar algo, verá aqui.',
+        'st' => 'Ha motho a u rapella, a arabela poso ea hao kapa a u tsebisa ho hong, u tla ho bona mona.'
+    ],
+    'nt_none_filter' => [
+        'af' => 'Niks hier nie',
+        'en' => 'Nothing here',
+        'zu' => 'Akukho lutho lapha',
+        'xh' => 'Akukho nto apha',
+        'pt' => 'Nada aqui',
+        'st' => 'Ha ho letho mona'
+    ],
+    'nt_show_all' => [
+        'af' => 'Wys alles',
+        'en' => 'Show all',
+        'zu' => 'Bonisa konke',
+        'xh' => 'Bonisa konke',
+        'pt' => 'Mostrar tudo',
+        'st' => 'Bontša tsohle'
+    ],
+    'nt_load_failed' => [
+        'af' => 'Kon nie jou kennisgewings laai nie',
+        'en' => 'Could not load your notifications',
+        'zu' => 'Akukwazekanga ukulayisha izaziso zakho',
+        'xh' => 'Akukwazekanga ukulayisha izaziso zakho',
+        'pt' => 'Não foi possível carregar as suas notificações',
+        'st' => 'Ha ea khona ho kenya litsebiso tsa hao'
+    ],
+    'nt_retry' => [
+        'af' => 'Probeer weer',
+        'en' => 'Try again',
+        'zu' => 'Zama futhi',
+        'xh' => 'Zama kwakhona',
+        'pt' => 'Tentar novamente',
+        'st' => 'Leka hape'
+    ],
+    'nt_load_more' => [
+        'af' => 'Wys ouer kennisgewings',
+        'en' => 'Show older notifications',
+        'zu' => 'Bonisa izaziso ezindala',
+        'xh' => 'Bonisa izaziso ezindala',
+        'pt' => 'Mostrar notificações mais antigas',
+        'st' => 'Bontša litsebiso tsa khale'
+    ],
+    'nt_err_session' => [
+        'af' => 'Jou sessie het verval. Laai die bladsy weer.',
+        'en' => 'Your session has expired. Please reload the page.',
+        'zu' => 'Iseshini yakho iphelelwe yisikhathi. Sicela ulayishe ikhasi kabusha.',
+        'xh' => 'Iseshoni yakho iphelelwe lixesha. Nceda uphinde ulayishe iphepha.',
+        'pt' => 'A sua sessão expirou. Recarregue a página.',
+        'st' => 'Seshene ea hao e felile. Ka kopo kenya leqephe hape.'
+    ],
+    'nt_err_offline' => [
+        'af' => 'Geen verbinding nie. Probeer weer.',
+        'en' => 'No connection. Please try again.',
+        'zu' => 'Akukho ukuxhumana. Sicela uzame futhi.',
+        'xh' => 'Akukho qhagamshelo. Nceda uzame kwakhona.',
+        'pt' => 'Sem ligação. Tente novamente.',
+        'st' => 'Ha ho khokahano. Ka kopo leka hape.'
+    ],
+    'nt_err_generic' => [
+        'af' => 'Iets het skeefgeloop. Probeer weer.',
+        'en' => 'Something went wrong. Please try again.',
+        'zu' => 'Kukhona okungahambanga kahle. Sicela uzame futhi.',
+        'xh' => 'Kukho into engahambanga kakuhle. Nceda uzame kwakhona.',
+        'pt' => 'Algo correu mal. Tente novamente.',
+        'st' => 'Ho na le se sa tsamaeang hantle. Ka kopo leka hape.'
+    ],
+    'nt_delete_one' => [
+        'af' => 'Verwyder kennisgewing',
+        'en' => 'Delete notification',
+        'zu' => 'Susa isaziso',
+        'xh' => 'Cima isaziso',
+        'pt' => 'Apagar notificação',
+        'st' => 'Hlakola tsebiso'
+    ],
+    'nt_group_prayer' => [
+        'af' => 'Gebede',
+        'en' => 'Prayers',
+        'zu' => 'Imithandazo',
+        'xh' => 'Imithandazo',
+        'pt' => 'Orações',
+        'st' => 'Lithapelo'
+    ],
+    'nt_group_gospel' => [
+        'af' => 'Gospel Media',
+        'en' => 'Gospel Media',
+        'zu' => 'Gospel Media',
+        'xh' => 'Gospel Media',
+        'pt' => 'Gospel Media',
+        'st' => 'Gospel Media'
+    ],
+    'nt_group_calendar' => [
+        'af' => 'Kalender',
+        'en' => 'Calendar',
+        'zu' => 'Ikhalenda',
+        'xh' => 'Ikhalenda',
+        'pt' => 'Calendário',
+        'st' => 'Almanaka'
+    ],
+    'nt_group_thought' => [
+        'af' => 'Gedagtes',
+        'en' => 'Thoughts',
+        'zu' => 'Imicabango',
+        'xh' => 'Iingcinga',
+        'pt' => 'Pensamentos',
+        'st' => 'Menahano'
+    ],
+    'nt_group_other' => [
+        'af' => 'Ander',
+        'en' => 'Other',
+        'zu' => 'Okunye',
+        'xh' => 'Ezinye',
+        'pt' => 'Outras',
+        'st' => 'Tse ling'
+    ],
+
+    // ===== Gebede (prayers/) =====
+    'pr_eyebrow' => [
+        'af' => 'Gebedsmuur',
+        'en' => 'Prayer wall',
+        'zu' => 'Udonga lomthandazo',
+        'xh' => 'Udonga lomthandazo',
+        'pt' => 'Mural de oração',
+        'st' => 'Lebota la thapelo'
+    ],
+    'pr_prompt' => [
+        'af' => 'Waarvoor kan ons saam bid?',
+        'en' => 'What can we pray about together?',
+        'zu' => 'Singathandazela ini ndawonye?',
+        'xh' => 'Singathandazela ntoni kunye?',
+        'pt' => 'Por que podemos orar juntos?',
+        'st' => 'Re ka rapella eng hammoho?'
+    ],
+    'pr_filter_mine' => [
+        'af' => 'My gebede',
+        'en' => 'My prayers',
+        'zu' => 'Imithandazo yami',
+        'xh' => 'Imithandazo yam',
+        'pt' => 'As minhas orações',
+        'st' => 'Lithapelo tsa ka'
+    ],
+    'pr_pray' => [
+        'af' => 'Ek bid saam',
+        'en' => 'Pray along',
+        'zu' => 'Thandaza nabo',
+        'xh' => 'Thandaza nabo',
+        'pt' => 'Orar junto',
+        'st' => 'Rapela le bona'
+    ],
+    'pr_praying' => [
+        'af' => 'Jy bid saam',
+        'en' => 'Praying along',
+        'zu' => 'Uthandaza nabo',
+        'xh' => 'Uthandaza nabo',
+        'pt' => 'A orar junto',
+        'st' => 'O rapela le bona'
+    ],
+    'pr_heart' => [
+        'af' => 'Stuur \'n hart',
+        'en' => 'Send a heart',
+        'zu' => 'Thumela inhliziyo',
+        'xh' => 'Thumela intliziyo',
+        'pt' => 'Enviar um coração',
+        'st' => 'Romela pelo'
+    ],
+    'pr_comment' => [
+        'af' => 'Skryf \'n bemoedigende woord',
+        'en' => 'Write an encouraging word',
+        'zu' => 'Bhala igama elikhuthazayo',
+        'xh' => 'Bhala ilizwi elikhuthazayo',
+        'pt' => 'Escrever uma palavra de ânimo',
+        'st' => 'Ngola lentsoe le khothatsang'
+    ],
+    'pr_tally_pray_one' => [
+        'af' => '1 bid saam',
+        'en' => '1 praying',
+        'zu' => 'Abathandazayo: 1',
+        'xh' => 'Abathandazayo: 1',
+        'pt' => '1 a orar',
+        'st' => 'Ba rapelang: 1'
+    ],
+    'pr_tally_pray_n' => [
+        'af' => '{n} bid saam',
+        'en' => '{n} praying',
+        'zu' => 'Abathandazayo: {n}',
+        'xh' => 'Abathandazayo: {n}',
+        'pt' => '{n} a orar',
+        'st' => 'Ba rapelang: {n}'
+    ],
+    'pr_tally_heart_one' => [
+        'af' => '1 hart',
+        'en' => '1 heart',
+        'zu' => 'Izinhliziyo: 1',
+        'xh' => 'Iintliziyo: 1',
+        'pt' => '1 coração',
+        'st' => 'Lipelo: 1'
+    ],
+    'pr_tally_heart_n' => [
+        'af' => '{n} harte',
+        'en' => '{n} hearts',
+        'zu' => 'Izinhliziyo: {n}',
+        'xh' => 'Iintliziyo: {n}',
+        'pt' => '{n} corações',
+        'st' => 'Lipelo: {n}'
+    ],
+    'pr_tally_comments_one' => [
+        'af' => '1 kommentaar',
+        'en' => '1 comment',
+        'zu' => 'Amazwana: 1',
+        'xh' => 'Izimvo: 1',
+        'pt' => '1 comentário',
+        'st' => 'Maikutlo: 1'
+    ],
+    'pr_tally_comments_n' => [
+        'af' => '{n} kommentare',
+        'en' => '{n} comments',
+        'zu' => 'Amazwana: {n}',
+        'xh' => 'Izimvo: {n}',
+        'pt' => '{n} comentários',
+        'st' => 'Maikutlo: {n}'
+    ],
+    'pr_edited' => [
+        'af' => 'gewysig',
+        'en' => 'edited',
+        'zu' => 'kuhleliwe',
+        'xh' => 'kuhleliwe',
+        'pt' => 'editado',
+        'st' => 'e fetotsoe'
+    ],
+    'pr_options' => [
+        'af' => 'Opsies',
+        'en' => 'Options',
+        'zu' => 'Okukhethwa kukho',
+        'xh' => 'Ukhetho',
+        'pt' => 'Opções',
+        'st' => 'Likhetho'
+    ],
+    'pr_edit' => [
+        'af' => 'Wysig',
+        'en' => 'Edit',
+        'zu' => 'Hlela',
+        'xh' => 'Hlela',
+        'pt' => 'Editar',
+        'st' => 'Fetola'
+    ],
+    'pr_delete' => [
+        'af' => 'Verwyder',
+        'en' => 'Delete',
+        'zu' => 'Susa',
+        'xh' => 'Cima',
+        'pt' => 'Apagar',
+        'st' => 'Hlakola'
+    ],
+    'pr_new_title' => [
+        'af' => 'Deel \'n gebedsnood',
+        'en' => 'Share a prayer need',
+        'zu' => 'Yabelana ngesidingo somthandazo',
+        'xh' => 'Yabelana ngesidingo somthandazo',
+        'pt' => 'Partilhar um pedido de oração',
+        'st' => 'Arolelana tlhoko ea thapelo'
+    ],
+    'pr_edit_title' => [
+        'af' => 'Wysig jou gebed',
+        'en' => 'Edit your prayer',
+        'zu' => 'Hlela umthandazo wakho',
+        'xh' => 'Hlela umthandazo wakho',
+        'pt' => 'Editar a sua oração',
+        'st' => 'Fetola thapelo ea hao'
+    ],
+    'pr_text_ph' => [
+        'af' => 'Waarvoor kan ons saam bid? Ander lede sal saam met jou bid.',
+        'en' => 'What can we pray about together? Other members will pray with you.',
+        'zu' => 'Singathandazela ini ndawonye? Amanye amalungu azothandaza nawe.',
+        'xh' => 'Singathandazela ntoni kunye? Amanye amalungu aya kuthandaza nawe.',
+        'pt' => 'Por que podemos orar juntos? Outros membros vão orar consigo.',
+        'st' => 'Re ka rapella eng hammoho? Litho tse ling li tla rapela le uena.'
+    ],
+    'pr_add_photo' => [
+        'af' => 'Voeg foto by',
+        'en' => 'Add photo',
+        'zu' => 'Engeza isithombe',
+        'xh' => 'Yongeza ifoto',
+        'pt' => 'Adicionar foto',
+        'st' => 'Kenya foto'
+    ],
+    'pr_change_photo' => [
+        'af' => 'Ander foto',
+        'en' => 'Other photo',
+        'zu' => 'Esinye isithombe',
+        'xh' => 'Enye ifoto',
+        'pt' => 'Outra foto',
+        'st' => 'Foto e \'ngoe'
+    ],
+    'pr_remove_photo' => [
+        'af' => 'Verwyder foto',
+        'en' => 'Remove photo',
+        'zu' => 'Susa isithombe',
+        'xh' => 'Susa ifoto',
+        'pt' => 'Remover foto',
+        'st' => 'Tlosa foto'
+    ],
+    'pr_share_btn' => [
+        'af' => 'Deel',
+        'en' => 'Share',
+        'zu' => 'Yabelana',
+        'xh' => 'Yabelana',
+        'pt' => 'Partilhar',
+        'st' => 'Arolelana'
+    ],
+    'pr_save_btn' => [
+        'af' => 'Stoor',
+        'en' => 'Save',
+        'zu' => 'Londoloza',
+        'xh' => 'Gcina',
+        'pt' => 'Guardar',
+        'st' => 'Boloka'
+    ],
+    'pr_posting' => [
+        'af' => 'Deel tans…',
+        'en' => 'Sharing…',
+        'zu' => 'Iyabelana…',
+        'xh' => 'Iyabelana…',
+        'pt' => 'A partilhar…',
+        'st' => 'E a arolelana…'
+    ],
+    'pr_saving' => [
+        'af' => 'Stoor tans…',
+        'en' => 'Saving…',
+        'zu' => 'Iyalondoloza…',
+        'xh' => 'Iyagcina…',
+        'pt' => 'A guardar…',
+        'st' => 'E a boloka…'
+    ],
+    'pr_shared' => [
+        'af' => 'Jou gebed is gedeel. Ons bid saam.',
+        'en' => 'Your prayer has been shared. We pray with you.',
+        'zu' => 'Umthandazo wakho wabelwe. Sithandaza nawe.',
+        'xh' => 'Umthandazo wakho wabelwe. Sithandaza nawe.',
+        'pt' => 'A sua oração foi partilhada. Oramos consigo.',
+        'st' => 'Thapelo ea hao e arolelanoe. Re rapela le uena.'
+    ],
+    'pr_saved' => [
+        'af' => 'Gestoor',
+        'en' => 'Saved',
+        'zu' => 'Kulondoloziwe',
+        'xh' => 'Kugciniwe',
+        'pt' => 'Guardado',
+        'st' => 'E bolokiloe'
+    ],
+    'pr_deleted' => [
+        'af' => 'Gebed verwyder',
+        'en' => 'Prayer deleted',
+        'zu' => 'Umthandazo ususiwe',
+        'xh' => 'Umthandazo ucinyiwe',
+        'pt' => 'Oração apagada',
+        'st' => 'Thapelo e hlakotsoe'
+    ],
+    'pr_delete_q' => [
+        'af' => 'Verwyder hierdie gebed?',
+        'en' => 'Delete this prayer?',
+        'zu' => 'Susa lo mthandazo?',
+        'xh' => 'Cima lo mthandazo?',
+        'pt' => 'Apagar esta oração?',
+        'st' => 'Hlakola thapelo ena?'
+    ],
+    'pr_delete_text' => [
+        'af' => 'Die kommentaar en reaksies word ook verwyder. Dit kan nie ontdoen word nie.',
+        'en' => 'Its comments and reactions are deleted too. This cannot be undone.',
+        'zu' => 'Amazwana nokusabela nakho kuzosuswa. Lokhu akunakuhlehliswa.',
+        'xh' => 'Izimvo nokusabela nazo ziya kucinywa. Oku akunakubuyiselwa.',
+        'pt' => 'Os comentários e reações também são apagados. Não pode ser desfeito.',
+        'st' => 'Maikutlo le likarabo le tsona li tla hlakoloa. Sena se ke ke sa khutlisoa.'
+    ],
+    'pr_discard_q' => [
+        'af' => 'Gooi weg wat jy geskryf het?',
+        'en' => 'Discard what you wrote?',
+        'zu' => 'Lahla okubhalile?',
+        'xh' => 'Lahla oko ukubhalileyo?',
+        'pt' => 'Descartar o que escreveu?',
+        'st' => 'Lahla seo u se ngotseng?'
+    ],
+    'pr_discard' => [
+        'af' => 'Gooi weg',
+        'en' => 'Discard',
+        'zu' => 'Lahla',
+        'xh' => 'Lahla',
+        'pt' => 'Descartar',
+        'st' => 'Lahla'
+    ],
+    'pr_keep' => [
+        'af' => 'Hou aan skryf',
+        'en' => 'Keep writing',
+        'zu' => 'Qhubeka ubhala',
+        'xh' => 'Qhubeka ubhala',
+        'pt' => 'Continuar a escrever',
+        'st' => 'Tsoela pele ho ngola'
+    ],
+    'pr_no_comments' => [
+        'af' => 'Nog geen kommentaar nie. Skryf die eerste bemoedigende woord.',
+        'en' => 'No comments yet. Write the first encouraging word.',
+        'zu' => 'Awekho amazwana okwamanje. Bhala igama lokuqala elikhuthazayo.',
+        'xh' => 'Akukabikho zimvo. Bhala ilizwi lokuqala elikhuthazayo.',
+        'pt' => 'Ainda sem comentários. Escreva a primeira palavra de ânimo.',
+        'st' => 'Ha ho e-so be le maikutlo. Ngola lentsoe la pele le khothatsang.'
+    ],
+    'pr_comment_delete_q' => [
+        'af' => 'Verwyder hierdie kommentaar?',
+        'en' => 'Delete this comment?',
+        'zu' => 'Susa leli zwana?',
+        'xh' => 'Cima olu luvo?',
+        'pt' => 'Apagar este comentário?',
+        'st' => 'Hlakola maikutlo ana?'
+    ],
+    'pr_comment_deleted' => [
+        'af' => 'Kommentaar verwyder',
+        'en' => 'Comment deleted',
+        'zu' => 'Izwana lisusiwe',
+        'xh' => 'Uluvo lucinyiwe',
+        'pt' => 'Comentário apagado',
+        'st' => 'Maikutlo a hlakotsoe'
+    ],
+    'pr_comment_edit' => [
+        'af' => 'Wysig',
+        'en' => 'Edit',
+        'zu' => 'Hlela',
+        'xh' => 'Hlela',
+        'pt' => 'Editar',
+        'st' => 'Fetola'
+    ],
+    'pr_comment_saved' => [
+        'af' => 'Kommentaar gestoor',
+        'en' => 'Comment saved',
+        'zu' => 'Izwana lilondoloziwe',
+        'xh' => 'Uluvo lugciniwe',
+        'pt' => 'Comentário guardado',
+        'st' => 'Maikutlo a bolokiloe'
+    ],
+    'pr_who_title' => [
+        'af' => 'Wie bid saam',
+        'en' => 'Who is praying',
+        'zu' => 'Ubani othandazayo',
+        'xh' => 'Ngubani othandazayo',
+        'pt' => 'Quem está a orar',
+        'st' => 'Ke mang ea rapelang'
+    ],
+    'pr_tab_pray' => [
+        'af' => 'Bid saam',
+        'en' => 'Praying',
+        'zu' => 'Abathandazayo',
+        'xh' => 'Abathandazayo',
+        'pt' => 'A orar',
+        'st' => 'Ba rapelang'
+    ],
+    'pr_tab_heart' => [
+        'af' => 'Harte',
+        'en' => 'Hearts',
+        'zu' => 'Izinhliziyo',
+        'xh' => 'Iintliziyo',
+        'pt' => 'Corações',
+        'st' => 'Lipelo'
+    ],
+    'pr_who_none' => [
+        'af' => 'Nog niemand nie',
+        'en' => 'No one yet',
+        'zu' => 'Akekho okwamanje',
+        'xh' => 'Akukabikho mntu',
+        'pt' => 'Ainda ninguém',
+        'st' => 'Ha ho e-so be le motho'
+    ],
+    'pr_you' => [
+        'af' => 'jy',
+        'en' => 'you',
+        'zu' => 'wena',
+        'xh' => 'wena',
+        'pt' => 'você',
+        'st' => 'uena'
+    ],
+    'pr_empty' => [
+        'af' => 'Nog geen gebede nie',
+        'en' => 'No prayers yet',
+        'zu' => 'Ayikabi khona imithandazo',
+        'xh' => 'Akukabikho mithandazo',
+        'pt' => 'Ainda não há orações',
+        'st' => 'Ha ho e-so be le lithapelo'
+    ],
+    'pr_empty_hint' => [
+        'af' => 'Deel die eerste gebedsnood — ander sal saam met jou bid.',
+        'en' => 'Share the first prayer need — others will pray with you.',
+        'zu' => 'Yabelana ngesidingo sokuqala somthandazo — abanye bazothandaza nawe.',
+        'xh' => 'Yabelana ngesidingo sokuqala somthandazo — abanye baya kuthandaza nawe.',
+        'pt' => 'Partilhe o primeiro pedido de oração — outros vão orar consigo.',
+        'st' => 'Arolelana tlhoko ea pele ea thapelo — ba bang ba tla rapela le uena.'
+    ],
+    'pr_empty_mine' => [
+        'af' => 'Jy het nog nie \'n gebed gedeel nie',
+        'en' => 'You haven\'t shared a prayer yet',
+        'zu' => 'Awukabelani ngomthandazo',
+        'xh' => 'Akukabelani ngomthandazo',
+        'pt' => 'Ainda não partilhou nenhuma oração',
+        'st' => 'Ha u e-so arolelane thapelo'
+    ],
+    'pr_empty_town' => [
+        'af' => 'Nog geen gebede uit {town} nie',
+        'en' => 'No prayers from {town} yet',
+        'zu' => 'Ayikabi khona imithandazo evela e-{town}',
+        'xh' => 'Akukabikho mithandazo evela e-{town}',
+        'pt' => 'Ainda não há orações de {town}',
+        'st' => 'Ha ho e-so be le lithapelo tse tsoang {town}'
+    ],
+    'pr_load_failed' => [
+        'af' => 'Kon nie die gebede laai nie',
+        'en' => 'Could not load the prayers',
+        'zu' => 'Akukwazekanga ukulayisha imithandazo',
+        'xh' => 'Akukwazekanga ukulayisha imithandazo',
+        'pt' => 'Não foi possível carregar as orações',
+        'st' => 'Ha ea khona ho kenya lithapelo'
+    ],
+    'pr_retry' => [
+        'af' => 'Probeer weer',
+        'en' => 'Try again',
+        'zu' => 'Zama futhi',
+        'xh' => 'Zama kwakhona',
+        'pt' => 'Tentar novamente',
+        'st' => 'Leka hape'
+    ],
+    'pr_load_more' => [
+        'af' => 'Wys meer gebede',
+        'en' => 'Show more prayers',
+        'zu' => 'Bonisa eminye imithandazo',
+        'xh' => 'Bonisa eminye imithandazo',
+        'pt' => 'Mostrar mais orações',
+        'st' => 'Bontša lithapelo tse ling'
+    ],
+    'pr_photo_alt' => [
+        'af' => 'Foto by die gebed',
+        'en' => 'Photo with the prayer',
+        'zu' => 'Isithombe somthandazo',
+        'xh' => 'Ifoto yomthandazo',
+        'pt' => 'Foto da oração',
+        'st' => 'Foto ea thapelo'
+    ],
+    'pr_chars_left' => [
+        'af' => '{n} karakters oor',
+        'en' => '{n} characters left',
+        'zu' => 'Izinhlamvu ezisele: {n}',
+        'xh' => 'Oonobumba abaseleyo: {n}',
+        'pt' => 'Restam {n} caracteres',
+        'st' => 'Litlhaku tse setseng: {n}'
+    ],
+    'pr_not_found' => [
+        'af' => 'Hierdie gebed is nie meer daar nie',
+        'en' => 'This prayer is no longer there',
+        'zu' => 'Lo mthandazo awusekho',
+        'xh' => 'Lo mthandazo awusekho',
+        'pt' => 'Esta oração já não existe',
+        'st' => 'Thapelo ena ha e sa le teng'
+    ],
+    'pr_err_session' => [
+        'af' => 'Jou sessie het verval. Laai die bladsy weer.',
+        'en' => 'Your session has expired. Please reload the page.',
+        'zu' => 'Iseshini yakho iphelelwe yisikhathi. Sicela ulayishe ikhasi kabusha.',
+        'xh' => 'Iseshoni yakho iphelelwe lixesha. Nceda uphinde ulayishe iphepha.',
+        'pt' => 'A sua sessão expirou. Recarregue a página.',
+        'st' => 'Seshene ea hao e felile. Ka kopo kenya leqephe hape.'
+    ],
+    'pr_err_offline' => [
+        'af' => 'Geen verbinding nie. Probeer weer.',
+        'en' => 'No connection. Please try again.',
+        'zu' => 'Akukho ukuxhumana. Sicela uzame futhi.',
+        'xh' => 'Akukho qhagamshelo. Nceda uzame kwakhona.',
+        'pt' => 'Sem ligação. Tente novamente.',
+        'st' => 'Ha ho khokahano. Ka kopo leka hape.'
+    ],
+    'pr_err_generic' => [
+        'af' => 'Iets het skeefgeloop. Probeer weer.',
+        'en' => 'Something went wrong. Please try again.',
+        'zu' => 'Kukhona okungahambanga kahle. Sicela uzame futhi.',
+        'xh' => 'Kukho into engahambanga kakuhle. Nceda uzame kwakhona.',
+        'pt' => 'Algo correu mal. Tente novamente.',
+        'st' => 'Ho na le se sa tsamaeang hantle. Ka kopo leka hape.'
+    ],
+    'pr_err_rate' => [
+        'af' => 'Jy het baie gedeel. Probeer oor \'n rukkie weer.',
+        'en' => 'You have shared a lot. Please try again in a while.',
+        'zu' => 'Wabelane kakhulu. Sicela uzame futhi emva kwesikhashana.',
+        'xh' => 'Wabelane kakhulu. Nceda uzame kwakhona emva kwexeshana.',
+        'pt' => 'Partilhou muito. Tente novamente daqui a pouco.',
+        'st' => 'U arolelane haholo. Ka kopo leka hape ka mor\'a nakoana.'
+    ],
+    'pr_err_too_long' => [
+        'af' => 'Die teks is te lank',
+        'en' => 'The text is too long',
+        'zu' => 'Umbhalo mude kakhulu',
+        'xh' => 'Umbhalo mde kakhulu',
+        'pt' => 'O texto é demasiado longo',
+        'st' => 'Mongolo o molelele haholo'
+    ],
+    'pr_err_empty' => [
+        'af' => 'Skryf eers iets',
+        'en' => 'Write something first',
+        'zu' => 'Bhala okuthile kuqala',
+        'xh' => 'Bhala into kuqala',
+        'pt' => 'Escreva algo primeiro',
+        'st' => 'Ngola ho hong pele'
+    ],
+    'pr_err_photo' => [
+        'af' => 'Hierdie foto kon nie gebruik word nie',
+        'en' => 'This photo could not be used',
+        'zu' => 'Lesi sithombe asikwazanga ukusetshenziswa',
+        'xh' => 'Le foto ayikwazanga ukusetyenziswa',
+        'pt' => 'Não foi possível usar esta foto',
+        'st' => 'Foto ena ha ea khona ho sebelisoa'
+    ],
+    'pr_err_photo_big' => [
+        'af' => 'Die foto is te groot',
+        'en' => 'The photo is too large',
+        'zu' => 'Isithombe sikhulu kakhulu',
+        'xh' => 'Ifoto inkulu kakhulu',
+        'pt' => 'A foto é demasiado grande',
+        'st' => 'Foto e kholo haholo'
+    ],
+    'pr_err_forbidden' => [
+        'af' => 'Jy mag dit nie doen nie',
+        'en' => 'You may not do that',
+        'zu' => 'Awuvunyelwe ukwenza lokho',
+        'xh' => 'Awuvumelekanga ukwenza oko',
+        'pt' => 'Não pode fazer isto',
+        'st' => 'Ha ua lumelloa ho etsa joalo'
+    ],
+    'pr_verse' => [
+        'af' => 'Bid sonder ophou.',
+        'en' => 'Pray without ceasing.',
+        'zu' => 'Khulekani ningapheli.',
+        'xh' => 'Thandazani ningaphezi.',
+        'pt' => 'Orai sem cessar.',
+        'st' => 'Rapelang le sa khaotse.'
+    ],
+    'pr_verse_ref' => [
+        'af' => '1 Tessalonisense 5:17',
+        'en' => '1 Thessalonians 5:17',
+        'zu' => '1 Thesalonika 5:17',
+        'xh' => '1 Tesalonika 5:17',
+        'pt' => '1 Tessalonicenses 5:17',
+        'st' => '1 Bathesalonika 5:17'
     ]
+
 ]);
 
 /**
