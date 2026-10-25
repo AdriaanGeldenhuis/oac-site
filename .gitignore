@@ -13,3 +13,9 @@ logs/*.log
 # Teaching of the Month - written by elders on the server (admin/elders.php)
 welcome/south_africa/
 welcome/*.html
+
+# Live SQLite stores (notifications etc.) - created at runtime, never deploy over the server copy
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
