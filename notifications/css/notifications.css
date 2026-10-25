@@ -639,6 +639,7 @@ input {
 .nt-item.is-leaving {
   opacity: 0;
   transform: translateX(24px);
+  pointer-events: none;
 }
 
 .nt-item-main {

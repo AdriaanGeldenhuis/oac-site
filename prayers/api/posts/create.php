@@ -10,6 +10,7 @@ require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
 require_once dirname(__DIR__, 2) . '/lib/prayers.php';
 
 pr_require_post();
+pr_require_body();
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     pr_fail('db_unavailable', 500);
 }

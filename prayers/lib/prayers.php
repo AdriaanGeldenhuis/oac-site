@@ -89,6 +89,31 @@ function pr_fail(string $code, int $status = 400): void {
     pr_json(['success' => false, 'error' => $code], $status);
 }
 
+/**
+ * Send the answer now and keep running (to notify someone): the tap feels
+ * instant. With PHP-FPM the request is finished; without it, Content-Length
+ * and Connection: close let the browser stop waiting all the same.
+ */
+function pr_answer_and_continue(array $data): void {
+    $body = (string)json_encode($data, JSON_UNESCAPED_UNICODE);
+    ignore_user_abort(true);
+    while (ob_get_level() > 0) ob_end_clean();
+    if (!headers_sent()) {
+        http_response_code(200);
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: private, no-store');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Length: ' . strlen($body));
+        header('Connection: close');
+    }
+    echo $body;
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } else {
+        flush();
+    }
+}
+
 /** Every write: POST + the session CSRF token in X-CSRF-Token */
 function pr_require_post(): void {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -96,6 +121,16 @@ function pr_require_post(): void {
     }
     if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
         pr_fail('csrf', 403);
+    }
+}
+
+/**
+ * A multipart POST bigger than PHP's post_max_size arrives with $_POST and
+ * $_FILES empty: say "photo too big", not "write something first".
+ */
+function pr_require_body(): void {
+    if (empty($_POST) && empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+        pr_fail('photo_too_big', 413);
     }
 }
 
@@ -204,9 +239,9 @@ function pr_post_select(): string {
         SELECT p.id, p.user_id, p.text, p.photo_url,
                UNIX_TIMESTAMP(p.created_at) AS ts, UNIX_TIMESTAMP(p.updated_at) AS uts,
                u.name, u.surname, u.amp_id, u.gender, u.photo AS user_photo, t.name AS town_name,
-               (SELECT COUNT(*) FROM prayers_reactions r WHERE r.post_id = p.id AND r.type = 'pray') AS pray_count,
-               (SELECT COUNT(*) FROM prayers_reactions r WHERE r.post_id = p.id AND r.type = 'heart') AS heart_count,
-               (SELECT COUNT(*) FROM prayers_comments c WHERE c.post_id = p.id) AS comment_count,
+               (SELECT COUNT(*) FROM prayers_reactions r JOIN users ru ON ru.id = r.user_id WHERE r.post_id = p.id AND r.type = 'pray') AS pray_count,
+               (SELECT COUNT(*) FROM prayers_reactions r JOIN users ru ON ru.id = r.user_id WHERE r.post_id = p.id AND r.type = 'heart') AS heart_count,
+               (SELECT COUNT(*) FROM prayers_comments c JOIN users cu ON cu.id = c.user_id WHERE c.post_id = p.id) AS comment_count,
                (SELECT COUNT(*) FROM prayers_reactions r WHERE r.post_id = p.id AND r.user_id = ? AND r.type = 'pray') AS user_prayed,
                (SELECT COUNT(*) FROM prayers_reactions r WHERE r.post_id = p.id AND r.user_id = ? AND r.type = 'heart') AS user_hearted
         FROM prayers_posts p
@@ -275,7 +310,8 @@ function pr_comment_select(): string {
 /** A stored photo path as a URL, only when it is one of ours */
 function pr_upload_url($url): ?string {
     $url = (string)$url;
-    return preg_match('~^/uploads/prayers/[A-Za-z0-9_.-]+\.(webp|jpe?g|png|gif)$~', $url) ? $url : null;
+    // Older versions saved into dated folders: /uploads/prayers/20250920/p_....webp
+    return preg_match('~^/uploads/prayers/(?:\d{8}/)?[A-Za-z0-9_-][A-Za-z0-9_.-]*\.(webp|jpe?g|png|gif)$~', $url) ? $url : null;
 }
 
 /** Remove a stored photo file (only files inside uploads/prayers/) */
@@ -284,6 +320,31 @@ function pr_photo_delete($url): void {
     if ($url === null) return;
     $path = dirname(__DIR__, 2) . $url;
     if (is_file($path)) @unlink($path);
+}
+
+/** Room in memory_limit for $bytes more (raised for this request when the host allows it) */
+function pr_memory_for(int $bytes): bool {
+    $toBytes = function (string $v): int {
+        $v = trim($v);
+        if ($v === '' || $v === '-1') return -1;
+        $n = (int)$v;
+        switch (strtolower(substr($v, -1))) {
+            case 'g': $n *= 1024;
+            // no break
+            case 'm': $n *= 1024;
+            // no break
+            case 'k': $n *= 1024;
+        }
+        return $n;
+    };
+    $limit = $toBytes((string)ini_get('memory_limit'));
+    if ($limit < 0) return true;
+    $need = memory_get_usage(true) + $bytes;
+    if ($need <= $limit) return true;
+    // A phone photo of 12-50 MP needs more than the usual 128M while GD holds it
+    @ini_set('memory_limit', (string)(int)ceil($need / 1048576) . 'M');
+    $raised = $toBytes((string)ini_get('memory_limit'));
+    return $raised < 0 || $need <= $raised;
 }
 
 /**
@@ -303,7 +364,7 @@ function pr_photo_from_upload(): array {
     $info = @getimagesize($tmp);
     if (!$info || empty($info[0]) || empty($info[1])) return [null, 'photo_invalid'];
     [$w, $h] = [(int)$info[0], (int)$info[1]];
-    if ($w * $h > 40000000) return [null, 'photo_too_big'];   // 40 megapixels: GD would run out of memory
+    if ($w * $h > 50000000 || !pr_memory_for($w * $h * 5 + 24 * 1024 * 1024)) return [null, 'photo_too_big'];
 
     $mime = (string)($info['mime'] ?? '');
     switch ($mime) {

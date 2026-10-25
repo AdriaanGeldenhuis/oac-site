@@ -42,16 +42,7 @@ $ownerId = (int)$post['user_id'];
 if ($ownerId === pr_user_id()) pr_json($response);
 
 // Answer first, then tell the writer of the prayer
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: private, no-store');
-echo json_encode($response, JSON_UNESCAPED_UNICODE);
-ignore_user_abort(true);
-if (function_exists('fastcgi_finish_request')) {
-    fastcgi_finish_request();
-} else {
-    if (ob_get_level() > 0) ob_end_flush();
-    flush();
-}
+pr_answer_and_continue($response);
 
 createPrayerNotification($pdo, $ownerId, 'comment_on_post', [
     'commenter_name' => pr_full_name(pr_me($pdo)),

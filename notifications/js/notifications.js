@@ -434,6 +434,7 @@
     pending.rows.forEach((r) => { r.n.read = true; });
     state.counts = res.data.counts;
     pending.rows.forEach((r) => adjustCounts(r.n, -1));
+    if (state.filter === 'unread') { state.items = []; state.hasMore = false; } // nothing unread is left anywhere
     render();
     toast(T.nt_all_marked);
   }
@@ -441,10 +442,14 @@
   // ===== DELETING (with Undo) =====
   function remove(n) {
     const index = state.items.indexOf(n);
-    if (index === -1) return;
+    if (index === -1 || n.leaving) return; // a second tap during the animation
+    n.leaving = true;
     const node = document.querySelector('.nt-item[data-id="' + n.id + '"]');
     const finish = () => {
-      state.items.splice(state.items.indexOf(n), 1);
+      n.leaving = false;
+      const at = state.items.indexOf(n);
+      if (at === -1) return; // the list was reloaded meanwhile
+      state.items.splice(at, 1);
       adjustCounts(n, -1);
       pending.rows.push({ n: n, index: index });
       render();

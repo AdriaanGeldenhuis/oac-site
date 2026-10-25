@@ -280,16 +280,19 @@
 
     layer.close = async function (how) {
       how = how || {};
-      if (!back.parentNode || layer.closing) return;
+      // A forced close goes through even while "Discard?" is still being asked
+      if (layer.closed || (layer.closing && !how.force)) return;
       if (layer.beforeClose && !how.force) {
         layer.closing = true;
         const ok = await layer.beforeClose();
         layer.closing = false;
+        if (layer.closed) return; // closed by force meanwhile
         if (!ok) {
           if (how.fromHistory) armHistory(); // Back was used up: put the entry back
           return;
         }
       }
+      layer.closed = true;
       layer.closing = true;
       back.classList.add('is-closing');
       setTimeout(() => back.remove(), 180);
@@ -792,6 +795,7 @@
     });
 
     async function save() {
+      if (submit.disabled) return; // already sending (a second Ctrl+Enter)
       const text = ta.value.trim();
       if (!text) { toast(T.pr_err_empty, true); ta.focus(); return; }
       if (text.length > LIMITS.text) { toast(T.pr_err_too_long, true); ta.focus(); return; }
@@ -844,7 +848,8 @@
     drawPhoto();
     updateCounter();
     autoGrow(ta, Math.round(window.innerHeight * 0.45));
-    if (opts.pickPhoto) setTimeout(() => file.click(), 60);
+    // Still inside the tap that opened the composer, so the picker may open
+    if (opts.pickPhoto) file.click();
   }
 
   // ===== COMMENTS =====
@@ -922,6 +927,7 @@
     }
 
     async function submit() {
+      if (send.classList.contains('is-busy')) return; // already sending
       const text = input.value.trim();
       if (!text) return;
       if (text.length > LIMITS.comment) { toast(T.pr_err_too_long, true); return; }
@@ -1018,7 +1024,7 @@
     window.addEventListener('hashchange', () => {
       const t = takeHash();
       if (!t) return;
-      while (layers.length) layers[layers.length - 1].close({ force: true });
+      layers.slice().reverse().forEach((l) => l.close({ force: true }));
       openTarget(t.id, t.talk);
     });
     await load(false);

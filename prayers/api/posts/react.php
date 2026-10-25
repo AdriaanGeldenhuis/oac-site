@@ -40,10 +40,11 @@ try {
         $pdo->prepare('INSERT INTO prayers_reactions (post_id, user_id, type) VALUES (?, ?, ?)')->execute([$postId, $me, $type]);
     }
 
+    // Members who still exist, as the "who is praying" list shows them
     $counts = $pdo->prepare("SELECT
-        SUM(type = 'pray') AS pray_count, SUM(type = 'heart') AS heart_count,
-        SUM(type = 'pray' AND user_id = ?) AS prayed, SUM(type = 'heart' AND user_id = ?) AS hearted
-        FROM prayers_reactions WHERE post_id = ?");
+        SUM(r.type = 'pray') AS pray_count, SUM(r.type = 'heart') AS heart_count,
+        SUM(r.type = 'pray' AND r.user_id = ?) AS prayed, SUM(r.type = 'heart' AND r.user_id = ?) AS hearted
+        FROM prayers_reactions r JOIN users u ON u.id = r.user_id WHERE r.post_id = ?");
     $counts->execute([$me, $me, $postId]);
     $c = $counts->fetch(PDO::FETCH_ASSOC) ?: [];
     $pdo->commit();
@@ -66,17 +67,7 @@ $response = [
 $ownerId = (int)$post['user_id'];
 $notify = !$had && $ownerId !== $me;
 if (!$notify) pr_json($response);
-
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: private, no-store');
-echo json_encode($response, JSON_UNESCAPED_UNICODE);
-ignore_user_abort(true);
-if (function_exists('fastcgi_finish_request')) {
-    fastcgi_finish_request();
-} else {
-    if (ob_get_level() > 0) ob_end_flush();
-    flush();
-}
+pr_answer_and_continue($response);
 
 // Once an hour per person, prayer and kind: switching off and on again is no news
 if (pr_rate_ok('prayer_notify_' . $type . '_' . $postId, 1)) {
