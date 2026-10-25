@@ -289,6 +289,7 @@ $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APO
         window.CAN_POST = <?= $allowPost ? 'true' : 'false' ?>;
         window.USER_ID = <?= $userId ?>;
         window.USER_AMP_ID = <?= $ampId ?>;
+        window.CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;
         window.JS_T = <?= json_encode($jsT, $jsonFlags) ?: '{}' ?>;
     </script>
 </head>

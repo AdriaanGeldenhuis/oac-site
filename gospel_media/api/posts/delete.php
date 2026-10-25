@@ -10,6 +10,12 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
     exit;
 }
 
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'csrf']);
+    exit;
+}
+
 // Accept form-data or JSON
 $input = $_POST;
 if (empty($input)) {

@@ -18,6 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'csrf']);
+    exit;
+}
+
 $commentId = isset($_POST['comment_id']) ? (int)$_POST['comment_id'] : 0;
 $type = trim($_POST['type'] ?? 'heart');
 

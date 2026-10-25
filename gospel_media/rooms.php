@@ -581,6 +581,8 @@ $VER = time();
     <div id="toast" class="toast"></div>
     
     <script>
+    window.CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;
+
     function showToast(message, isError = false) {
         const toast = document.getElementById('toast');
         toast.textContent = message;
@@ -614,7 +616,10 @@ $VER = time();
         try {
             const res = await fetch('/gospel_media/api/rooms/' + action + '.php', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': window.CSRF_TOKEN || ''
+                },
                 body: 'room_id=' + roomId
             });
             

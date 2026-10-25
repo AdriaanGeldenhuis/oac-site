@@ -12,6 +12,12 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
     exit;
 }
 
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'csrf']);
+    exit;
+}
+
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
