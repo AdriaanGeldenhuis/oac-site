@@ -1,604 +1,416 @@
 /**
- * Rooms Menu Overlay
- * AI Slimbybel styling with Light/Dark Theme Support
- * Shows only rooms user has access to (auto + joined)
+ * Gospel Media — room navigation
+ * 1. The rail under the hero: every room the user is in, one tap away,
+ *    with unread counts. The current room is rendered by gospel.php.
+ * 2. The rooms sheet (the "Rooms" button): the same rooms, grouped, with
+ *    a search when the list gets long.
+ * Rooms come from /gospel_media/api/rooms/user_rooms.php, which applies
+ * the room rules — this file only shows what that endpoint returns.
+ * All styling lives in gospel.css.
  */
 (function () {
   'use strict';
 
   const $ = (q, el = document) => el.querySelector(q);
-  const $$ = (q, el = document) => Array.from(el.querySelectorAll(q));
-  const ce = (tag, cls, html) => {
-    const n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (html != null) n.innerHTML = html;
-    return n;
-  };
-
   const T = (key) => (window.JS_T && window.JS_T[key]) ? window.JS_T[key] : key;
 
-  function injectCSS() {
-    if ($('#roommenu-styles')) return;
-    
-    const css = ce('style');
-    css.id = 'roommenu-styles';
-    css.textContent = `
-      /* ===== ROOT VARIABLES - DARK THEME (DEFAULT) ===== */
-      :root {
-        --rm-overlay-bg: rgba(0, 0, 0, 0.7);
-        --rm-panel-bg-start: rgba(26, 26, 26, 0.98);
-        --rm-panel-bg-end: rgba(42, 42, 42, 0.95);
-        --rm-panel-border: rgba(183, 110, 121, 0.4);
-        --rm-panel-shadow: -8px 0 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(183, 110, 121, 0.4);
-        
-        --rm-border-color: rgba(192, 192, 192, 0.2);
-        --rm-rosegold: #f3c3b1;
-        --rm-rosegold-glow: rgba(183, 110, 121, 0.4);
-        --rm-peach: #f5d5c8;
-        --rm-silver: #c0c0c0;
-        --rm-silver-dark: #8a8a8a;
-        
-        --rm-btn-bg-start: #2a2a2a;
-        --rm-btn-bg-end: #1a1a1a;
-        --rm-btn-border: rgba(192, 192, 192, 0.3);
-        
-        --rm-item-bg-start: rgba(10, 10, 10, 0.8);
-        --rm-item-bg-end: rgba(26, 26, 26, 0.7);
-        --rm-item-hover-start: rgba(26, 26, 26, 0.9);
-        --rm-item-hover-end: rgba(42, 42, 42, 0.8);
-        --rm-item-active-start: rgba(183, 110, 121, 0.2);
-        --rm-item-active-end: rgba(183, 110, 121, 0.1);
-        
-        --rm-scrollbar-track: rgba(26, 26, 26, 0.5);
-        --rm-scrollbar-thumb: linear-gradient(180deg, #f3c3b1 0%, #c0c0c0 100%);
-      }
-      
-      /* ===== LIGHT THEME ===== */
-      [data-theme="light"] {
-        --rm-overlay-bg: rgba(7, 17, 31, 0.35);
-        --rm-panel-bg-start: rgba(246, 245, 241, 0.98);
-        --rm-panel-bg-end: rgba(238, 236, 230, 0.98);
-        --rm-panel-border: rgba(17, 24, 39, 0.11);
-        --rm-panel-shadow: -30px 0 80px -30px rgba(7, 17, 31, 0.35);
-        
-        --rm-border-color: rgba(17, 24, 39, 0.10);
-        --rm-rosegold: #8a6427;
-        --rm-rosegold-glow: rgba(164, 124, 56, 0.45);
-        --rm-peach: #111827;
-        --rm-silver: #111827;
-        --rm-silver-dark: #6b7482;
-        
-        --rm-btn-bg-start: #ffffff;
-        --rm-btn-bg-end: #ffffff;
-        --rm-btn-border: rgba(17, 24, 39, 0.18);
-        
-        --rm-item-bg-start: #ffffff;
-        --rm-item-bg-end: #ffffff;
-        --rm-item-hover-start: #fffdf8;
-        --rm-item-hover-end: #faf4e6;
-        --rm-item-active-start: rgba(164, 124, 56, 0.12);
-        --rm-item-active-end: rgba(164, 124, 56, 0.06);
-        
-        --rm-scrollbar-track: rgba(238, 236, 230, 0.8);
-        --rm-scrollbar-thumb: linear-gradient(180deg, #c7a15a 0%, #a47c38 100%);
-      }
-      
-      /* ===== BASE STYLES ===== */
-      #roommenu[hidden]{display:none}
-      #roommenu{
-        position:fixed;
-        inset:0;
-        z-index:10000;
-        background: var(--rm-overlay-bg);
-        animation:fade-in 0.3s ease-out;
-        transition: background 0.4s ease;
-      }
-      
-      @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      
-      #roommenu .rmx-panel{
-        position:absolute;
-        top:70px;
-        right:0;
-        bottom:0;
-        width:400px;
-        max-width:100%;
-        display:grid;
-        grid-template-rows:auto 1fr auto;
-        background: linear-gradient(135deg, var(--rm-panel-bg-start) 0%, var(--rm-panel-bg-end) 100%);
-        border-left: 2px solid var(--rm-panel-border);
-        box-shadow: var(--rm-panel-shadow);
-        animation: slide-in-right 0.3s ease-out;
-        transition: all 0.4s ease;
-      }
-      
-      @keyframes slide-in-right {
-        from {
-          opacity: 0;
-          transform: translateX(100%);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-      
-      #roommenu .rmx-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        padding:25px 20px;
-        border-bottom: 1px solid var(--rm-border-color);
-        transition: border-color 0.4s ease;
-      }
-      
-      #roommenu .rmx-hbubble{
-        font-family: 'Parisienne', cursive;
-        font-size: 2rem;
-        color: var(--rm-rosegold);
-        text-shadow: 0 0 10px var(--rm-rosegold-glow);
-        transition: color 0.4s ease, text-shadow 0.4s ease;
-      }
-      
-      [data-theme="light"] #roommenu .rmx-hbubble{
-        text-shadow: none;
-      }
-      
-      #roommenu .rmx-close{
-        width: 44px;
-        height: 44px;
-        border: 1px solid var(--rm-btn-border);
-        border-radius: 12px;
-        background: linear-gradient(135deg, var(--rm-btn-bg-start) 0%, var(--rm-btn-bg-end) 100%);
-        cursor: pointer;
-        line-height: 1;
-        color: var(--rm-peach);
-        font-size: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      }
-      
-      [data-theme="light"] #roommenu .rmx-close{
-        border-radius: 50%;
-        box-shadow: 0 1px 2px rgba(17,24,39,0.05), 0 10px 22px -14px rgba(7,17,31,0.3);
-      }
+  const CURRENT_ID = parseInt(window.CURRENT_ROOM_ID, 10) || 0;
+  const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-      [data-theme="light"] #roommenu .rmx-close:hover{
-        border-color: #a47c38;
-        color: #8a6427;
-        box-shadow: 0 12px 26px -14px var(--rm-rosegold-glow);
-      }
+  const ICONS = { gemeente: 'church', opsienerskap: 'shield', jeug: 'spark', sondagskool: 'school', gemeenskap: 'globe' };
+  const KNOWN = ['gemeente', 'opsienerskap', 'jeug', 'sondagskool', 'gemeenskap'];
 
-      [data-theme="light"] #roommenu .rmx-section-title{
-        font-size: 0.74rem;
-        font-weight: 700;
-        letter-spacing: 0.2em;
-        border-bottom-color: rgba(17,24,39,0.11);
-      }
+  const SVG_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  const SVG_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const SVG_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+  const SVG_CHEV = '<svg class="gm-room-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
 
-      [data-theme="light"] #roommenu .rmx-link{
-        font-weight: 500;
-      }
-      
-      #roommenu .rmx-close:hover{
-        border-color: var(--rm-rosegold);
-        box-shadow: 0 4px 16px var(--rm-rosegold-glow);
-        transform: scale(1.05);
-      }
-      
-      #roommenu .rmx-list{
-        overflow:auto;
-        padding: 20px;
-      }
-      
-      #roommenu .rmx-list::-webkit-scrollbar {
-        width: 8px;
-      }
-      
-      #roommenu .rmx-list::-webkit-scrollbar-track {
-        background: var(--rm-scrollbar-track);
-        border-radius: 4px;
-        transition: background 0.4s ease;
-      }
-      
-      #roommenu .rmx-list::-webkit-scrollbar-thumb {
-        background: var(--rm-scrollbar-thumb);
-        border-radius: 4px;
-        box-shadow: 0 0 10px var(--rm-rosegold-glow);
-        transition: background 0.4s ease;
-      }
-      
-      #roommenu .rmx-section {
-        margin-bottom: 25px;
-      }
-      
-      #roommenu .rmx-section-title {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--rm-rosegold);
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid var(--rm-panel-border);
-        font-weight: 600;
-        transition: color 0.4s ease, border-color 0.4s ease;
-      }
-      
-      #roommenu .rmx-item{
-        position:relative;
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        margin-bottom: 10px;
-        padding: 16px 18px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, var(--rm-item-bg-start) 0%, var(--rm-item-bg-end) 100%);
-        border: 1px solid var(--rm-border-color);
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      }
-      
-      [data-theme="light"] #roommenu .rmx-item{
-        box-shadow: 0 1px 2px rgba(17,24,39,0.04), 0 12px 26px -20px rgba(7,17,31,0.35);
-      }
-
-      [data-theme="light"] #roommenu .rmx-item:hover{
-        border-color: rgba(164,124,56,0.5);
-        box-shadow: 0 16px 32px -20px var(--rm-rosegold-glow);
-      }
-
-      [data-theme="light"] #roommenu .rmx-item.active{
-        border-color: #a47c38;
-      }
-      
-      #roommenu .rmx-item:hover{
-        background: linear-gradient(135deg, var(--rm-item-hover-start) 0%, var(--rm-item-hover-end) 100%);
-        border-color: var(--rm-rosegold);
-        box-shadow: 0 4px 12px var(--rm-rosegold-glow);
-        transform: translateX(-5px);
-      }
-      
-      #roommenu .rmx-item.active {
-        background: linear-gradient(135deg, var(--rm-item-active-start) 0%, var(--rm-item-active-end) 100%);
-        border-color: var(--rm-rosegold);
-      }
-      
-      #roommenu .rmx-link{
-        flex:1 1 auto;
-        min-width:0;
-        color: var(--rm-silver);
-        text-decoration:none;
-        font-size: 15px;
-        font-weight: 300;
-        transition: color 0.3s ease;
-      }
-      
-      #roommenu .rmx-link:hover{
-        color: var(--rm-rosegold);
-      }
-      
-      #roommenu .rmx-badge {
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-left: 10px;
-        transition: all 0.3s ease;
-      }
-      
-      #roommenu .rmx-badge.auto {
-        background: rgba(42, 157, 143, 0.3);
-        color: #2a9d8f;
-        border: 1px solid #2a9d8f;
-      }
-      
-      [data-theme="light"] #roommenu .rmx-badge.auto {
-        background: rgba(42, 157, 143, 0.15);
-      }
-      
-      #roommenu .rmx-badge.joined {
-        background: rgba(244, 162, 97, 0.3);
-        color: #f4a261;
-        border: 1px solid #f4a261;
-      }
-
-      #roommenu .rmx-unread {
-        min-width: 22px;
-        height: 22px;
-        padding: 0 6px;
-        margin-left: 10px;
-        border-radius: 11px;
-        background: #e63946;
-        color: #fff;
-        font-size: 0.72rem;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-        box-shadow: 0 0 8px rgba(230, 57, 70, 0.5);
-      }
-      
-      [data-theme="light"] #roommenu .rmx-badge.joined {
-        background: rgba(164, 124, 56, 0.10);
-        color: #8a6427;
-        border-color: rgba(164, 124, 56, 0.45);
-      }
-      
-      #roommenu .rmx-empty{
-        color: var(--rm-silver-dark);
-        padding: 40px 20px;
-        text-align: center;
-        font-size: 15px;
-        font-weight: 200;
-        transition: color 0.4s ease;
-      }
-      
-      #roommenu .rmx-foot{
-        padding: 20px;
-        display:flex;
-        justify-content:center;
-        border-top: 1px solid var(--rm-border-color);
-        transition: border-color 0.4s ease;
-      }
-      
-      #roommenu .rmx-chip{
-        padding: 12px 28px;
-        background: linear-gradient(135deg, var(--rm-btn-bg-start) 0%, var(--rm-btn-bg-end) 100%);
-        border: 1px solid var(--rm-btn-border);
-        border-radius: 20px;
-        color: var(--rm-peach);
-        font-size: 14px;
-        font-weight: 400;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-      
-      [data-theme="light"] #roommenu .rmx-chip{
-        border-radius: 999px;
-        font-weight: 600;
-        box-shadow: 0 1px 2px rgba(17,24,39,0.05);
-      }
-
-      [data-theme="light"] #roommenu .rmx-chip:hover{
-        border-color: #a47c38;
-        color: #8a6427;
-        box-shadow: 0 12px 26px -16px var(--rm-rosegold-glow);
-      }
-      
-      #roommenu .rmx-chip:hover{
-        border-color: var(--rm-rosegold);
-        box-shadow: 0 4px 16px var(--rm-rosegold-glow);
-        transform: translateY(-2px);
-      }
-      
-      #roommenu .rmx-chip svg {
-        transition: stroke 0.4s ease;
-      }
-      
-      @media (max-width: 768px) {
-        #roommenu .rmx-panel {
-          width: 100%;
-          max-width: 100%;
-        }
-      }
-      
-      /* Smooth transitions for all theme changes */
-      #roommenu,
-      #roommenu *,
-      #roommenu *::before,
-      #roommenu *::after {
-        transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, text-shadow;
-        transition-duration: 0.4s;
-        transition-timing-function: ease;
-      }
-    `;
-    document.head.appendChild(css);
+  function ce(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
   }
 
-  // Use display_name from API (already translated server-side)
-  function labelForRoom(r) {
-    // API now provides translated display_name
-    if (r.display_name) {
-      return r.display_name;
+  // ===== ROOM DATA =====
+  function typeOf(r) {
+    const t = String(r.type || '').toLowerCase();
+    return KNOWN.indexOf(t) !== -1 ? t : 'other';
+  }
+
+  function typeLabel(type) {
+    if (type === 'gemeenskap' || type === 'other') return T('type_room');
+    return T('type_' + type);
+  }
+
+  // display_name is "<type label> <name>" (built server-side); split it so
+  // the chip can show the place large and the type small
+  function shortName(r) {
+    const full = String(r.display_name || r.name || T('type_room'));
+    const label = typeLabel(typeOf(r));
+    if (label && full.indexOf(label + ' ') === 0 && full.length > label.length + 1) {
+      return full.slice(label.length + 1);
     }
-    // Fallback for legacy data
-    return r.name || 'Room';
+    return full;
   }
 
-  // Red unread-count badge (WhatsApp style), capped at 99+
-  function unreadBadge(r) {
-    const n = parseInt(r.unread, 10) || 0;
-    if (n <= 0) return null;
-    const b = ce('span', 'rmx-unread');
-    b.textContent = n > 99 ? '99+' : String(n);
-    return b;
+  function roomHref(r) {
+    return '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
   }
 
-  async function fetchUserRooms() {
-    try {
-      const r = await fetch('/gospel_media/api/rooms/user_rooms.php', { credentials: 'include' });
-      const j = await r.json();
-      return j || { auto: [], joined: [] };
-    } catch (e) {
-      console.error('Failed to load user rooms:', e);
-      return { auto: [], joined: [] };
+  function unreadOf(r) {
+    if (parseInt(r.id, 10) === CURRENT_ID) return 0;   // being read right now
+    return parseInt(r.unread, 10) || 0;
+  }
+
+  let roomsPromise = null;
+
+  function loadRooms() {
+    if (!roomsPromise) {
+      roomsPromise = fetch('/gospel_media/api/rooms/user_rooms.php', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(j => ({
+          ok: !!j && !j.error,
+          auto: (j && Array.isArray(j.auto)) ? j.auto : [],
+          joined: (j && Array.isArray(j.joined)) ? j.joined : []
+        }))
+        .catch(() => ({ ok: false, auto: [], joined: [] }));
+    }
+    return roomsPromise;
+  }
+
+  // ===== ROOM CHIP (rail) / ROW (sheet) =====
+  function roomEl(r, asRow) {
+    const type = typeOf(r);
+    const isCurrent = parseInt(r.id, 10) === CURRENT_ID;
+
+    const a = ce('a', 'gm-room gm-room--' + type + (asRow ? ' gm-room-row' : '') + (isCurrent ? ' is-current' : ''));
+    a.href = roomHref(r);
+    a.dataset.roomId = String(r.id);
+    if (isCurrent) a.setAttribute('aria-current', 'page');
+
+    const orb = ce('span', 'gm-room-orb');
+    orb.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#gm-i-' + (ICONS[type] || 'globe') + '"/></svg>';
+
+    const text = ce('span', 'gm-room-text');
+    text.append(ce('b', null, shortName(r)), ce('i', null, typeLabel(type)));
+
+    a.append(orb, text);
+
+    const n = unreadOf(r);
+    if (n > 0) {
+      const badge = ce('span', 'gm-room-unread', n > 99 ? '99+' : String(n));
+      badge.setAttribute('aria-label', n + ' ' + T('unread'));
+      a.appendChild(badge);
+    }
+
+    if (asRow) {
+      if (isCurrent) a.appendChild(ce('span', 'gm-room-here', T('you_are_here')));
+      else a.insertAdjacentHTML('beforeend', SVG_CHEV);
+    }
+    return a;
+  }
+
+  // ===== RAIL =====
+  function renderRail(data) {
+    const rail = $('#gmRail');
+    if (!rail) return;
+
+    const serverChip = rail.querySelector('.gm-room.is-current');
+    const rooms = data.auto.concat(data.joined);
+    const seen = {};
+    const frag = document.createDocumentFragment();
+    let placedCurrent = false;
+
+    rooms.forEach(r => {
+      const id = parseInt(r.id, 10);
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      if (id === CURRENT_ID) placedCurrent = true;
+      frag.appendChild(roomEl(r, false));
+    });
+
+    // Visiting a room that isn't in the list (e.g. a community room):
+    // keep the server-rendered chip up front
+    if (!placedCurrent && serverChip) frag.insertBefore(serverChip, frag.firstChild);
+
+    rail.innerHTML = '';
+    rail.appendChild(frag);
+    rail.setAttribute('aria-busy', 'false');
+
+    // Bring the current room into view (with a peek of the one before it)
+    // without moving the page
+    const cur = rail.querySelector('.is-current');
+    if (cur && cur.offsetLeft + cur.offsetWidth > rail.clientWidth - 16) {
+      rail.scrollLeft = Math.max(0, cur.offsetLeft - 44);
+    }
+
+    // Total unread elsewhere, on the "Rooms" button
+    const total = rooms.reduce((sum, r) => sum + unreadOf(r), 0);
+    const badge = $('[data-rooms-unread]');
+    if (badge) {
+      badge.textContent = total > 99 ? '99+' : String(total);
+      badge.hidden = total <= 0;
+      if (total > 0) badge.setAttribute('aria-label', total + ' ' + T('unread'));
     }
   }
 
-  function ensureOverlay() {
-    injectCSS();
-    
-    let wrap = $('#roommenu');
-    if (wrap) return wrap;
-    
-    wrap = ce('aside');
-    wrap.id = 'roommenu';
-    wrap.hidden = true;
-    
-    const panel = ce('div', 'rmx-panel');
-    
-    const head = ce('div', 'rmx-head');
-    const hb = ce('div', 'rmx-hbubble', T('rooms'));
-    const close = ce('button', 'rmx-close', '×');
+  // ===== SHEET =====
+  let sheet = null;
+  let lastFocus = null;
+  let closeTimer = 0;
+
+  function buildSheet() {
+    if (sheet) return sheet;
+
+    sheet = ce('div', 'gm-sheet');
+    sheet.id = 'roommenu';
+    sheet.hidden = true;
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.setAttribute('aria-labelledby', 'gmSheetTitle');
+
+    const scrim = ce('div', 'gm-sheet-scrim');
+    const panel = ce('div', 'gm-sheet-panel');
+
+    const grip = ce('div', 'gm-sheet-grip');
+    const head = ce('div', 'gm-sheet-head');
+    const title = ce('h2', 'gm-sheet-title', T('rooms'));
+    title.id = 'gmSheetTitle';
+    const close = ce('button', 'gm-sheet-close');
     close.type = 'button';
-    head.appendChild(hb);
-    head.appendChild(close);
-    
-    const list = ce('div', 'rmx-list');
+    close.setAttribute('aria-label', T('close'));
+    close.innerHTML = SVG_CLOSE;
+    head.append(title, close);
+
+    const search = ce('label', 'gm-sheet-search');
+    search.hidden = true;
+    search.innerHTML = SVG_SEARCH;
+    const input = ce('input');
+    input.type = 'search';
+    input.placeholder = T('search');
+    input.setAttribute('aria-label', T('search'));
+    input.autocomplete = 'off';
+    search.appendChild(input);
+
+    const list = ce('div', 'gm-sheet-list');
     list.id = 'roommenu-list';
-    
-    const foot = ce('div', 'rmx-foot');
-    const manage = ce('a', 'rmx-chip');
+
+    const foot = ce('div', 'gm-sheet-foot');
+    const manage = ce('a', 'gm-btn gm-btn--glass');
     manage.href = '/gospel_media/rooms.php';
-    manage.innerHTML = `
-      <svg style="width:18px;height:18px;stroke:currentColor;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <span>${T('manage_rooms')}</span>
-    `;
+    manage.innerHTML = SVG_PLUS;
+    manage.appendChild(ce('span', null, T('manage_rooms')));
     foot.appendChild(manage);
-    
-    panel.appendChild(head);
-    panel.appendChild(list);
-    panel.appendChild(foot);
-    wrap.appendChild(panel);
-    document.body.appendChild(wrap);
-    
-    close.addEventListener('click', closeOverlay);
-    wrap.addEventListener('click', function (e) {
-      if (!panel.contains(e.target)) closeOverlay();
+
+    panel.append(grip, head, search, list, foot);
+    sheet.append(scrim, panel);
+    document.body.appendChild(sheet);
+
+    close.addEventListener('click', closeSheet);
+    scrim.addEventListener('click', closeSheet);
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      let shown = 0;
+      list.querySelectorAll('.gm-room-row').forEach(row => {
+        const hit = !q || row.textContent.toLowerCase().indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) shown++;
+      });
+      list.querySelectorAll('.gm-sheet-group').forEach(g => {
+        g.hidden = !g.querySelector('.gm-room-row:not([hidden])');
+      });
+      const empty = list.querySelector('.gm-sheet-empty--search');
+      if (empty) empty.hidden = shown > 0;
     });
-    
-    return wrap;
+
+    // Swipe the sheet down to close it (phones)
+    let startY = null;
+    let dy = 0;
+    panel.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1 || (list.scrollTop > 0 && list.contains(e.target))) { startY = null; return; }
+      startY = e.touches[0].clientY;
+      dy = 0;
+    }, { passive: true });
+    panel.addEventListener('touchmove', (e) => {
+      if (startY === null) return;
+      dy = Math.max(0, e.touches[0].clientY - startY);
+      if (dy > 0) panel.style.transform = 'translateY(' + dy + 'px)';
+    }, { passive: true });
+    panel.addEventListener('touchend', () => {
+      if (startY === null) return;
+      startY = null;
+      panel.style.transform = '';
+      if (dy > 90) closeSheet();
+    }, { passive: true });
+
+    return sheet;
   }
 
-  function openOverlay() {
-    const wrap = ensureOverlay();
-    wrap.hidden = false;
-    
-    const list = $('#roommenu-list', wrap);
-    list.innerHTML = '<div class="rmx-empty">' + T('loading_rooms') + '</div>';
+  function group(title, rooms) {
+    const sec = ce('section', 'gm-sheet-group');
+    sec.appendChild(ce('h3', 'gm-sheet-group-title', title));
+    const rows = ce('div', 'gm-sheet-rows');
+    rooms.forEach(r => rows.appendChild(roomEl(r, true)));
+    sec.appendChild(rows);
+    return sec;
+  }
 
-    const currentRoomId = window.CURRENT_ROOM_ID || 0;
+  function fillSheet(data) {
+    const list = $('#roommenu-list', sheet);
+    const search = $('.gm-sheet-search', sheet);
+    list.innerHTML = '';
 
-    fetchUserRooms().then(function (data) {
-      list.innerHTML = '';
-      
-      const autoRooms = data.auto || [];
-      const joinedRooms = data.joined || [];
-      
-      if (!autoRooms.length && !joinedRooms.length) {
-        list.innerHTML = '<div class="rmx-empty">' + T('no_rooms') + '</div>';
-        return;
-      }
-      
-      // Auto rooms section
-      if (autoRooms.length) {
-        const autoSection = ce('div', 'rmx-section');
-        const autoTitle = ce('div', 'rmx-section-title', T('automatic'));
-        autoSection.appendChild(autoTitle);
-        
-        autoRooms.forEach(function (r) {
-          const row = ce('div', 'rmx-item');
-          if (currentRoomId && parseInt(r.id) === parseInt(currentRoomId)) {
-            row.classList.add('active');
-          }
+    if (!data.auto.length && !data.joined.length) {
+      list.appendChild(ce('p', 'gm-sheet-empty', data.ok ? T('no_rooms') : T('error')));
+      search.hidden = true;
+      return;
+    }
 
-          const a = ce('a', 'rmx-link');
-          a.textContent = labelForRoom(r);
-          a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
+    if (data.auto.length) list.appendChild(group(T('automatic'), data.auto));
+    if (data.joined.length) list.appendChild(group(T('joined_section'), data.joined));
 
-          const badge = ce('span', 'rmx-badge auto', T('auto'));
+    const noHits = ce('p', 'gm-sheet-empty gm-sheet-empty--search', T('no_rooms'));
+    noHits.hidden = true;
+    list.appendChild(noHits);
 
-          row.appendChild(a);
-          const unread = unreadBadge(r);
-          if (unread) row.appendChild(unread);
-          row.appendChild(badge);
-          // Whole row is tappable, not just the text
-          row.style.cursor = 'pointer';
-          row.addEventListener('click', function (e) {
-            if (!e.target.closest('a')) window.location.href = a.href;
-          });
-          autoSection.appendChild(row);
-        });
-        
-        list.appendChild(autoSection);
-      }
-      
-      // Joined rooms section
-      if (joinedRooms.length) {
-        const joinedSection = ce('div', 'rmx-section');
-        const joinedTitle = ce('div', 'rmx-section-title', T('joined_section'));
-        joinedSection.appendChild(joinedTitle);
-        
-        joinedRooms.forEach(function (r) {
-          const row = ce('div', 'rmx-item');
-          if (currentRoomId && parseInt(r.id) === parseInt(currentRoomId)) {
-            row.classList.add('active');
-          }
+    search.hidden = (data.auto.length + data.joined.length) < 6;
+  }
 
-          const a = ce('a', 'rmx-link');
-          a.textContent = labelForRoom(r);
-          a.href = '/gospel_media/gospel.php?room_id=' + encodeURIComponent(r.id);
+  function openSheet() {
+    buildSheet();
+    window.clearTimeout(closeTimer);
+    sheet.classList.remove('is-closing');
 
-          const badge = ce('span', 'rmx-badge joined', T('joined_badge'));
+    if (!sheet.hidden) return;
+    lastFocus = document.activeElement;
 
-          row.appendChild(a);
-          const unread = unreadBadge(r);
-          if (unread) row.appendChild(unread);
-          row.appendChild(badge);
-          // Whole row is tappable, not just the text
-          row.style.cursor = 'pointer';
-          row.addEventListener('click', function (e) {
-            if (!e.target.closest('a')) window.location.href = a.href;
-          });
-          joinedSection.appendChild(row);
-        });
-        
-        list.appendChild(joinedSection);
-      }
+    const list = $('#roommenu-list', sheet);
+    const input = $('.gm-sheet-search input', sheet);
+    if (input) input.value = '';
+    list.innerHTML = '<p class="gm-sheet-empty">' + T('loading_rooms') + '</p>';
+
+    sheet.hidden = false;
+    document.body.classList.add('gm-locked');
+    const close = $('.gm-sheet-close', sheet);
+    if (close) close.focus({ preventScroll: true });
+
+    loadRooms().then(data => {
+      fillSheet(data);
+      const cur = list.querySelector('.is-current');
+      if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
     });
   }
 
-  function closeOverlay() {
-    const wrap = $('#roommenu');
-    if (wrap) wrap.hidden = true;
+  function closeSheet() {
+    if (!sheet || sheet.hidden) return;
+    const finish = () => {
+      sheet.hidden = true;
+      sheet.classList.remove('is-closing');
+      // Other layers (composer, modals) may still hold the lock
+      if (!document.querySelector('.composer-overlay, .modal-backdrop, .lightbox-backdrop')) {
+        document.body.classList.remove('gm-locked');
+      }
+      if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+    };
+    if (reduceMotion) { finish(); return; }
+    sheet.classList.add('is-closing');
+    closeTimer = window.setTimeout(finish, 230);
   }
 
-  window.openRoomMenu = openOverlay;
-  window.closeRoomMenu = closeOverlay;
+  // Keep Tab inside the open sheet
+  function trapFocus(e) {
+    if (!sheet || sheet.hidden || e.key !== 'Tab') return;
+    const items = Array.prototype.filter.call(
+      sheet.querySelectorAll('a[href], button, input'),
+      el => !el.hidden && el.offsetParent !== null
+    );
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
+  // ===== GOING TO ANOTHER ROOM: a flare in the room's colour =====
+  let launching = false;
+
+  function goToRoom(link, e) {
+    const href = link.getAttribute('href');
+    if (!href) return;
+
+    if (link.classList.contains('is-current')) {
+      e.preventDefault();
+      closeSheet();
+      return;
+    }
+
+    const flare = $('#gmFlare');
+    if (!flare || reduceMotion) return;   // plain navigation
+
+    e.preventDefault();
+    if (launching) return;
+    launching = true;
+
+    const r = link.getBoundingClientRect();
+    const x = e.clientX || (r.left + r.width / 2);   // keyboard clicks report 0,0
+    const y = e.clientY || (r.top + r.height / 2);
+    const rgb = (window.getComputedStyle(link).getPropertyValue('--c-rgb') || '').trim();
+
+    flare.style.setProperty('--fx', x + 'px');
+    flare.style.setProperty('--fy', y + 'px');
+    if (rgb) flare.style.setProperty('--fc', rgb);
+    flare.classList.add('is-on');
+
+    window.setTimeout(() => { window.location.href = href; }, 320);
+    // If the navigation stalls (offline), hand the page back
+    window.setTimeout(() => {
+      launching = false;
+      flare.classList.remove('is-on');
+    }, 5000);
+  }
+
+  // ===== WIRING =====
+  window.openRoomMenu = openSheet;
+  window.closeRoomMenu = closeSheet;
 
   function wire() {
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', (e) => {
       const trg = e.target.closest('#open-rooms-menu, .rooms-menu-btn, [data-roommenu-open]');
       if (trg) {
         e.preventDefault();
-        openOverlay();
+        openSheet();
+        return;
+      }
+
+      const link = e.target.closest('a.gm-room');
+      if (link && !(e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) {
+        goToRoom(link, e);
       }
     });
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeOverlay();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sheet && !sheet.hidden) {
+        e.stopPropagation();
+        closeSheet();
+      }
+      trapFocus(e);
     });
+
+    // Coming back via the back button (bfcache) must not show a stuck flare
+    window.addEventListener('pageshow', () => {
+      launching = false;
+      const flare = $('#gmFlare');
+      if (flare) flare.classList.remove('is-on');
+    });
+
+    if ($('#gmRail')) loadRooms().then(renderRail);
   }
 
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    wire();
-  } else {
+  if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', wire);
+  } else {
+    wire();
   }
 })();

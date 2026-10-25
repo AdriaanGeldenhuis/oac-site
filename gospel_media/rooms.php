@@ -375,7 +375,6 @@ $VER = time();
       font-display: swap;
     }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@200;400;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="/gospel_media/css/rooms.css?v=<?= $VER ?>">
 </head>
@@ -428,7 +427,7 @@ $VER = time();
                             $canLeaveRoom = true;
                         }
                     ?>
-                        <li class="rm-item auto">
+                        <li class="rm-item auto rm-item--<?= htmlspecialchars($roomType) ?>">
                             <div>
                                 <a class="rm-link" href="/gospel_media/gospel.php?room_id=<?= $roomId ?>">
                                     <?= htmlspecialchars($r['display_name']) ?>
@@ -484,7 +483,7 @@ $VER = time();
                         $roomType = strtolower($r['type'] ?? '');
                         $roomId = (int)$r['id'];
                     ?>
-                        <li class="rm-item">
+                        <li class="rm-item rm-item--<?= htmlspecialchars($roomType) ?>">
                             <div>
                                 <a class="rm-link" href="/gospel_media/gospel.php?room_id=<?= $roomId ?>">
                                     <?= htmlspecialchars($r['display_name']) ?>
@@ -531,7 +530,7 @@ $VER = time();
                         $roomType = strtolower($r['type'] ?? '');
                         $roomId = (int)$r['id'];
                     ?>
-                        <li class="rm-item">
+                        <li class="rm-item rm-item--<?= htmlspecialchars($roomType) ?>">
                             <div>
                                 <div class="rm-link">
                                     <?= htmlspecialchars($r['display_name']) ?>
