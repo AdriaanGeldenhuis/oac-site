@@ -26,7 +26,13 @@
 
   async function fetchJSON(url, opt) {
     try {
-      const r = await fetch(url, Object.assign({ credentials: 'include' }, opt || {}));
+      const o = Object.assign({ credentials: 'include' }, opt || {});
+      // Every POST carries the session CSRF token (exposed by gospel.php)
+      if (String(o.method || 'GET').toUpperCase() === 'POST') {
+        o.headers = new Headers(o.headers || {});
+        o.headers.set('X-CSRF-Token', window.CSRF_TOKEN || '');
+      }
+      const r = await fetch(url, o);
       const t = await r.text();
       try {
         return JSON.parse(t);

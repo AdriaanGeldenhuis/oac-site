@@ -1,13 +1,102 @@
 (() => {
   'use strict';
 
-  console.log('%c[BIBLE v4] Synchronous batch rendering loaded', 'color: lime; font-weight: bold');
-
   // ===== UTILITIES =====
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s || '').replace(/[&<>"']/g, m => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[m]);
+
+  // Afrikaans readers get Afrikaans; everyone else reads the English text,
+  // so they get English messages (never Afrikaans by accident)
+  const tr = (af, en) => (window.BIBLE && window.BIBLE.lang === 'af') ? af : en;
+  const I18N = (window.BIBLE && window.BIBLE.i18n) || {};
+
+  const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  // localStorage can throw (private mode, blocked storage) — never let it matter
+  const store = {
+    get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+    set(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* ignore */ } }
+  };
+
+  const svg = (paths) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+  const ICON = {
+    bookmark: svg('<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>'),
+    note: svg('<path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/>'),
+    trash: svg('<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>')
+  };
+
+  // ===== TOAST + CONFIRM (instead of alert()/confirm(), which show the
+  // site address as a title inside the app) =====
+  let toastTimer = 0;
+  function toast(message, isError) {
+    const el = document.getElementById('bibleToast');
+    if (!el || !message) return;
+    el.textContent = message;
+    el.classList.toggle('is-error', !!isError);
+    el.classList.add('is-on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-on'), isError ? 3600 : 2200);
+  }
+
+  function confirmSheet(message, okLabel) {
+    return new Promise((resolve) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'bible-confirm';
+      wrap.setAttribute('role', 'alertdialog');
+      wrap.setAttribute('aria-modal', 'true');
+      wrap.innerHTML = `
+        <div class="bible-confirm-card">
+          <p class="bible-confirm-text">${esc(message)}</p>
+          <div class="bible-confirm-actions">
+            <button type="button" class="bible-btn bible-btn-danger" data-ok>${esc(okLabel || I18N.remove || tr('Verwyder', 'Remove'))}</button>
+            <button type="button" class="bible-btn" data-cancel>${esc(I18N.cancel || tr('Kanselleer', 'Cancel'))}</button>
+          </div>
+        </div>`;
+      const prev = document.activeElement;
+      const done = (v) => {
+        document.removeEventListener('keydown', onKey, true);
+        wrap.remove();
+        if (prev && prev.focus) prev.focus({ preventScroll: true });
+        resolve(v);
+      };
+      const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
+      wrap.addEventListener('click', (e) => {
+        if (e.target === wrap || e.target.closest('[data-cancel]')) done(false);
+        else if (e.target.closest('[data-ok]')) done(true);
+      });
+      document.addEventListener('keydown', onKey, true);
+      document.body.appendChild(wrap);
+      wrap.querySelector('[data-cancel]').focus();
+    });
+  }
+
+  // Clipboard with a fallback for older WebViews / plain http, and for
+  // WebViews that have the API but refuse the permission
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).catch(() => copyTextLegacy(text));
+    }
+    return copyTextLegacy(text);
+  }
+
+  function copyTextLegacy(text) {
+    return new Promise((resolve, reject) => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        if (document.execCommand('copy')) resolve(); else reject(new Error('copy failed'));
+      } catch (err) {
+        reject(err);
+      }
+      ta.remove();
+    });
+  }
 
   // ===== INDEXEDDB SETUP =====
   let db = null;
@@ -162,7 +251,9 @@
     notes: {},
     bookmarks: {},
     crossReferences: {},
-    fontSize: 'medium',
+    fontSize: 2,              // index into the 5 text-size steps (see bible.css)
+    fontFace: 'serif',
+    searchIndex: {},
     navState: {
       testament: null,
       book: null,
@@ -206,7 +297,7 @@
 
     setTimeout(async () => {
       try {
-        updateLoadingProgress(50, '50%', state.lang === 'af' ? 'Laai Bybel...' : 'Loading Bible...');
+        updateLoadingProgress(50, '50%', tr('Laai Bybel...', 'Loading Bible...'));
 
         // Navigate to the saved position in the new language
         const bookEN = state.booksEN[savedBookIdx] || 'Genesis';
@@ -214,7 +305,7 @@
         goToReference(ref);
         refreshVerseDisplay();
 
-        updateLoadingProgress(100, '100%', state.lang === 'af' ? 'Gereed!' : 'Ready!');
+        updateLoadingProgress(100, '100%', tr('Gereed!', 'Ready!'));
 
         setTimeout(() => {
           removeLoadingOverlay();
@@ -279,8 +370,32 @@
     ctxCopy: $('ctxCopy'),
     ctxShare: $('ctxShare'),
     fontSizeIncrease: $('fontSizeIncrease'),
-    fontSizeDecrease: $('fontSizeDecrease')
+    fontSizeDecrease: $('fontSizeDecrease'),
+    fontSizeSteps: $('fontSizeSteps'),
+    displayToggle: $('displayToggle'),
+    displayPanel: $('displayPanel'),
+    reading: $('bibleReading'),
+    refLabel: $('bibleRefLabel'),
+    progress: $('bibleProgress'),
+    verseScrim: $('verseScrim'),
+    ctxRef: $('ctxRef'),
+    ctxPreview: $('ctxPreview'),
+    ctxClose: $('ctxClose'),
+    navBookFilter: $('navBookFilter')
   };
+
+  // Where the reader was, per user, so the Bible opens there next time
+  const LAST_REF_KEY = 'bible_last_ref_' + (window.BIBLE && window.BIBLE.userId || 0);
+
+  function bookLabel(bookEN) {
+    return state.lang === 'af' ? (EN_TO_AF_BOOKS[bookEN] || bookEN) : bookEN;
+  }
+
+  // "Johannes 3" on the toolbar button
+  function setRefLabel(bookEN, chapter) {
+    if (!els.refLabel) return;
+    els.refLabel.textContent = bookEN ? `${bookLabel(bookEN)} ${chapter}` : (I18N.bible || tr('Bybel', 'Bible'));
+  }
 
   // ===== LOADING OVERLAY =====
   function createLoadingOverlay() {
@@ -289,7 +404,7 @@
     overlay.innerHTML = `
       <div class="bible-loading-container">
         <div class="bible-loading-spinner"></div>
-        <h2 class="bible-loading-title">${state.lang === 'af' ? 'Laai Bybel...' : 'Loading Bible...'}</h2>
+        <h2 class="bible-loading-title">${tr('Laai Bybel...', 'Loading Bible...')}</h2>
         <div class="bible-loading-bar">
           <div class="bible-loading-progress" id="loadingProgress"></div>
         </div>
@@ -507,7 +622,8 @@
 
     const verses = leftColumn.querySelectorAll('.bible-verse[data-verse]');
     if (!verses.length) {
-      headerTitle.textContent = state.lang === 'en' ? 'Bible' : 'Bybel';
+      headerTitle.textContent = tr('Bybel', 'Bible');
+      setRefLabel(null);
       return;
     }
 
@@ -541,8 +657,18 @@
 
       const displayName = state.lang === 'af' ? EN_TO_AF_BOOKS[bookEN] || bookEN : bookEN;
       headerTitle.textContent = `${displayName} ${chapter}:${verse}`;
+      setRefLabel(bookEN, chapter);
+      store.set(LAST_REF_KEY, state.viewRef);
+
+      // How far into this chapter: the top verse out of the chapter's verses
+      if (els.progress) {
+        const block = topVerse.closest('.bible-chapter-block');
+        const total = block ? block.querySelectorAll('.bible-verse').length : 0;
+        const p = total ? Math.min(1, (parseInt(verse, 10) || 1) / total) : 0;
+        els.progress.style.setProperty('--p', p.toFixed(3));
+      }
     } else {
-      headerTitle.textContent = state.lang === 'en' ? 'Bible' : 'Bybel';
+      headerTitle.textContent = tr('Bybel', 'Bible');
     }
   }
 
@@ -680,9 +806,17 @@
     chapterDiv.dataset.chapter = chapter;
     chapterDiv.dataset.side = side;
 
+    // Book name small, chapter number large (read as "Johannes 3")
     const chTitle = document.createElement('h3');
     chTitle.className = 'bible-chapter-title';
-    chTitle.textContent = `${bookDisplay} ${chapter}`;
+    const chBook = document.createElement('span');
+    chBook.className = 'bible-chapter-book';
+    chBook.textContent = bookDisplay;
+    const chNum = document.createElement('span');
+    chNum.className = 'bible-chapter-num';
+    chNum.textContent = String(chapter);
+    chTitle.append(chBook, chNum);
+    chTitle.setAttribute('aria-label', `${bookDisplay} ${chapter}`);
     chapterDiv.appendChild(chTitle);
 
     const verses = getChapter(data, bookName, chapter);
@@ -729,25 +863,29 @@
 
     vDiv.appendChild(numSpan);
     vDiv.appendChild(textSpan);
+    addIndicators(vDiv, ref);
 
+    return vDiv;
+  }
+
+  // Small bookmark / note markers after the verse text
+  function addIndicators(vDiv, ref) {
     if (state.bookmarks[ref]) {
       const bookmarkIcon = document.createElement('span');
       bookmarkIcon.className = 'bible-bookmark-indicator';
-      bookmarkIcon.innerHTML = '🔖';
-      bookmarkIcon.title = state.lang === 'en' ? 'Bookmarked' : 'Geboekmerk';
+      bookmarkIcon.innerHTML = ICON.bookmark;
+      bookmarkIcon.title = tr('Geboekmerk', 'Bookmarked');
       vDiv.appendChild(bookmarkIcon);
     }
 
     if (state.notes[ref]) {
       const noteIcon = document.createElement('span');
       noteIcon.className = 'bible-note-indicator';
-      noteIcon.innerHTML = '📝';
-      noteIcon.title = state.lang === 'en' ? 'Click to view note' : 'Klik om nota te sien';
+      noteIcon.innerHTML = ICON.note;
+      noteIcon.title = tr('Klik om nota te sien', 'Click to view note');
       noteIcon.dataset.ref = ref;
       vDiv.appendChild(noteIcon);
     }
-
-    return vDiv;
   }
 
   // ===== INFINITE SCROLL =====
@@ -887,58 +1025,91 @@
       els.dualContainer.classList.add('bible-single-view');
       els.rightColumn.style.display = 'none';
     }
-    
+
     setupDualScrollSync();
+
+    // Line the English column up with where you are reading right away,
+    // instead of waiting for the next scroll
+    if (state.dualViewEnabled) {
+      requestAnimationFrame(() => els.leftColumn.dispatchEvent(new Event('scroll')));
+    }
   }
 
   // ===== VERSE INTERACTIONS =====
+  // One listener per column (thousands of verses get rendered while you
+  // scroll; a listener on each of them adds up)
+  let verseDelegationReady = false;
   function bindVerseInteractions() {
-    document.querySelectorAll('.bible-verse:not(.bound)').forEach(verse => {
-      verse.classList.add('bound');
-      verse.addEventListener('click', handleVerseClick);
-      verse.addEventListener('contextmenu', handleVerseClick);
+    if (verseDelegationReady) return;
+    verseDelegationReady = true;
+    [els.leftContent, els.rightContent].forEach(host => {
+      if (!host) return;
+      host.addEventListener('click', handleVerseClick);
+      host.addEventListener('contextmenu', handleVerseClick);
     });
   }
 
   function handleVerseClick(e) {
+    const verse = e.target.closest('.bible-verse');
+    if (!verse) return;
     e.preventDefault();
-    
-    if (e.target.classList.contains('bible-note-indicator')) {
-      const ref = e.target.dataset.ref;
-      showNoteEditor(ref);
+
+    const noteMark = e.target.closest('.bible-note-indicator');
+    if (noteMark) {
+      showNoteEditor(noteMark.dataset.ref);
       showPanel(els.notesPanel);
       return;
     }
-    
-    const verse = e.currentTarget;
-    document.querySelectorAll('.bible-verse').forEach(v => v.classList.remove('selected'));
-    verse.classList.add('selected');
+
+    document.querySelectorAll('.bible-verse.selected').forEach(v => v.classList.remove('selected'));
+    document.querySelectorAll(`.bible-verse[data-ref="${CSS.escape(verse.dataset.ref)}"]`).forEach(v => v.classList.add('selected'));
     state.selectedVerse = verse.dataset.ref;
-    
-    showContextMenu(e.clientX, e.clientY);
+
+    showContextMenu(verse);
   }
 
-  function showContextMenu(x, y) {
+  // The verse sheet: reference + text at the top, then colours and actions
+  let ctxReturnFocus = null;
+  function showContextMenu(verse) {
     const menu = els.verseContextMenu;
     if (!menu) return;
-    
+    hideDisplayPanel();
+
+    const ref = state.selectedVerse;
+    const parsed = parseRef(ref);
+    const text = verse ? (verse.querySelector('.bible-verse-text') || {}).textContent || '' : '';
+    if (els.ctxRef) els.ctxRef.textContent = `${bookLabel(parsed.bookEN)} ${parsed.chapter}:${parsed.verse}`;
+    if (els.ctxPreview) els.ctxPreview.textContent = text;
+
+    // Mark the colour it already has, and whether it is bookmarked
+    const current = state.highlights[ref] || 0;
+    menu.querySelectorAll('.bible-color-btn').forEach(btn => {
+      const isCurrent = parseInt(btn.dataset.color, 10) === current && current !== 0;
+      btn.classList.toggle('is-current', isCurrent);
+      btn.setAttribute('aria-pressed', String(isCurrent));
+    });
+    if (els.ctxBookmark) {
+      const on = !!state.bookmarks[ref];
+      els.ctxBookmark.classList.toggle('is-on', on);
+      els.ctxBookmark.setAttribute('aria-pressed', String(on));
+    }
+    if (els.ctxAddNote) els.ctxAddNote.classList.toggle('is-on', !!state.notes[ref]);
+
+    ctxReturnFocus = document.activeElement;
+    els.verseScrim?.classList.remove('bible-context-hidden');
     menu.classList.remove('bible-context-hidden');
-    menu.style.left = `${x}px`;
-    menu.style.top = `${y}px`;
-    
-    setTimeout(() => {
-      const rect = menu.getBoundingClientRect();
-      if (rect.right > window.innerWidth) {
-        menu.style.left = `${window.innerWidth - rect.width - 20}px`;
-      }
-      if (rect.bottom > window.innerHeight) {
-        menu.style.top = `${window.innerHeight - rect.height - 20}px`;
-      }
-    }, 0);
+    menu.scrollTop = 0;
+    menu.focus({ preventScroll: true });
   }
 
   function hideContextMenu() {
-    els.verseContextMenu?.classList.add('bible-context-hidden');
+    if (!els.verseContextMenu || els.verseContextMenu.classList.contains('bible-context-hidden')) return;
+    els.verseContextMenu.classList.add('bible-context-hidden');
+    els.verseScrim?.classList.add('bible-context-hidden');
+    document.querySelectorAll('.bible-verse.selected').forEach(v => v.classList.remove('selected'));
+    if (ctxReturnFocus && ctxReturnFocus.focus && document.body.contains(ctxReturnFocus)) {
+      ctxReturnFocus.focus({ preventScroll: true });
+    }
   }
 
   // ===== HIGHLIGHTS =====
@@ -971,7 +1142,7 @@
       }
     } catch (e) {
       console.error('Highlight save failed:', e);
-      alert(state.lang === 'af' ? 'Kon nie highlight stoor nie' : 'Could not save highlight');
+      toast(tr('Kon nie die kleur stoor nie', 'Could not save highlight'), true);
     }
 
     hideContextMenu();
@@ -1010,12 +1181,13 @@
         
         refreshVerseDisplay();
         renderBookmarksList();
+        toast(data.bookmarked ? tr('Geboekmerk', 'Bookmarked') : tr('Boekmerk verwyder', 'Bookmark removed'));
       } else {
         throw new Error(data.error);
       }
     } catch (e) {
       console.error('Bookmark toggle failed:', e);
-      alert(state.lang === 'af' ? 'Kon nie boekmerk stoor nie' : 'Could not save bookmark');
+      toast(tr('Kon nie boekmerk stoor nie', 'Could not save bookmark'), true);
     }
 
     hideContextMenu();
@@ -1029,7 +1201,7 @@
     });
     
     if (!refs.length) {
-      els.bookmarksList.innerHTML = `<p class="bible-empty-state">${state.lang === 'en' ? 'No bookmarks yet.' : 'Geen boekmerke nog nie.'}</p>`;
+      els.bookmarksList.innerHTML = `<p class="bible-empty-state">${tr('Geen boekmerke nog nie.', 'No bookmarks yet.')}</p>`;
       return;
     }
     
@@ -1044,9 +1216,9 @@
       item.className = 'bible-bookmark-item';
       item.innerHTML = `
         <div class="bible-bookmark-ref">${esc(displayName)} ${parsed.chapter}:${parsed.verse}</div>
-        <div class="bible-bookmark-text">${esc(bookmark.text.substring(0, 100))}${bookmark.text.length > 100 ? '...' : ''}</div>
+        <div class="bible-bookmark-text">${esc((bookmark.text || '').substring(0, 140))}${(bookmark.text || '').length > 140 ? '…' : ''}</div>
         <div class="bible-bookmark-item-actions">
-          <button class="bible-btn-small bible-bookmark-delete" title="${state.lang === 'en' ? 'Delete bookmark' : 'Verwyder boekmerk'}">🗑️</button>
+          <button type="button" class="bible-btn-small bible-bookmark-delete" title="${esc(tr('Verwyder boekmerk', 'Delete bookmark'))}" aria-label="${esc(tr('Verwyder boekmerk', 'Delete bookmark'))}">${ICON.trash}</button>
         </div>
       `;
 
@@ -1057,7 +1229,7 @@
 
       item.querySelector('.bible-bookmark-delete').addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!confirm(state.lang === 'en' ? 'Delete this bookmark?' : 'Verwyder hierdie boekmerk?')) return;
+        if (!(await confirmSheet(tr('Verwyder hierdie boekmerk?', 'Delete this bookmark?')))) return;
         try {
           const res = await fetch('/bible/api/bookmarks/save.php', {
             method: 'POST',
@@ -1080,7 +1252,7 @@
           }
         } catch (err) {
           console.error('Bookmark delete failed:', err);
-          alert(state.lang === 'af' ? 'Kon nie boekmerk verwyder nie' : 'Could not delete bookmark');
+          toast(tr('Kon nie boekmerk verwyder nie', 'Could not delete bookmark'), true);
         }
       });
       
@@ -1095,7 +1267,6 @@
     let bookIdx = startBookIdx;
     let chapter = startChapter;
     let rendered = 0;
-    const log = [];
 
     while (rendered < count && bookIdx < state.booksEN.length) {
       const bookEN = state.booksEN[bookIdx];
@@ -1126,7 +1297,6 @@
         state.renderedChapters.add(rightKey);
       }
 
-      log.push(`${bookForLeft} ${chapter}`);
       rendered++;
       chapter++;
     }
@@ -1135,13 +1305,16 @@
     if (rendered > 0) {
       state.currentBookIndex = bookIdx;
       state.currentChapter = chapter - 1;
-      console.log(`[BIBLE] Rendered ${rendered} chapters: ${log.join(', ')} → state: book=${state.booksEN[bookIdx] || 'END'} ch=${chapter - 1}`);
     }
 
     return rendered;
   }
 
-  function goToReference(ref) {
+  // opts.chapterOnly: land on the chapter heading (chapter picker, resume)
+  // instead of pulsing verse 1
+  function goToReference(ref, opts) {
+    const chapterOnly = !!(opts && opts.chapterOnly);
+    const resume = !!(opts && opts.resume);
     const parsed = parseRef(ref);
     if (!parsed.bookEN || !parsed.chapter) return;
 
@@ -1180,12 +1353,20 @@
         : parsed.bookEN;
       headerTitle.textContent = `${displayName} ${parsed.chapter}:${parsed.verse || 1}`;
     }
+    setRefLabel(parsed.bookEN, parsed.chapter);
+    store.set(LAST_REF_KEY, makeRef(parsed.bookEN, parsed.chapter, parsed.verse || 1));
 
     // Scroll to the specific verse
     setTimeout(() => {
       const verseEl = els.leftContent.querySelector(`.bible-verse[data-ref="${CSS.escape(ref)}"]`);
-      if (verseEl) {
-        verseEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (verseEl && (chapterOnly || (resume && parsed.verse <= 1))) {
+        els.leftColumn.scrollTop = 0;
+        if (els.rightColumn) els.rightColumn.scrollTop = 0;
+      } else if (verseEl && resume) {
+        // Back where you were reading: that verse at the top, no fuss
+        els.leftColumn.scrollTop = Math.max(0, verseEl.offsetTop - 70);
+      } else if (verseEl) {
+        verseEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
         verseEl.classList.add('bible-verse-flash');
         setTimeout(() => verseEl.classList.remove('bible-verse-flash'), 2000);
       } else {
@@ -1202,10 +1383,15 @@
   function renderNotesList() {
     if (!els.notesList) return;
     
-    const refs = Object.keys(state.notes);
-    
+    // In Bible order, so notes read like a journal through Scripture
+    const order = (r) => {
+      const pr = parseRef(r);
+      return state.booksEN.indexOf(pr.bookEN) * 1e6 + pr.chapter * 1e3 + pr.verse;
+    };
+    const refs = Object.keys(state.notes).sort((a, b) => order(a) - order(b));
+
     if (!refs.length) {
-      els.notesList.innerHTML = `<p class="bible-empty-state">${state.lang === 'en' ? 'No notes yet. Click on a verse to add a note!' : 'Geen notas nog nie. Klik op \'n vers om \'n nota by te voeg!'}</p>`;
+      els.notesList.innerHTML = `<p class="bible-empty-state">${tr('Geen notas nog nie. Klik op \'n vers om \'n nota by te voeg!', 'No notes yet. Click on a verse to add a note!')}</p>`;
       return;
     }
 
@@ -1221,17 +1407,24 @@
         <div class="bible-note-item-ref">${esc(displayName)} ${parsed.chapter}:${parsed.verse}</div>
         <div class="bible-note-item-text">${esc(state.notes[ref])}</div>
         <div class="bible-note-item-actions">
-          <button class="bible-btn-small bible-note-edit" data-ref="${ref}">✏️</button>
-          <button class="bible-btn-small bible-note-delete" data-ref="${ref}">🗑️</button>
+          <button type="button" class="bible-btn-small bible-note-edit" title="${esc(tr('Wysig', 'Edit'))}" aria-label="${esc(tr('Wysig', 'Edit'))}">${ICON.note}</button>
+          <button type="button" class="bible-btn-small bible-note-delete" title="${esc(tr('Verwyder', 'Delete'))}" aria-label="${esc(tr('Verwyder', 'Delete'))}">${ICON.trash}</button>
         </div>
       `;
+
+      // Tapping the note takes you to its verse; the buttons edit / delete
+      noteItem.addEventListener('click', (e) => {
+        if (e.target.closest('.bible-note-item-actions')) return;
+        goToReference(ref);
+        hidePanel(els.notesPanel);
+      });
 
       noteItem.querySelector('.bible-note-edit').addEventListener('click', () => {
         showNoteEditor(ref);
       });
 
       noteItem.querySelector('.bible-note-delete').addEventListener('click', async () => {
-        if (confirm(state.lang === 'en' ? 'Delete this note?' : 'Verwyder hierdie nota?')) {
+        if (await confirmSheet(tr('Verwyder hierdie nota?', 'Delete this note?'))) {
           try {
             const res = await fetch('/bible/api/notes/save.php', {
               method: 'POST',
@@ -1249,9 +1442,12 @@
               delete state.notes[ref];
               renderNotesList();
               refreshVerseDisplay();
+            } else {
+              throw new Error(data.error);
             }
           } catch (e) {
             console.error('Note delete failed:', e);
+            toast(tr('Kon nie nota verwyder nie', 'Could not delete note'), true);
           }
         }
       });
@@ -1305,12 +1501,13 @@
         els.notesList?.classList.remove('bible-note-hidden');
         renderNotesList();
         refreshVerseDisplay();
+        toast(text ? tr('Nota gestoor', 'Note saved') : tr('Nota verwyder', 'Note removed'));
       } else {
         throw new Error(data.error);
       }
     } catch (e) {
       console.error('Note save failed:', e);
-      alert(state.lang === 'af' ? 'Kon nie nota stoor nie' : 'Could not save note');
+      toast(tr('Kon nie nota stoor nie', 'Could not save note'), true);
     }
   }
 
@@ -1321,33 +1518,60 @@
 
   function addNoteToVerse() {
     if (!state.selectedVerse) {
-      alert(state.lang === 'en' ? 'Select a verse first!' : 'Kies eers \'n vers!');
+      toast(tr('Kies eers \'n vers', 'Select a verse first'), true);
       return;
     }
+    hideContextMenu();
     showPanel(els.notesPanel);
     showNoteEditor(state.selectedVerse);
-    hideContextMenu();
+    setTimeout(() => els.noteText && els.noteText.focus(), 350);
   }
 
   // ===== NAVIGATION =====
+  let navReturnFocus = null;
   function showQuickNav() {
     if (!els.quickNavModal) return;
+    hideContextMenu();
+    hideDisplayPanel();
+    hideAllPanels();
+    navReturnFocus = document.activeElement;
     els.quickNavModal.classList.remove('bible-modal-hidden');
     state.navState = { testament: null, book: null, chapter: null };
     showNavStep('testament');
-    document.body.style.overflow = 'hidden';
+    els.quickNavModal.querySelector('.bible-modal-content')?.focus({ preventScroll: true });
   }
 
   function hideQuickNav() {
-    if (!els.quickNavModal) return;
+    if (!els.quickNavModal || els.quickNavModal.classList.contains('bible-modal-hidden')) return;
     els.quickNavModal.classList.add('bible-modal-hidden');
-    document.body.style.overflow = '';
+    if (navReturnFocus && navReturnFocus.focus) navReturnFocus.focus({ preventScroll: true });
+  }
+
+  function currentBookEN() {
+    return state.viewRef ? parseRef(state.viewRef).bookEN : '';
   }
 
   function showNavStep(step) {
     els.navStepTestament?.classList.toggle('bible-nav-hidden', step !== 'testament');
     els.navStepBook?.classList.toggle('bible-nav-hidden', step !== 'book');
     els.navStepChapter?.classList.toggle('bible-nav-hidden', step !== 'chapter');
+    const body = els.quickNavModal?.querySelector('.bible-modal-body');
+    if (body) body.scrollTop = 0;
+    if (step === 'book' && els.navBookFilter) {
+      els.navBookFilter.value = '';
+      // Only pop the keyboard where there is a real keyboard
+      if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        els.navBookFilter.focus({ preventScroll: true });
+      }
+    }
+  }
+
+  // Narrow the book grid as you type ("kor" -> 1 & 2 Korinthiërs)
+  function filterBooks() {
+    const q = normalizeBookName(els.navBookFilter ? els.navBookFilter.value : '');
+    els.navBookGrid?.querySelectorAll('.bible-nav-card').forEach(card => {
+      card.hidden = !!q && card.dataset.search.indexOf(q) === -1;
+    });
   }
 
   function renderTestamentChoice() {
@@ -1382,8 +1606,8 @@
     
     const booksEN = state.navState.testament === 'old' ? OLD_TESTAMENT_EN : NEW_TESTAMENT_EN;
     const title = state.navState.testament === 'old' 
-      ? (state.lang === 'en' ? 'Old Testament Books' : 'Ou Testament Boeke')
-      : (state.lang === 'en' ? 'New Testament Books' : 'Nuwe Testament Boeke');
+      ? (tr('Ou Testament Boeke', 'Old Testament Books'))
+      : (tr('Nuwe Testament Boeke', 'New Testament Books'));
     
     if (!els.navBookTitle || !els.navBookGrid) return;
     
@@ -1392,13 +1616,26 @@
 
     const frag = document.createDocumentFragment();
     
+    const data = state.lang === 'af' ? state.dataAF : state.dataEN;
+    const here = currentBookEN();
+
     booksEN.forEach(bookEN => {
       const btn = document.createElement('button');
-      btn.className = 'bible-nav-card bible-nav-card-small';
-      
+      btn.type = 'button';
+      btn.className = 'bible-nav-card bible-nav-card-small bible-nav-card--' + state.navState.testament;
+      if (bookEN === here) btn.classList.add('is-current');
+
       const displayName = state.lang === 'af' ? (EN_TO_AF_BOOKS[bookEN] || bookEN) : bookEN;
-      btn.textContent = displayName;
-      
+      const count = getChapterCount(data, state.lang === 'af' ? (EN_TO_AF_BOOKS[bookEN] || bookEN) : bookEN);
+      const nameEl = document.createElement('span');
+      nameEl.className = 'bible-nav-book';
+      nameEl.textContent = displayName;
+      const countEl = document.createElement('span');
+      countEl.className = 'bible-nav-count';
+      countEl.textContent = `${count} ${count === 1 ? tr('hoofstuk', 'chapter') : tr('hoofstukke', 'chapters')}`;
+      btn.append(nameEl, countEl);
+      btn.dataset.search = normalizeBookName(displayName + ' ' + bookEN);
+
       btn.addEventListener('click', () => {
         state.navState.book = bookEN;
         renderChapterChoice();
@@ -1427,19 +1664,22 @@
     
     if (!els.navChapterTitle || !els.navChapterGrid) return;
     
-    els.navChapterTitle.textContent = `${displayName} - ${state.lang === 'en' ? 'Choose Chapter' : 'Kies Hoofstuk'}`;
+    els.navChapterTitle.textContent = `${displayName} · ${tr('Kies hoofstuk', 'Choose chapter')}`;
     els.navChapterGrid.innerHTML = '';
 
     if (chapterCount === 0) {
-      els.navChapterGrid.innerHTML = `<p class="bible-empty-state">${state.lang === 'af' ? 'Geen hoofstukke gevind nie.' : 'No chapters found.'}</p>`;
+      els.navChapterGrid.innerHTML = `<p class="bible-empty-state">${tr('Geen hoofstukke gevind nie.', 'No chapters found.')}</p>`;
       return;
     }
 
     const frag = document.createDocumentFragment();
     
+    const hereRef = state.viewRef ? parseRef(state.viewRef) : null;
     for (let i = 1; i <= chapterCount; i++) {
       const btn = document.createElement('button');
-      btn.className = 'bible-nav-card bible-nav-card-small';
+      btn.type = 'button';
+      btn.className = 'bible-nav-card bible-nav-card-small bible-nav-card--' + (state.navState.testament || 'old');
+      if (hereRef && hereRef.bookEN === state.navState.book && hereRef.chapter === i) btn.classList.add('is-current');
       btn.textContent = String(i);
       
       btn.addEventListener('click', () => {
@@ -1456,7 +1696,7 @@
   function goToChapter(bookEN, chapter) {
     hideQuickNav();
     const ref = makeRef(bookEN, chapter, 1);
-    goToReference(ref);
+    goToReference(ref, { chapterOnly: true });
   }
 
   // ===== SEARCH =====
@@ -1553,6 +1793,35 @@
     return { bookIndex: candidates[0].idx, chapter, verse };
   }
 
+  // Every verse once, already normalised: built on the first search, then
+  // each search is a quick scan instead of re-normalising the whole Bible
+  function getSearchIndex() {
+    const key = state.lang === 'af' ? 'af' : 'en';
+    if (state.searchIndex[key]) return state.searchIndex[key];
+
+    const searchData = key === 'af' ? state.dataAF : state.dataEN;
+    const searchBooks = key === 'af' ? state.booksAF : state.booksEN;
+    const entries = [];
+
+    for (let idx = 0; idx < searchBooks.length; idx++) {
+      const bookName = searchBooks[idx];
+      const chapterCount = getChapterCount(searchData, bookName);
+      for (let ch = 1; ch <= chapterCount; ch++) {
+        const verses = getChapter(searchData, bookName, ch);
+        let verseNum = 0;
+        for (let v = 0; v < verses.length; v++) {
+          const parsed = parseVerse(verses[v]);
+          if (parsed.type !== 'verse') continue;
+          verseNum++;
+          entries.push({ idx, ch, v: verseNum, text: parsed.text, norm: normalizeSearch(parsed.text) });
+        }
+      }
+    }
+
+    state.searchIndex[key] = entries;
+    return entries;
+  }
+
   function renderEmptyState(msg) {
     els.searchResults.innerHTML = `<p class="bible-empty-state">${esc(msg)}</p>`;
   }
@@ -1563,15 +1832,13 @@
     const displayName = state.lang === 'af' ? bookAF : bookEN;
     const verse = parsed.verse || 1;
     const refLabel = `${displayName} ${parsed.chapter}${parsed.verse ? ':' + parsed.verse : ''}`;
-    const hint = state.lang === 'en'
-      ? 'Jump straight to this passage'
-      : 'Spring direk na hierdie gedeelte';
+    const hint = tr('Spring direk na hierdie gedeelte', 'Jump straight to this passage');
 
     const frag = document.createDocumentFragment();
 
     const countRow = document.createElement('div');
     countRow.className = 'bible-search-count';
-    countRow.textContent = state.lang === 'en' ? 'Reference match' : 'Verwysing gevind';
+    countRow.textContent = tr('Verwysing gevind', 'Reference match');
     frag.appendChild(countRow);
 
     const row = document.createElement('div');
@@ -1601,60 +1868,38 @@
     // Tokenise — require ALL words to appear (any order)
     const terms = normQuery.split(' ').filter(t => t.length >= 2);
     if (!terms.length) {
-      renderEmptyState(state.lang === 'en'
-        ? 'Type at least 2 characters.'
-        : 'Tik ten minste 2 karakters.');
+      renderEmptyState(tr('Tik ten minste 2 karakters.', 'Type at least 2 characters.'));
       return;
     }
 
-    const searchData = state.lang === 'af' ? state.dataAF : state.dataEN;
-    const searchBooks = state.lang === 'af' ? state.booksAF : state.booksEN;
     const HARD_LIMIT = 300;
     const results = [];
+    const index = getSearchIndex();
 
-    outer:
-    for (let idx = 0; idx < searchBooks.length; idx++) {
-      const bookName = searchBooks[idx];
-      const bookEN = state.booksEN[idx];
-      const bookAF = state.booksAF[idx];
-      const chapterCount = getChapterCount(searchData, bookName);
-
-      for (let ch = 1; ch <= chapterCount; ch++) {
-        const verses = getChapter(searchData, bookName, ch);
-        let verseNum = 0;
-
-        for (let v = 0; v < verses.length; v++) {
-          const parsed = parseVerse(verses[v]);
-          if (parsed.type !== 'verse') continue;
-          verseNum++;
-
-          const normText = normalizeSearch(parsed.text);
-          // AND across all terms
-          let allMatch = true;
-          for (const t of terms) {
-            if (!normText.includes(t)) { allMatch = false; break; }
-          }
-          if (!allMatch) continue;
-
-          // Score: exact phrase match wins, then number of distinct terms
-          let score = 0;
-          if (normText.includes(normQuery)) score += 100;
-          score += terms.length * 10;
-
-          results.push({
-            bookEN, bookAF, chapter: ch, verse: verseNum,
-            text: parsed.text, score
-          });
-
-          if (results.length >= HARD_LIMIT) break outer;
-        }
+    for (let i = 0; i < index.length; i++) {
+      const e = index[i];
+      // AND across all terms
+      let allMatch = true;
+      for (const t of terms) {
+        if (e.norm.indexOf(t) === -1) { allMatch = false; break; }
       }
+      if (!allMatch) continue;
+
+      // Score: exact phrase match wins, then number of distinct terms
+      let score = 0;
+      if (e.norm.indexOf(normQuery) !== -1) score += 100;
+      score += terms.length * 10;
+
+      results.push({
+        bookEN: state.booksEN[e.idx], bookAF: state.booksAF[e.idx],
+        chapter: e.ch, verse: e.v, text: e.text, score
+      });
+
+      if (results.length >= HARD_LIMIT) break;
     }
 
     if (!results.length) {
-      renderEmptyState(state.lang === 'en'
-        ? 'No results found.'
-        : 'Geen resultate gevind nie.');
+      renderEmptyState(tr('Geen resultate gevind nie.', 'No results found.'));
       return;
     }
 
@@ -1666,11 +1911,11 @@
 
     const countRow = document.createElement('div');
     countRow.className = 'bible-search-count';
-    const countMsg = state.lang === 'en'
-      ? `${results.length}${results.length >= HARD_LIMIT ? '+' : ''} result${results.length === 1 ? '' : 's'}`
-        + (shown.length < results.length ? ` — showing first ${shown.length}` : '')
-      : `${results.length}${results.length >= HARD_LIMIT ? '+' : ''} resultaat${results.length === 1 ? '' : 'e'}`
-        + (shown.length < results.length ? ` — wys eerste ${shown.length}` : '');
+    const total = `${results.length}${results.length >= HARD_LIMIT ? '+' : ''}`;
+    const countMsg = tr(
+      `${total} resultaat${results.length === 1 ? '' : 'e'}` + (shown.length < results.length ? ` — wys eerste ${shown.length}` : ''),
+      `${total} result${results.length === 1 ? '' : 's'}` + (shown.length < results.length ? ` — showing first ${shown.length}` : '')
+    );
     countRow.textContent = countMsg;
     frag.appendChild(countRow);
 
@@ -1719,19 +1964,17 @@
     if (!els.searchResults) return;
     if (!raw) { els.searchResults.innerHTML = ''; return; }
     if (raw.length < 2) {
-      renderEmptyState(state.lang === 'en'
-        ? 'Keep typing…'
-        : 'Tik aan…');
+      renderEmptyState(tr('Tik aan…', 'Keep typing…'));
       return;
     }
-    els.searchResults.innerHTML = `<div class="bible-loading">${esc(state.lang === 'en' ? 'Searching…' : 'Soek…')}</div>`;
+    els.searchResults.innerHTML = `<div class="bible-loading">${esc(tr('Soek…', 'Searching…'))}</div>`;
     searchDebounceTimer = setTimeout(() => handleSearch(), 180);
   }
 
   // ===== AI & CROSS REFS =====
   async function showAIPrompt() {
     if (!state.selectedVerse) {
-      alert(state.lang === 'en' ? 'Select a verse first!' : 'Kies eers \'n vers!');
+      toast(tr('Kies eers \'n vers', 'Select a verse first'), true);
       return;
     }
 
@@ -1745,9 +1988,7 @@
 
     if (!els.aiPanel || !els.aiOutput) return;
 
-    const loadingMsg = state.lang === 'af'
-      ? 'AI lees die verse rondom hierdie gedeelte en vertel die storie...'
-      : 'AI is reading the surrounding verses and telling the story...';
+    const loadingMsg = tr('AI lees die verse rondom hierdie gedeelte en vertel die storie...', 'AI is reading the surrounding verses and telling the story...');
     els.aiOutput.innerHTML = `<div class="bible-loading">${loadingMsg}</div>`;
     showPanel(els.aiPanel);
 
@@ -1796,9 +2037,9 @@
         els.aiOutput.innerHTML = `
           <div class="bible-ai-response">
             <div class="bible-ai-verse-ref">${esc(verseRef)}</div>
-            <div class="bible-ai-context-note">${esc(state.lang === 'af'
-              ? 'Gebaseer op ' + (data.context_verses || 20) + ' omliggende verse'
-              : 'Based on ' + (data.context_verses || 20) + ' surrounding verses')}</div>
+            <div class="bible-ai-context-note">${esc(tr(
+              'Gebaseer op ' + (data.context_verses || 20) + ' omliggende verse',
+              'Based on ' + (data.context_verses || 20) + ' surrounding verses'))}</div>
             <div class="bible-ai-answer">${html}</div>
           </div>
         `;
@@ -1806,7 +2047,7 @@
         throw new Error(data.error);
       }
     } catch (e) {
-      els.aiOutput.innerHTML = `<p class="bible-error">${state.lang === 'af' ? 'Kon nie kommentaar kry nie.' : 'Could not get commentary.'}</p>`;
+      els.aiOutput.innerHTML = `<p class="bible-error">${tr('Kon nie kommentaar kry nie.', 'Could not get commentary.')}</p>`;
       console.error('AI Commentary error:', e);
     }
   }
@@ -1842,7 +2083,7 @@
       console.error('Cross references error:', e);
       // Wys darem die paneel met 'n boodskap i.p.v. om stilweg niks te doen nie.
       if (els.crossRefPanel && els.crossRefList) {
-        els.crossRefList.innerHTML = `<p class="bible-empty-state">${state.lang === 'af' ? 'Kon nie kruisverwysings laai nie.' : 'Could not load cross-references.'}</p>`;
+        els.crossRefList.innerHTML = `<p class="bible-empty-state">${tr('Kon nie kruisverwysings laai nie.', 'Could not load cross-references.')}</p>`;
         showPanel(els.crossRefPanel);
       }
     }
@@ -1852,7 +2093,7 @@
     if (!els.crossRefPanel || !els.crossRefList) return;
     
     if (!refs.length) {
-      els.crossRefList.innerHTML = `<p class="bible-empty-state">${state.lang === 'af' ? 'Geen kruisverwysings nie.' : 'No cross-references.'}</p>`;
+      els.crossRefList.innerHTML = `<p class="bible-empty-state">${tr('Geen kruisverwysings nie.', 'No cross-references.')}</p>`;
       showPanel(els.crossRefPanel);
       return;
     }
@@ -1883,111 +2124,125 @@
   }
 
   // ===== UTILITIES =====
+  function selectedVerseInfo() {
+    const verse = document.querySelector(`.bible-verse[data-ref="${CSS.escape(state.selectedVerse)}"]`);
+    return {
+      text: verse?.querySelector('.bible-verse-text')?.textContent || '',
+      label: `${verse?.dataset.bookdisplay || ''} ${verse?.dataset.chapter || ''}:${verse?.dataset.verse || ''}`.trim()
+    };
+  }
+
   function copyVerse() {
     if (!state.selectedVerse) return;
-    
-    const verse = document.querySelector(`[data-ref="${state.selectedVerse}"]`);
-    const verseText = verse?.querySelector('.bible-verse-text')?.textContent || '';
-    const bookDisplay = verse?.dataset.bookdisplay || '';
-    const chapter = verse?.dataset.chapter || '';
-    const verseNum = verse?.dataset.verse || '';
-    
-    const copyText = `${bookDisplay} ${chapter}:${verseNum} - ${verseText}`;
-    
-    navigator.clipboard.writeText(copyText).then(() => {
-      alert(state.lang === 'en' ? 'Verse copied!' : 'Vers gekopieer!');
+    const info = selectedVerseInfo();
+
+    copyText(`${info.label} - ${info.text}`).then(() => {
+      toast(tr('Vers gekopieer', 'Verse copied'));
     }).catch(() => {
-      alert(state.lang === 'en' ? 'Failed to copy' : 'Kon nie kopieer nie');
+      toast(tr('Kon nie kopieer nie', 'Failed to copy'), true);
     });
-    
+
     hideContextMenu();
   }
 
   function shareVerse() {
     if (!state.selectedVerse) return;
-    
-    const verse = document.querySelector(`[data-ref="${state.selectedVerse}"]`);
-    const bookDisplay = verse?.dataset.bookdisplay || '';
-    const chapter = verse?.dataset.chapter || '';
-    const verseNum = verse?.dataset.verse || '';
-    
-    const shareText = `${bookDisplay} ${chapter}:${verseNum}`;
+    const info = selectedVerseInfo();
     const shareUrl = `${window.location.origin}/bible/bible.php?ref=${encodeURIComponent(state.selectedVerse)}`;
-    
+
     if (navigator.share) {
       navigator.share({
-        title: shareText,
-        text: shareText,
+        title: info.label,
+        text: `${info.label} - ${info.text}`,
         url: shareUrl
       }).catch(() => {});
     } else {
-      alert(state.lang === 'af' ? 'Deel nie ondersteun nie.' : 'Share not supported.');
+      // No share sheet (desktop, older WebViews): copy the verse with its link
+      copyText(`${info.label} - ${info.text}\n${shareUrl}`).then(() => {
+        toast(tr('Vers en skakel gekopieer', 'Verse and link copied'));
+      }).catch(() => {
+        toast(tr('Kon nie deel nie', 'Could not share'), true);
+      });
     }
-    
+
     hideContextMenu();
   }
 
+  // ===== READING COMFORT: text size + typeface (remembered) =====
+  const FONT_STEPS = 5;
+
   function changeFontSize(direction) {
-    const sizes = ['small', 'medium', 'large', 'xlarge'];
-    const currentIndex = sizes.indexOf(state.fontSize);
-    let newIndex = currentIndex;
-    
-    if (direction === 'increase' && currentIndex < sizes.length - 1) {
-      newIndex++;
-    } else if (direction === 'decrease' && currentIndex > 0) {
-      newIndex--;
-    }
-    
-    state.fontSize = sizes[newIndex];
+    const next = state.fontSize + (direction === 'increase' ? 1 : -1);
+    state.fontSize = Math.max(0, Math.min(FONT_STEPS - 1, next));
+    store.set('bible_font_size', String(state.fontSize));
     applyFontSize();
   }
 
+  function setFontFace(face) {
+    state.fontFace = face === 'sans' ? 'sans' : 'serif';
+    store.set('bible_font_face', state.fontFace);
+    applyFontSize();
+  }
+
+  // One attribute on the reading area; the stylesheet does the rest
+  // (no inline style on every verse)
   function applyFontSize() {
-    const sizeMap = {
-      small: '0.9rem',
-      medium: '1.05rem',
-      large: '1.2rem',
-      xlarge: '1.35rem'
-    };
-    
-    document.querySelectorAll('.bible-verse-text').forEach(el => {
-      el.style.fontSize = sizeMap[state.fontSize];
+    if (els.reading) {
+      els.reading.dataset.size = String(state.fontSize);
+      els.reading.dataset.face = state.fontFace;
+    }
+    if (els.fontSizeDecrease) els.fontSizeDecrease.disabled = state.fontSize <= 0;
+    if (els.fontSizeIncrease) els.fontSizeIncrease.disabled = state.fontSize >= FONT_STEPS - 1;
+    if (els.fontSizeSteps) {
+      Array.from(els.fontSizeSteps.children).forEach((dot, i) => {
+        dot.classList.toggle('is-on', i <= state.fontSize);
+        dot.classList.toggle('is-current', i === state.fontSize);
+      });
+    }
+    document.querySelectorAll('.bible-face-btn').forEach(btn => {
+      btn.setAttribute('aria-pressed', String(btn.dataset.face === state.fontFace));
     });
+  }
+
+  function loadReadingPrefs() {
+    const size = parseInt(store.get('bible_font_size'), 10);
+    if (!isNaN(size)) state.fontSize = Math.max(0, Math.min(FONT_STEPS - 1, size));
+    state.fontFace = store.get('bible_font_face') === 'sans' ? 'sans' : 'serif';
+    applyFontSize();
+  }
+
+  function showDisplayPanel() {
+    if (!els.displayPanel) return;
+    hideContextMenu();
+    hideAllPanels();
+    els.displayPanel.classList.remove('bible-context-hidden');
+    els.displayToggle?.setAttribute('aria-expanded', 'true');
+  }
+
+  function hideDisplayPanel() {
+    if (!els.displayPanel || els.displayPanel.classList.contains('bible-context-hidden')) return;
+    els.displayPanel.classList.add('bible-context-hidden');
+    els.displayToggle?.setAttribute('aria-expanded', 'false');
   }
 
   function refreshVerseDisplay() {
     document.querySelectorAll('.bible-verse').forEach(verse => {
       const ref = verse.dataset.ref;
-      const wasBound = verse.classList.contains('bound');
 
       verse.className = 'bible-verse';
-      if (wasBound) verse.classList.add('bound');
 
       if (state.highlights[ref]) {
         verse.classList.add(`bible-highlight-${state.highlights[ref]}`);
       }
 
       verse.querySelectorAll('.bible-note-indicator, .bible-bookmark-indicator').forEach(n => n.remove());
-      
-      if (state.bookmarks[ref]) {
-        const bookmarkIcon = document.createElement('span');
-        bookmarkIcon.className = 'bible-bookmark-indicator';
-        bookmarkIcon.innerHTML = '🔖';
-        bookmarkIcon.title = state.lang === 'en' ? 'Bookmarked' : 'Geboekmerk';
-        verse.appendChild(bookmarkIcon);
-      }
-      
-      if (state.notes[ref]) {
-        const noteIcon = document.createElement('span');
-        noteIcon.className = 'bible-note-indicator';
-        noteIcon.innerHTML = '📝';
-        noteIcon.title = state.lang === 'en' ? 'Click to view note' : 'Klik om nota te sien';
-        noteIcon.dataset.ref = ref;
-        verse.appendChild(noteIcon);
-      }
+      addIndicators(verse, ref);
     });
-    
-    bindVerseInteractions();
+
+    // Keep the open verse marked
+    if (state.selectedVerse && els.verseContextMenu && !els.verseContextMenu.classList.contains('bible-context-hidden')) {
+      document.querySelectorAll(`.bible-verse[data-ref="${CSS.escape(state.selectedVerse)}"]`).forEach(v => v.classList.add('selected'));
+    }
   }
 
   // ===== DATA PERSISTENCE =====
@@ -2020,7 +2275,11 @@
   function showPanel(panel) {
     if (!panel) return;
     hideAllPanels();
+    hideDisplayPanel();
     panel.classList.remove('bible-panel-hidden');
+    if (panel === els.searchPanel && els.searchInput) {
+      setTimeout(() => els.searchInput.focus({ preventScroll: true }), 300);
+    }
   }
 
   function hidePanel(panel) {
@@ -2106,6 +2365,17 @@
 
     els.fontSizeIncrease?.addEventListener('click', () => changeFontSize('increase'));
     els.fontSizeDecrease?.addEventListener('click', () => changeFontSize('decrease'));
+    document.querySelectorAll('.bible-face-btn').forEach(btn => {
+      btn.addEventListener('click', () => setFontFace(btn.dataset.face));
+    });
+    els.displayToggle?.addEventListener('click', () => {
+      if (els.displayPanel && els.displayPanel.classList.contains('bible-context-hidden')) showDisplayPanel();
+      else hideDisplayPanel();
+    });
+
+    els.ctxClose?.addEventListener('click', hideContextMenu);
+    els.verseScrim?.addEventListener('click', hideContextMenu);
+    els.navBookFilter?.addEventListener('input', filterBooks);
 
     document.addEventListener('click', (e) => {
       if (els.verseContextMenu && !els.verseContextMenu.contains(e.target) && !e.target.closest('.bible-verse')) {
@@ -2114,7 +2384,11 @@
     });
 
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.bible-panel') || e.target.closest('.bible-tool-btn') || e.target.closest('.bible-context-menu')) {
+      if (els.displayPanel && !e.target.closest('#displayPanel') && !e.target.closest('#displayToggle')) {
+        hideDisplayPanel();
+      }
+      if (e.target.closest('.bible-panel') || e.target.closest('.bible-tool-btn') || e.target.closest('.bible-context-menu') ||
+          e.target.closest('.bible-confirm') || e.target.closest('.bible-display') || e.target.closest('.bible-toolbar')) {
         return;
       }
       const openPanels = [
@@ -2131,9 +2405,10 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        hideAllPanels();
         hideContextMenu();
+        hideDisplayPanel();
         hideQuickNav();
+        hideAllPanels();
       }
     });
 
@@ -2152,12 +2427,38 @@
   }
 
   // ===== INITIALIZATION =====
+  function isValidRef(ref) {
+    const pr = parseRef(ref);
+    if (!pr.bookEN || pr.chapter < 1 || state.booksEN.indexOf(pr.bookEN) === -1) return false;
+    const data = state.lang === 'af' ? state.dataAF : state.dataEN;
+    const book = state.lang === 'af' ? (EN_TO_AF_BOOKS[pr.bookEN] || pr.bookEN) : pr.bookEN;
+    return pr.chapter <= getChapterCount(data, book);
+  }
+
+  function showLoadError(e) {
+    const msg = tr('Kon nie die Bybel laai nie.', 'Could not load the Bible.');
+    els.leftContent.innerHTML = `
+      <div class="bible-empty-state">
+        <p>${esc(msg)}</p>
+        <p><button type="button" class="bible-btn bible-btn-primary" id="bibleRetry">${esc(tr('Probeer weer', 'Try again'))}</button></p>
+      </div>`;
+    const retry = document.getElementById('bibleRetry');
+    if (retry) retry.addEventListener('click', () => window.location.reload());
+    console.error('Initialization failed:', e);
+  }
+
   async function init() {
-    const overlay = createLoadingOverlay();
-    
+    createLoadingOverlay();
+    loadReadingPrefs();
+
     try {
-      await initDB();
-      updateLoadingProgress(10, '10%', state.lang === 'af' ? 'Database gereed' : 'Database ready');
+      // The offline cache is a bonus: private mode / blocked storage just means no cache
+      try {
+        await initDB();
+      } catch (e) {
+        db = null;
+      }
+      updateLoadingProgress(10, '10%', tr('Laai Bybel...', 'Loading Bible...'));
 
       els.quickNavModal?.classList.add('bible-modal-hidden');
 
@@ -2165,8 +2466,8 @@
       const updateCombinedProgress = () => {
         const combined = 10 + ((progressAF + progressEN) / 2) * 0.7;
         const label = progressAF < 100
-          ? (state.lang === 'af' ? 'Laai Afrikaans...' : 'Loading Afrikaans...')
-          : (state.lang === 'af' ? 'Laai Engels...' : 'Loading English...');
+          ? (tr('Laai Afrikaans...', 'Loading Afrikaans...'))
+          : (tr('Laai Engels...', 'Loading English...'));
         updateLoadingProgress(combined, '', label);
       };
       const [dataAF, dataEN] = await Promise.all([
@@ -2179,20 +2480,31 @@
       state.booksAF = extractBooks(state.dataAF);
       state.booksEN = extractBooks(state.dataEN);
 
-      updateLoadingProgress(80, '80%', state.lang === 'af' ? 'Laai gebruiker data...' : 'Loading user data...');
+      updateLoadingProgress(85, '85%', tr('Laai jou notas...', 'Loading your notes...'));
 
       await loadUserData();
-      
-      updateLoadingProgress(90, '90%', state.lang === 'af' ? 'Bou Bybel...' : 'Building Bible...');
 
-      renderInitialChapters();
+      // Open where asked (?ref=Luke-1-1), else where you stopped reading,
+      // else at the beginning
+      const urlRef = new URLSearchParams(window.location.search).get('ref');
+      const savedRef = store.get(LAST_REF_KEY);
+      let resumed = false;
+
+      if (urlRef && isValidRef(urlRef)) {
+        goToReference(urlRef);
+      } else if (savedRef && isValidRef(savedRef)) {
+        goToReference(savedRef, { resume: true });
+        resumed = true;
+      } else {
+        renderInitialChapters();
+      }
       setupInfiniteScroll();
-      
-      updateLoadingProgress(100, '100%', state.lang === 'af' ? 'Gereed!' : 'Ready!');
+      bindVerseInteractions();
+
+      updateLoadingProgress(100, '100%', tr('Gereed!', 'Ready!'));
 
       // Read initial dual view state from localStorage BEFORE binding events
-      const savedDualView = localStorage.getItem('bible_dual_view');
-      state.dualViewEnabled = savedDualView === '1';
+      state.dualViewEnabled = store.get('bible_dual_view') === '1';
 
       bindEvents();
       updateHeaderRef();
@@ -2200,21 +2512,20 @@
 
       setTimeout(() => {
         removeLoadingOverlay();
-
-        // Check for deep link: ?ref=Luke-1-1
-        const urlParams = new URLSearchParams(window.location.search);
-        const refParam = urlParams.get('ref');
-        if (refParam) {
-          setTimeout(() => goToReference(refParam), 100);
+        if (resumed) {
+          const pr = parseRef(savedRef);
+          toast(`${tr('Terug waar jy was', 'Back where you were')}: ${bookLabel(pr.bookEN)} ${pr.chapter}:${pr.verse || 1}`);
         }
-      }, 500);
+      }, 150);
+
+      // Build the search index while the reader is reading, not when they search
+      const warm = () => { try { getSearchIndex(); } catch (e) { /* built on first search instead */ } };
+      if ('requestIdleCallback' in window) window.requestIdleCallback(warm, { timeout: 8000 });
+      else setTimeout(warm, 4000);
 
     } catch (e) {
-      console.error('Initialization failed:', e);
       removeLoadingOverlay();
-      alert(state.lang === 'en' 
-        ? `Failed to load Bible: ${e.message}\n\nPlease refresh the page.` 
-        : `Kon nie Bybel laai nie: ${e.message}\n\nHerlaai asseblief die bladsy.`);
+      showLoadError(e);
     }
   }
 
