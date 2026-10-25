@@ -5315,6 +5315,744 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Iincwadi ezifumanekayo',
         'pt' => 'Livros disponíveis',
         'st' => 'Libuka tse fumanehang'
+    ],
+
+    // ===== Calendar (calendar/) =====
+    'month' => [
+        'af' => 'Maand',
+        'en' => 'Month',
+        'zu' => 'Inyanga',
+        'xh' => 'Inyanga',
+        'pt' => 'Mês',
+        'st' => 'Khoeli'
+    ],
+    'cal_visit' => [
+        'af' => 'Besoek',
+        'en' => 'Visit',
+        'zu' => 'Ukuvakasha',
+        'xh' => 'Utyelelo',
+        'pt' => 'Visita',
+        'st' => 'Ketelo'
+    ],
+    'cal_birthday' => [
+        'af' => 'Verjaarsdag',
+        'en' => 'Birthday',
+        'zu' => 'Usuku lokuzalwa',
+        'xh' => 'Usuku lokuzalwa',
+        'pt' => 'Aniversário',
+        'st' => 'Letsatsi la tsoalo'
+    ],
+    'cal_f_events' => [
+        'af' => 'Gebeure',
+        'en' => 'Events',
+        'zu' => 'Imicimbi',
+        'xh' => 'Imisitho',
+        'pt' => 'Eventos',
+        'st' => 'Liketsahalo'
+    ],
+    'cal_f_visits' => [
+        'af' => 'Besoeke',
+        'en' => 'Visits',
+        'zu' => 'Ukuvakasha',
+        'xh' => 'Iityelelo',
+        'pt' => 'Visitas',
+        'st' => 'Maeto'
+    ],
+    'cal_f_appointments' => [
+        'af' => 'Afsprake',
+        'en' => 'Appointments',
+        'zu' => 'Izikhathi ezibekiwe',
+        'xh' => 'Amadinga',
+        'pt' => 'Compromissos',
+        'st' => 'Likopano'
+    ],
+    'cal_f_birthdays' => [
+        'af' => 'Verjaarsdae',
+        'en' => 'Birthdays',
+        'zu' => 'Izinsuku zokuzalwa',
+        'xh' => 'Imihla yokuzalwa',
+        'pt' => 'Aniversários',
+        'st' => 'Matsatsi a tsoalo'
+    ],
+    'cal_show' => [
+        'af' => 'Wys',
+        'en' => 'Show',
+        'zu' => 'Bonisa',
+        'xh' => 'Bonisa',
+        'pt' => 'Mostrar',
+        'st' => 'Bontša'
+    ],
+    'cal_new' => [
+        'af' => 'Nuwe',
+        'en' => 'New',
+        'zu' => 'Okusha',
+        'xh' => 'Entsha',
+        'pt' => 'Novo',
+        'st' => 'E ncha'
+    ],
+    'cal_add' => [
+        'af' => 'Voeg by',
+        'en' => 'Add',
+        'zu' => 'Engeza',
+        'xh' => 'Yongeza',
+        'pt' => 'Adicionar',
+        'st' => 'Kenya'
+    ],
+    'cal_new_event' => [
+        'af' => 'Nuwe gebeurtenis',
+        'en' => 'New event',
+        'zu' => 'Umcimbi omusha',
+        'xh' => 'Umsitho omtsha',
+        'pt' => 'Novo evento',
+        'st' => 'Ketsahalo e ncha'
+    ],
+    'cal_new_event_hint' => [
+        'af' => 'In ’n kamer: almal in die kamer sien dit',
+        'en' => 'In a room: everyone in the room sees it',
+        'zu' => 'Egumbini: wonke umuntu osegumbini uyawubona',
+        'xh' => 'Kwigumbi: wonke umntu osegumbini uyawubona',
+        'pt' => 'Numa sala: todos na sala o veem',
+        'st' => 'Kamoreng: bohle ba kamoreng ba e bona'
+    ],
+    'cal_new_visit' => [
+        'af' => 'Nuwe besoek',
+        'en' => 'New visit',
+        'zu' => 'Ukuvakasha okusha',
+        'xh' => 'Utyelelo olutsha',
+        'pt' => 'Nova visita',
+        'st' => 'Ketelo e ncha'
+    ],
+    'cal_new_visit_hint' => [
+        'af' => 'Privaat: net jy (en jou gade as jy dit deel)',
+        'en' => 'Private: only you (and your spouse if you share it)',
+        'zu' => 'Kuyimfihlo: nguwe kuphela (nomlingani wakho uma wabelana)',
+        'xh' => 'Kuyimfihlo: nguwe kuphela (neqabane lakho ukuba wabelana)',
+        'pt' => 'Privado: só você (e o seu cônjuge, se compartilhar)',
+        'st' => 'Ke lekunutu: ke uena feela (le molekane oa hao ha o arolelana)'
+    ],
+    'cal_new_diary' => [
+        'af' => 'Dagboekinskrywing',
+        'en' => 'Diary entry',
+        'zu' => 'Okufakwe kudayari',
+        'xh' => 'Ingeniso yedayari',
+        'pt' => 'Entrada no diário',
+        'st' => 'Ngoliso ea bukana'
+    ],
+    'cal_new_diary_hint' => [
+        'af' => 'Maak jou privaat dagboek oop',
+        'en' => 'Opens your private diary',
+        'zu' => 'Kuvula idayari yakho eyimfihlo',
+        'xh' => 'Ivula idayari yakho eyimfihlo',
+        'pt' => 'Abre o seu diário privado',
+        'st' => 'E bula bukana ea hao ea lekunutu'
+    ],
+    'cal_edit_event' => [
+        'af' => 'Wysig gebeurtenis',
+        'en' => 'Edit event',
+        'zu' => 'Hlela umcimbi',
+        'xh' => 'Hlela umsitho',
+        'pt' => 'Editar evento',
+        'st' => 'Fetola ketsahalo'
+    ],
+    'cal_edit_visit' => [
+        'af' => 'Wysig besoek',
+        'en' => 'Edit visit',
+        'zu' => 'Hlela ukuvakasha',
+        'xh' => 'Hlela utyelelo',
+        'pt' => 'Editar visita',
+        'st' => 'Fetola ketelo'
+    ],
+    'cal_all_day' => [
+        'af' => 'Hele dag',
+        'en' => 'All day',
+        'zu' => 'Usuku lonke',
+        'xh' => 'Imini yonke',
+        'pt' => 'Dia inteiro',
+        'st' => 'Letsatsi lohle'
+    ],
+    'cal_add_to_phone' => [
+        'af' => 'Voeg by my foon se kalender',
+        'en' => 'Add to my phone’s calendar',
+        'zu' => 'Engeza kukhalenda yefoni yami',
+        'xh' => 'Yongeza kwikhalenda yefowuni yam',
+        'pt' => 'Adicionar ao calendário do telefone',
+        'st' => 'Kenya khalendareng ea founu ea ka'
+    ],
+    'cal_send_reminder' => [
+        'af' => 'Stuur herinnering aan die kamer',
+        'en' => 'Send a reminder to the room',
+        'zu' => 'Thumela isikhumbuzo egumbini',
+        'xh' => 'Thumela isikhumbuzo kwigumbi',
+        'pt' => 'Enviar lembrete à sala',
+        'st' => 'Romela khopotso kamoreng'
+    ],
+    'cal_reminder_sent' => [
+        'af' => 'Herinnering gestuur',
+        'en' => 'Reminder sent',
+        'zu' => 'Isikhumbuzo sithunyelwe',
+        'xh' => 'Isikhumbuzo sithunyelwe',
+        'pt' => 'Lembrete enviado',
+        'st' => 'Khopotso e rometsoe'
+    ],
+    'cal_reminder_recent' => [
+        'af' => 'Jy het reeds ’n herinnering vir hierdie gebeurtenis gestuur. Probeer oor ’n uur weer.',
+        'en' => 'You already sent a reminder for this event. Try again in an hour.',
+        'zu' => 'Usuthumele isikhumbuzo salo mcimbi. Zama futhi ngemva kwehora.',
+        'xh' => 'Sele uthumele isikhumbuzo salo msitho. Zama kwakhona emva kweyure.',
+        'pt' => 'Você já enviou um lembrete para este evento. Tente novamente daqui a uma hora.',
+        'st' => 'U se u rometse khopotso bakeng sa ketsahalo ena. Leka hape kamora hora.'
+    ],
+    'cal_open_in_gospel' => [
+        'af' => 'Open in Gospel Media',
+        'en' => 'Open in Gospel Media',
+        'zu' => 'Vula ku-Gospel Media',
+        'xh' => 'Vula kwi-Gospel Media',
+        'pt' => 'Abrir no Gospel Media',
+        'st' => 'Bula ho Gospel Media'
+    ],
+    'cal_open_in_diary' => [
+        'af' => 'Open in dagboek',
+        'en' => 'Open in diary',
+        'zu' => 'Vula kudayari',
+        'xh' => 'Vula kwidayari',
+        'pt' => 'Abrir no diário',
+        'st' => 'Bula bukaneng'
+    ],
+    'cal_confirm' => [
+        'af' => 'Bevestig',
+        'en' => 'Confirm',
+        'zu' => 'Qinisekisa',
+        'xh' => 'Qinisekisa',
+        'pt' => 'Confirmar',
+        'st' => 'Netefatsa'
+    ],
+    'cal_cancel_appt' => [
+        'af' => 'Kanselleer afspraak',
+        'en' => 'Cancel appointment',
+        'zu' => 'Khansela isikhathi esibekiwe',
+        'xh' => 'Rhoxisa idinga',
+        'pt' => 'Cancelar compromisso',
+        'st' => 'Hlakola kopano'
+    ],
+    'cal_cancel_appt_q' => [
+        'af' => 'Kanselleer hierdie afspraak?',
+        'en' => 'Cancel this appointment?',
+        'zu' => 'Khansela lesi sikhathi esibekiwe?',
+        'xh' => 'Rhoxisa eli dinga?',
+        'pt' => 'Cancelar este compromisso?',
+        'st' => 'Hlakola kopano ena?'
+    ],
+    'cal_cancel_appt_text' => [
+        'af' => 'Die ander persoon kry ’n kennisgewing.',
+        'en' => 'The other person will be notified.',
+        'zu' => 'Omunye umuntu uzokwaziswa.',
+        'xh' => 'Omnye umntu uya kwaziswa.',
+        'pt' => 'A outra pessoa será notificada.',
+        'st' => 'Motho e mong o tla tsebisoa.'
+    ],
+    'cal_appt_confirmed' => [
+        'af' => 'Afspraak bevestig',
+        'en' => 'Appointment confirmed',
+        'zu' => 'Isikhathi esibekiwe siqinisekisiwe',
+        'xh' => 'Idinga liqinisekisiwe',
+        'pt' => 'Compromisso confirmado',
+        'st' => 'Kopano e netefalitsoe'
+    ],
+    'cal_appt_cancelled' => [
+        'af' => 'Afspraak gekanselleer',
+        'en' => 'Appointment cancelled',
+        'zu' => 'Isikhathi esibekiwe sikhanseliwe',
+        'xh' => 'Idinga lirhoxisiwe',
+        'pt' => 'Compromisso cancelado',
+        'st' => 'Kopano e hlakotsoe'
+    ],
+    'cal_status_pending' => [
+        'af' => 'wag op bevestiging',
+        'en' => 'awaiting confirmation',
+        'zu' => 'kulindwe ukuqinisekiswa',
+        'xh' => 'kulindwe ukuqinisekiswa',
+        'pt' => 'aguarda confirmação',
+        'st' => 'e emetse netefatso'
+    ],
+    'cal_status_confirmed' => [
+        'af' => 'bevestig',
+        'en' => 'confirmed',
+        'zu' => 'kuqinisekisiwe',
+        'xh' => 'kuqinisekisiwe',
+        'pt' => 'confirmado',
+        'st' => 'e netefalitsoe'
+    ],
+    'cal_appt_with' => [
+        'af' => 'Afspraak met {name}',
+        'en' => 'Appointment with {name}',
+        'zu' => 'Isikhathi esibekiwe no-{name}',
+        'xh' => 'Idinga no-{name}',
+        'pt' => 'Compromisso com {name}',
+        'st' => 'Kopano le {name}'
+    ],
+    'cal_birthday_of' => [
+        'af' => '{name} verjaar',
+        'en' => '{name}’s birthday',
+        'zu' => 'Usuku lokuzalwa luka-{name}',
+        'xh' => 'Usuku lokuzalwa luka-{name}',
+        'pt' => 'Aniversário de {name}',
+        'st' => 'Letsatsi la tsoalo la {name}'
+    ],
+    'cal_your_birthday' => [
+        'af' => 'Jou verjaarsdag',
+        'en' => 'Your birthday',
+        'zu' => 'Usuku lwakho lokuzalwa',
+        'xh' => 'Usuku lwakho lokuzalwa',
+        'pt' => 'O seu aniversário',
+        'st' => 'Letsatsi la hao la tsoalo'
+    ],
+    'cal_shared_by_spouse' => [
+        'af' => 'Gedeel deur jou gade',
+        'en' => 'Shared by your spouse',
+        'zu' => 'Kwabelwe ngumlingani wakho',
+        'xh' => 'Kwabelwe liqabane lakho',
+        'pt' => 'Compartilhado pelo seu cônjuge',
+        'st' => 'E arolelanoe ke molekane oa hao'
+    ],
+    'cal_shared_with' => [
+        'af' => 'Gedeel met {name}',
+        'en' => 'Shared with {name}',
+        'zu' => 'Kwabelwana no-{name}',
+        'xh' => 'Kwabelwana no-{name}',
+        'pt' => 'Compartilhado com {name}',
+        'st' => 'E arolelanoe le {name}'
+    ],
+    'cal_read_only' => [
+        'af' => 'Net lees',
+        'en' => 'Read only',
+        'zu' => 'Ukufunda kuphela',
+        'xh' => 'Ukufunda kuphela',
+        'pt' => 'Somente leitura',
+        'st' => 'Ho bala feela'
+    ],
+    'cal_nothing_day' => [
+        'af' => 'Niks op hierdie dag nie',
+        'en' => 'Nothing on this day',
+        'zu' => 'Akukho lutho ngalolu suku',
+        'xh' => 'Akukho nto ngalo mhla',
+        'pt' => 'Nada neste dia',
+        'st' => 'Ha ho letho ka letsatsi lena'
+    ],
+    'cal_nothing_period' => [
+        'af' => 'Niks in hierdie tydperk nie',
+        'en' => 'Nothing in this period',
+        'zu' => 'Akukho lutho kulesi sikhathi',
+        'xh' => 'Akukho nto kweli xesha',
+        'pt' => 'Nada neste período',
+        'st' => 'Ha ho letho nakong ena'
+    ],
+    'cal_empty_hint' => [
+        'af' => 'Tik op “Nuwe” om iets by te voeg.',
+        'en' => 'Tap “New” to add something.',
+        'zu' => 'Thepha “Okusha” ukuze wengeze okuthile.',
+        'xh' => 'Cofa “Entsha” ukongeza into.',
+        'pt' => 'Toque em “Novo” para adicionar algo.',
+        'st' => 'Tobetsa “E ncha” ho kenya ho hong.'
+    ],
+    'cal_load_failed' => [
+        'af' => 'Kon nie die kalender laai nie.',
+        'en' => 'Could not load the calendar.',
+        'zu' => 'Ayikwazanga ukulayisha ikhalenda.',
+        'xh' => 'Ayikwazanga ukulayisha ikhalenda.',
+        'pt' => 'Não foi possível carregar o calendário.',
+        'st' => 'Ha ea khona ho kenya khalendara.'
+    ],
+    'cal_retry' => [
+        'af' => 'Probeer weer',
+        'en' => 'Try again',
+        'zu' => 'Zama futhi',
+        'xh' => 'Zama kwakhona',
+        'pt' => 'Tentar novamente',
+        'st' => 'Leka hape'
+    ],
+    'cal_delete_q' => [
+        'af' => 'Vee hierdie besoek uit?',
+        'en' => 'Delete this visit?',
+        'zu' => 'Susa lokhu kuvakasha?',
+        'xh' => 'Cima olu tyelelo?',
+        'pt' => 'Excluir esta visita?',
+        'st' => 'Hlakola ketelo ena?'
+    ],
+    'cal_delete_event_q' => [
+        'af' => 'Vee hierdie gebeurtenis uit?',
+        'en' => 'Delete this event?',
+        'zu' => 'Susa lo mcimbi?',
+        'xh' => 'Cima lo msitho?',
+        'pt' => 'Excluir este evento?',
+        'st' => 'Hlakola ketsahalo ena?'
+    ],
+    'cal_delete_event_text' => [
+        'af' => 'Dit verdwyn ook uit Gospel Media, met sy kommentaar.',
+        'en' => 'It also disappears from Gospel Media, with its comments.',
+        'zu' => 'Kuzonyamalala naku-Gospel Media, kanye nemibono yakhona.',
+        'xh' => 'Iya kunyamalala nakwi-Gospel Media, kunye nezimvo zayo.',
+        'pt' => 'Também desaparece do Gospel Media, com os comentários.',
+        'st' => 'E tla nyamela le ho Gospel Media, hammoho le maikutlo a eona.'
+    ],
+    'cal_cannot_undo' => [
+        'af' => 'Dit kan nie ontdoen word nie.',
+        'en' => 'This cannot be undone.',
+        'zu' => 'Lokhu akunakuhlehliswa.',
+        'xh' => 'Oku akunakubuyiswa.',
+        'pt' => 'Isto não pode ser desfeito.',
+        'st' => 'Sena se ke ke sa khutlisoa.'
+    ],
+    'cal_err_title' => [
+        'af' => 'Gee asseblief ’n titel.',
+        'en' => 'Please enter a title.',
+        'zu' => 'Sicela ufake isihloko.',
+        'xh' => 'Nceda ufake isihloko.',
+        'pt' => 'Por favor, insira um título.',
+        'st' => 'Ka kopo kenya sehlooho.'
+    ],
+    'cal_err_date' => [
+        'af' => 'Kies ’n geldige datum.',
+        'en' => 'Choose a valid date.',
+        'zu' => 'Khetha usuku olufanele.',
+        'xh' => 'Khetha umhla ofanelekileyo.',
+        'pt' => 'Escolha uma data válida.',
+        'st' => 'Khetha letsatsi le nepahetseng.'
+    ],
+    'cal_err_time' => [
+        'af' => 'Kies ’n geldige tyd, of merk “Hele dag”.',
+        'en' => 'Choose a valid time, or tick “All day”.',
+        'zu' => 'Khetha isikhathi esifanele, noma umake “Usuku lonke”.',
+        'xh' => 'Khetha ixesha elifanelekileyo, okanye uphawule “Imini yonke”.',
+        'pt' => 'Escolha uma hora válida ou marque “Dia inteiro”.',
+        'st' => 'Khetha nako e nepahetseng, kapa o tšoaee “Letsatsi lohle”.'
+    ],
+    'cal_err_time_event' => [
+        'af' => 'Gebeure in ’n kamer het ’n tyd nodig.',
+        'en' => 'Room events need a time.',
+        'zu' => 'Imicimbi esegumbini idinga isikhathi.',
+        'xh' => 'Imisitho esegumbini ifuna ixesha.',
+        'pt' => 'Eventos numa sala precisam de uma hora.',
+        'st' => 'Liketsahalo tsa kamore li hloka nako.'
+    ],
+    'cal_err_room' => [
+        'af' => 'Kies ’n kamer.',
+        'en' => 'Choose a room.',
+        'zu' => 'Khetha igumbi.',
+        'xh' => 'Khetha igumbi.',
+        'pt' => 'Escolha uma sala.',
+        'st' => 'Khetha kamore.'
+    ],
+    'cal_err_person' => [
+        'af' => 'Hierdie persoon kan nie gekies word nie.',
+        'en' => 'This person can’t be chosen.',
+        'zu' => 'Lo muntu akakwazi ukukhethwa.',
+        'xh' => 'Lo mntu akanakukhethwa.',
+        'pt' => 'Esta pessoa não pode ser escolhida.',
+        'st' => 'Motho enoa a ke ke a khethoa.'
+    ],
+    'cal_err_forbidden' => [
+        'af' => 'Jy het nie regte hiervoor nie.',
+        'en' => 'You don’t have permission for this.',
+        'zu' => 'Awunayo imvume yalokhu.',
+        'xh' => 'Akunayo imvume yoku.',
+        'pt' => 'Você não tem permissão para isso.',
+        'st' => 'Ha u na tumello ea sena.'
+    ],
+    'cal_err_session' => [
+        'af' => 'Jou sessie het verval. Meld asseblief weer aan.',
+        'en' => 'Your session has expired. Please sign in again.',
+        'zu' => 'Iseshini yakho iphelelwe yisikhathi. Sicela ungene futhi.',
+        'xh' => 'Iseshoni yakho iphelelwe lixesha. Nceda ungene kwakhona.',
+        'pt' => 'A sua sessão expirou. Entre novamente.',
+        'st' => 'Seshene ea hao e felile. Ka kopo kena hape.'
+    ],
+    'cal_err_generic' => [
+        'af' => 'Iets het skeefgeloop. Probeer asseblief weer.',
+        'en' => 'Something went wrong. Please try again.',
+        'zu' => 'Kukhona okungahambanga kahle. Sicela uzame futhi.',
+        'xh' => 'Kukho into engahambanga kakuhle. Nceda uzame kwakhona.',
+        'pt' => 'Algo deu errado. Tente novamente.',
+        'st' => 'Ho na le se sa tsamaeang hantle. Ka kopo leka hape.'
+    ],
+    'cal_err_rate' => [
+        'af' => 'Te veel versoeke. Wag asseblief ’n rukkie.',
+        'en' => 'Too many requests. Please wait a moment.',
+        'zu' => 'Izicelo eziningi kakhulu. Sicela ulinde kancane.',
+        'xh' => 'Izicelo ezininzi kakhulu. Nceda ulinde kancinci.',
+        'pt' => 'Pedidos demais. Aguarde um momento.',
+        'st' => 'Likopo tse ngata haholo. Ka kopo ema hanyane.'
+    ],
+    'cal_err_not_found' => [
+        'af' => 'Hierdie item bestaan nie meer nie.',
+        'en' => 'This item no longer exists.',
+        'zu' => 'Lento ayisekho.',
+        'xh' => 'Le nto ayisekho.',
+        'pt' => 'Este item já não existe.',
+        'st' => 'Ntho ena ha e sa le eo.'
+    ],
+    'cal_err_offline' => [
+        'af' => 'Geen verbinding nie. Kyk jou internet en probeer weer.',
+        'en' => 'No connection. Check your internet and try again.',
+        'zu' => 'Akukho xhumano. Hlola i-inthanethi yakho bese uzama futhi.',
+        'xh' => 'Akukho qhagamshelwano. Jonga i-intanethi yakho uze uzame kwakhona.',
+        'pt' => 'Sem conexão. Verifique a internet e tente novamente.',
+        'st' => 'Ha ho khokahano. Hlahloba inthanete ea hao ’me u leke hape.'
+    ],
+    'cal_err_past' => [
+        'af' => 'Hierdie gebeurtenis is reeds verby.',
+        'en' => 'This event has already passed.',
+        'zu' => 'Lo mcimbi usudlulile.',
+        'xh' => 'Lo msitho sele udlulile.',
+        'pt' => 'Este evento já passou.',
+        'st' => 'Ketsahalo ena e se e fetile.'
+    ],
+    'cal_err_already' => [
+        'af' => 'Dit is reeds gedoen.',
+        'en' => 'This has already been done.',
+        'zu' => 'Lokhu sekwenziwe kakade.',
+        'xh' => 'Oku sele kwenziwe.',
+        'pt' => 'Isso já foi feito.',
+        'st' => 'Sena se se se entsoe.'
+    ],
+    'cal_err_no_spouse' => [
+        'af' => 'Jy is nie aan ’n gade gekoppel nie.',
+        'en' => 'You are not linked to a spouse.',
+        'zu' => 'Awuxhunywanga nomlingani.',
+        'xh' => 'Akunxulumananga neqabane.',
+        'pt' => 'Você não está vinculado a um cônjuge.',
+        'st' => 'Ha u hokahane le molekane.'
+    ],
+    'cal_items' => [
+        'af' => '{n} items',
+        'en' => '{n} items',
+        'zu' => 'izinto ezingu-{n}',
+        'xh' => 'izinto ezi-{n}',
+        'pt' => '{n} itens',
+        'st' => 'lintho tse {n}'
+    ],
+    'cal_one_item' => [
+        'af' => '1 item',
+        'en' => '1 item',
+        'zu' => 'into engu-1',
+        'xh' => 'into e-1',
+        'pt' => '1 item',
+        'st' => 'ntho e le 1'
+    ],
+    'cal_more' => [
+        'af' => '+{n} meer',
+        'en' => '+{n} more',
+        'zu' => '+{n} ngaphezulu',
+        'xh' => '+{n} ngaphezulu',
+        'pt' => '+{n} mais',
+        'st' => '+{n} tse ling'
+    ],
+    'cal_previous' => [
+        'af' => 'Vorige',
+        'en' => 'Previous',
+        'zu' => 'Okwedlule',
+        'xh' => 'Okudlulileyo',
+        'pt' => 'Anterior',
+        'st' => 'E fetileng'
+    ],
+    'cal_next' => [
+        'af' => 'Volgende',
+        'en' => 'Next',
+        'zu' => 'Okulandelayo',
+        'xh' => 'Okulandelayo',
+        'pt' => 'Próximo',
+        'st' => 'E latelang'
+    ],
+    'cal_view' => [
+        'af' => 'Aansig',
+        'en' => 'View',
+        'zu' => 'Ukubuka',
+        'xh' => 'Imboniselo',
+        'pt' => 'Vista',
+        'st' => 'Pono'
+    ],
+    'cal_exporting' => [
+        'af' => 'Berei die lêer voor…',
+        'en' => 'Preparing the file…',
+        'zu' => 'Ilungiselela ifayela…',
+        'xh' => 'Ilungiselela ifayile…',
+        'pt' => 'Preparando o arquivo…',
+        'st' => 'E lokisetsa faele…'
+    ],
+    'cal_make_appointment' => [
+        'af' => 'Maak ’n afspraak',
+        'en' => 'Make an appointment',
+        'zu' => 'Yenza isikhathi esibekiwe',
+        'xh' => 'Yenza idinga',
+        'pt' => 'Marcar compromisso',
+        'st' => 'Etsa kopano'
+    ],
+    'cal_spouse_pending' => [
+        'af' => 'Iemand wil jou as gade koppel.',
+        'en' => 'Someone wants to link with you as spouse.',
+        'zu' => 'Othile ufuna ukuxhumana nawe njengomlingani.',
+        'xh' => 'Umntu uthile ufuna ukunxulumana nawe njengeqabane.',
+        'pt' => 'Alguém quer se vincular a você como cônjuge.',
+        'st' => 'Motho e mong o batla ho hokahana le uena e le molekane.'
+    ],
+    'cal_spouse_view' => [
+        'af' => 'Bekyk',
+        'en' => 'View',
+        'zu' => 'Buka',
+        'xh' => 'Jonga',
+        'pt' => 'Ver',
+        'st' => 'Sheba'
+    ],
+    'cal_no_rooms' => [
+        'af' => 'Jy kan nie in ’n kamer gebeure plaas nie. Besoeke kan jy altyd byvoeg.',
+        'en' => 'You can’t post events in a room. You can always add visits.',
+        'zu' => 'Awukwazi ukuthumela imicimbi egumbini. Ungahlala wengeza ukuvakasha.',
+        'xh' => 'Akukwazi ukuthumela imisitho kwigumbi. Ungasoloko wongeza iityelelo.',
+        'pt' => 'Você não pode publicar eventos numa sala. Pode sempre adicionar visitas.',
+        'st' => 'U ke ke ua kenya liketsahalo kamoreng. U ka lula u kenya maeto.'
+    ],
+    'cal_access_denied' => [
+        'af' => 'Jy het nie toegang tot hierdie kalender nie.',
+        'en' => 'You don’t have access to this calendar.',
+        'zu' => 'Awunakho ukufinyelela kule khalenda.',
+        'xh' => 'Akunakho ukufikelela kule khalenda.',
+        'pt' => 'Você não tem acesso a este calendário.',
+        'st' => 'Ha u na phihlello khalendareng ena.'
+    ],
+    'cal_back_to_mine' => [
+        'af' => 'Na my kalender',
+        'en' => 'To my calendar',
+        'zu' => 'Kukhalenda yami',
+        'xh' => 'Kwikhalenda yam',
+        'pt' => 'Para o meu calendário',
+        'st' => 'Ho khalendara ea ka'
+    ],
+    'cal_when' => [
+        'af' => 'Wanneer',
+        'en' => 'When',
+        'zu' => 'Nini',
+        'xh' => 'Nini',
+        'pt' => 'Quando',
+        'st' => 'Neng'
+    ],
+    'cal_by' => [
+        'af' => 'Deur {name}',
+        'en' => 'By {name}',
+        'zu' => 'Ngu-{name}',
+        'xh' => 'Ngu-{name}',
+        'pt' => 'Por {name}',
+        'st' => 'Ka {name}'
+    ],
+    'cal_ics_ready' => [
+        'af' => 'Kalenderlêer afgelaai',
+        'en' => 'Calendar file downloaded',
+        'zu' => 'Ifayela lekhalenda lilandiwe',
+        'xh' => 'Ifayile yekhalenda ikhutshelwe',
+        'pt' => 'Arquivo de calendário baixado',
+        'st' => 'Faele ea khalendara e jarollotsoe'
+    ],
+    'cal_page' => [
+        'af' => 'Bladsy',
+        'en' => 'Page',
+        'zu' => 'Ikhasi',
+        'xh' => 'Iphepha',
+        'pt' => 'Página',
+        'st' => 'Leqephe'
+    ],
+    'cal_generated' => [
+        'af' => 'Gegenereer op',
+        'en' => 'Generated on',
+        'zu' => 'Kwenziwe ngo',
+        'xh' => 'Kwenziwe ngo',
+        'pt' => 'Gerado em',
+        'st' => 'E entsoe ka'
+    ],
+    'cal_week_n' => [
+        'af' => 'Week {n}',
+        'en' => 'Week {n}',
+        'zu' => 'Iviki {n}',
+        'xh' => 'Iveki {n}',
+        'pt' => 'Semana {n}',
+        'st' => 'Beke {n}'
+    ],
+    'cal_saving' => [
+        'af' => 'Stoor…',
+        'en' => 'Saving…',
+        'zu' => 'Iyalondoloza…',
+        'xh' => 'Iyagcina…',
+        'pt' => 'Salvando…',
+        'st' => 'E boloka…'
+    ],
+    'cal_person' => [
+        'af' => 'Persoon',
+        'en' => 'Person',
+        'zu' => 'Umuntu',
+        'xh' => 'Umntu',
+        'pt' => 'Pessoa',
+        'st' => 'Motho'
+    ],
+    'cal_from_list' => [
+        'af' => 'Uit die lys',
+        'en' => 'From the list',
+        'zu' => 'Ohlwini',
+        'xh' => 'Kuluhlu',
+        'pt' => 'Da lista',
+        'st' => 'Lethathamong'
+    ],
+    'cal_title_visit_ph' => [
+        'af' => 'bv. Huisbesoek by die Smits',
+        'en' => 'e.g. Home visit to the Smiths',
+        'zu' => 'isib. Ukuvakasha ekhaya kwa-Smith',
+        'xh' => 'umz. Utyelelo ekhaya kwa-Smith',
+        'pt' => 'ex.: Visita à família Smith',
+        'st' => 'mohl. Ketelo lapeng la ha Smith'
+    ],
+    'cal_title_event_ph' => [
+        'af' => 'bv. Jeugaand in die saal',
+        'en' => 'e.g. Youth evening in the hall',
+        'zu' => 'isib. Ubusuku bentsha ehholo',
+        'xh' => 'umz. Ubusuku bolutsha eholweni',
+        'pt' => 'ex.: Noite de jovens no salão',
+        'st' => 'mohl. Mantsiboea a bacha holong'
+    ],
+    'cal_room_event_note' => [
+        'af' => 'Verskyn ook in Gospel Media',
+        'en' => 'Also appears in Gospel Media',
+        'zu' => 'Kuvela naku-Gospel Media',
+        'xh' => 'Ikwavela nakwi-Gospel Media',
+        'pt' => 'Também aparece no Gospel Media',
+        'st' => 'E hlaha le ho Gospel Media'
+    ],
+    'cal_status' => [
+        'af' => 'Status',
+        'en' => 'Status',
+        'zu' => 'Isimo',
+        'xh' => 'Imeko',
+        'pt' => 'Status',
+        'st' => 'Boemo'
+    ],
+    'cal_notif_visit_msg' => [
+        'af' => '{name} het ’n besoek by jou beplan vir {date}.',
+        'en' => '{name} has planned a visit with you on {date}.',
+        'zu' => '{name} uhlele ukukuvakashela ngo-{date}.',
+        'xh' => '{name} ucwangcise ukukutyelela ngo-{date}.',
+        'pt' => '{name} planejou uma visita a você em {date}.',
+        'st' => '{name} o reriletse ho u etela ka {date}.'
+    ],
+    'cal_notif_reminder_msg' => [
+        'af' => 'Moenie vergeet nie: {event}, {when}.',
+        'en' => 'Don’t forget: {event}, {when}.',
+        'zu' => 'Ungakhohlwa: {event}, {when}.',
+        'xh' => 'Musa ukulibala: {event}, {when}.',
+        'pt' => 'Não se esqueça: {event}, {when}.',
+        'st' => 'U se ke ua lebala: {event}, {when}.'
+    ],
+    'cal_notif_appt_confirmed_msg' => [
+        'af' => '{name} het jou afspraak op {date} om {time} bevestig.',
+        'en' => '{name} confirmed your appointment on {date} at {time}.',
+        'zu' => '{name} uqinisekise isikhathi sakho esibekiwe ngo-{date} ngo-{time}.',
+        'xh' => '{name} uqinisekise idinga lakho ngo-{date} ngo-{time}.',
+        'pt' => '{name} confirmou o seu compromisso em {date} às {time}.',
+        'st' => '{name} o netefalitse kopano ea hao ka {date} ka {time}.'
     ]
 ]);
 

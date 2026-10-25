@@ -1,139 +1,147 @@
 <?php
 declare(strict_types=1);
+/**
+ * GET|POST /calendar/api/export_pdf.php?user_id=N&from=YYYY-MM-DD&to=YYYY-MM-DD
+ * A real PDF of a calendar for the period (default: this month), for the
+ * people cal_view_rights() lets export it. Same content as view.php shows:
+ * visits and appointments, never diary entries or notes.
+ */
+
 require_once __DIR__ . '/../../security/auth_gate.php';
-require_once __DIR__ . '/../../includes/languages.php';
+require_once __DIR__ . '/../lib/ics.php';
+require_once __DIR__ . '/../lib/pdf.php';
 
-$userLang = $_SESSION['language'] ?? 'af';
-$meId = (int)($_SESSION['user_id'] ?? 0);
-$targetId = isset($_POST['user_id']) && is_numeric($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
-$view = trim($_POST['view'] ?? 'month');
-$date = trim($_POST['date'] ?? date('Y-m-d'));
+$src = $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : $_GET;
+$lang = cal_lang();
 
-if (!$targetId) {
-    http_response_code(400);
-    die('Invalid user_id');
-}
-
-// Check permissions (amp 1-9 can export)
-$stmt = $pdo->prepare("SELECT amp_id FROM users WHERE id = ? LIMIT 1");
-$stmt->execute([$meId]);
-$me = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$myAmpId = (int)($me['amp_id'] ?? 10);
-
-if ($myAmpId >= 10) {
+$me = cal_user($pdo, (int)$_SESSION['user_id']);
+$target = cal_user($pdo, (int)($src['user_id'] ?? 0));
+if (!$me || !$target || !cal_view_rights($me, $target)['export']) {
     http_response_code(403);
-    die('Insufficient permissions');
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'Forbidden';
+    exit;
 }
 
-// Get user info
-$stmt = $pdo->prepare("SELECT name, surname FROM users WHERE id = ? LIMIT 1");
-$stmt->execute([$targetId]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$user) {
-    http_response_code(404);
-    die('User not found');
+[$from, $to] = cal_range($src);
+if ($from === null) {
+    $first = cal_now()->modify('first day of this month');
+    $from = $first->format('Y-m-d');
+    $to = $first->modify('last day of this month')->format('Y-m-d');
 }
 
-$fullName = trim($user['name'] . ' ' . $user['surname']);
+try {
+    $items = cal_items_for_viewer($pdo, $target, (int)$me['id'], $from, $to, $lang);
+} catch (Throwable $e) {
+    error_log('Calendar PDF export error: ' . $e->getMessage());
+    http_response_code(500);
+    exit;
+}
 
-// Fetch events
-$stmt = $pdo->prepare("
-    SELECT 
-        ce.title,
-        ce.start_at AS datetime,
-        ce.description AS notes,
-        'event' AS type
-    FROM calendar_events ce
-    WHERE ce.user_id = ?
-    UNION ALL
-    SELECT 
-        d.title,
-        CONCAT(d.date, ' ', COALESCE(d.time, '00:00:00')) AS datetime,
-        d.body AS notes,
-        'diary' AS type
-    FROM diaries d
-    WHERE d.user_id = ?
-    UNION ALL
-    SELECT 
-        cv.title,
-        CONCAT(cv.visit_date, ' ', COALESCE(cv.visit_time, '00:00:00')) AS datetime,
-        cv.notes,
-        'visit' AS type
-    FROM calendar_visits cv
-    WHERE cv.user_id = ?
-    ORDER BY datetime ASC
-");
-$stmt->execute([$targetId, $targetId, $targetId]);
-$events = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Generate simple HTML for PDF
-header('Content-Type: application/pdf');
-header('Content-Disposition: attachment; filename="calendar_' . $targetId . '_' . time() . '.pdf"');
-
-// Use simple HTML to PDF conversion (you'd normally use a library like TCPDF or Dompdf)
-// For now, let's create a simple HTML that browser can print to PDF
-
-// Translation labels
-$calLabel = __t('calendar', $userLang);
-$dateLabel = __t('date', $userLang);
-$timeLabel = __t('time', $userLang);
-$titleLabel = __t('title', $userLang);
-$typeLabel = __t('type', $userLang) ?? 'Type';
-$notesLabel = __t('notes', $userLang);
-
-// Type translations
-$typeMap = [
-    'event' => __t('event', $userLang),
-    'diary' => __t('diary', $userLang),
-    'visit' => __t('appointment', $userLang)
+$fullName = cal_name($target['name'] ?? '', $target['surname'] ?? '');
+$dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+$monthKeys = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+$typeLabel = [
+    'visit' => __t('cal_visit', $lang),
+    'appointment' => __t('appointment', $lang),
 ];
 
-echo "<!DOCTYPE html>
-<html>
-<head>
-<meta charset='utf-8'>
-<title>$calLabel - $fullName</title>
-<style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-h1 { color: #b76e79; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-th { background-color: #b76e79; color: white; }
-tr:nth-child(even) { background-color: #f2f2f2; }
-</style>
-</head>
-<body>
-<h1>$calLabel: $fullName</h1>
-<p>$dateLabel: $date</p>
-<table>
-<thead>
-<tr>
-<th>$dateLabel / $timeLabel</th>
-<th>$titleLabel</th>
-<th>$typeLabel</th>
-<th>$notesLabel</th>
-</tr>
-</thead>
-<tbody>";
+$fmtDate = function (string $date, bool $withDay) use ($lang, $dayKeys, $monthKeys): string {
+    $d = new DateTimeImmutable($date);
+    $month = mb_substr(__t($monthKeys[(int)$d->format('n') - 1], $lang), 0, 3);
+    $out = (int)$d->format('j') . ' ' . $month . ' ' . $d->format('Y');
+    return $withDay ? __t($dayKeys[(int)$d->format('w')], $lang) . ' ' . $out : $out;
+};
 
-foreach ($events as $event) {
-    $datetime = date('Y-m-d H:i', strtotime($event['datetime']));
-    $title = htmlspecialchars($event['title']);
-    $type = $typeMap[$event['type']] ?? ucfirst($event['type']);
-    $notes = htmlspecialchars(substr($event['notes'] ?? '', 0, 100));
+// ===== DRAW =====
+$pdf = new CalPdf();
+$m = CalPdf::MARGIN;
+$width = CalPdf::W - 2 * $m;
+$cols = [
+    ['key' => 'date', 'label' => __t('date', $lang), 'w' => 88],
+    ['key' => 'time', 'label' => __t('time', $lang), 'w' => 52],
+    ['key' => 'type', 'label' => __t('type', $lang), 'w' => 64],
+    ['key' => 'title', 'label' => __t('title', $lang), 'w' => 168],
+    ['key' => 'where', 'label' => __t('location', $lang), 'w' => $width - 372],
+];
+$ink = [0.12, 0.14, 0.18];
+$muted = [0.42, 0.45, 0.51];
+$sapphire = [0.17, 0.38, 0.84];
+$pageNo = 0;
+$y = 0.0;
 
-    echo "<tr>
-    <td>$datetime</td>
-    <td>$title</td>
-    <td>$type</td>
-    <td>$notes</td>
-    </tr>";
+$header = function () use ($pdf, $m, $width, $cols, $sapphire, $fullName, $lang, $from, $to, $fmtDate, &$pageNo, &$y): void {
+    $pdf->addPage();
+    $pageNo++;
+    $pdf->rect(0, 0, CalPdf::W, 78, $sapphire);
+    $pdf->text($m, 38, __t('calendar', $lang) . ': ' . $fullName, 18, true, [1, 1, 1]);
+    $pdf->text($m, 58, $fmtDate($from, false) . ' – ' . $fmtDate($to, false), 10, false, [0.88, 0.92, 1]);
+    $pdf->text(CalPdf::W - $m - 60, 58, __t('cal_page', $lang) . ' ' . $pageNo, 9, false, [0.88, 0.92, 1]);
+    $y = 104;
+    $x = $m;
+    foreach ($cols as $c) {
+        $pdf->text($x, $y, $c['label'], 8.5, true, [0.29, 0.33, 0.4]);
+        $x += $c['w'];
+    }
+    $pdf->line($m, $y + 6, $m + $width, $y + 6, [0.17, 0.38, 0.84], 1);
+    $y += 20;
+};
+
+$header();
+
+if (!$items) {
+    $pdf->text($m, $y + 10, __t('cal_nothing_period', $lang), 11, false, $muted);
 }
 
-echo "</tbody>
-</table>
-<script>window.print();</script>
-</body>
-</html>";
+$shade = false;
+foreach ($items as $it) {
+    $where = [];
+    if (!empty($it['location'])) $where[] = (string)$it['location'];
+    if ($it['type'] === 'visit' && !empty($it['person_name']) && $it['person_name'] !== $it['title']) {
+        $where[] = (string)$it['person_name'];
+    }
+    $title = (string)$it['title'];
+    if ($it['type'] === 'appointment' && ($it['status'] ?? '') === 'pending') {
+        $title .= ' (' . __t('cal_status_pending', $lang) . ')';
+    }
+    $cells = [
+        'date' => [$fmtDate($it['date'], true)],
+        'time' => $pdf->wrap($it['time'] ?? __t('cal_all_day', $lang), 48, 9, false, 2),
+        'type' => $pdf->wrap($typeLabel[$it['type']] ?? $it['type'], 60, 9, false, 2),
+        'title' => $pdf->wrap($title, 164, 9.5, true, 4),
+        'where' => $pdf->wrap(implode(' · ', $where), $cols[4]['w'] - 4, 9, false, 4),
+    ];
+    $cells['date'] = $pdf->wrap($cells['date'][0], 84, 9, false, 2);
+    $lines = max(array_map('count', $cells));
+    $rowH = 8 + $lines * 12;
+
+    if ($y + $rowH > CalPdf::H - $m) {
+        $header();
+        $shade = false;
+    }
+    if ($shade) {
+        $pdf->rect($m - 4, $y - 11, $width + 8, $rowH, [0.95, 0.96, 0.99]);
+    }
+    $shade = !$shade;
+
+    $x = $m;
+    foreach ($cols as $c) {
+        $ly = $y;
+        foreach ($cells[$c['key']] as $line) {
+            $bold = $c['key'] === 'title';
+            $pdf->text($x, $ly, $line, $bold ? 9.5 : 9, $bold, $c['key'] === 'time' || $c['key'] === 'type' ? $muted : $ink);
+            $ly += 12;
+        }
+        $x += $c['w'];
+    }
+    $y += $rowH;
+}
+
+$pdf->text($m, CalPdf::H - 22, __t('cal_generated', $lang) . ' ' . cal_now()->format('Y-m-d H:i'), 8, false, $muted);
+
+$body = $pdf->output(__t('calendar', $lang) . ' - ' . $fullName);
+header('Content-Type: application/pdf');
+header('Content-Disposition: attachment; filename="' . cal_file_name('kalender-' . $fullName . '-' . $from, 'pdf') . '"');
+header('Content-Length: ' . strlen($body));
+header('Cache-Control: private, no-store');
+echo $body;

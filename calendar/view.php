@@ -1,572 +1,147 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../security/auth_gate.php';
-require_once __DIR__ . '/../includes/languages.php';
+/**
+ * Someone else's calendar (read only), for the people cal_view_rights()
+ * allows. Shows their visits and appointments with title, time and place;
+ * never diary entries or notes. Officers can export the period (PDF / CSV)
+ * and ask for an appointment on a chosen day (Ampte → Afsprake).
+ */
 
-$pageLang = $_SESSION['language'] ?? 'af';
+require_once dirname(__DIR__) . '/security/auth_gate.php';
+require_once __DIR__ . '/lib/page.php';
+
+$targetId = (int)($_GET['u'] ?? 0);
+
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
-    $_SESSION['language'] = $pageLang = $_GET['lang'];
+    $_SESSION['language'] = $_GET['lang'];
+    header('Location: /calendar/view.php?u=' . $targetId);
+    exit;
 }
 
-// Translation helper using central 5-language system
-function t(string $key): string {
-    global $pageLang;
-    return __t($key, $pageLang);
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    http_response_code(500);
+    die('Database connection failed');
 }
 
-function esc($s) { 
-    return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); 
+$pageLang = cal_lang();
+$me = cal_user($pdo, (int)$_SESSION['user_id']);
+if (!$me) {
+    header('Location: /logout.php');
+    exit;
 }
 
-$meId = (int)($_SESSION['user_id'] ?? 0);
-$targetId = isset($_GET['u']) && is_numeric($_GET['u']) ? (int)$_GET['u'] : $meId;
-
-if ($targetId <= 0) {
+// Your own calendar lives on calendar.php (with everything in it)
+if ($targetId <= 0 || $targetId === (int)$me['id']) {
     header('Location: /calendar/calendar.php');
     exit;
 }
 
-// Load target user
-$stmt = $pdo->prepare("SELECT u.id, u.name, u.surname, u.amp_id, u.town_id, u.congregation_id, u.photo, u.gender,
-    CASE WHEN u.gender='vrou' THEN a.female_name ELSE a.male_name END AS amp_name
-    FROM users u
-    LEFT JOIN amptes a ON a.id = u.amp_id
-    WHERE u.id = ? LIMIT 1");
-$stmt->execute([$targetId]);
-$targetUser = $stmt->fetch(PDO::FETCH_ASSOC);
+$target = cal_user($pdo, $targetId);
+$rights = $target ? cal_view_rights($me, $target) : ['view' => false, 'export' => false, 'appoint' => false];
 
-if (!$targetUser) {
-    header('Location: /calendar/calendar.php');
-    exit;
+$T = cal_js_strings($pageLang);
+$fullName = $target ? cal_name($target['name'] ?? '', $target['surname'] ?? '') : '';
+$office = ($target && !empty($target['amp_id']))
+    ? get_translated_office(cal_amp($target), (string)($target['gender'] ?? 'man'), $pageLang)
+    : '';
+
+$photo = (string)($target['photo'] ?? '');
+if ($photo !== '' && strpos($photo, 'http') !== 0 && strpos($photo, '/') !== 0) {
+    $photo = '/assets/uploads/' . $photo;
 }
+$parts = preg_split('/\s+/', $fullName) ?: [];
+$initials = count($parts) >= 2
+    ? mb_strtoupper(mb_substr($parts[0], 0, 1) . mb_substr($parts[count($parts) - 1], 0, 1))
+    : mb_strtoupper(mb_substr($fullName, 0, 2));
 
-// Load my permissions
-$stmt = $pdo->prepare("SELECT amp_id, town_id, congregation_id FROM users WHERE id = ? LIMIT 1");
-$stmt->execute([$meId]);
-$me = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$myAmpId = (int)($me['amp_id'] ?? 10);
-$myTownId = (int)($me['town_id'] ?? 0);
-$myCongId = (int)($me['congregation_id'] ?? 0);
-
-$targetAmpId = (int)($targetUser['amp_id'] ?? 10);
-$targetTownId = (int)($targetUser['town_id'] ?? 0);
-$targetCongId = (int)($targetUser['congregation_id'] ?? 0);
-
-// Check permission
-$canView = false;
-$canExport = false;
-
-if ($meId === $targetId) {
-    $canView = true;
-    $canExport = ($myAmpId >= 1 && $myAmpId <= 9);
-} elseif ($myAmpId < $targetAmpId) {
-    // Higher amp viewing lower
-    if ($myAmpId >= 6) {
-        $canView = ($myCongId === $targetCongId);
-    } elseif ($myAmpId >= 2) {
-        $canView = ($myTownId === $targetTownId);
-    } else {
-        $canView = true;
-    }
-    $canExport = ($myAmpId >= 1 && $myAmpId <= 9);
-} elseif ($myAmpId <= 5 && $myTownId === $targetTownId) {
-    // Same town
-    $canView = true;
-    $canExport = true;
-}
-
-if (!$canView) {
+if (!$rights['view']) {
     http_response_code(403);
-    die('Access denied / Toegang geweier');
 }
 
-$fullName = trim($targetUser['name'] . ' ' . $targetUser['surname']);
-$avatar = !empty($targetUser['photo']) ? $targetUser['photo'] : '/assets/img/avatar-default.png';
-
-$VER = time();
+$config = [
+    'mode' => 'view',
+    'lang' => $pageLang,
+    'csrf' => csrf_token(),
+    'userId' => (int)$me['id'],
+    'targetId' => $targetId,
+    'targetName' => $fullName,
+    'canExport' => $rights['export'],
+    'canAppoint' => $rights['appoint'],
+    'today' => cal_now()->format('Y-m-d'),
+    't' => $T,
+];
 ?><!doctype html>
-<html lang="<?= $pageLang ?>">
+<html lang="<?= cal_e($pageLang) ?>">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= esc(t('calendar')) ?> - <?= esc($fullName) ?></title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <style>
-        @font-face {
-            font-family: 'Parisienne';
-            src: url('/assets/fonts/Parisienne-Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
-    </style>
-    
-    <link rel="stylesheet" href="/calendar/css/calendar.css?v=<?= $VER ?>">
-    
-    <style>
-    /* Scoped user header styles */
-    .calendar-body .cal-user-header {
-      display: flex;
-      align-items: center;
-      gap: 25px;
-      padding: 25px 30px;
-      background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.85) 100%);
-      border: 1px solid rgba(183, 110, 121, 0.3);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(183, 110, 121, 0.4);
-      margin-bottom: 30px;
-      position: relative;
-      overflow: hidden;
-      z-index: 10;
-    }
-
-    .calendar-body .cal-user-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent 0%, rgba(192, 192, 192, 0.1) 50%, transparent 100%);
-      animation: header-shine 3s ease-in-out infinite;
-      pointer-events: none;
-    }
-
-    @keyframes header-shine {
-      0% { left: -100%; }
-      50%, 100% { left: 100%; }
-    }
-
-    .calendar-body .cal-user-avatar {
-      flex-shrink: 0;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      border: 3px solid #b76e79;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 20px rgba(183, 110, 121, 0.4);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      z-index: 2;
-    }
-
-    .calendar-body .cal-user-avatar:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 30px rgba(183, 110, 121, 0.6);
-    }
-
-    .calendar-body .cal-user-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      border-radius: 50%;
-    }
-
-    .calendar-body .cal-user-info {
-      flex: 1;
-      position: relative;
-      z-index: 2;
-    }
-
-    .calendar-body .cal-user-name {
-      font-family: 'Parisienne', cursive;
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
-      color: #b76e79;
-      text-shadow: 0 0 20px rgba(183, 110, 121, 0.4);
-      margin: 0 0 8px 0;
-      letter-spacing: 1px;
-      line-height: 1.2;
-    }
-
-    .calendar-body .cal-user-amp {
-      font-size: 1.1rem;
-      color: #f3c3b1;
-      opacity: 0.9;
-      font-weight: 300;
-      margin: 0;
-    }
-
-    .calendar-body .cal-user-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 2;
-    }
-
-    .calendar-body .cal-user-actions .cal-btn {
-      padding: 12px 20px;
-      background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-      border: 1px solid #8a8a8a;
-      border-radius: 12px;
-      color: #f3c3b1;
-      font-size: 14px;
-      font-weight: 300;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .calendar-body .cal-user-actions .cal-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent 0%, rgba(192, 192, 192, 0.2) 50%, transparent 100%);
-      transition: left 0.6s;
-      pointer-events: none;
-    }
-
-    .calendar-body .cal-user-actions .cal-btn:hover::before {
-      left: 100%;
-    }
-
-    .calendar-body .cal-user-actions .cal-btn:hover {
-      border-color: #b76e79;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(183, 110, 121, 0.4);
-      transform: translateY(-2px);
-    }
-
-    .calendar-body .cal-user-actions .cal-btn svg {
-      width: 18px;
-      height: 18px;
-      stroke: currentColor;
-      flex-shrink: 0;
-    }
-
-    .calendar-body .cal-btn-export {
-      background: linear-gradient(135deg, rgba(76, 175, 80, 0.3) 0%, rgba(76, 175, 80, 0.5) 100%);
-      border-color: #4caf50;
-      color: #4caf50;
-    }
-
-    .calendar-body .cal-btn-export:hover {
-      background: linear-gradient(135deg, rgba(76, 175, 80, 0.5) 0%, rgba(76, 175, 80, 0.7) 100%);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(76, 175, 80, 0.6);
-      border-color: #66bb6a;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .calendar-body .cal-user-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 20px;
-      }
-
-      .calendar-body .cal-user-avatar {
-        width: 80px;
-        height: 80px;
-      }
-
-      .calendar-body .cal-user-name {
-        font-size: 1.8rem;
-      }
-
-      .calendar-body .cal-user-amp {
-        font-size: 1rem;
-      }
-
-      .calendar-body .cal-user-actions {
-        width: 100%;
-        flex-direction: column;
-      }
-
-      .calendar-body .cal-user-actions .cal-btn {
-        width: 100%;
-        justify-content: center;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .calendar-body .cal-user-header {
-        padding: 15px;
-      }
-
-      .calendar-body .cal-user-avatar {
-        width: 70px;
-        height: 70px;
-      }
-
-      .calendar-body .cal-user-name {
-        font-size: 1.5rem;
-      }
-
-      .calendar-body .cal-user-amp {
-        font-size: 0.95rem;
-      }
-    }
-
-    /* Toast notification */
-    .cal-toast {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      padding: 15px 25px;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-      border: 1px solid #8a8a8a;
-      border-radius: 12px;
-      color: #f3c3b1;
-      font-size: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-      z-index: 11000;
-      opacity: 0;
-      transform: translateX(100px);
-      transition: all 0.3s ease;
-      pointer-events: none;
-    }
-
-    .cal-toast.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    .cal-toast-success {
-      border-color: #4caf50;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(76, 175, 80, 0.4);
-    }
-
-    .cal-toast-error {
-      border-color: #e76f51;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(231, 111, 81, 0.4);
-    }
-
-    .cal-toast-info {
-      border-color: #2196f3;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(33, 150, 243, 0.4);
-    }
-
-    /* Light theme - Tri-Core finish (warm white, charcoal ink, antique gold) */
-    [data-theme="light"] .calendar-body .cal-user-header {
-      background: #ffffff;
-      border-color: rgba(17, 24, 39, 0.10);
-      border-radius: 22px;
-      box-shadow: 0 30px 70px -34px rgba(7, 17, 31, 0.30);
-    }
-
-    [data-theme="light"] .calendar-body .cal-user-header::before {
-      background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.08) 50%, transparent 100%);
-    }
-
-    [data-theme="light"] .calendar-body .cal-user-avatar {
-      border-color: #c7a15a;
-      box-shadow: 0 0 0 3px #ffffff, 0 10px 22px -12px rgba(7, 17, 31, 0.35);
-    }
-
-    [data-theme="light"] .calendar-body .cal-user-avatar:hover {
-      box-shadow: 0 0 0 3px #ffffff, 0 16px 30px -14px rgba(164, 124, 56, 0.55);
-    }
-
-    [data-theme="light"] .calendar-body .cal-user-name {
-      color: #8a6427;
-      text-shadow: none;
-    }
-
-    [data-theme="light"] .calendar-body .cal-user-amp {
-      color: #5a6474;
-    }
-
-    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn {
-      background: #ffffff;
-      border-color: rgba(17, 24, 39, 0.18);
-      border-radius: 999px;
-      color: #111827;
-      font-weight: 600;
-      box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05);
-    }
-
-    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn::before {
-      background: linear-gradient(90deg, transparent 0%, rgba(199, 161, 90, 0.16) 50%, transparent 100%);
-    }
-
-    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn:hover {
-      border-color: #a47c38;
-      color: #8a6427;
-      box-shadow: 0 12px 26px -16px rgba(164, 124, 56, 0.55);
-    }
-
-    [data-theme="light"] .calendar-body .cal-btn-export,
-    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn-export {
-      background: rgba(46, 125, 50, 0.08);
-      border-color: rgba(46, 125, 50, 0.45);
-      color: #2e7d32;
-    }
-
-    [data-theme="light"] .calendar-body .cal-btn-export:hover,
-    [data-theme="light"] .calendar-body .cal-user-actions .cal-btn-export:hover {
-      background: rgba(46, 125, 50, 0.12);
-      border-color: #2e7d32;
-      color: #2e7d32;
-      box-shadow: 0 12px 26px -16px rgba(46, 125, 50, 0.5);
-    }
-
-    [data-theme="light"] .cal-toast {
-      background: #ffffff;
-      border-color: rgba(17, 24, 39, 0.12);
-      color: #111827;
-      box-shadow: 0 24px 50px -20px rgba(7, 17, 31, 0.40);
-    }
-
-    [data-theme="light"] .cal-toast-success { border-color: rgba(46, 125, 50, 0.55); }
-    [data-theme="light"] .cal-toast-error { border-color: rgba(194, 65, 12, 0.55); }
-    [data-theme="light"] .cal-toast-info { border-color: rgba(33, 150, 243, 0.55); }
-    </style>
+    <?php cal_render_head(__t('calendar', $pageLang) . ($rights['view'] ? ' - ' . $fullName : '')); ?>
+    <?php if ($rights['view']): ?>
+    <script>window.CAL = <?= cal_json_for_script($config) ?>;</script>
+    <?php endif; ?>
 </head>
-<body class="calendar-body">
-    <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
+<body class="cal-body cal-body--view">
+    <?php require_once dirname(__DIR__) . '/header_footer/header.php'; ?>
+    <?php cal_render_sprite(); ?>
+    <?php cal_render_aura(); ?>
 
-    <main class="cal-main">
-        <!-- User Header -->
-        <section class="cal-user-header">
-            <div class="cal-user-avatar">
-                <img src="<?= esc($avatar) ?>" alt="<?= esc($fullName) ?>">
-            </div>
-            <div class="cal-user-info">
-                <h1 class="cal-user-name"><?= esc($fullName) ?></h1>
-                <?php if (!empty($targetUser['amp_id'])): ?>
-                <p class="cal-user-amp"><?= esc(get_translated_office((int)$targetUser['amp_id'], $targetUser['gender'] ?? 'man', $pageLang)) ?></p>
+    <main class="cal-main" id="calMain">
+    <?php if (!$rights['view']): ?>
+        <section class="cal-card cal-notice" role="alert">
+            <span class="cal-notice-orb" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cal-i-calendar"/></svg></span>
+            <p class="cal-notice-text"><?= cal_e(__t('cal_access_denied', $pageLang)) ?></p>
+            <a class="cal-btn cal-btn--primary" href="/calendar/calendar.php"><?= cal_e(__t('cal_back_to_mine', $pageLang)) ?></a>
+        </section>
+    <?php else: ?>
+        <section class="cal-hero cal-hero--person" aria-labelledby="calPerson">
+            <div class="cal-person">
+                <?php if ($photo !== ''): ?>
+                    <img class="cal-avatar" src="<?= cal_e($photo) ?>" alt="" width="72" height="72" decoding="async" data-initials="<?= cal_e($initials ?: '?') ?>">
+                <?php else: ?>
+                    <span class="cal-avatar cal-avatar--initials" aria-hidden="true"><?= cal_e($initials ?: '?') ?></span>
                 <?php endif; ?>
+                <div class="cal-person-text">
+                    <p class="cal-eyebrow cal-eyebrow--plain">
+                        <svg class="cal-eyebrow-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#cal-i-calendar"/></svg>
+                        <span><?= cal_e(__t('calendar', $pageLang)) ?></span>
+                    </p>
+                    <h2 class="cal-person-name" id="calPerson"><?= cal_e($fullName) ?></h2>
+                    <?php if ($office !== ''): ?><p class="cal-person-office"><?= cal_e($office) ?></p><?php endif; ?>
+                </div>
             </div>
-            <div class="cal-user-actions">
-                <a href="/profile/?u=<?= $targetId ?>" class="cal-btn">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <?= esc(t('profile')) ?>
+            <h3 class="cal-title cal-title--sm" id="calTitle"><span>&nbsp;</span></h3>
+            <p class="cal-sub" id="calSub">&nbsp;</p>
+            <div class="cal-hero-actions">
+                <a class="cal-btn cal-btn--glass" href="/profile/?u=<?= $targetId ?>">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cal-i-person"/></svg>
+                    <span><?= cal_e($T['profile']) ?></span>
                 </a>
-                
-                <?php if ($canExport): ?>
-                <button type="button" class="cal-btn cal-btn-export" onclick="exportToPDF()">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2"/>
-                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <?= esc(t('pdf')) ?>
-                </button>
-                
-                <button type="button" class="cal-btn cal-btn-export" onclick="exportToExcel()">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2"/>
-                        <path d="M14 2v6h6M8 13h2l2 4 2-4h2" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <?= esc(t('excel')) ?>
-                </button>
+                <?php if ($rights['export']): ?>
+                <a class="cal-btn cal-btn--glass" id="calExportPdf" href="/calendar/api/export_pdf.php?user_id=<?= $targetId ?>">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cal-i-pdf"/></svg>
+                    <span><?= cal_e($T['pdf']) ?></span>
+                </a>
+                <a class="cal-btn cal-btn--glass" id="calExportCsv" href="/calendar/api/export_excel.php?user_id=<?= $targetId ?>">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cal-i-sheet"/></svg>
+                    <span><?= cal_e($T['excel']) ?></span>
+                </a>
                 <?php endif; ?>
+                <span class="cal-chip cal-chip--static">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cal-i-notes"/></svg>
+                    <?= cal_e($T['cal_read_only']) ?>
+                </span>
             </div>
         </section>
 
-        <!-- View Switcher & Navigation -->
-        <section class="cal-controls">
-            <div class="cal-view-switcher">
-                <button class="cal-view-btn" data-view="day">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <span><?= esc(t('day')) ?></span>
-                </button>
-                
-                <button class="cal-view-btn active" data-view="week">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <line x1="10" y1="10" x2="10" y2="22" stroke="currentColor"/>
-                        <line x1="17" y1="10" x2="17" y2="22" stroke="currentColor"/>
-                    </svg>
-                    <span><?= esc(t('week')) ?></span>
-                </button>
-                
-                <button class="cal-view-btn" data-view="month">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <span><?= esc(t('month')) ?></span>
-                </button>
-            </div>
-            
-            <div class="cal-nav">
-                <button class="cal-nav-btn" id="prevBtn" type="button">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                </button>
-                <button class="cal-nav-btn" id="todayBtn" type="button"><?= esc(t('today')) ?></button>
-                <button class="cal-nav-btn" id="nextBtn" type="button">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                </button>
-            </div>
-        </section>
-
-        <!-- Calendar Section -->
-        <section class="cal-section">
-            <div class="cal-section-header">
-                <h2 class="cal-section-title" id="calTitle"><?= esc(t('calendar')) ?></h2>
-            </div>
-            
-            <div class="cal-views">
-                <!-- Day View -->
-                <div class="cal-view-container" id="dayView" style="display:none;">
-                    <div class="cal-day-grid" id="dayGrid"></div>
-                </div>
-
-                <!-- Week View -->
-                <div class="cal-view-container" id="weekView">
-                    <div class="cal-week-grid" id="weekGrid"></div>
-                </div>
-
-                <!-- Month View -->
-                <div class="cal-view-container" id="monthView" style="display:none;">
-                    <div class="cal-month-weekdays">
-                        <div><?= esc(t('sun')) ?></div>
-                        <div><?= esc(t('mon')) ?></div>
-                        <div><?= esc(t('tue')) ?></div>
-                        <div><?= esc(t('wed')) ?></div>
-                        <div><?= esc(t('thu')) ?></div>
-                        <div><?= esc(t('fri')) ?></div>
-                        <div><?= esc(t('sat')) ?></div>
-                    </div>
-                    <div class="cal-month-grid" id="monthGrid"></div>
-                </div>
-            </div>
-        </section>
+        <?php cal_render_board($T, false); ?>
+    <?php endif; ?>
     </main>
 
-    <script>
-        window.LANG = '<?= $pageLang ?>';
-        window.TARGET_USER_ID = <?= $targetId ?>;
-        window.USER_ID = <?= $meId ?>;
-        window.VIEW_ONLY = <?= $meId === $targetId ? 'false' : 'true' ?>;
-        window.T = {
-            day: '<?= esc(t('day')) ?>',
-            week: '<?= esc(t('week')) ?>',
-            month: '<?= esc(t('month')) ?>',
-            today: '<?= esc(t('today')) ?>',
-            noEvents: '<?= esc(t('no_events')) ?>',
-            generatingPdf: '<?= esc(t('generating_pdf')) ?>',
-            generatingExcel: '<?= esc(t('generating_excel')) ?>',
-            pdfExported: '<?= esc(t('pdf_exported')) ?>',
-            excelExported: '<?= esc(t('excel_exported')) ?>',
-            exportFailed: '<?= esc(t('export_failed')) ?>',
-            networkError: '<?= esc(t('network_error')) ?>',
-            dayNames: ["<?= esc(t('sunday')) ?>","<?= esc(t('monday')) ?>","<?= esc(t('tuesday')) ?>","<?= esc(t('wednesday')) ?>","<?= esc(t('thursday')) ?>","<?= esc(t('friday')) ?>","<?= esc(t('saturday')) ?>"],
-            dayNamesShort: ["<?= esc(t('sun')) ?>","<?= esc(t('mon')) ?>","<?= esc(t('tue')) ?>","<?= esc(t('wed')) ?>","<?= esc(t('thu')) ?>","<?= esc(t('fri')) ?>","<?= esc(t('sat')) ?>"],
-            monthNames: ["<?= esc(t('january')) ?>","<?= esc(t('february')) ?>","<?= esc(t('march')) ?>","<?= esc(t('april')) ?>","<?= esc(t('may')) ?>","<?= esc(t('june')) ?>","<?= esc(t('july')) ?>","<?= esc(t('august')) ?>","<?= esc(t('september')) ?>","<?= esc(t('october')) ?>","<?= esc(t('november')) ?>","<?= esc(t('december')) ?>"]
-        };
-    </script>
-    <script src="/calendar/js/view.js?v=<?= $VER ?>"></script>
+    <div class="cal-toast" id="calToast" role="status" aria-live="polite"></div>
 
-    <?php require_once __DIR__ . '/../header_footer/footer.php'; ?>
+    <?php if ($rights['view']): ?>
+    <script defer src="<?= cal_asset('/calendar/js/calendar.js') ?>"></script>
+    <script defer src="<?= cal_asset('/calendar/js/view.js') ?>"></script>
+    <?php endif; ?>
+
+    <?php require_once dirname(__DIR__) . '/header_footer/footer.php'; ?>
 </body>
 </html>

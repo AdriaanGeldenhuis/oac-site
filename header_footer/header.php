@@ -45,7 +45,7 @@ if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !
   $pageTitle = t_hdr('bible');
 } elseif (strpos($reqPath, '/opsomming/opsomming.php') !== false) {
   $pageTitle = t_hdr('bible_summary');
-} elseif (strpos($reqPath, '/calendar/calendar.php') !== false) {
+} elseif (strpos($reqPath, '/calendar/calendar.php') !== false || strpos($reqPath, '/calendar/view.php') !== false) {
   $pageTitle = t_hdr('calendar');
 } elseif (strpos($reqPath, '/diary/diary.php') !== false) {
   $pageTitle = t_hdr('diary');

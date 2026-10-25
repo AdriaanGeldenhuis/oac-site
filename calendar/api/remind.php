@@ -1,101 +1,96 @@
 <?php
+declare(strict_types=1);
 /**
- * Calendar remind API
- *
- * Accepts a POST request with an event_id and creates a reminder post
- * in the appropriate room.  The reminder post text summarises the
- * event and uses the current user's context.  Only users with an
- * approved membership in the event's room may create reminders.
+ * POST /calendar/api/remind.php  (X-CSRF-Token)
+ * Send the members of a room a reminder about an upcoming event in it.
+ * Who may: whoever may post in that room (Gospel Media's rules). Who gets
+ * it: the same people Gospel Media tells about a new post in that room.
+ * Each gets a notification in their own language that opens the calendar
+ * on the event. At most once an hour per event, ten an hour per person.
+ * Fields: event_id   Answer: {success} or {success:false, error}
  */
 
-header('Content-Type: application/json');
-
 require_once __DIR__ . '/../../security/auth_gate.php';
-require_once __DIR__ . '/../../includes/languages.php';
+require_once __DIR__ . '/../lib/calendar.php';
+require_once __DIR__ . '/notifications/helper.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
-    http_response_code(500);
-    echo json_encode(['error' => 'db_unavailable']);
-    exit;
+    cal_fail('db_unavailable', 500);
 }
-
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
-    exit;
-}
-
-$eventId = isset($_POST['event_id']) ? (int)$_POST['event_id'] : 0;
-if ($eventId <= 0) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid event_id']);
-    exit;
-}
+cal_require_post();
 
 $userId = (int)$_SESSION['user_id'];
+$eventId = (int)($_POST['event_id'] ?? 0);
+if ($eventId <= 0) {
+    cal_fail('invalid_id');
+}
 
 try {
-    // Fetch the event post and its room
-    $stmt = $pdo->prepare(
-        'SELECT p.id, p.text, p.event_at, p.event_place, p.room_id
-         FROM posts p
-         WHERE p.id = :id AND p.type = "event" LIMIT 1'
-    );
-    $stmt->execute(['id' => $eventId]);
-    $event = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$event) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Event not found']);
-        exit;
-    }
-    $roomId = (int)$event['room_id'];
-    // Verify user has approved membership in this room
-    $mStmt = $pdo->prepare('SELECT id FROM room_memberships WHERE room_id = :rid AND user_id = :uid AND status = "approved" LIMIT 1');
-    $mStmt->execute(['rid' => $roomId, 'uid' => $userId]);
-    if (!$mStmt->fetch(PDO::FETCH_ASSOC)) {
-        http_response_code(403);
-        echo json_encode(['error' => 'Not authorised to remind for this event']);
-        exit;
-    }
-    // Build reminder post text
-    $userLang = $_SESSION['language'] ?? 'af';
-    $seeYouText = __t('see_you_at', $userLang);
-
-    $dt = null;
-    if ($event['event_at']) {
-        $dt = new DateTime($event['event_at']);
-    }
-    $dateStr = $dt ? $dt->format('l H:i') : '';
-    $text = '';
-    if ($dateStr) {
-        $text = $seeYouText . ' ' . $dateStr;
-    }
-    if ($event['text']) {
-        $text .= ' – ' . $event['text'];
-    }
-    // Insert reminder post
-    $pdo->beginTransaction();
-    $ins = $pdo->prepare('INSERT INTO posts (room_id, user_id, type, text, created_at) VALUES (:room_id,:user_id,:type,:text,NOW())');
-    $ins->execute([
-        'room_id' => $roomId,
-        'user_id' => $userId,
-        'type'    => 'post',
-        'text'    => $text
-    ]);
-    $pdo->commit();
-    echo json_encode(['success' => true]);
-    exit;
+    $st = $pdo->prepare("SELECT id, room_id, text, event_at FROM posts WHERE id = ? AND type = 'event' LIMIT 1");
+    $st->execute([$eventId]);
+    $event = $st->fetch(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
+    error_log('Calendar remind error: ' . $e->getMessage());
+    cal_fail('server_error', 500);
+}
+if (!$event) {
+    cal_fail('not_found', 404);
+}
+
+$rights = cal_room_rights($pdo, $userId, (int)$event['room_id']);
+if (!$rights) {
+    cal_fail('not_found', 404);
+}
+$room = $rights['room'];
+$roomType = strtolower((string)($room['type'] ?? ''));
+if (!$rights['post'] || !in_array($roomType, ['gemeente', 'opsienerskap', 'jeug', 'sondagskool'], true)) {
+    cal_fail('forbidden', 403);
+}
+
+$date = substr((string)$event['event_at'], 0, 10);
+$time = cal_stored_time(substr((string)$event['event_at'], 11, 5));
+if (cal_date($date) === null || ($date . ' ' . ($time ?? '23:59')) < cal_now()->format('Y-m-d H:i')) {
+    cal_fail('event_past');
+}
+
+if (!cal_rate_ok('cal_remind:' . $userId . ':' . $eventId, 1)) {
+    cal_fail('reminder_recent', 429);
+}
+if (!cal_rate_ok('cal_remind:' . $userId, 10)) {
+    cal_fail('rate_limited', 429);
+}
+
+cal_finish_response(['success' => true]);
+
+// ===== FAN OUT (after the answer has gone) =====
+try {
+    $townId = (int)($room['town_id'] ?? 0);
+    $gemeenteId = (int)($room['gemeente_id'] ?? 0);
+    $roomId = (int)$room['id'];
+    $members = [];
+
+    // The same recipients as gospel_media/api/posts/create.php
+    if ($roomType === 'gemeente' && $gemeenteId > 0) {
+        $q = $pdo->prepare("SELECT id FROM users WHERE congregation_id = ? AND id != ? AND status = 'approved'");
+        $q->execute([$gemeenteId, $userId]);
+        $members = $q->fetchAll(PDO::FETCH_COLUMN);
+    } elseif ($townId > 0) {
+        $q = $pdo->prepare("SELECT DISTINCT u.id FROM users u
+                            WHERE u.id != ? AND u.status = 'approved'
+                              AND (u.town_id = ? OR u.id IN (SELECT rm.user_id FROM room_memberships rm WHERE rm.room_id = ?))");
+        $q->execute([$userId, $townId, $roomId]);
+        $members = $q->fetchAll(PDO::FETCH_COLUMN);
     }
-    http_response_code(500);
-    echo json_encode(['error' => 'Server error']);
-    exit;
+
+    [$title] = cal_split_post_text((string)$event['text']);
+    $sent = createCalendarNotifications($members, 'event_reminder', [
+        'event_title' => $title,
+        'when' => $date . ($time !== null ? ' ' . $time : ''),
+        'room_name' => cal_room_label($roomType, (string)($room['name'] ?? ''), 'af'),
+        'date' => $date,
+        'uid' => 'event-' . $eventId,
+    ]);
+    error_log("Calendar reminder: event $eventId, room $roomId, $sent notified");
+} catch (Throwable $e) {
+    error_log('Calendar remind fan-out error: ' . $e->getMessage());
 }

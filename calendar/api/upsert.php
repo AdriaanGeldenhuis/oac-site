@@ -1,328 +1,154 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json; charset=utf-8');
+/**
+ * POST /calendar/api/upsert.php  (X-CSRF-Token)
+ * Create or update one of your own visits (calendar_visits).
+ *
+ * Room events are posts and are written through Gospel Media's own API
+ * (/gospel_media/api/posts/*), so the feed and the calendar always agree on
+ * rights, notifications and clean-up. Diary entries belong to /diary/.
+ *
+ * Fields: id, title, date (YYYY-MM-DD), time (HH:MM, empty = all day),
+ * linked_user_id | person_name, location, notes, share_with_spouse (1/0)
+ * Answer: {success, id, uid} or {success:false, error:<code>}
+ */
 
 require_once __DIR__ . '/../../security/auth_gate.php';
+require_once __DIR__ . '/../lib/calendar.php';
 require_once __DIR__ . '/notifications/helper.php';
-require_once __DIR__ . '/../../gospel_media/api/notifications/helper.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'db_unavailable']);
-    exit;
+    cal_fail('db_unavailable', 500);
+}
+cal_require_post();
+
+$me = cal_user($pdo, (int)$_SESSION['user_id']);
+if (!$me) {
+    cal_fail('forbidden', 403);
+}
+$userId = (int)$me['id'];
+
+$type = (string)($_POST['type'] ?? 'visit');
+if ($type !== 'visit') {
+    cal_fail('unsupported_type');
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'method_not_allowed']);
-    exit;
+// ===== VALIDATE =====
+$id = max(0, (int)($_POST['id'] ?? 0));
+$title = cal_clean_line((string)($_POST['title'] ?? ''));
+$date = cal_date($_POST['date'] ?? null);
+$rawTime = trim((string)($_POST['time'] ?? ''));
+$allDay = ($_POST['all_day'] ?? '') === '1' || $rawTime === '';
+$time = $allDay ? null : cal_time($rawTime);
+$linkedUserId = max(0, (int)($_POST['linked_user_id'] ?? 0));
+$personName = cal_clean_line((string)($_POST['person_name'] ?? ''));
+$location = cal_clean_line((string)($_POST['location'] ?? ''));
+$notes = cal_clean_text((string)($_POST['notes'] ?? ''));
+$share = ($_POST['share_with_spouse'] ?? '') === '1';
+
+if ($title === '') cal_fail('title_required');
+if (cal_len($title) > 150) cal_fail('title_too_long');
+if ($date === null) cal_fail('invalid_date');
+if (!$allDay && $time === null) cal_fail('invalid_time');
+if (cal_len($personName) > 120 || cal_len($location) > 200) cal_fail('too_long');
+if (cal_len($notes) > 5000) cal_fail('notes_too_long');
+
+// A linked person must be someone the picker offers (users.php): approved, same town, not yourself
+$linkedUser = null;
+if ($linkedUserId > 0) {
+    $linkedUser = cal_user($pdo, $linkedUserId);
+    $town = (int)($me['town_id'] ?? 0);
+    if (!$linkedUser || $linkedUserId === $userId || ($linkedUser['status'] ?? '') !== 'approved'
+        || $town <= 0 || (int)($linkedUser['town_id'] ?? 0) !== $town) {
+        cal_fail('invalid_person');
+    }
+    $personName = '';
 }
 
-$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-$type = trim($_POST['type'] ?? 'event');
-$title = trim($_POST['title'] ?? '');
-$date = trim($_POST['date'] ?? '');
-$time = trim($_POST['time'] ?? '');
-$notes = trim($_POST['notes'] ?? '');
-$shareWithSpouse = isset($_POST['share_with_spouse']) && $_POST['share_with_spouse'] === '1';
-
-if ($title === '' || $date === '') {
-    echo json_encode(['success' => false, 'error' => 'title_and_date_required']);
-    exit;
+$spouseId = cal_spouse_id($pdo, $me);
+if (!$spouseId) {
+    $share = false;
 }
 
-$userId = (int)$_SESSION['user_id'];
-
-// Get user info
-$userStmt = $pdo->prepare("SELECT amp_id, town_id, congregation_id, name, surname FROM users WHERE id = ?");
-$userStmt->execute([$userId]);
-$user = $userStmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$user) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'user_not_found']);
-    exit;
-}
-
-$ampId = (int)($user['amp_id'] ?? 10);
-$townId = (int)($user['town_id'] ?? 0);
-$congId = (int)($user['congregation_id'] ?? 0);
-$userName = trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
+$storedTime = $time === null ? '00:00:00' : $time . ':00';
 
 try {
+    $previous = null;
+    if ($id > 0) {
+        $st = $pdo->prepare('SELECT id, visit_date, visit_time, linked_user_id FROM calendar_visits WHERE id = ? AND user_id = ? LIMIT 1');
+        $st->execute([$id, $userId]);
+        $previous = $st->fetch(PDO::FETCH_ASSOC);
+        if (!$previous) {
+            cal_fail('not_found', 404);
+        }
+    }
+
+    $wasShared = false;
+    if ($id > 0 && $spouseId) {
+        $st = $pdo->prepare("SELECT 1 FROM calendar_shared_events WHERE event_type = 'visit' AND event_id = ? AND owner_user_id = ? AND shared_with_user_id = ? LIMIT 1");
+        $st->execute([$id, $userId, $spouseId]);
+        $wasShared = (bool)$st->fetchColumn();
+    }
+
     $pdo->beginTransaction();
-    
-    $insertedId = $id;
-    
-    if ($type === 'event') {
-        $roomId = isset($_POST['room_id']) ? (int)$_POST['room_id'] : null;
-        
-        if (!$roomId && $id === 0) {
-            throw new Exception('room_required');
-        }
-        
-        // Check room permissions
-        if ($roomId) {
-            $roomStmt = $pdo->prepare("SELECT type, town_id, gemeente_id FROM rooms WHERE id = ?");
-            $roomStmt->execute([$roomId]);
-            $room = $roomStmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$room) {
-                throw new Exception('invalid_room');
-            }
-            
-            $canPost = false;
-            
-            // Amp 10: read-only
-            if ($ampId === 10) {
-                $canPost = false;
-            }
-            // Amp 1-5: opsienerskap
-            elseif ($ampId >= 1 && $ampId <= 5 && $room['type'] === 'opsienerskap' && $room['town_id'] == $townId) {
-                $canPost = true;
-            }
-            // Amp 5-9: gemeente
-            elseif ($ampId >= 5 && $ampId <= 9 && $room['type'] === 'gemeente' && $room['gemeente_id'] == $congId) {
-                $canPost = true;
-            }
-            // Amp <10: jeug/sondagskool
-            elseif ($ampId < 10 && in_array($room['type'], ['jeug', 'sondagskool']) && $room['town_id'] == $townId) {
-                $canPost = true;
-            }
-            
-            if (!$canPost) {
-                throw new Exception('no_permission_for_room');
-            }
-        }
-        
-        $eventAt = $date . ($time ? ' ' . $time : ' 00:00:00');
-        
-        if ($id > 0) {
-            // Update
-            $stmt = $pdo->prepare("
-                UPDATE posts 
-                SET text = :title, event_at = :event_at 
-                WHERE id = :id AND user_id = :uid AND type = 'event'
-            ");
-            $stmt->execute([
-                'title' => $title,
-                'event_at' => $eventAt,
-                'id' => $id,
-                'uid' => $userId
-            ]);
-        } else {
-            // Insert
-            $stmt = $pdo->prepare("
-                INSERT INTO posts (room_id, user_id, type, text, event_at, created_at) 
-                VALUES (:room_id, :uid, 'event', :title, :event_at, NOW())
-            ");
-            $stmt->execute([
-                'room_id' => $roomId,
-                'uid' => $userId,
-                'title' => $title,
-                'event_at' => $eventAt
-            ]);
-            $insertedId = (int)$pdo->lastInsertId();
-        }
 
-    } elseif ($type === 'diary') {
-        if ($id > 0) {
-            $stmt = $pdo->prepare("
-                UPDATE diaries 
-                SET title = :title, date = :date, time = :time, body = :notes 
-                WHERE id = :id AND user_id = :uid
-            ");
-            $stmt->execute([
-                'title' => $title,
-                'date' => $date,
-                'time' => $time,
-                'notes' => $notes,
-                'id' => $id,
-                'uid' => $userId
-            ]);
-        } else {
-            $stmt = $pdo->prepare("
-                INSERT INTO diaries (user_id, title, date, time, body, created_at) 
-                VALUES (:uid, :title, :date, :time, :notes, NOW())
-            ");
-            $stmt->execute([
-                'uid' => $userId,
-                'title' => $title,
-                'date' => $date,
-                'time' => $time,
-                'notes' => $notes
-            ]);
-            $insertedId = (int)$pdo->lastInsertId();
-        }
-        
-    } elseif ($type === 'visit') {
-        $linkedUserId = !empty($_POST['linked_user_id']) ? (int)$_POST['linked_user_id'] : null;
-        $personName = trim($_POST['person_name'] ?? '');
-        $location = trim($_POST['location'] ?? '');
-        
-        if ($id > 0) {
-            $stmt = $pdo->prepare("
-                UPDATE calendar_visits 
-                SET title = :title, 
-                    visit_date = :date, 
-                    visit_time = :time, 
-                    linked_user_id = :linked, 
-                    person_name = :person, 
-                    location = :loc, 
-                    notes = :notes 
-                WHERE id = :id AND user_id = :uid
-            ");
-            $stmt->execute([
-                'title' => $title,
-                'date' => $date,
-                'time' => $time,
-                'linked' => $linkedUserId,
-                'person' => $personName,
-                'loc' => $location,
-                'notes' => $notes,
-                'id' => $id,
-                'uid' => $userId
-            ]);
-        } else {
-            $stmt = $pdo->prepare("
-                INSERT INTO calendar_visits 
-                (user_id, title, visit_date, visit_time, linked_user_id, person_name, location, notes, created_at) 
-                VALUES (:uid, :title, :date, :time, :linked, :person, :loc, :notes, NOW())
-            ");
-            $stmt->execute([
-                'uid' => $userId,
-                'title' => $title,
-                'date' => $date,
-                'time' => $time,
-                'linked' => $linkedUserId,
-                'person' => $personName,
-                'loc' => $location,
-                'notes' => $notes
-            ]);
-            $insertedId = (int)$pdo->lastInsertId();
-            
-            // 🔔 NOTIFY LINKED USER IF VISIT
-            if ($linkedUserId) {
-                createCalendarNotification($linkedUserId, 'visit_scheduled', [
-                    'person_name' => $userName,
-                    'date' => $date
-                ]);
-            }
-        }
-    }
-    
-    // Handle spouse sharing
-    if ($shareWithSpouse && $insertedId) {
-        $spouseStmt = $pdo->prepare("SELECT spouse_user_id FROM users WHERE id = ?");
-        $spouseStmt->execute([$userId]);
-        $spouseRow = $spouseStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!empty($spouseRow['spouse_user_id'])) {
-            $spouseId = (int)$spouseRow['spouse_user_id'];
-            
-            // Delete existing share
-            $delStmt = $pdo->prepare("DELETE FROM calendar_shared_events WHERE event_id = ? AND event_type = ?");
-            $delStmt->execute([$insertedId, $type]);
-            
-            // Insert new share
-            $shareStmt = $pdo->prepare("
-                INSERT INTO calendar_shared_events 
-                (event_id, event_type, owner_user_id, shared_with_user_id, created_at) 
-                VALUES (:eid, :type, :owner, :shared, NOW())
-            ");
-            $shareStmt->execute([
-                'eid' => $insertedId,
-                'type' => $type,
-                'owner' => $userId,
-                'shared' => $spouseId
-            ]);
-            
-            // 🔔 NOTIFY SPOUSE
-            if ($id === 0) { // Only notify on new event
-                createCalendarNotification($spouseId, 'event_shared', [
-                    'from_name' => $userName,
-                    'event_title' => $title
-                ]);
-            }
-        }
-    } else if (!$shareWithSpouse && $insertedId) {
-        // Remove sharing
-        $delStmt = $pdo->prepare("DELETE FROM calendar_shared_events WHERE event_id = ? AND event_type = ? AND owner_user_id = ?");
-        $delStmt->execute([$insertedId, $type, $userId]);
-    }
-    
-    $pdo->commit();
-
-    // Send response IMMEDIATELY so UI updates fast
-    echo json_encode(['success' => true, 'id' => $insertedId]);
-
-    // Flush output to browser immediately, then continue with notifications
-    if (function_exists('fastcgi_finish_request')) {
-        fastcgi_finish_request();
+    if ($id > 0) {
+        $st = $pdo->prepare('UPDATE calendar_visits
+                             SET title = ?, visit_date = ?, visit_time = ?, linked_user_id = ?, person_name = ?, location = ?, notes = ?
+                             WHERE id = ? AND user_id = ?');
+        $st->execute([$title, $date, $storedTime, $linkedUserId ?: null, $personName, $location, $notes, $id, $userId]);
     } else {
-        if (ob_get_level() > 0) ob_end_flush();
-        flush();
+        $st = $pdo->prepare('INSERT INTO calendar_visits (user_id, title, visit_date, visit_time, linked_user_id, person_name, location, notes, created_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())');
+        $st->execute([$userId, $title, $date, $storedTime, $linkedUserId ?: null, $personName, $location, $notes]);
+        $id = (int)$pdo->lastInsertId();
     }
 
-    // 🔔 NOTIFY ROOM MEMBERS about new event (runs in background after response sent)
-    if ($type === 'event' && $id === 0 && isset($roomId)) {
-        try {
-            // Get room info
-            $roomInfoStmt = $pdo->prepare("SELECT name, type, town_id, gemeente_id FROM rooms WHERE id = ?");
-            $roomInfoStmt->execute([$roomId]);
-            $roomInfo = $roomInfoStmt->fetch(PDO::FETCH_ASSOC);
-            $roomName = $roomInfo['name'] ?? 'Room';
-            $roomType = strtolower($roomInfo['type'] ?? '');
-            $roomTownId = (int)($roomInfo['town_id'] ?? 0);
-            $roomGemeenteId = (int)($roomInfo['gemeente_id'] ?? 0);
-
-            // Get room members based on room type (implicit membership)
-            $members = [];
-
-            if ($roomType === 'gemeente' && $roomGemeenteId > 0) {
-                $membersStmt = $pdo->prepare("
-                    SELECT id FROM users
-                    WHERE congregation_id = ? AND id != ? AND status = 'approved'
-                ");
-                $membersStmt->execute([$roomGemeenteId, $userId]);
-                $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
-
-            } elseif ($roomType === 'opsienerskap' && $roomTownId > 0) {
-                $membersStmt = $pdo->prepare("
-                    SELECT id FROM users
-                    WHERE town_id = ? AND amp_id <= 5 AND id != ? AND status = 'approved'
-                ");
-                $membersStmt->execute([$roomTownId, $userId]);
-                $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
-
-            } elseif (in_array($roomType, ['jeug', 'sondagskool']) && $roomTownId > 0) {
-                $membersStmt = $pdo->prepare("
-                    SELECT id FROM users
-                    WHERE town_id = ? AND id != ? AND status = 'approved'
-                ");
-                $membersStmt->execute([$roomTownId, $userId]);
-                $members = $membersStmt->fetchAll(PDO::FETCH_COLUMN);
-            }
-
-            foreach ($members as $memberId) {
-                createGospelNotification($pdo, (int)$memberId, 'new_post', [
-                    'room_id' => $roomId,
-                    'room_name' => $roomName,
-                    'author_name' => $userName,
-                    'post_id' => $insertedId
-                ]);
-            }
-
-            error_log("Calendar event notification: Sent to " . count($members) . " members for room $roomId ($roomType)");
-        } catch (Throwable $notifErr) {
-            error_log('Calendar event notification error: ' . $notifErr->getMessage());
-        }
+    // Sharing with the spouse: only this owner's own rows are touched
+    $del = $pdo->prepare("DELETE FROM calendar_shared_events WHERE event_type = 'visit' AND event_id = ? AND owner_user_id = ?");
+    $del->execute([$id, $userId]);
+    if ($share) {
+        $ins = $pdo->prepare("INSERT INTO calendar_shared_events (event_id, event_type, owner_user_id, shared_with_user_id, created_at)
+                              VALUES (?, 'visit', ?, ?, NOW())");
+        $ins->execute([$id, $userId, $spouseId]);
     }
 
+    $pdo->commit();
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
     error_log('Calendar upsert error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    cal_fail('server_error', 500);
+}
+
+cal_finish_response(['success' => true, 'id' => $id, 'uid' => 'visit-' . $id]);
+
+// ===== NOTIFY (after the answer has gone) =====
+$myName = cal_name($me['name'] ?? '', $me['surname'] ?? '');
+$when = $date . ($time !== null ? ' ' . $time : '');
+try {
+    $isNewForLinked = $linkedUserId > 0 && (
+        $previous === null
+        || (int)($previous['linked_user_id'] ?? 0) !== $linkedUserId
+        || (string)$previous['visit_date'] !== $date
+        || cal_stored_time($previous['visit_time'] ?? null) !== $time
+    );
+    if ($isNewForLinked && cal_rate_ok('cal_notify:' . $userId, 30)) {
+        createCalendarNotification($linkedUserId, 'visit_scheduled', [
+            'person_name' => $myName,
+            'date' => $date,
+            'when' => $when,
+        ]);
+    }
+    if ($share && !$wasShared && cal_rate_ok('cal_notify:' . $userId, 30)) {
+        createCalendarNotification($spouseId, 'event_shared', [
+            'from_name' => $myName,
+            'event_title' => $title,
+            'date' => $date,
+            'uid' => 'visit-' . $id,
+        ]);
+    }
+} catch (Throwable $e) {
+    error_log('Calendar upsert notification error: ' . $e->getMessage());
 }

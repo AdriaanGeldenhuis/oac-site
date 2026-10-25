@@ -987,45 +987,25 @@
     }
   }
 
-  // Build and download an .ics file so the event can land in any calendar app
+  // Add the event to the phone's own calendar: the app's "new event" screen
+  // when it offers one, else the same .ics file the calendar gives
+  // (/calendar/api/ics.php — one format and one event UID everywhere).
   function downloadEventICS(p) {
-    const start = new Date(String(p.event_at).replace(' ', 'T'));
-    if (isNaN(start.getTime())) return;
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
-
-    const fmtUTC = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
-    const escICS = (s) => String(s || '')
-      .replace(/\\/g, '\\\\')
-      .replace(/;/g, '\\;')
-      .replace(/,/g, '\\,')
-      .replace(/\r?\n/g, '\\n');
-
-    const summary = (p.text || '').split('\n')[0].slice(0, 80) || 'Gospel Media';
-
-    const lines = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//OAC//Gospel Media//EN',
-      'BEGIN:VEVENT',
-      'UID:gm-post-' + p.id + '@oacapp.co.za',
-      'DTSTAMP:' + fmtUTC(new Date()),
-      'DTSTART:' + fmtUTC(start),
-      'DTEND:' + fmtUTC(end),
-      'SUMMARY:' + escICS(summary),
-      p.event_place ? 'LOCATION:' + escICS(p.event_place) : null,
-      'DESCRIPTION:' + escICS(p.text || ''),
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].filter(Boolean);
-
-    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'event-' + p.id + '.ics';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    const m = String(p.event_at || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    if (!m) return;
+    const native = window.NativeApp && typeof window.NativeApp.addToCalendar === 'function';
+    if (native) {
+      // Stored times are South African time (UTC+2, no daylight saving)
+      const begin = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - 2 * 3600e3;
+      const lines = String(p.text || '').split('\n');
+      try {
+        const opened = window.NativeApp.addToCalendar(
+          (lines[0] || 'Gospel Media').slice(0, 140), String(begin), String(begin + 3600e3), false,
+          p.event_place || '', lines.slice(1).join('\n').trim());
+        if (opened === true || opened === 'true') return;
+      } catch (e) { /* older app: fall back to the file */ }
+    }
+    window.location.href = '/calendar/api/ics.php?type=event&id=' + encodeURIComponent(p.id);
   }
 
   // Date stamp + when/where + countdown, like "Up next" on the welcome page

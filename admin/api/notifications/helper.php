@@ -128,7 +128,8 @@ function createAdminNotification($userId, $type, $data = []) {
                 $params = ['name' => $fromName, 'date' => $date, 'time' => $time];
                 $title = '📅 Afspraak Versoek';
                 $message = "{$fromName} wil 'n afspraak maak op {$date} om {$time}.";
-                $link = '/admin/index.php?tab=afsprake';
+                // The calendar lets everyone confirm or cancel (the Afsprake tab is amp 1–9 only)
+                $link = preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? '/calendar/calendar.php#d=' . $date : '/calendar/calendar.php';
                 $icon = '📅';
                 $notifType = 'appointment';
                 break;
@@ -138,7 +139,8 @@ function createAdminNotification($userId, $type, $data = []) {
                 $messageKey = 'notif_appointment_confirmed_msg';
                 $title = '✅ Afspraak Bevestig';
                 $message = 'Jou afspraak is bevestig!';
-                $link = '/calendar/calendar.php';
+                $date = (string)($data['date'] ?? '');
+                $link = preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? '/calendar/calendar.php#d=' . $date : '/calendar/calendar.php';
                 $icon = '✅';
                 $notifType = 'success';
                 break;
@@ -152,7 +154,7 @@ function createAdminNotification($userId, $type, $data = []) {
                 $params = ['name' => $fromName, 'date' => $date, 'time' => $time];
                 $title = '❌ Afspraak Gekanselleer';
                 $message = "{$fromName} het jou afspraak op {$date} om {$time} gekanselleer.";
-                $link = '/calendar/calendar.php';
+                $link = preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? '/calendar/calendar.php#d=' . $date : '/calendar/calendar.php';
                 $icon = '❌';
                 $notifType = 'appointment';
                 break;

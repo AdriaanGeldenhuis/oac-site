@@ -89,32 +89,10 @@
     }
   };
 
-  // Export Calendar
-  window.exportCalendar = async function(userId) {
-    try {
-      showToast('Preparing export...', 'success');
-      
-      const response = await fetch(`/profile/api/export_calendar.php?user_id=${userId}`);
-      const blob = await response.blob();
-      
-      if (response.ok) {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `calendar_${userId}_${Date.now()}.ics`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        showToast('Calendar exported!', 'success');
-      } else {
-        showToast('Export failed', 'error');
-      }
-    } catch (error) {
-      showToast('Network error', 'error');
-      console.error('Export error:', error);
-    }
+  // Export Calendar: a plain download link (blob: downloads do nothing in the app's WebView)
+  window.exportCalendar = function(userId) {
+    showToast('Preparing export...', 'success');
+    window.location.href = '/profile/api/export_calendar.php?user_id=' + encodeURIComponent(userId);
   };
 
   // Show Toast
