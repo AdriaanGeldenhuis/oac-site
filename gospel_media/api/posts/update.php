@@ -11,6 +11,12 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
     exit; 
 }
 
+if (!csrf_verify((string)($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''))) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'csrf']);
+    exit;
+}
+
 $userId = (int)($_SESSION['user_id'] ?? 0);
 $postId = (int)($_POST['post_id'] ?? 0);
 $text   = isset($_POST['text']) ? trim((string)$_POST['text']) : null;

@@ -108,7 +108,7 @@ if (!$hasAccess) {
 // Check posting rights
 $allowPost = $roomObj ? user_can_post_in_room($pdo, $userId, $roomObj) : false;
 
-$VER = '2.9.1';
+$VER = '2.9.2';
 ?><!doctype html>
 <html lang="<?= $pageLang ?>">
 <head>
@@ -136,6 +136,7 @@ $VER = '2.9.1';
         window.CAN_POST = <?= $allowPost ? 'true' : 'false' ?>;
         window.USER_ID = <?= $userId ?>;
         window.USER_AMP_ID = <?= $ampId ?>;
+        window.CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;
         window.JS_T = {
             edit: <?= json_encode(__t('js_edit', $pageLang)) ?>,
             delete: <?= json_encode(__t('js_delete', $pageLang)) ?>,
