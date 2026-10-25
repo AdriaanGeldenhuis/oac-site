@@ -41,7 +41,7 @@ define('TEACHING_FILES', [
 define('TEACHING_LEGACY_EN_FILE', 'teaching_content.html');
 
 // Max stored size per language (a long teaching is ~30 KB)
-define('TEACHING_MAX_BYTES', 600000);
+define('TEACHING_MAX_BYTES', 250000);
 
 // Placeholder texts the old editor saved as if they were content for every
 // empty language. Files holding only one of these count as empty.
@@ -141,14 +141,12 @@ function teaching_reader_html(string $townDir, string $lang): string {
 }
 
 /**
- * Does the HTML contain anything a reader would see?
+ * Does the HTML contain text a reader would see? (A lone divider or an
+ * empty table is not a teaching.)
  */
 function teaching_has_content(string $html): bool {
     if ($html === '') {
         return false;
-    }
-    if (preg_match('/<(img|hr|table)\b/i', $html)) {
-        return true;
     }
     $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $plain = trim((string)preg_replace('/[\s\x{00A0}\x{200B}\x{FEFF}]+/u', ' ', $text));
@@ -164,10 +162,13 @@ const TEACHING_DROP_TAGS = [
     'script', 'style', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet',
     'form', 'input', 'button', 'textarea', 'select', 'option', 'optgroup', 'datalist',
     'noscript', 'template', 'link', 'meta', 'base', 'head', 'title', 'svg', 'math',
-    'canvas', 'audio', 'video', 'source', 'track', 'param', 'xml', 'dialog', 'map'
+    'canvas', 'audio', 'video', 'source', 'track', 'param', 'xml', 'dialog', 'map',
+    'img', 'picture'
 ];
 
-// Allowed tags => allowed attributes (style/class are handled for all)
+// Allowed tags => allowed attributes (style/class are handled for all).
+// No images: a teaching is text, pasted image links expire, and an image
+// URL is a request every reader's browser makes on their behalf.
 const TEACHING_ALLOWED_TAGS = [
     'p' => [], 'div' => [], 'br' => [], 'hr' => [],
     'h1' => [], 'h2' => [], 'h3' => [], 'h4' => [], 'h5' => [], 'h6' => [],
@@ -177,7 +178,6 @@ const TEACHING_ALLOWED_TAGS = [
     'blockquote' => [], 'pre' => [], 'code' => [],
     'ul' => [], 'ol' => ['start', 'type'], 'li' => [],
     'a' => ['href', 'target', 'rel', 'title'],
-    'img' => ['src', 'alt', 'title', 'width', 'height'],
     'table' => [], 'thead' => [], 'tbody' => [], 'tfoot' => [], 'tr' => [],
     'th' => ['colspan', 'rowspan'], 'td' => ['colspan', 'rowspan'], 'caption' => []
 ];
@@ -191,6 +191,24 @@ const TEACHING_ALLOWED_CSS = [
     'margin-left', 'padding-left', 'vertical-align'
 ];
 
+/**
+ * Text the parser can be trusted with: valid UTF-8, no document-level tags
+ * (a stray </body> would end the document early), no Office namespace tags
+ * (libxml drops the prefix, so <o:p> would become a nested <p>), and no
+ * absurdly long tags (thousands of attributes make libxml crawl).
+ */
+function teaching_prepare_html(string $html): string {
+    if (function_exists('mb_scrub')) {
+        $html = mb_scrub($html, 'UTF-8');
+    } elseif (!preg_match('//u', $html)) {
+        $html = (string)@iconv('UTF-8', 'UTF-8//IGNORE', $html);
+    }
+    $html = (string)preg_replace('/<[^>]{4000,}>?/', '', $html);
+    $html = (string)preg_replace('#<\?xml[^>]*>|<!DOCTYPE[^>]*>|</?(?:html|head|body)\b[^>]*>#i', '', $html);
+    $html = (string)preg_replace('#</?[a-z][a-z0-9]*:[a-z0-9._\-]*\b[^>]*>#i', '', $html);
+    return $html;
+}
+
 function teaching_sanitize_html(string $html): string {
     $html = trim($html);
     if ($html === '') {
@@ -203,29 +221,94 @@ function teaching_sanitize_html(string $html): string {
     $doc = new DOMDocument('1.0', 'UTF-8');
     $prev = libxml_use_internal_errors(true);
     $ok = $doc->loadHTML(
-        '<?xml encoding="UTF-8"?><!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div id="__teach_root">'
-        . $html . '</div></body></html>',
+        '<?xml encoding="UTF-8"?><!DOCTYPE html><html><head><meta charset="utf-8"></head><body>'
+        . teaching_prepare_html($html) . '</body></html>',
         LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING
     );
     libxml_clear_errors();
     libxml_use_internal_errors($prev);
 
-    $root = $ok ? $doc->getElementById('__teach_root') : null;
+    $root = $ok ? $doc->getElementsByTagName('body')->item(0) : null;
     if (!$root) {
         return teaching_sanitize_html_fallback($html);
     }
 
     teaching_clean_children($root);
+    teaching_merge_split_lists($root);
 
     $out = '';
-    foreach (iterator_to_array($root->childNodes) as $child) {
+    for ($child = $root->firstChild; $child !== null; $child = $child->nextSibling) {
         $out .= $doc->saveHTML($child);
     }
     return trim($out);
 }
 
+/**
+ * Lists that were pasted one item at a time, with blank lines between them
+ * (<ol><li>a</li></ol><p>&nbsp;</p><ol><li>b</li></ol>), number 1, 1, 1.
+ * Join them so the numbering runs 1, 2, 3. At most two blank paragraphs may
+ * sit between the pieces, and a list with its own different start number
+ * is left alone.
+ */
+function teaching_merge_split_lists(DOMNode $root): void {
+    $isBlankP = static function (DOMNode $n): bool {
+        if (!($n instanceof DOMElement) || strtolower($n->nodeName) !== 'p') {
+            return false;
+        }
+        $text = preg_replace('/[\s\x{00A0}\x{200B}\x{FEFF}]+/u', '', (string)$n->textContent);
+        return $text === '' || $text === null;
+    };
+
+    for ($list = $root->firstChild; $list !== null; $list = $list->nextSibling) {
+        if (!($list instanceof DOMElement)) {
+            continue;
+        }
+        $tag = strtolower($list->nodeName);
+        if ($tag !== 'ol' && $tag !== 'ul') {
+            continue;
+        }
+        while (true) {
+            $between = [];
+            $next = $list->nextSibling;
+            while ($next !== null && (($next instanceof DOMText && trim($next->textContent) === '') || $isBlankP($next))) {
+                if ($next instanceof DOMElement) {
+                    $between[] = $next;
+                }
+                $next = $next->nextSibling;
+            }
+            if (!($next instanceof DOMElement) || strtolower($next->nodeName) !== $tag
+                || count($between) > 2 || $next->getAttribute('type') !== $list->getAttribute('type')) {
+                break;
+            }
+            if ($tag === 'ol' && $next->hasAttribute('start')) {
+                $count = 0;
+                foreach ($list->childNodes as $c) {
+                    if ($c instanceof DOMElement && strtolower($c->nodeName) === 'li') {
+                        $count++;
+                    }
+                }
+                $expected = (int)($list->getAttribute('start') ?: 1) + $count;
+                if ((int)$next->getAttribute('start') !== $expected) {
+                    break;
+                }
+            }
+            while ($next->firstChild) {
+                $list->appendChild($next->firstChild);
+            }
+            foreach ($between as $b) {
+                $root->removeChild($b);
+            }
+            $root->removeChild($next);
+        }
+    }
+}
+
+// Walks the live child list (no array of all nodes at once: a 250 KB file
+// can hold 100k+ nodes, and an array of node objects would eat the memory)
 function teaching_clean_children(DOMNode $parent): void {
-    foreach (iterator_to_array($parent->childNodes) as $node) {
+    for ($node = $parent->firstChild; $node !== null; $node = $next) {
+        $next = $node->nextSibling;
+
         if ($node instanceof DOMText) {
             continue; // includes CDATA
         }
@@ -236,9 +319,7 @@ function teaching_clean_children(DOMNode $parent): void {
 
         $tag = strtolower($node->nodeName);
 
-        // Namespaced Office tags (w:*, v:*, m:*) carry no text worth keeping;
-        // o:p is Word's paragraph marker and is simply unwrapped below
-        if (in_array($tag, TEACHING_DROP_TAGS, true) || (strpos($tag, ':') !== false && $tag !== 'o:p')) {
+        if (in_array($tag, TEACHING_DROP_TAGS, true)) {
             $parent->removeChild($node);
             continue;
         }
@@ -267,7 +348,7 @@ function teaching_clean_children(DOMNode $parent): void {
         }
 
         if (!array_key_exists($tag, TEACHING_ALLOWED_TAGS)) {
-            // Unknown wrapper (section, center, o:p, ...): keep its content
+            // Unknown wrapper (section, center, ...): keep its (clean) content
             while ($node->firstChild) {
                 $parent->insertBefore($node->firstChild, $node);
             }
@@ -276,10 +357,6 @@ function teaching_clean_children(DOMNode $parent): void {
         }
 
         teaching_clean_attributes($node, $tag);
-
-        if ($tag === 'img' && !$node->hasAttribute('src')) {
-            $parent->removeChild($node);
-        }
     }
 }
 
@@ -299,10 +376,7 @@ function teaching_clean_attributes(DOMElement $el, string $tag): void {
         } elseif (in_array($name, $allowed, true)) {
             switch ($name) {
                 case 'href':
-                    $keep = teaching_safe_url($value, false);
-                    break;
-                case 'src':
-                    $keep = teaching_safe_url($value, true);
+                    $keep = teaching_safe_url($value);
                     break;
                 case 'target':
                     $keep = $value === '_blank' ? '_blank' : '';
@@ -313,8 +387,6 @@ function teaching_clean_attributes(DOMElement $el, string $tag): void {
                 case 'start':
                 case 'colspan':
                 case 'rowspan':
-                case 'width':
-                case 'height':
                     $keep = preg_match('/^\d{1,4}$/', $value) ? $value : '';
                     break;
                 case 'type':
@@ -326,7 +398,7 @@ function teaching_clean_attributes(DOMElement $el, string $tag): void {
                 case 'color':
                     $keep = teaching_safe_css_color($value) ? $value : '';
                     break;
-                default: // alt, title
+                default: // title
                     $keep = mb_substr($value, 0, 300);
             }
         }
@@ -415,22 +487,14 @@ function teaching_safe_css_color(string $val): bool {
 }
 
 /**
- * Only http(s), mailto, tel, site-relative and #anchors. Images: https or
- * site-relative only (no data:, no file:, no blob:).
+ * Links: only http(s), mailto, tel, site-relative and #anchors.
  */
-function teaching_safe_url(string $url, bool $isImage): string {
+function teaching_safe_url(string $url): string {
     $url = trim($url);
     if ($url === '') {
         return '';
     }
     $probe = strtolower((string)preg_replace('/[\x00-\x20]+/', '', $url));
-
-    if ($isImage) {
-        if (strpos($probe, 'https://') === 0 || (strpos($probe, '/') === 0 && strpos($probe, '//') !== 0)) {
-            return $url;
-        }
-        return '';
-    }
 
     if (preg_match('#^(https?://|mailto:|tel:|/|\#)#', $probe)) {
         return $url;
@@ -443,17 +507,19 @@ function teaching_safe_url(string $url, bool $isImage): string {
 }
 
 /**
- * Regex fallback for servers without ext-dom (should never be needed)
+ * Without ext-dom there is no safe way to keep markup: fall back to plain
+ * text paragraphs (never seen on a normal PHP install).
  */
 function teaching_sanitize_html_fallback(string $html): string {
-    foreach (TEACHING_DROP_TAGS as $tag) {
-        $html = (string)preg_replace('/<' . $tag . '\b[^>]*>.*?<\/' . $tag . '\s*>/is', '', $html);
-        $html = (string)preg_replace('/<\/?' . $tag . '\b[^>]*>/i', '', $html);
+    $html = (string)preg_replace('#<(script|style|head|title|xml|template)\b.*?</\1\s*>#is', ' ', $html);
+    $html = (string)preg_replace('#</(p|div|h[1-6]|li|blockquote|tr|table|ul|ol)\s*>|<br\s*/?>#i', "\n", $html);
+    $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $out = '';
+    foreach (preg_split('/\n\s*\n|\n/', $text) ?: [] as $line) {
+        $line = trim((string)preg_replace('/[ \t\x{00A0}]+/u', ' ', $line));
+        if ($line !== '') {
+            $out .= '<p>' . htmlspecialchars($line, ENT_QUOTES, 'UTF-8') . '</p>';
+        }
     }
-    $html = (string)preg_replace('/<!--.*?-->/s', '', $html);
-    $html = strip_tags($html, '<' . implode('><', array_keys(TEACHING_ALLOWED_TAGS)) . '>');
-    $html = (string)preg_replace('/[\s\/]+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', ' ', $html);
-    $html = (string)preg_replace('/(href|src)\s*=\s*("|\')?\s*(javascript|vbscript|data|file):[^"\'>\s]*("|\')?/i', '', $html);
-    $html = (string)preg_replace('/expression\s*\(|url\s*\(/i', '', $html);
-    return trim($html);
+    return $out;
 }

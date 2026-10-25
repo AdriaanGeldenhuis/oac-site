@@ -1318,6 +1318,14 @@ html {
   color: var(--text-primary);
 }
 
+/* Bold inside a coloured run keeps that colour */
+.wc-teaching-content [style^="color"] strong, .wc-teaching-content [style^="color"] b,
+.wc-teaching-content [style*="; color"] strong, .wc-teaching-content [style*="; color"] b,
+.wc-teaching-content [style*=";color"] strong, .wc-teaching-content [style*=";color"] b,
+.wc-teaching-content font[color] strong, .wc-teaching-content font[color] b {
+  color: inherit;
+}
+
 .wc-teaching-content ul,
 .wc-teaching-content ol {
   margin: 0 0 16px;
@@ -1417,12 +1425,6 @@ html {
   font-size: 0.7em;
 }
 
-.wc-teaching-content img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 10px;
-}
-
 .wc-teaching-content table {
   display: block;
   max-width: 100%;
@@ -1454,6 +1456,21 @@ html {
   margin-bottom: 0;
 }
 
+/* Paragraphs inside quotes and table cells look like their container
+   (quotes pasted from the web and Word table cells hold <p>s) */
+.wc-teaching-content blockquote p,
+.wc-teaching-content td p,
+.wc-teaching-content th p,
+.wc-teaching-content caption p {
+  color: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.wc-teaching-content caption {
+  color: var(--text-primary);
+}
+
 [data-theme="light"] .wc-teaching-content blockquote {
   border-left-color: #a47c38;
   background: rgba(164, 124, 56, 0.07);
@@ -1467,10 +1484,25 @@ html {
   color: var(--rose-gold-dark);
 }
 
+/* Verse blocks keep their own gold / soft colours (they are <p> too) */
 [data-theme="light"] .wc-teaching-content,
-[data-theme="light"] .wc-teaching-content p,
+[data-theme="light"] .wc-teaching-content p:not(.vref):not(.vtxt),
 [data-theme="light"] .wc-teaching-content li {
   color: #1f2937 !important;
+}
+
+/* ...and so do paragraphs inside quotes / cells (more specific than above) */
+[data-theme="light"] .wc-teaching-content blockquote p:not(.vref):not(.vtxt) {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .wc-teaching-content td p:not(.vref):not(.vtxt),
+[data-theme="light"] .wc-teaching-content caption p:not(.vref):not(.vtxt) {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .wc-teaching-content th p:not(.vref):not(.vtxt) {
+  color: var(--rose-gold) !important;
 }
 
 [data-theme="light"] .wc-teaching-content h1,

@@ -57,8 +57,8 @@ if (!defined('OPENAI_API_KEY') || OPENAI_API_KEY === '') {
 }
 
 // Get inputs
-$content = trim((string)($_POST['content'] ?? ''));
-$lang = trim((string)($_POST['lang'] ?? 'af'));
+$content = ai_post_str('content');
+$lang = ai_post_str('lang', 'af');
 if (!in_array($lang, SUPPORTED_LANGS, true)) {
     $lang = 'af';
 }
@@ -67,6 +67,14 @@ if ($content === '') {
     ob_end_clean();
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'No content provided']);
+    exit;
+}
+
+$limitError = ai_limit_error((int)auth_user_id(), $content);
+if ($limitError) {
+    ob_end_clean();
+    http_response_code($limitError[0]);
+    echo json_encode(['success' => false, 'error' => $limitError[1]]);
     exit;
 }
 

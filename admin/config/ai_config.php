@@ -163,6 +163,33 @@ function ai_user_is_elder(PDO $pdo, ?int $userId): bool {
     }
 }
 
+// Biggest teaching the AI endpoints accept (a long teaching is ~30 KB)
+define('AI_MAX_CONTENT_BYTES', 120000);
+
+/**
+ * A POST field as a trimmed string ('' for arrays like content[]=x)
+ */
+function ai_post_str(string $key, string $default = ''): string {
+    $v = $_POST[$key] ?? $default;
+    return is_string($v) ? trim($v) : $default;
+}
+
+/**
+ * Size cap + per-user rate limit for the AI endpoints (they spend API credit).
+ * @return array{0:int,1:string}|null  [http status, error] or null when fine
+ */
+function ai_limit_error(int $userId, string $content): ?array {
+    if (strlen($content) > AI_MAX_CONTENT_BYTES) {
+        return [413, 'Content too large for the AI (max ' . (int)(AI_MAX_CONTENT_BYTES / 1000) . ' KB)'];
+    }
+    require_once dirname(__DIR__, 2) . '/security/rate_limit.php';
+    // translate-all = 5 calls, improve = 1: 150 an hour is plenty for real use
+    if (function_exists('rate_limit_check') && !rate_limit_check('ai:' . $userId, 150, 15)) {
+        return [429, 'Too many AI requests - try again in 15 minutes'];
+    }
+    return null;
+}
+
 /**
  * Strip markdown code fences (```html ... ```) that models sometimes
  * wrap around HTML output.

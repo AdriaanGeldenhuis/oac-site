@@ -19,8 +19,7 @@
     --success: #4caf50;
     --error: #f44336;
     --warning: #ff9800;
-    --editor-bg: #0a0a0a;
-    --editor-text: #f5ebe6;
+    --editor-bg: #171514;         /* welcome teaching card */
 }
 
 [data-theme="light"] {
@@ -34,7 +33,6 @@
     --text-dim: #4a5361;
     --border: rgba(17, 24, 39, 0.12);
     --editor-bg: #ffffff;
-    --editor-text: #111827;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -85,7 +83,32 @@ body {
     font-size: 0.85rem;
 }
 
+/* Screen-reader-only text */
+.sr-only {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* ===== TOOLBAR ===== */
+/* Both rows stay under the fixed site header while a long teaching scrolls */
+.toolbar-dock {
+    position: sticky;
+    top: var(--ghf-height, 70px);
+    z-index: 50;
+    margin: -8px 0 8px;
+    padding: 8px 0;
+    background: var(--bg);
+}
+.toolbar-dock .toolbar { margin-bottom: 8px; }
+.toolbar-dock .toolbar:last-child { margin-bottom: 0; }
+
 .toolbar {
     display: flex;
     align-items: center;
@@ -193,6 +216,15 @@ body {
     border-color: var(--primary);
 }
 
+/* "Default colour" swatch - the theme's own text colour */
+.color-swatch.swatch-default {
+    display: inline-grid;
+    place-items: center;
+    background: var(--surface-light);
+    color: var(--text);
+    font: 600 0.8rem/1 system-ui, -apple-system, sans-serif;
+}
+
 /* "Remove highlight" swatch - diagonal red line */
 .color-swatch.swatch-none {
     position: relative;
@@ -242,11 +274,11 @@ body {
     /* Body typography lives HERE, not on p/li: when paragraphs are merged
        (Backspace, paste over a selection) Chrome copies the rules of the
        removed block into inline style spans, which then get saved */
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     font-size: 16px;
     font-weight: 300;
     line-height: 1.9;
-    color: var(--editor-text);
+    color: var(--c-text);
     background: var(--editor-bg);
     caret-color: var(--primary);
     overflow-wrap: break-word;
@@ -265,30 +297,64 @@ body {
     pointer-events: none;
 }
 
-/* Editor heading styles - MATCH WELCOME.CSS exactly */
+/* =====================================================================
+   TEACHING CONTENT - a mirror of `.wc-teaching-content` in
+   /welcome/css/welcome.css, so the elder sees exactly what members see.
+   Change both together. Colours come from the --c-* tokens below, which
+   hold the welcome page's values for each theme.
+   ===================================================================== */
+.editor {
+    --c-text: #f5ebe6;            /* welcome --text-primary            */
+    --c-text-2: #c8c0ba;          /* welcome --text-secondary          */
+    --c-strong: #fae8e0;          /* welcome --peach-light             */
+    --c-gold: #e8b4a8;            /* welcome --rose-gold               */
+    --c-gold-dark: #c99485;       /* welcome --rose-gold-dark          */
+    --c-heading: #e8b4a8;
+    --c-link: #e8b4a8;
+    --c-quote-line: #e8b4a8;
+    --c-quote-bg: rgba(232, 180, 168, 0.06);
+    --c-hr: #c99485;
+    --c-cell-line: rgba(232, 180, 168, 0.16);
+    --c-th: #e8b4a8;
+    --c-th-bg: rgba(232, 180, 168, 0.06);
+    --c-td: #f5ebe6;
+    --c-dark-ink: #f5ebe6;        /* welcome remaps dark ink to --text-primary */
+}
+[data-theme="light"] .editor {
+    --c-text: #1f2937;            /* welcome forces p / li to #1f2937  */
+    --c-text-2: #5a6474;
+    --c-strong: #111827;
+    --c-gold: #a47c38;
+    --c-gold-dark: #8a6427;
+    --c-heading: #8a6427;
+    --c-link: #8a6427;
+    --c-quote-line: #a47c38;
+    --c-quote-bg: rgba(164, 124, 56, 0.07);
+    --c-hr: rgba(164, 124, 56, 0.55);
+    --c-cell-line: rgba(17, 24, 39, 0.11);
+    --c-th: #a47c38;
+    --c-th-bg: rgba(164, 124, 56, 0.06);
+    --c-td: #111827;
+    --c-dark-ink: #111827;
+}
+
 .editor h1,
 .editor h2,
 .editor h3 {
     font-weight: 400;
-    color: var(--primary);
+    color: var(--c-heading);
     margin: 28px 0 14px;
     line-height: 1.3;
 }
-/* Only H1 gets Parisienne cursive. Sizes in em, like the welcome page,
-   so inline em sizes (toolbar + pasted) scale the same on both pages */
 .editor h1 {
     font-family: 'Parisienne', cursive;
     font-size: 2em;
 }
-/* H2 and H3 use system font */
 .editor h2 {
-    font-family: system-ui, -apple-system, sans-serif;
     font-size: 1.4em;
 }
 .editor h3 {
-    font-family: system-ui, -apple-system, sans-serif;
     font-size: 1.2em;
-    color: var(--primary-dark);
 }
 .editor h1:first-child,
 .editor h2:first-child,
@@ -314,15 +380,17 @@ body {
 }
 .editor strong, .editor b {
     font-weight: 500;
-    color: var(--peach);
+    color: var(--c-strong);
+}
+/* Bold inside a coloured run keeps that colour (same rule on the welcome page) */
+.editor [style^="color"] strong, .editor [style^="color"] b,
+.editor [style*="; color"] strong, .editor [style*="; color"] b,
+.editor [style*=";color"] strong, .editor [style*=";color"] b,
+.editor font[color] strong, .editor font[color] b {
+    color: inherit;
 }
 .editor u { text-underline-offset: 2px; }
 .editor sup, .editor sub { font-size: 0.7em; }
-.editor img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
-}
 .editor table {
     display: block;
     max-width: 100%;
@@ -333,27 +401,29 @@ body {
 }
 .editor th,
 .editor td {
-    border: 1px solid var(--border);
+    border: 1px solid var(--c-cell-line);
     padding: 8px 12px;
     text-align: left;
     vertical-align: top;
-    min-width: 60px;
+    line-height: 1.6;
+    color: var(--c-td);
 }
 .editor th {
-    color: var(--primary);
     font-weight: 500;
-    background: rgba(232, 180, 168, 0.06);
+    color: var(--c-th);
+    background: var(--c-th-bg);
 }
 .editor td > p:last-child,
 .editor th > p:last-child { margin-bottom: 0; }
+.editor caption { color: var(--c-td); }
 .editor blockquote {
-    margin: 0 0 16px;
+    margin: 0 0 20px;
     padding: 14px 20px;
-    border-left: 3px solid var(--primary);
-    background: rgba(232, 180, 168, 0.06);
-    border-radius: 0 8px 8px 0;
+    border-left: 3px solid var(--c-quote-line);
+    background: var(--c-quote-bg);
+    border-radius: 0 10px 10px 0;
     font-style: italic;
-    color: var(--text-dim);
+    color: var(--c-text-2);
 }
 .editor blockquote p:last-child {
     margin-bottom: 0;
@@ -362,23 +432,54 @@ body {
     border: none;
     height: 1px;
     margin: 28px auto;
-    background: linear-gradient(90deg, transparent, var(--primary-dark), transparent);
+    background: linear-gradient(90deg, transparent, var(--c-hr), transparent);
 }
 .editor a {
-    color: var(--primary);
+    color: var(--c-link);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
 
-/* ===== INLINE COLOR SAFETY =====
-   Ink colors picked on the opposite theme stay readable here */
+/* Bible verse blocks */
+.editor .vref {
+    font-family: 'Parisienne', cursive;
+    font-size: 1.15em;
+    font-weight: 500;
+    color: var(--c-heading);
+    margin: 24px 0 8px;
+    display: block;
+}
+.editor .vtxt {
+    font-style: italic;
+    color: var(--c-text-2);
+    line-height: 1.9;
+    margin: 0 0 20px;
+    padding-left: 16px;
+    border-left: 2px solid var(--c-gold-dark);
+}
+.editor .vtxt sup {
+    font-size: 0.7em;
+    font-weight: 600;
+    color: var(--c-heading);
+    margin-right: 2px;
+    vertical-align: super;
+    font-style: normal;
+}
+
+/* ===== INLINE COLOR SAFETY (same remaps as the welcome page) ===== */
+/* Dark ink -> normal text on the dark theme */
+.editor [style*="#1a1816" i],
+.editor [style*="rgb(26, 24, 22)"],
+.editor [style*="rgb(26,24,22)"],
 .editor [style*="#3d3835" i],
 .editor [style*="rgb(61, 56, 53)"],
 .editor [style*="rgb(61,56,53)"],
+.editor font[color="#1a1816" i],
 .editor font[color="#3d3835" i] {
-    color: var(--editor-text) !important;
+    color: var(--c-dark-ink) !important;
 }
 
+/* White / peach / silver ink -> dark text on the light theme */
 [data-theme="light"] .editor [style*="#fff" i],
 [data-theme="light"] .editor [style*="rgb(255, 255, 255)"],
 [data-theme="light"] .editor [style*="rgb(255,255,255)"],
@@ -400,9 +501,10 @@ body {
 [data-theme="light"] .editor [style*="rgb(192, 192, 192)"],
 [data-theme="light"] .editor [style*="rgb(192,192,192)"],
 [data-theme="light"] .editor font[color="#c0c0c0" i] {
-    color: var(--editor-text) !important;
+    color: #1f2937 !important;
 }
 
+/* Pale rose-gold ink -> deep antique gold on the light theme */
 [data-theme="light"] .editor [style*="#e8b4a8" i],
 [data-theme="light"] .editor [style*="rgb(232, 180, 168)"],
 [data-theme="light"] .editor [style*="rgb(232,180,168)"],
@@ -419,38 +521,7 @@ body {
 [data-theme="light"] .editor [style*="rgb(183,110,121)"],
 [data-theme="light"] .editor font[color="#f3c3b1" i],
 [data-theme="light"] .editor font[color="#b76e79" i] {
-    color: var(--primary-dark) !important;
-}
-
-/* Bible verse classes - MATCH WELCOME.CSS exactly */
-.editor .vref {
-    font-family: 'Parisienne', cursive;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--primary);
-    margin: 24px 0 8px;
-    display: block;
-}
-.editor .vtxt {
-    font-style: italic;
-    color: var(--text-dim);
-    line-height: 1.9;
-    padding-left: 16px;
-    border-left: 2px solid var(--primary-dark);
-    margin: 0 0 20px;
-}
-.editor .vtxt sup {
-    font-size: 0.7em;
-    font-weight: 600;
-    color: var(--primary);
-    margin-right: 2px;
-    font-style: normal;
-    vertical-align: super;
-}
-
-/* Numbered paragraphs styling */
-.editor p[style*="text-align: center"] {
-    text-align: center;
+    color: #8a6427 !important;
 }
 
 /* ===== ACTIONS ===== */
@@ -822,7 +893,8 @@ body {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    /* --kb: height of an on-screen keyboard covering the page (set by JS) */
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px) + var(--kb, 0px));
     width: max-content;
     max-width: calc(100% - 32px);
     margin: 0 auto;
@@ -882,10 +954,45 @@ body {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .header { flex-direction: column; gap: 20px; }
+    /* Compact title block, so the editor starts higher up the screen */
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+    .header h1 { font-size: 1.9rem; margin-bottom: 4px; }
+    .lang-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin-bottom: 0;
+    }
+    .lang-tabs::-webkit-scrollbar { display: none; }
+    .lang-tab { flex-shrink: 0; }
+    .container { margin-top: 12px; padding: 0 12px 100px; }
 
-    /* Toolbars: one swipeable row each instead of a tall wrapped
-       block, so the editor stays right under your thumb */
+
+    .form-grid { grid-template-columns: 1fr; }
+    .editor { padding: 20px; min-height: 400px; }
+    .editor.is-empty::before { top: 20px; left: 20px; right: 20px; }
+    .seg-btn { min-height: 34px; }
+    /* Above the floating back / notification buttons */
+    .paste-pop {
+        bottom: calc(100px + env(safe-area-inset-bottom, 0px) + var(--kb, 0px));
+        padding: 8px 8px 8px 12px;
+        gap: 6px;
+    }
+    .paste-pop .seg-btn { padding: 4px 10px; }
+    .paste-pop { flex-wrap: nowrap; }
+    .actions { flex-direction: column; gap: 14px; }
+    .actions .btn { width: 100%; justify-content: center; }
+}
+
+/* Phones, tablets and narrow windows: one swipeable row per toolbar
+   instead of a tall wrapped block, so the editor stays in view */
+@media (max-width: 1024px), (pointer: coarse) {
     .toolbar {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -895,7 +1002,6 @@ body {
         scrollbar-color: var(--primary-dark) transparent;
         padding: 10px 12px;
         gap: 8px;
-        margin-bottom: 10px;
         scroll-snap-type: x proximity;
     }
     .toolbar::-webkit-scrollbar { height: 4px; }
@@ -907,35 +1013,29 @@ body {
         flex-shrink: 0;
         scroll-snap-align: start;
     }
-    .toolbar .sep { flex-shrink: 0; }
-    /* Comfortable touch targets */
-    .toolbar .tool-btn {
-        min-width: 40px;
-        min-height: 40px;
-        flex-shrink: 0;
-    }
-    .toolbar .color-swatch {
-        width: 28px;
-        height: 28px;
-        flex-shrink: 0;
-    }
+    .toolbar .sep,
+    .toolbar .tool-btn,
+    .toolbar .color-swatch { flex-shrink: 0; }
     .btn-translate { min-width: 0; }
+}
 
-    .form-grid { grid-template-columns: 1fr; }
-    .lang-tabs { flex-wrap: wrap; }
-    .editor { padding: 20px; min-height: 400px; }
-    .editor.is-empty::before { top: 20px; left: 20px; right: 20px; }
-    .seg-btn { min-height: 34px; }
-    /* Above the floating back / notification buttons */
-    .paste-pop {
-        bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-        padding: 8px 8px 8px 12px;
-        gap: 6px;
+/* Touch screens (phones AND tablets): 44px targets everywhere */
+@media (pointer: coarse) {
+    .tool-btn,
+    .toolbar .tool-btn {
+        min-width: 44px;
+        min-height: 44px;
     }
-    .paste-pop .seg-btn { padding: 4px 10px; }
-    .paste-pop { flex-wrap: nowrap; }
-    .actions { flex-direction: column; gap: 14px; }
-    .actions .btn { width: 100%; justify-content: center; }
+    .tool-group select { min-height: 44px; }
+    .color-swatch,
+    .toolbar .color-swatch {
+        width: 40px;
+        height: 40px;
+    }
+    .seg-btn,
+    .paste-pop .seg-btn { min-height: 44px; }
+    .lang-tab { min-height: 44px; }
+    .paste-pop-close { width: 44px; height: 44px; }
 }
 
 /* Small phones: the two choices + close on one row */
@@ -999,24 +1099,9 @@ body {
     border-color: rgba(164, 124, 56, 0.45);
     box-shadow: 0 18px 40px -12px rgba(7, 17, 31, 0.35);
 }
-[data-theme="light"] .editor strong,
-[data-theme="light"] .editor b {
-    color: inherit;
-}
-[data-theme="light"] .editor th {
-    color: #8a6427;
-    background: rgba(164, 124, 56, 0.07);
-}
 [data-theme="light"] .editor-wrap,
 [data-theme="light"] .modal-content {
     box-shadow: 0 30px 70px -34px rgba(7, 17, 31, 0.30);
-}
-[data-theme="light"] .editor blockquote {
-    border-left-color: #a47c38;
-    background: rgba(164, 124, 56, 0.07);
-}
-[data-theme="light"] .editor hr {
-    background: linear-gradient(90deg, transparent, rgba(164, 124, 56, 0.55), transparent);
 }
 [data-theme="light"] .btn-secondary {
     background: #ffffff;

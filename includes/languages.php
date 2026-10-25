@@ -286,7 +286,10 @@ define('UI_TRANSLATIONS', [
     'up_next' => [
         'af' => 'Volgende',
         'en' => 'Up next',
-        'pt' => 'A seguir'
+        'zu' => 'Okulandelayo',
+        'xh' => 'Okulandelayo',
+        'pt' => 'A seguir',
+        'st' => 'Se latelang'
     ],
     'tomorrow' => [
         'af' => 'Môre',
@@ -299,17 +302,26 @@ define('UI_TRANSLATIONS', [
     'copied' => [
         'af' => 'Gekopieer',
         'en' => 'Copied',
-        'pt' => 'Copiado'
+        'zu' => 'Kukopishiwe',
+        'xh' => 'Kukhutshelwe',
+        'pt' => 'Copiado',
+        'st' => 'E kopilitsoe'
     ],
     'read_more' => [
         'af' => 'Lees meer',
         'en' => 'Read more',
-        'pt' => 'Ler mais'
+        'zu' => 'Funda kabanzi',
+        'xh' => 'Funda ngakumbi',
+        'pt' => 'Ler mais',
+        'st' => 'Bala haholoanyane'
     ],
     'read_less' => [
         'af' => 'Lees minder',
         'en' => 'Read less',
-        'pt' => 'Ler menos'
+        'zu' => 'Bonisa okuncane',
+        'xh' => 'Bonisa okuncinci',
+        'pt' => 'Ler menos',
+        'st' => 'Bontsha hanyane'
     ],
 
     // ==================== ADMIN SECTION ====================
@@ -1591,6 +1603,22 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Imifanekiso ayinakuncamathiselwa apha',
         'pt' => 'Não é possível colar imagens aqui',
         'st' => 'Litšoantšo li ke ke tsa khomaretsoa mona'
+    ],
+    'default_color' => [
+        'af' => 'Gewone kleur',
+        'en' => 'Default colour',
+        'zu' => 'Umbala ojwayelekile',
+        'xh' => 'Umbala oqhelekileyo',
+        'pt' => 'Cor padrão',
+        'st' => 'Mmala o tloaelehileng'
+    ],
+    'editor_keys_hint' => [
+        'af' => 'Tab keep in. Druk Esc en dan Tab om die teks te verlaat.',
+        'en' => 'Tab indents. Press Esc, then Tab, to leave the text.',
+        'zu' => 'U-Tab uyangenisa. Cindezela u-Esc bese u-Tab ukuze uphume embhalweni.',
+        'xh' => 'I-Tab iyangenisa. Cofa u-Esc, emva koko i-Tab, ukuze uphume kumbhalo.',
+        'pt' => 'Tab aumenta o recuo. Pressione Esc e depois Tab para sair do texto.',
+        'st' => 'Tab e kenya ka hare. Tobetsa Esc ebe Tab ho tsoa mongolong.'
     ],
     'draft_found' => [
         'af' => "Daar is 'n ongestoorde konsep van hierdie lering",

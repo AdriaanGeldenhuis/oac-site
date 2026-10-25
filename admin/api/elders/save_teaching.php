@@ -77,6 +77,13 @@ $townId = (int)($user['town_id'] ?? 0);
 $province = (string)($user['province_name'] ?? '');
 $town = (string)($user['town_name'] ?? '');
 
+// Without ext-dom formatting can't be kept safely - refuse rather than
+// silently storing plain text
+if (!class_exists('DOMDocument')) {
+    error_log('save_teaching: PHP ext-dom is missing');
+    save_teaching_fail(500, 'Server is missing the PHP DOM extension');
+}
+
 // ---------------------------------------------------------------------------
 // Validate + sanitize every language
 // ---------------------------------------------------------------------------
@@ -108,43 +115,66 @@ if (!is_dir($targetDir) && !@mkdir($targetDir, 0755, true) && !is_dir($targetDir
 $written = [];
 $removed = [];
 $hasContent = [];
+$temps = [];   // final path => temp path
 
+// 1. Every new file is written to a temp file first. If any of them fails,
+//    nothing on disk has changed yet.
 try {
     foreach (SUPPORTED_LANGS as $code) {
-        $file = teaching_file($targetDir, $code);
-
+        $hasContent[$code] = $contents[$code] === '' ? 0 : 1;
         if ($contents[$code] === '') {
-            $hasContent[$code] = 0;
-            if (is_file($file)) {
-                if (!@unlink($file)) {
-                    throw new RuntimeException('Failed to remove ' . basename($file));
-                }
-                $removed[] = basename($file);
-            }
             continue;
         }
-
+        $file = teaching_file($targetDir, $code);
         $tmp = $file . '.tmp-' . bin2hex(random_bytes(4));
-        if (file_put_contents($tmp, $contents[$code], LOCK_EX) === false) {
+        if (file_put_contents($tmp, $contents[$code], LOCK_EX) !== strlen($contents[$code])) {
             throw new RuntimeException('Failed to write ' . $code);
         }
         @chmod($tmp, 0644);
-        if (!@rename($tmp, $file)) {
-            @unlink($tmp);
-            throw new RuntimeException('Failed to replace ' . basename($file));
-        }
-        $written[] = basename($file);
-        $hasContent[$code] = 1;
-    }
-
-    // The legacy English file was shown in the English tab; it is now either
-    // saved as teaching_content.en.html or was deliberately cleared
-    $legacy = $targetDir . '/' . TEACHING_LEGACY_EN_FILE;
-    if (is_file($legacy) && @unlink($legacy)) {
-        $removed[] = TEACHING_LEGACY_EN_FILE;
+        $temps[$file] = $tmp;
     }
 } catch (Throwable $e) {
+    foreach ($temps as $tmp) {
+        @unlink($tmp);
+    }
     error_log('save_teaching: Write error: ' . $e->getMessage());
+    save_teaching_fail(500, 'Failed to write files');
+}
+
+// 2. Swap them in (rename in the same folder is atomic), then remove the
+//    languages that were cleared. A file that is already gone is fine
+//    (two saves at once).
+$failed = false;
+foreach ($temps as $file => $tmp) {
+    if (@rename($tmp, $file)) {
+        $written[] = basename($file);
+    } else {
+        @unlink($tmp);
+        $failed = true;
+        error_log('save_teaching: Failed to replace ' . $file);
+    }
+}
+$toRemove = [];
+foreach (SUPPORTED_LANGS as $code) {
+    if ($contents[$code] === '') {
+        $toRemove[] = teaching_file($targetDir, $code);
+    }
+}
+// The legacy English file was shown in the English tab; it is now either
+// saved as teaching_content.en.html or was deliberately cleared
+$toRemove[] = $targetDir . '/' . TEACHING_LEGACY_EN_FILE;
+foreach ($toRemove as $file) {
+    if (!is_file($file)) {
+        continue;
+    }
+    if (@unlink($file) || !is_file($file)) {
+        $removed[] = basename($file);
+    } else {
+        $failed = true;
+        error_log('save_teaching: Failed to remove ' . $file);
+    }
+}
+if ($failed) {
     save_teaching_fail(500, 'Failed to write files');
 }
 

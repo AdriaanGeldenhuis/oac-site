@@ -1,0 +1,23 @@
+# Teaching of the Month files are read by PHP (welcome.php, admin/elders.php)
+# straight from disk. Never serve them directly: that would skip the login
+# and the output sanitizer. Applies to every town folder below this one.
+<FilesMatch "^(lering_content|teaching_content|content).*\.html$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Temp files of an interrupted save
+<FilesMatch "\.tmp-[0-9a-f]+$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

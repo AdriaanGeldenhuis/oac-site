@@ -86,8 +86,21 @@ class MainActivity : ComponentActivity() {
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if (url != null) {
+                if (url == null) return true
+                val scheme = Uri.parse(url).scheme?.lowercase()
+                if (scheme == "http" || scheme == "https") {
                     view?.loadUrl(url)
+                    return true
+                }
+                // Phone, e-mail, SMS, WhatsApp and map links (e.g. in the
+                // teaching of the month) belong to other apps; the WebView
+                // itself can only show an "unknown URL scheme" error for them
+                if (scheme != null && scheme in setOf("tel", "mailto", "sms", "whatsapp", "geo")) {
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    } catch (e: Exception) {
+                        Log.w("MainActivity", "No app to open $url", e)
+                    }
                 }
                 return true
             }
