@@ -6053,6 +6053,800 @@ define('UI_TRANSLATIONS', [
         'xh' => '{name} uqinisekise idinga lakho ngo-{date} ngo-{time}.',
         'pt' => '{name} confirmou o seu compromisso em {date} às {time}.',
         'st' => '{name} o netefalitse kopano ea hao ka {date} ka {time}.'
+    ],
+
+    // ===== Diary (diary/) =====
+    'dy_private' => [
+        'af' => 'Privaat — net jy kan dit lees',
+        'en' => 'Private — only you can read it',
+        'zu' => 'Okuyimfihlo — nguwe kuphela ongakufunda',
+        'xh' => 'Iyimfihlo — nguwe kuphela onokuyifunda',
+        'pt' => 'Privado — só você pode ler',
+        'st' => 'Ke lekunutu — ke uena feela ea ka e balang'
+    ],
+    'dy_write_today' => [
+        'af' => 'Skryf vandag se bladsy',
+        'en' => 'Write today’s page',
+        'zu' => 'Bhala ikhasi lanamuhla',
+        'xh' => 'Bhala iphepha lanamhlanje',
+        'pt' => 'Escrever a página de hoje',
+        'st' => 'Ngola leqephe la kajeno'
+    ],
+    'dy_search_label' => [
+        'af' => 'Soek in jou dagboek',
+        'en' => 'Search your diary',
+        'zu' => 'Sesha kudayari yakho',
+        'xh' => 'Khangela kwidayari yakho',
+        'pt' => 'Pesquisar no seu diário',
+        'st' => 'Batla bukeng ea hao ea letsatsi'
+    ],
+    'dy_clear_search' => [
+        'af' => 'Maak soektog skoon',
+        'en' => 'Clear search',
+        'zu' => 'Sula usesho',
+        'xh' => 'Cima ukhangelo',
+        'pt' => 'Limpar pesquisa',
+        'st' => 'Hlakola patlo'
+    ],
+    'dy_sort_label' => [
+        'af' => 'Volgorde',
+        'en' => 'Order',
+        'zu' => 'Uhlelo',
+        'xh' => 'Ulandelelwano',
+        'pt' => 'Ordem',
+        'st' => 'Tatellano'
+    ],
+    'dy_export' => [
+        'af' => 'Laai af',
+        'en' => 'Download',
+        'zu' => 'Landa',
+        'xh' => 'Khuphela',
+        'pt' => 'Baixar',
+        'st' => 'Jarolla'
+    ],
+    'dy_period' => [
+        'af' => 'Tydperk',
+        'en' => 'Period',
+        'zu' => 'Isikhathi',
+        'xh' => 'Ixesha',
+        'pt' => 'Período',
+        'st' => 'Nako'
+    ],
+    'dy_on_this_day' => [
+        'af' => 'Op hierdie dag',
+        'en' => 'On this day',
+        'zu' => 'Ngalolu suku',
+        'xh' => 'Ngalo mhla',
+        'pt' => 'Neste dia',
+        'st' => 'Ka letsatsi lena'
+    ],
+    'dy_load_more' => [
+        'af' => 'Wys meer',
+        'en' => 'Show more',
+        'zu' => 'Bonisa okwengeziwe',
+        'xh' => 'Bonisa ezingakumbi',
+        'pt' => 'Mostrar mais',
+        'st' => 'Bontša tse ling'
+    ],
+    'dy_yesterday' => [
+        'af' => 'Gister',
+        'en' => 'Yesterday',
+        'zu' => 'Izolo',
+        'xh' => 'Izolo',
+        'pt' => 'Ontem',
+        'st' => 'Maobane'
+    ],
+    'dy_entries_n' => [
+        'af' => '{n} inskrywings',
+        'en' => '{n} entries',
+        'zu' => 'okufakiwe okungu-{n}',
+        'xh' => 'iingeniso ezi-{n}',
+        'pt' => '{n} entradas',
+        'st' => 'lintlha tse {n}'
+    ],
+    'dy_entry_one' => [
+        'af' => '1 inskrywing',
+        'en' => '1 entry',
+        'zu' => 'okufakiwe oku-1',
+        'xh' => 'ingeniso e-1',
+        'pt' => '1 entrada',
+        'st' => 'ntlha e le 1'
+    ],
+    'dy_found_n' => [
+        'af' => '{n} gevind',
+        'en' => '{n} found',
+        'zu' => 'kutholwe okungu-{n}',
+        'xh' => 'kufunyenwe ezi-{n}',
+        'pt' => '{n} encontradas',
+        'st' => 'ho fumanoe tse {n}'
+    ],
+    'dy_found_one' => [
+        'af' => '1 gevind',
+        'en' => '1 found',
+        'zu' => 'kutholwe oku-1',
+        'xh' => 'kufunyenwe e-1',
+        'pt' => '1 encontrada',
+        'st' => 'ho fumanoe e le 1'
+    ],
+    'dy_words_n' => [
+        'af' => '{n} woorde',
+        'en' => '{n} words',
+        'zu' => 'amagama angu-{n}',
+        'xh' => 'amagama angama-{n}',
+        'pt' => '{n} palavras',
+        'st' => 'mantsoe a {n}'
+    ],
+    'dy_word_one' => [
+        'af' => '1 woord',
+        'en' => '1 word',
+        'zu' => 'igama elilodwa',
+        'xh' => 'igama elinye',
+        'pt' => '1 palavra',
+        'st' => 'lentsoe le le leng'
+    ],
+    'dy_no_title' => [
+        'af' => 'Sonder titel',
+        'en' => 'Untitled',
+        'zu' => 'Akunasihloko',
+        'xh' => 'Akukho sihloko',
+        'pt' => 'Sem título',
+        'st' => 'Ha ho sehlooho'
+    ],
+    'dy_empty_title' => [
+        'af' => 'Jou dagboek is nog leeg',
+        'en' => 'Your diary is still empty',
+        'zu' => 'Idayari yakho isengenalutho',
+        'xh' => 'Idayari yakho isengenanto',
+        'pt' => 'Seu diário ainda está vazio',
+        'st' => 'Buka ea hao ea letsatsi e ntse e se na letho'
+    ],
+    'dy_empty_hint' => [
+        'af' => 'Skryf jou eerste bladsy — net jy kan dit lees.',
+        'en' => 'Write your first page — only you can read it.',
+        'zu' => 'Bhala ikhasi lakho lokuqala — nguwe kuphela ongalifunda.',
+        'xh' => 'Bhala iphepha lakho lokuqala — nguwe kuphela onokulifunda.',
+        'pt' => 'Escreva sua primeira página — só você pode lê-la.',
+        'st' => 'Ngola leqephe la hao la pele — ke uena feela ea ka le balang.'
+    ],
+    'dy_write_first' => [
+        'af' => 'Skryf jou eerste bladsy',
+        'en' => 'Write your first page',
+        'zu' => 'Bhala ikhasi lakho lokuqala',
+        'xh' => 'Bhala iphepha lakho lokuqala',
+        'pt' => 'Escrever sua primeira página',
+        'st' => 'Ngola leqephe la hao la pele'
+    ],
+    'dy_none_found' => [
+        'af' => 'Niks gevind nie',
+        'en' => 'Nothing found',
+        'zu' => 'Akutholakalanga lutho',
+        'xh' => 'Akufunyenwanga nto',
+        'pt' => 'Nada encontrado',
+        'st' => 'Ha ho letho le fumanoeng'
+    ],
+    'dy_none_found_hint' => [
+        'af' => 'Probeer ander woorde of ’n ander tydperk.',
+        'en' => 'Try other words or another period.',
+        'zu' => 'Zama amanye amagama noma esinye isikhathi.',
+        'xh' => 'Zama amanye amagama okanye elinye ixesha.',
+        'pt' => 'Tente outras palavras ou outro período.',
+        'st' => 'Leka mantsoe a mang kapa nako e ’ngoe.'
+    ],
+    'dy_show_all' => [
+        'af' => 'Wys alles',
+        'en' => 'Show everything',
+        'zu' => 'Bonisa konke',
+        'xh' => 'Bonisa konke',
+        'pt' => 'Mostrar tudo',
+        'st' => 'Bontša tsohle'
+    ],
+    'dy_load_failed' => [
+        'af' => 'Kon nie jou dagboek laai nie.',
+        'en' => 'Could not load your diary.',
+        'zu' => 'Ayikwazanga ukulayisha idayari yakho.',
+        'xh' => 'Ayikwazanga ukulayisha idayari yakho.',
+        'pt' => 'Não foi possível carregar seu diário.',
+        'st' => 'Ha ea khona ho kenya buka ea hao ea letsatsi.'
+    ],
+    'dy_retry' => [
+        'af' => 'Probeer weer',
+        'en' => 'Try again',
+        'zu' => 'Zama futhi',
+        'xh' => 'Zama kwakhona',
+        'pt' => 'Tentar novamente',
+        'st' => 'Leka hape'
+    ],
+    'dy_years_ago' => [
+        'af' => '{n} jaar gelede',
+        'en' => '{n} years ago',
+        'zu' => 'eminyakeni engu-{n} edlule',
+        'xh' => 'kwiminyaka eyi-{n} edlulileyo',
+        'pt' => 'há {n} anos',
+        'st' => 'lilemong tse {n} tse fetileng'
+    ],
+    'dy_year_ago' => [
+        'af' => '’n Jaar gelede',
+        'en' => 'A year ago',
+        'zu' => 'Onyakeni odlule',
+        'xh' => 'Kunyaka ophelileyo',
+        'pt' => 'Há um ano',
+        'st' => 'Selemong se fetileng'
+    ],
+    'dy_tag_filter' => [
+        'af' => '#{tag}',
+        'en' => '#{tag}',
+        'zu' => '#{tag}',
+        'xh' => '#{tag}',
+        'pt' => '#{tag}',
+        'st' => '#{tag}'
+    ],
+    'dy_remove_filter' => [
+        'af' => 'Verwyder filter',
+        'en' => 'Remove filter',
+        'zu' => 'Susa isihlungi',
+        'xh' => 'Susa isihluzi',
+        'pt' => 'Remover filtro',
+        'st' => 'Tlosa sefa'
+    ],
+    'dy_reading' => [
+        'af' => 'Lees inskrywing',
+        'en' => 'Reading entry',
+        'zu' => 'Ukufunda okufakiwe',
+        'xh' => 'Ukufunda ingeniso',
+        'pt' => 'Lendo a entrada',
+        'st' => 'Ho bala ntlha'
+    ],
+    'dy_written' => [
+        'af' => 'Geskryf {date}',
+        'en' => 'Written {date}',
+        'zu' => 'Kubhalwe ngo-{date}',
+        'xh' => 'Ibhalwe ngo-{date}',
+        'pt' => 'Escrito em {date}',
+        'st' => 'E ngotsoe ka {date}'
+    ],
+    'dy_edited' => [
+        'af' => 'Gewysig {date}',
+        'en' => 'Edited {date}',
+        'zu' => 'Kuhlelwe ngo-{date}',
+        'xh' => 'Ihlelwe ngo-{date}',
+        'pt' => 'Editado em {date}',
+        'st' => 'E fetotsoe ka {date}'
+    ],
+    'dy_open_calendar' => [
+        'af' => 'Wys in kalender',
+        'en' => 'Show in calendar',
+        'zu' => 'Bonisa ekhalendeni',
+        'xh' => 'Bonisa kwikhalenda',
+        'pt' => 'Mostrar no calendário',
+        'st' => 'Bontša khalendareng'
+    ],
+    'dy_prev' => [
+        'af' => 'Vorige inskrywing',
+        'en' => 'Previous entry',
+        'zu' => 'Okufakiwe kwangaphambili',
+        'xh' => 'Ingeniso yangaphambili',
+        'pt' => 'Entrada anterior',
+        'st' => 'Ntlha e fetileng'
+    ],
+    'dy_next' => [
+        'af' => 'Volgende inskrywing',
+        'en' => 'Next entry',
+        'zu' => 'Okufakiwe okulandelayo',
+        'xh' => 'Ingeniso elandelayo',
+        'pt' => 'Próxima entrada',
+        'st' => 'Ntlha e latelang'
+    ],
+    'dy_deleted' => [
+        'af' => 'Inskrywing verwyder',
+        'en' => 'Entry deleted',
+        'zu' => 'Okufakiwe kususiwe',
+        'xh' => 'Ingeniso icinyiwe',
+        'pt' => 'Entrada excluída',
+        'st' => 'Ntlha e hlakotsoe'
+    ],
+    'dy_delete_q' => [
+        'af' => 'Verwyder hierdie inskrywing?',
+        'en' => 'Delete this entry?',
+        'zu' => 'Susa lokhu okufakiwe?',
+        'xh' => 'Cima le ngeniso?',
+        'pt' => 'Excluir esta entrada?',
+        'st' => 'Hlakola ntlha ena?'
+    ],
+    'dy_cannot_undo' => [
+        'af' => 'Dit kan nie ontdoen word nie.',
+        'en' => 'This cannot be undone.',
+        'zu' => 'Lokhu akunakuhlehliswa.',
+        'xh' => 'Oku akunakubuyiswa.',
+        'pt' => 'Isso não pode ser desfeito.',
+        'st' => 'Sena se ke ke sa khutlisoa.'
+    ],
+    'dy_writing' => [
+        'af' => 'Jou teks',
+        'en' => 'Your text',
+        'zu' => 'Umbhalo wakho',
+        'xh' => 'Umbhalo wakho',
+        'pt' => 'Seu texto',
+        'st' => 'Mongolo oa hao'
+    ],
+    'dy_edit_entry' => [
+        'af' => 'Wysig inskrywing',
+        'en' => 'Edit entry',
+        'zu' => 'Hlela okufakiwe',
+        'xh' => 'Hlela ingeniso',
+        'pt' => 'Editar entrada',
+        'st' => 'Fetola ntlha'
+    ],
+    'dy_optional' => [
+        'af' => 'opsioneel',
+        'en' => 'optional',
+        'zu' => 'ongakukhetha',
+        'xh' => 'ukuzikhethela',
+        'pt' => 'opcional',
+        'st' => 'ka boikhethelo'
+    ],
+    'dy_tag_ph' => [
+        'af' => 'Nuwe etiket…',
+        'en' => 'New tag…',
+        'zu' => 'Ilebula elisha…',
+        'xh' => 'Ilebhuli entsha…',
+        'pt' => 'Nova etiqueta…',
+        'st' => 'Maraka e ncha…'
+    ],
+    'dy_add_tag' => [
+        'af' => 'Voeg etiket by',
+        'en' => 'Add tag',
+        'zu' => 'Engeza ilebula',
+        'xh' => 'Yongeza ilebhuli',
+        'pt' => 'Adicionar etiqueta',
+        'st' => 'Kenya maraka'
+    ],
+    'dy_remove_tag' => [
+        'af' => 'Verwyder #{tag}',
+        'en' => 'Remove #{tag}',
+        'zu' => 'Susa #{tag}',
+        'xh' => 'Susa #{tag}',
+        'pt' => 'Remover #{tag}',
+        'st' => 'Tlosa #{tag}'
+    ],
+    'dy_calendar_note' => [
+        'af' => 'Wys op hierdie dag in jou eie kalender — net jy sien dit.',
+        'en' => 'Shows on this day in your own calendar — only you can see it.',
+        'zu' => 'Kuvela ngalolu suku ekhalendeni lakho — nguwe kuphela okubonayo.',
+        'xh' => 'Ivela ngalo mhla kwikhalenda yakho — nguwe kuphela oyibonayo.',
+        'pt' => 'Aparece neste dia no seu próprio calendário — só você pode ver.',
+        'st' => 'E hlaha ka letsatsi lena khalendareng ea hao — ke uena feela ea e bonang.'
+    ],
+    'dy_saving' => [
+        'af' => 'Stoor…',
+        'en' => 'Saving…',
+        'zu' => 'Iyalondoloza…',
+        'xh' => 'Iyagcina…',
+        'pt' => 'Salvando…',
+        'st' => 'E boloka…'
+    ],
+    'dy_saved' => [
+        'af' => 'Gestoor',
+        'en' => 'Saved',
+        'zu' => 'Kulondoloziwe',
+        'xh' => 'Kugciniwe',
+        'pt' => 'Salvo',
+        'st' => 'E bolokiloe'
+    ],
+    'dy_discard_q' => [
+        'af' => 'Gooi jou veranderinge weg?',
+        'en' => 'Discard your changes?',
+        'zu' => 'Lahla izinguquko zakho?',
+        'xh' => 'Lahla utshintsho lwakho?',
+        'pt' => 'Descartar suas alterações?',
+        'st' => 'Lahla liphetoho tsa hao?'
+    ],
+    'dy_discard_text' => [
+        'af' => 'Wat jy geskryf het, sal nie gestoor word nie.',
+        'en' => 'What you wrote will not be saved.',
+        'zu' => 'Lokho okubhalile ngeke kulondolozwe.',
+        'xh' => 'Oko ukubhalileyo akuyi kugcinwa.',
+        'pt' => 'O que você escreveu não será salvo.',
+        'st' => 'Seo u se ngotseng se ke ke sa bolokoa.'
+    ],
+    'dy_discard' => [
+        'af' => 'Gooi weg',
+        'en' => 'Discard',
+        'zu' => 'Lahla',
+        'xh' => 'Lahla',
+        'pt' => 'Descartar',
+        'st' => 'Lahla'
+    ],
+    'dy_keep_writing' => [
+        'af' => 'Hou aan skryf',
+        'en' => 'Keep writing',
+        'zu' => 'Qhubeka ubhala',
+        'xh' => 'Qhubeka ubhala',
+        'pt' => 'Continuar escrevendo',
+        'st' => 'Tsoela pele u ngola'
+    ],
+    'dy_draft_restored' => [
+        'af' => 'Jou onvoltooide teks is teruggesit.',
+        'en' => 'Your unfinished text was brought back.',
+        'zu' => 'Umbhalo wakho ongaqediwe ubuyisiwe.',
+        'xh' => 'Umbhalo wakho ongagqitywanga ubuyisiwe.',
+        'pt' => 'Seu texto inacabado foi recuperado.',
+        'st' => 'Mongolo oa hao o sa phethoang o khutlisitsoe.'
+    ],
+    'dy_draft_discard' => [
+        'af' => 'Begin oor',
+        'en' => 'Start over',
+        'zu' => 'Qala kabusha',
+        'xh' => 'Qala kwakhona',
+        'pt' => 'Começar de novo',
+        'st' => 'Qala bocha'
+    ],
+    'dy_draft_kept' => [
+        'af' => 'Jou teks is op hierdie toestel bewaar.',
+        'en' => 'Your text is kept on this device.',
+        'zu' => 'Umbhalo wakho ugcinwe kule divayisi.',
+        'xh' => 'Umbhalo wakho ugcinwe kwesi sixhobo.',
+        'pt' => 'Seu texto ficou guardado neste aparelho.',
+        'st' => 'Mongolo oa hao o bolokiloe sesebelisoeng sena.'
+    ],
+    'dy_undo' => [
+        'af' => 'Ontdoen',
+        'en' => 'Undo',
+        'zu' => 'Hlehlisa',
+        'xh' => 'Buyisa',
+        'pt' => 'Desfazer',
+        'st' => 'Khutlisa'
+    ],
+    'dy_share_title' => [
+        'af' => 'Deel inskrywing',
+        'en' => 'Share entry',
+        'zu' => 'Yabelana ngokufakiwe',
+        'xh' => 'Yabelana ngengeniso',
+        'pt' => 'Compartilhar entrada',
+        'st' => 'Arolelana ntlha'
+    ],
+    'dy_share_text' => [
+        'af' => 'Deel as teks',
+        'en' => 'Share as text',
+        'zu' => 'Yabelana njengombhalo',
+        'xh' => 'Yabelana njengombhalo',
+        'pt' => 'Compartilhar como texto',
+        'st' => 'Arolelana joalo ka mongolo'
+    ],
+    'dy_share_text_hint' => [
+        'af' => 'Jy kies self met wie — niks word aanlyn gepubliseer nie.',
+        'en' => 'You choose who — nothing is published online.',
+        'zu' => 'Uzikhethela ukuthi ubani — akukho okushicilelwa ku-inthanethi.',
+        'xh' => 'Uzikhethela ukuba ngubani — akukho nto ipapashwa kwi-intanethi.',
+        'pt' => 'Você escolhe com quem — nada é publicado on-line.',
+        'st' => 'U ikhethela hore ke mang — ha ho letho le phatlalatsoang inthaneteng.'
+    ],
+    'dy_copy_text' => [
+        'af' => 'Kopieer teks',
+        'en' => 'Copy text',
+        'zu' => 'Kopisha umbhalo',
+        'xh' => 'Kopa umbhalo',
+        'pt' => 'Copiar texto',
+        'st' => 'Kopitsa mongolo'
+    ],
+    'dy_copy_failed' => [
+        'af' => 'Kon nie kopieer nie',
+        'en' => 'Could not copy',
+        'zu' => 'Akukwazanga ukukopisha',
+        'xh' => 'Ayikwazanga ukukopa',
+        'pt' => 'Não foi possível copiar',
+        'st' => 'Ha ea khona ho kopitsa'
+    ],
+    'dy_download_pdf' => [
+        'af' => 'Laai af as PDF',
+        'en' => 'Download as PDF',
+        'zu' => 'Landa njenge-PDF',
+        'xh' => 'Khuphela njenge-PDF',
+        'pt' => 'Baixar como PDF',
+        'st' => 'Jarolla joalo ka PDF'
+    ],
+    'dy_downloading' => [
+        'af' => 'Jou lêer word afgelaai…',
+        'en' => 'Your file is downloading…',
+        'zu' => 'Ifayela lakho liyalandwa…',
+        'xh' => 'Ifayile yakho iyakhutshelwa…',
+        'pt' => 'Seu arquivo está sendo baixado…',
+        'st' => 'Faele ea hao ea jarolloa…'
+    ],
+    'dy_export_title' => [
+        'af' => 'Laai jou dagboek af',
+        'en' => 'Download your diary',
+        'zu' => 'Landa idayari yakho',
+        'xh' => 'Khuphela idayari yakho',
+        'pt' => 'Baixar seu diário',
+        'st' => 'Jarolla buka ea hao ea letsatsi'
+    ],
+    'dy_export_hint' => [
+        'af' => 'Die inskrywings wat jy nou sien ({n}).',
+        'en' => 'The entries you see now ({n}).',
+        'zu' => 'Okufakiwe okubonayo manje ({n}).',
+        'xh' => 'Iingeniso ozibonayo ngoku ({n}).',
+        'pt' => 'As entradas que você vê agora ({n}).',
+        'st' => 'Lintlha tseo u li bonang hona joale ({n}).'
+    ],
+    'dy_export_pdf' => [
+        'af' => 'PDF-dokument',
+        'en' => 'PDF document',
+        'zu' => 'Idokhumenti ye-PDF',
+        'xh' => 'Uxwebhu lwe-PDF',
+        'pt' => 'Documento PDF',
+        'st' => 'Tokomane ea PDF'
+    ],
+    'dy_export_pdf_hint' => [
+        'af' => 'Om te bewaar of te druk',
+        'en' => 'To keep or print',
+        'zu' => 'Ukuze uyigcine noma uyiphrinte',
+        'xh' => 'Ukuze uyigcine okanye uyiprinte',
+        'pt' => 'Para guardar ou imprimir',
+        'st' => 'Ho e boloka kapa ho e hatisa'
+    ],
+    'dy_export_txt' => [
+        'af' => 'Teks (.txt)',
+        'en' => 'Text (.txt)',
+        'zu' => 'Umbhalo (.txt)',
+        'xh' => 'Umbhalo (.txt)',
+        'pt' => 'Texto (.txt)',
+        'st' => 'Mongolo (.txt)'
+    ],
+    'dy_export_txt_hint' => [
+        'af' => '’n Eenvoudige rugsteun wat enige toestel kan oopmaak',
+        'en' => 'A simple backup any device can open',
+        'zu' => 'Ikhophi elula yokuphepha noma iyiphi idivayisi engayivula',
+        'xh' => 'Ikopi elula yogcino nasiphi na isixhobo esinokuyivula',
+        'pt' => 'Uma cópia de segurança simples que qualquer aparelho abre',
+        'st' => 'Kopi e bonolo ea polokeho eo sesebelisoa sefe kapa sefe se ka e bulang'
+    ],
+    'dy_ai_title' => [
+        'af' => 'AI-voorstel',
+        'en' => 'AI suggestion',
+        'zu' => 'Isiphakamiso se-AI',
+        'xh' => 'Isindululo se-AI',
+        'pt' => 'Sugestão da IA',
+        'st' => 'Tlhahiso ea AI'
+    ],
+    'dy_ai_hint' => [
+        'af' => 'Niks verander voordat jy kies nie. Jou teks is vir hierdie voorstel na ’n AI-diens (OpenAI) gestuur.',
+        'en' => 'Nothing changes until you choose. Your text was sent to an AI service (OpenAI) for this suggestion.',
+        'zu' => 'Akukho okushintshayo uze ukhethe. Umbhalo wakho uthunyelwe kusevisi ye-AI (OpenAI) ukuze kutholakale lesi siphakamiso.',
+        'xh' => 'Akukho nto itshintshayo ude ukhethe. Umbhalo wakho uthunyelwe kwinkonzo ye-AI (OpenAI) ukufumana esi sindululo.',
+        'pt' => 'Nada muda até você escolher. Seu texto foi enviado a um serviço de IA (OpenAI) para esta sugestão.',
+        'st' => 'Ha ho letho le fetohang ho fihlela u khetha. Mongolo oa hao o rometsoe tšebeletsong ea AI (OpenAI) bakeng sa tlhahiso ena.'
+    ],
+    'dy_ai_use' => [
+        'af' => 'Gebruik hierdie teks',
+        'en' => 'Use this text',
+        'zu' => 'Sebenzisa lo mbhalo',
+        'xh' => 'Sebenzisa lo mbhalo',
+        'pt' => 'Usar este texto',
+        'st' => 'Sebelisa mongolo ona'
+    ],
+    'dy_ai_keep' => [
+        'af' => 'Hou my teks',
+        'en' => 'Keep my text',
+        'zu' => 'Gcina umbhalo wami',
+        'xh' => 'Gcina umbhalo wam',
+        'pt' => 'Manter meu texto',
+        'st' => 'Boloka mongolo oa ka'
+    ],
+    'dy_ai_working' => [
+        'af' => 'AI dink…',
+        'en' => 'AI is thinking…',
+        'zu' => 'I-AI iyacabanga…',
+        'xh' => 'I-AI iyacinga…',
+        'pt' => 'A IA está pensando…',
+        'st' => 'AI e nahana…'
+    ],
+    'dy_ai_used' => [
+        'af' => 'Voorstel gebruik — jy kan dit nog wysig.',
+        'en' => 'Suggestion used — you can still change it.',
+        'zu' => 'Isiphakamiso sisetshenzisiwe — usengasishintsha.',
+        'xh' => 'Isindululo sisetyenzisiwe — usenokusitshintsha.',
+        'pt' => 'Sugestão usada — você ainda pode alterá-la.',
+        'st' => 'Tlhahiso e sebelisitsoe — u ntse u ka e fetola.'
+    ],
+    'dy_ai_unavailable' => [
+        'af' => 'AI-hulp is nou nie beskikbaar nie. Probeer later weer.',
+        'en' => 'AI help is not available right now. Try again later.',
+        'zu' => 'Usizo lwe-AI alutholakali manje. Zama futhi kamuva.',
+        'xh' => 'Uncedo lwe-AI alufumaneki ngoku. Zama kwakhona emva kwexesha.',
+        'pt' => 'A ajuda da IA não está disponível agora. Tente mais tarde.',
+        'st' => 'Thuso ea AI ha e fumanehe hona joale. Leka hape hamorao.'
+    ],
+    'dy_ai_too_long' => [
+        'af' => 'Die teks is te lank vir AI-hulp. Probeer ’n korter deel.',
+        'en' => 'The text is too long for AI help. Try a shorter part.',
+        'zu' => 'Umbhalo mude kakhulu kusizo lwe-AI. Zama ingxenye emfushane.',
+        'xh' => 'Umbhalo mde kakhulu kuncedo lwe-AI. Zama inxalenye emfutshane.',
+        'pt' => 'O texto é longo demais para a ajuda da IA. Tente uma parte menor.',
+        'st' => 'Mongolo o molelele haholo bakeng sa thuso ea AI. Leka karolo e khutšoanyane.'
+    ],
+    'dy_err_empty' => [
+        'af' => 'Skryf eers iets.',
+        'en' => 'Write something first.',
+        'zu' => 'Bhala okuthile kuqala.',
+        'xh' => 'Bhala into kuqala.',
+        'pt' => 'Escreva algo primeiro.',
+        'st' => 'Ngola ho hong pele.'
+    ],
+    'dy_err_date' => [
+        'af' => 'Kies ’n geldige datum.',
+        'en' => 'Choose a valid date.',
+        'zu' => 'Khetha usuku olufanele.',
+        'xh' => 'Khetha umhla ofanelekileyo.',
+        'pt' => 'Escolha uma data válida.',
+        'st' => 'Khetha letsatsi le nepahetseng.'
+    ],
+    'dy_err_time' => [
+        'af' => 'Kies ’n geldige tyd, of laat dit leeg.',
+        'en' => 'Choose a valid time, or leave it empty.',
+        'zu' => 'Khetha isikhathi esifanele, noma usishiye singenalutho.',
+        'xh' => 'Khetha ixesha elifanelekileyo, okanye ulishiye lingenanto.',
+        'pt' => 'Escolha uma hora válida ou deixe em branco.',
+        'st' => 'Khetha nako e nepahetseng, kapa u e tlohele e se na letho.'
+    ],
+    'dy_err_too_long' => [
+        'af' => 'Die teks is te lank vir een inskrywing.',
+        'en' => 'The text is too long for one entry.',
+        'zu' => 'Umbhalo mude kakhulu ukuba ube okufakiwe okukodwa.',
+        'xh' => 'Umbhalo mde kakhulu kwingeniso enye.',
+        'pt' => 'O texto é longo demais para uma entrada.',
+        'st' => 'Mongolo o molelele haholo bakeng sa ntlha e le ’ngoe.'
+    ],
+    'dy_err_session' => [
+        'af' => 'Jou sessie het verval. Meld asseblief weer aan.',
+        'en' => 'Your session has expired. Please sign in again.',
+        'zu' => 'Iseshini yakho iphelelwe yisikhathi. Sicela ungene futhi.',
+        'xh' => 'Iseshoni yakho iphelelwe lixesha. Nceda ungene kwakhona.',
+        'pt' => 'Sua sessão expirou. Entre novamente.',
+        'st' => 'Seshene ea hao e felile. Ka kopo kena hape.'
+    ],
+    'dy_err_offline' => [
+        'af' => 'Geen verbinding nie. Kyk jou internet en probeer weer.',
+        'en' => 'No connection. Check your internet and try again.',
+        'zu' => 'Akukho xhumano. Hlola i-inthanethi yakho bese uzama futhi.',
+        'xh' => 'Akukho qhagamshelwano. Jonga i-intanethi yakho uze uzame kwakhona.',
+        'pt' => 'Sem conexão. Verifique a internet e tente novamente.',
+        'st' => 'Ha ho khokahano. Hlahloba inthanete ea hao ’me u leke hape.'
+    ],
+    'dy_err_generic' => [
+        'af' => 'Iets het skeefgeloop. Probeer asseblief weer.',
+        'en' => 'Something went wrong. Please try again.',
+        'zu' => 'Kukhona okungahambanga kahle. Sicela uzame futhi.',
+        'xh' => 'Kukho into engahambanga kakuhle. Nceda uzame kwakhona.',
+        'pt' => 'Algo deu errado. Tente novamente.',
+        'st' => 'Ho na le se sa tsamaeang hantle. Ka kopo leka hape.'
+    ],
+    'dy_err_rate' => [
+        'af' => 'Te veel versoeke. Wag asseblief ’n rukkie.',
+        'en' => 'Too many requests. Please wait a moment.',
+        'zu' => 'Izicelo eziningi kakhulu. Sicela ulinde kancane.',
+        'xh' => 'Izicelo ezininzi kakhulu. Nceda ulinde kancinci.',
+        'pt' => 'Pedidos demais. Aguarde um momento.',
+        'st' => 'Likopo tse ngata haholo. Ka kopo ema hanyane.'
+    ],
+    'dy_err_not_found' => [
+        'af' => 'Hierdie inskrywing bestaan nie meer nie.',
+        'en' => 'This entry no longer exists.',
+        'zu' => 'Lokhu okufakiwe akusekho.',
+        'xh' => 'Le ngeniso ayisekho.',
+        'pt' => 'Esta entrada não existe mais.',
+        'st' => 'Ntlha ena ha e sa le eo.'
+    ],
+    'dy_mood_happy' => [
+        'af' => 'Bly',
+        'en' => 'Happy',
+        'zu' => 'Ngijabule',
+        'xh' => 'Ndonwabile',
+        'pt' => 'Feliz',
+        'st' => 'Ke thabile'
+    ],
+    'dy_mood_sad' => [
+        'af' => 'Hartseer',
+        'en' => 'Sad',
+        'zu' => 'Ngidabukile',
+        'xh' => 'Ndilusizi',
+        'pt' => 'Triste',
+        'st' => 'Ke hloname'
+    ],
+    'dy_mood_excited' => [
+        'af' => 'Opgewonde',
+        'en' => 'Excited',
+        'zu' => 'Ngithakasele',
+        'xh' => 'Ndichulumancile',
+        'pt' => 'Animado',
+        'st' => 'Ke chesehile'
+    ],
+    'dy_mood_calm' => [
+        'af' => 'Kalm',
+        'en' => 'Calm',
+        'zu' => 'Ngizolile',
+        'xh' => 'Ndizolile',
+        'pt' => 'Calmo',
+        'st' => 'Ke khutsitse'
+    ],
+    'dy_mood_thoughtful' => [
+        'af' => 'Peinsend',
+        'en' => 'Thoughtful',
+        'zu' => 'Ngicabanga',
+        'xh' => 'Ndicinga nzulu',
+        'pt' => 'Pensativo',
+        'st' => 'Ke nahanisisa'
+    ],
+    'dy_mood_grateful' => [
+        'af' => 'Dankbaar',
+        'en' => 'Grateful',
+        'zu' => 'Ngibonga',
+        'xh' => 'Ndinombulelo',
+        'pt' => 'Grato',
+        'st' => 'Ke leboha'
+    ],
+    'dy_mood_inspired' => [
+        'af' => 'Geïnspireer',
+        'en' => 'Inspired',
+        'zu' => 'Ngikhuthazekile',
+        'xh' => 'Ndikhuthazekile',
+        'pt' => 'Inspirado',
+        'st' => 'Ke khothalitsoe'
+    ],
+    'dy_mood_tired' => [
+        'af' => 'Moeg',
+        'en' => 'Tired',
+        'zu' => 'Ngikhathele',
+        'xh' => 'Ndidiniwe',
+        'pt' => 'Cansado',
+        'st' => 'Ke khathetse'
+    ],
+    'dy_weather_sunny' => [
+        'af' => 'Sonnig',
+        'en' => 'Sunny',
+        'zu' => 'Kunelanga',
+        'xh' => 'Kukho ilanga',
+        'pt' => 'Ensolarado',
+        'st' => 'Ho chabile letsatsi'
+    ],
+    'dy_weather_cloudy' => [
+        'af' => 'Bewolk',
+        'en' => 'Cloudy',
+        'zu' => 'Kunamafu',
+        'xh' => 'Kukho amafu',
+        'pt' => 'Nublado',
+        'st' => 'Ho na le maru'
+    ],
+    'dy_weather_rainy' => [
+        'af' => 'Reën',
+        'en' => 'Rainy',
+        'zu' => 'Kuyana',
+        'xh' => 'Kuyanetha',
+        'pt' => 'Chuvoso',
+        'st' => 'Ho a na'
+    ],
+    'dy_weather_stormy' => [
+        'af' => 'Stormweer',
+        'en' => 'Stormy',
+        'zu' => 'Kunesiphepho',
+        'xh' => 'Kukho isaqhwithi',
+        'pt' => 'Tempestuoso',
+        'st' => 'Ho na le sefefo'
+    ],
+    'dy_weather_snowy' => [
+        'af' => 'Sneeu',
+        'en' => 'Snowy',
+        'zu' => 'Kuneqhwa',
+        'xh' => 'Kukho ikhephu',
+        'pt' => 'Com neve',
+        'st' => 'Ho na le lehloa'
+    ],
+    'dy_weather_windy' => [
+        'af' => 'Winderig',
+        'en' => 'Windy',
+        'zu' => 'Kunomoya',
+        'xh' => 'Kukho umoya',
+        'pt' => 'Ventoso',
+        'st' => 'Ho na le moea'
     ]
 ]);
 

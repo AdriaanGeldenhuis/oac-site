@@ -1,147 +1,79 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json; charset=utf-8');
+/**
+ * GET /diary/api/list.php?q=&period=week|month|year&tag=&sort=newest|oldest&offset=N
+ * My entries, newest first, DY_PAGE at a time, with an excerpt of the text
+ * (the whole entry comes from get.php). The first page also brings the
+ * entries written on this day in earlier years and my tags.
+ */
 
 require_once dirname(__DIR__, 2) . '/security/auth_gate.php';
+require_once dirname(__DIR__) . '/lib/diary.php';
 
-if (!isset($pdo) || !($pdo instanceof PDO)) { 
-    http_response_code(500); 
-    echo json_encode(['error'=>'db_unavailable']); 
-    exit; 
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    dy_fail('db_unavailable', 500);
 }
 
-ini_set('display_errors', '0');
-ini_set('log_errors', '1');
-
-$userId = (int)($_SESSION['user_id'] ?? 0);
-
-if ($userId <= 0) { 
-    http_response_code(400); 
-    echo json_encode(['error'=>'unauthorized']); 
-    exit; 
-}
-
-// Get filters
-$search = trim((string)($_GET['search'] ?? ''));
-$sort = trim((string)($_GET['sort'] ?? 'newest'));
-$filter = trim((string)($_GET['filter'] ?? 'all'));
-$start = trim((string)($_GET['start'] ?? ''));
-$end = trim((string)($_GET['end'] ?? ''));
-$view = trim((string)($_GET['view'] ?? 'list'));
-
-// Build query
-$sql = "
-    SELECT 
-        id,
-        date,
-        time,
-        title,
-        body,
-        mood,
-        weather,
-        tags,
-        reminder_minutes,
-        created_at,
-        updated_at
-    FROM diaries 
-    WHERE user_id = :user_id
-";
-
-$params = [':user_id' => $userId];
-
-// Apply search filter
-if ($search !== '') {
-    $sql .= " AND (title LIKE :search OR body LIKE :search)";
-    $params[':search'] = '%' . $search . '%';
-}
-
-// Apply date range filter
-if ($start !== '' && $end !== '') {
-    $sql .= " AND date BETWEEN :start AND :end";
-    $params[':start'] = $start;
-    $params[':end'] = $end;
-}
-
-// Apply time filter
-if ($filter !== 'all' && $start === '' && $end === '') {
-    $today = date('Y-m-d');
-    switch($filter) {
-        case 'today':
-            $sql .= " AND date = :today";
-            $params[':today'] = $today;
-            break;
-        case 'week':
-            $weekStart = date('Y-m-d', strtotime('monday this week'));
-            $weekEnd = date('Y-m-d', strtotime('sunday this week'));
-            $sql .= " AND date BETWEEN :week_start AND :week_end";
-            $params[':week_start'] = $weekStart;
-            $params[':week_end'] = $weekEnd;
-            break;
-        case 'month':
-            $monthStart = date('Y-m-01');
-            $monthEnd = date('Y-m-t');
-            $sql .= " AND date BETWEEN :month_start AND :month_end";
-            $params[':month_start'] = $monthStart;
-            $params[':month_end'] = $monthEnd;
-            break;
-        case 'year':
-            $yearStart = date('Y-01-01');
-            $yearEnd = date('Y-12-31');
-            $sql .= " AND date BETWEEN :year_start AND :year_end";
-            $params[':year_start'] = $yearStart;
-            $params[':year_end'] = $yearEnd;
-            break;
-    }
-}
-
-// Apply sorting
-switch($sort) {
-    case 'oldest':
-        $sql .= " ORDER BY date ASC, time ASC";
-        break;
-    case 'title':
-        $sql .= " ORDER BY title ASC, date DESC";
-        break;
-    case 'newest':
-    default:
-        $sql .= " ORDER BY date DESC, time DESC";
-        break;
-}
-
-// Limit for performance
-$sql .= " LIMIT 500";
+$userId = dy_user_id();
+$offset = max(0, min(100000, (int)($_GET['offset'] ?? 0)));
+[$where, $params] = dy_where($userId, $_GET);
+$filtered = count($params) > 1;
 
 try {
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Process entries
-    foreach ($entries as &$entry) {
-        // Decode tags
-        if ($entry['tags']) {
-            $entry['tags'] = json_decode($entry['tags'], true) ?: [];
-        } else {
-            $entry['tags'] = [];
-        }
-        
-        // Format dates for JSON
-        $entry['created_at'] = $entry['created_at'] ?: null;
-        $entry['updated_at'] = $entry['updated_at'] ?: null;
-    }
-    unset($entry);
-    
-    echo json_encode([
+    $count = $pdo->prepare('SELECT COUNT(*) FROM diaries WHERE ' . $where);
+    $count->execute($params);
+    $total = (int)$count->fetchColumn();
+
+    // LIMIT/OFFSET are integers built here, never user text
+    $st = $pdo->prepare('SELECT ' . DY_COLUMNS . ' FROM diaries WHERE ' . $where
+        . ' ORDER BY ' . dy_order($_GET) . ' LIMIT ' . (DY_PAGE + 1) . ' OFFSET ' . $offset);
+    $st->execute($params);
+    $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+    $hasMore = count($rows) > DY_PAGE;
+    $entries = array_map(fn($r) => dy_entry_out($r, false), array_slice($rows, 0, DY_PAGE));
+
+    $out = [
         'success' => true,
         'entries' => $entries,
-        'count' => count($entries)
-    ]);
+        'total' => $total,
+        'offset' => $offset,
+        'has_more' => $hasMore,
+    ];
 
+    if ($offset === 0) {
+        // On this day, in earlier years (only on the plain first page)
+        $out['on_this_day'] = [];
+        if (!$filtered) {
+            $now = dy_now();
+            $otd = $pdo->prepare('SELECT ' . DY_COLUMNS . ' FROM diaries
+                                  WHERE user_id = ? AND MONTH(date) = ? AND DAYOFMONTH(date) = ? AND date < ?
+                                  ORDER BY date DESC, time DESC LIMIT 5');
+            $otd->execute([$userId, (int)$now->format('n'), (int)$now->format('j'), $now->format('Y-01-01')]);
+            $out['on_this_day'] = array_map(fn($r) => dy_entry_out($r, false), $otd->fetchAll(PDO::FETCH_ASSOC));
+        }
+
+        // My tags, most used first (suggestions while writing, filter chips)
+        $tagSt = $pdo->prepare("SELECT tags FROM diaries WHERE user_id = ? AND tags IS NOT NULL AND tags <> ''");
+        $tagSt->execute([$userId]);
+        $counts = [];
+        $labels = [];
+        foreach ($tagSt->fetchAll(PDO::FETCH_COLUMN) as $json) {
+            foreach (dy_tags_decode($json) as $tag) {
+                $key = mb_strtolower($tag, 'UTF-8');
+                $counts[$key] = ($counts[$key] ?? 0) + 1;
+                $labels[$key] = $labels[$key] ?? $tag;
+            }
+        }
+        arsort($counts);
+        $out['tags'] = [];
+        foreach (array_slice($counts, 0, 40, true) as $key => $n) {
+            $out['tags'][] = ['tag' => $labels[$key], 'count' => $n];
+        }
+    }
+
+    dy_json($out);
 } catch (Throwable $e) {
     error_log('Diary list error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'server_error',
-        'message' => 'Could not fetch diary entries'
-    ]);
+    dy_fail('server_error', 500);
 }

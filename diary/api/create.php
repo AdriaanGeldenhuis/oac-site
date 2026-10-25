@@ -1,148 +1,50 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json; charset=utf-8');
+/**
+ * POST /diary/api/create.php   (JSON body, X-CSRF-Token header)
+ * {date, time, title, body, mood, weather, tags[]} → {success, entry}
+ *
+ * The entry shows in my own calendar on its day (the calendar reads
+ * `diaries` itself), so nothing is copied to calendar_events.
+ */
 
 require_once dirname(__DIR__, 2) . '/security/auth_gate.php';
+require_once dirname(__DIR__) . '/lib/diary.php';
 
-if (!isset($pdo) || !($pdo instanceof PDO)) { 
-    http_response_code(500); 
-    echo json_encode(['error'=>'db_unavailable']); 
-    exit; 
+dy_require_post();
+
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    dy_fail('db_unavailable', 500);
 }
 
-ini_set('display_errors', '0');
-ini_set('log_errors', '1');
-
-$userId = (int)($_SESSION['user_id'] ?? 0);
-
-if ($userId <= 0) { 
-    http_response_code(400); 
-    echo json_encode(['error'=>'unauthorized']); 
-    exit; 
+$userId = dy_user_id();
+if ($userId <= 0) {
+    dy_fail('session', 401);
 }
 
-// Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
-
-$date = trim((string)($input['date'] ?? ''));
-$time = trim((string)($input['time'] ?? '00:00'));
-$title = trim((string)($input['title'] ?? ''));
-$body = trim((string)($input['body'] ?? ''));
-$mood = trim((string)($input['mood'] ?? ''));
-$weather = trim((string)($input['weather'] ?? ''));
-$tags = $input['tags'] ?? [];
-$reminderMinutes = (int)($input['reminder_minutes'] ?? 60);
-$addToCalendar = (bool)($input['add_to_calendar'] ?? true); // NEW
-
-if (empty($date)) {
-    http_response_code(400);
-    echo json_encode(['error'=>'date_required']);
-    exit;
+[$fields, $error] = dy_entry_from_input(dy_input());
+if ($error !== null) {
+    dy_fail($error);
 }
 
-// Validate date format
-if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-    http_response_code(400);
-    echo json_encode(['error'=>'invalid_date_format']);
-    exit;
-}
-
-// Validate time format
-if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $time)) {
-    $time = '00:00:00';
-} elseif (strlen($time) === 5) {
-    $time .= ':00';
-}
-
-// Process tags
-$tagsJson = null;
-if (is_array($tags) && count($tags) > 0) {
-    $tags = array_map('trim', $tags);
-    $tags = array_filter($tags, fn($t) => strlen($t) > 0);
-    $tagsJson = json_encode(array_values($tags), JSON_UNESCAPED_UNICODE);
+// A runaway client (or script) cannot fill the table: 120 new entries an hour is plenty
+if (!dy_rate_ok('diary_create_' . $userId, 120)) {
+    dy_fail('rate_limited', 429);
 }
 
 try {
-    $pdo->beginTransaction();
-
-    // 1. Insert diary entry
-    $stmt = $pdo->prepare("
-        INSERT INTO diaries (user_id, date, time, title, body, mood, weather, tags, reminder_minutes, created_at, updated_at)
-        VALUES (:user_id, :date, :time, :title, :body, :mood, :weather, :tags, :reminder_minutes, NOW(), NOW())
-    ");
-    
-    $stmt->execute([
-        ':user_id' => $userId,
-        ':date' => $date,
-        ':time' => $time,
-        ':title' => $title ?: null,
-        ':body' => $body ?: null,
-        ':mood' => $mood ?: null,
-        ':weather' => $weather ?: null,
-        ':tags' => $tagsJson,
-        ':reminder_minutes' => $reminderMinutes
+    // reminder_minutes is kept for older rows; nothing sends diary reminders
+    $st = $pdo->prepare('INSERT INTO diaries (user_id, date, time, title, body, mood, weather, tags, reminder_minutes, created_at, updated_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())');
+    $st->execute([
+        $userId, $fields['date'], $fields['time'], $fields['title'], $fields['body'],
+        $fields['mood'], $fields['weather'], $fields['tags'],
     ]);
-    
-    $diaryId = (int)$pdo->lastInsertId();
+    $id = (int)$pdo->lastInsertId();
 
-    // 2. Add to your existing Calendar system
-    $calendarEventId = null;
-    if ($addToCalendar && $title) {
-        $startAt = $date . ' ' . $time;
-        
-        // Calculate end_at (1 hour later by default)
-        $endAt = date('Y-m-d H:i:s', strtotime($startAt . ' +1 hour'));
-        
-        // Build description with mood/weather
-        $description = '';
-        if ($mood) $description .= "Gemoed: $mood\n";
-        if ($weather) $description .= "Weer: $weather\n";
-        if ($body) $description .= "\n" . substr($body, 0, 200) . (strlen($body) > 200 ? '...' : '');
-        
-        $calStmt = $pdo->prepare("
-            INSERT INTO calendar_events (user_id, title, description, start_at, end_at, all_day, visibility, created_at)
-            VALUES (:user_id, :title, :description, :start_at, :end_at, 0, 'private', NOW())
-        ");
-        
-        $calStmt->execute([
-            ':user_id' => $userId,
-            ':title' => '📔 ' . $title, // Diary icon prefix
-            ':description' => $description,
-            ':start_at' => $startAt,
-            ':end_at' => $endAt
-        ]);
-        
-        $calendarEventId = (int)$pdo->lastInsertId();
-        
-        // Link back to diary
-        $updateDiary = $pdo->prepare("
-            UPDATE diaries 
-            SET calendar_event_id = :cal_id 
-            WHERE id = :diary_id
-        ");
-        $updateDiary->execute([
-            ':cal_id' => $calendarEventId,
-            ':diary_id' => $diaryId
-        ]);
-    }
-
-    $pdo->commit();
-    
-    echo json_encode([
-        'success' => true,
-        'diary_id' => $diaryId,
-        'calendar_event_id' => $calendarEventId,
-        'message' => 'Diary entry created successfully'
-    ]);
-
+    $row = dy_find($pdo, $userId, $id);
+    dy_json(['success' => true, 'entry' => $row ? dy_entry_out($row, true) : ['id' => $id]]);
 } catch (Throwable $e) {
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
     error_log('Diary create error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'server_error',
-        'message' => 'Could not create diary entry'
-    ]);
+    dy_fail('server_error', 500);
 }
