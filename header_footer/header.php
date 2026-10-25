@@ -35,7 +35,7 @@ $isBiblePage = strpos($reqPath, '/bible/bible.php') !== false || strpos($reqPath
 
 if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !== false) {
   $pageTitle = t_hdr('welcome');
-} elseif (strpos($reqPath, '/gospel_media/gospel.php') !== false) {
+} elseif (strpos($reqPath, '/gospel_media/gospel.php') !== false || strpos($reqPath, '/gospel_media/rooms.php') !== false) {
   $pageTitle = t_hdr('gospel_media');
 } elseif (strpos($reqPath, '/prayers/prayers.php') !== false) {
   $pageTitle = t_hdr('prayers');

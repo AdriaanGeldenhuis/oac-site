@@ -3309,6 +3309,22 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Carregando postagens...',
         'st' => 'E kenya liposo...'
     ],
+    'gm_read_only' => [
+        'af' => 'Lees-alleen',
+        'en' => 'Read only',
+        'zu' => 'Ukufunda kuphela',
+        'xh' => 'Ukufunda kuphela',
+        'pt' => 'Somente leitura',
+        'st' => 'Ho bala feela'
+    ],
+    'gm_you_are_here' => [
+        'af' => 'Jy is hier',
+        'en' => 'You are here',
+        'zu' => 'Ulapha',
+        'xh' => 'Ulapha',
+        'pt' => 'Você está aqui',
+        'st' => 'O mona'
+    ],
 
     // ==================== ROOMS PAGE ====================
     'your_rooms' => [
