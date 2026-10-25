@@ -1,226 +1,186 @@
 <?php
 declare(strict_types=1);
+/**
+ * GET /diary/api/export.php?format=pdf|txt&id=N
+ * GET /diary/api/export.php?format=pdf|txt&q=&period=&tag=&sort=
+ * A download of one of my entries, or of the entries the list shows with
+ * the same filters. The PDF is a real PDF (calendar/lib/pdf.php), so
+ * phones, the app's download manager and printers all open it.
+ */
 
 require_once dirname(__DIR__, 2) . '/security/auth_gate.php';
+require_once dirname(__DIR__) . '/lib/diary.php';
+require_once dirname(__DIR__, 2) . '/calendar/lib/pdf.php';
 
-if (!isset($pdo) || !($pdo instanceof PDO)) { 
-    http_response_code(500); 
-    die('Database unavailable'); 
+function dy_export_fail(int $status, string $message): void {
+    http_response_code($status);
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: private, no-store');
+    echo $message;
+    exit;
 }
 
-ini_set('display_errors', '0');
-ini_set('log_errors', '1');
-
-$userId = (int)($_SESSION['user_id'] ?? 0);
-
-if ($userId <= 0) { 
-    http_response_code(400); 
-    die('Unauthorized'); 
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    dy_export_fail(500, 'Database unavailable');
 }
 
-$format = trim((string)($_GET['format'] ?? 'pdf'));
+$userId = dy_user_id();
+$lang = dy_lang();
+$format = dy_str($_GET['format'] ?? 'pdf');
+if (!in_array($format, ['pdf', 'txt'], true)) {
+    dy_export_fail(400, 'Invalid format');
+}
 $entryId = (int)($_GET['id'] ?? 0);
 
-// Get entries
 try {
     if ($entryId > 0) {
-        // Single entry
-        $stmt = $pdo->prepare("
-            SELECT * FROM diaries 
-            WHERE id = ? AND user_id = ?
-        ");
-        $stmt->execute([$entryId, $userId]);
-        $entries = [$stmt->fetch(PDO::FETCH_ASSOC)];
-        
-        if (!$entries[0]) {
-            http_response_code(404);
-            die('Entry not found');
-        }
+        $row = dy_find($pdo, $userId, $entryId);
+        $rows = $row ? [$row] : [];
     } else {
-        // All entries
-        $stmt = $pdo->prepare("
-            SELECT * FROM diaries 
-            WHERE user_id = ? 
-            ORDER BY date DESC, time DESC
-        ");
-        $stmt->execute([$userId]);
-        $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        [$where, $params] = dy_where($userId, $_GET);
+        $st = $pdo->prepare('SELECT ' . DY_COLUMNS . ' FROM diaries WHERE ' . $where . ' ORDER BY ' . dy_order($_GET));
+        $st->execute($params);
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
     }
-    
-    if (empty($entries)) {
-        http_response_code(404);
-        die('No entries found');
-    }
-    
-} catch (Exception $e) {
-    error_log('Export fetch error: ' . $e->getMessage());
-    http_response_code(500);
-    die('Could not fetch entries');
+
+    $who = $pdo->prepare('SELECT name, surname FROM users WHERE id = ? LIMIT 1');
+    $who->execute([$userId]);
+    $user = $who->fetch(PDO::FETCH_ASSOC) ?: [];
+} catch (Throwable $e) {
+    error_log('Diary export error: ' . $e->getMessage());
+    dy_export_fail(500, 'Could not fetch entries');
 }
 
-// Export based on format
-switch($format) {
-    case 'json':
-        header('Content-Type: application/json; charset=utf-8');
-        header('Content-Disposition: attachment; filename="diary_export_' . date('Y-m-d') . '.json"');
-        
-        foreach ($entries as &$entry) {
-            if ($entry['tags']) {
-                $entry['tags'] = json_decode($entry['tags'], true);
-            }
-        }
-        
-        echo json_encode($entries, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        break;
-        
-    case 'csv':
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="diary_export_' . date('Y-m-d') . '.csv"');
-        
-        $output = fopen('php://output', 'w');
-        
-        // BOM for UTF-8
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Header
-        fputcsv($output, ['Date', 'Time', 'Title', 'Body', 'Mood', 'Weather', 'Tags']);
-        
-        foreach ($entries as $entry) {
-            $tags = '';
-            if ($entry['tags']) {
-                $tagsArr = json_decode($entry['tags'], true);
-                $tags = implode(', ', $tagsArr);
-            }
-            
-            fputcsv($output, [
-                $entry['date'],
-                $entry['time'],
-                $entry['title'],
-                $entry['body'],
-                $entry['mood'],
-                $entry['weather'],
-                $tags
-            ]);
-        }
-        
-        fclose($output);
-        break;
-        
-    case 'txt':
-        header('Content-Type: text/plain; charset=utf-8');
-        header('Content-Disposition: attachment; filename="diary_export_' . date('Y-m-d') . '.txt"');
-        
-        foreach ($entries as $entry) {
-            echo "========================================\n";
-            echo "Date: {$entry['date']} {$entry['time']}\n";
-            if ($entry['title']) echo "Title: {$entry['title']}\n";
-            if ($entry['mood']) echo "Mood: {$entry['mood']}\n";
-            if ($entry['weather']) echo "Weather: {$entry['weather']}\n";
-            if ($entry['tags']) {
-                $tags = json_decode($entry['tags'], true);
-                echo "Tags: " . implode(', ', $tags) . "\n";
-            }
-            echo "----------------------------------------\n";
-            echo $entry['body'] . "\n";
-            echo "========================================\n\n";
-        }
-        break;
-        
-    case 'pdf':
-        // Simple PDF export (requires additional library like TCPDF or FPDF)
-        // For now, output HTML that can be printed to PDF
-        header('Content-Type: text/html; charset=utf-8');
-        ?>
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <title>Diary Export - <?= date('Y-m-d') ?></title>
-            <style>
-                body {
-                    font-family: 'Georgia', serif;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 20px;
-                    line-height: 1.6;
-                }
-                .entry {
-                    page-break-inside: avoid;
-                    margin-bottom: 40px;
-                    border-bottom: 2px solid #333;
-                    padding-bottom: 20px;
-                }
-                .entry-header {
-                    background: #f5f5f5;
-                    padding: 15px;
-                    margin-bottom: 15px;
-                }
-                .entry-title {
-                    font-size: 24px;
-                    font-weight: bold;
-                    margin-bottom: 10px;
-                }
-                .entry-meta {
-                    color: #666;
-                    font-size: 14px;
-                }
-                .entry-body {
-                    white-space: pre-wrap;
-                }
-                @media print {
-                    body { margin: 0; padding: 15mm; }
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="no-print" style="margin-bottom: 20px;">
-                <button onclick="window.print()">Print to PDF</button>
-                <button onclick="window.close()">Close</button>
-            </div>
-            
-            <h1>My Diary</h1>
-            <p>Exported: <?= date('Y-m-d H:i:s') ?></p>
-            
-            <?php foreach ($entries as $entry): ?>
-                <div class="entry">
-                    <div class="entry-header">
-                        <?php if ($entry['title']): ?>
-                            <div class="entry-title"><?= htmlspecialchars($entry['title']) ?></div>
-                        <?php endif; ?>
-                        <div class="entry-meta">
-                            📅 <?= htmlspecialchars($entry['date']) ?> 
-                            ⏰ <?= htmlspecialchars($entry['time']) ?>
-                            <?php if ($entry['mood']): ?>
-                                | Mood: <?= htmlspecialchars($entry['mood']) ?>
-                            <?php endif; ?>
-                            <?php if ($entry['weather']): ?>
-                                | Weather: <?= htmlspecialchars($entry['weather']) ?>
-                            <?php endif; ?>
-                        </div>
-                        <?php if ($entry['tags']): ?>
-                            <?php $tags = json_decode($entry['tags'], true); ?>
-                            <div class="entry-meta">
-                                Tags: <?= htmlspecialchars(implode(', ', $tags)) ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="entry-body">
-                        <?= htmlspecialchars($entry['body']) ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-            
-            <script>
-                // Auto-print on load (optional)
-                // window.onload = function() { window.print(); };
-            </script>
-        </body>
-        </html>
-        <?php
-        break;
-        
-    default:
-        http_response_code(400);
-        die('Invalid format');
+if (!$rows) {
+    dy_export_fail(404, dy_t('dy_err_not_found', $lang));
 }
+
+$entries = array_map(fn($r) => dy_entry_out($r, true), $rows);
+$owner = trim(trim((string)($user['name'] ?? '')) . ' ' . trim((string)($user['surname'] ?? '')));
+$heading = __t('my_diary', $lang);
+$today = dy_now()->format('Y-m-d');
+
+/** "Sondag 25 Oktober 2026 · 14:30" */
+$whenLine = function (array $e) use ($lang): string {
+    return dy_long_date($e['date'], $lang) . ($e['time'] !== null ? ' · ' . $e['time'] : '');
+};
+
+/** "Gemoed: Dankbaar · Weer: Sonnig" */
+$metaLine = function (array $e) use ($lang): string {
+    $parts = [];
+    if ($e['mood'] !== null) $parts[] = __t('mood', $lang) . ': ' . __t('dy_mood_' . $e['mood'], $lang);
+    if ($e['weather'] !== null) $parts[] = __t('weather', $lang) . ': ' . __t('dy_weather_' . $e['weather'], $lang);
+    return implode(' · ', $parts);
+};
+
+$tagLine = fn(array $e): string => $e['tags'] ? '#' . implode('  #', $e['tags']) : '';
+
+// File name: "dagboek-2026-10-25.pdf" in the page language, ASCII only
+$slug = strtolower((string)(@iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', __t('diary', $lang)) ?: 'diary'));
+$slug = trim(preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '', '-') ?: 'diary';
+$fileName = $slug . '-' . ($entryId > 0 ? $entries[0]['date'] : $today) . '.' . $format;
+
+header('Cache-Control: private, no-store');
+header('X-Content-Type-Options: nosniff');
+
+// ===== TEXT =====
+if ($format === 'txt') {
+    $out = $heading . "\n";
+    if ($owner !== '') $out .= $owner . "\n";
+    $out .= dy_long_date($today, $lang) . "\n\n";
+    foreach ($entries as $e) {
+        $out .= str_repeat('=', 48) . "\n" . $whenLine($e) . "\n";
+        if ($e['title'] !== '') $out .= $e['title'] . "\n";
+        if (($meta = $metaLine($e)) !== '') $out .= $meta . "\n";
+        if (($tags = $tagLine($e)) !== '') $out .= $tags . "\n";
+        $out .= str_repeat('-', 48) . "\n" . $e['body'] . "\n\n";
+    }
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $fileName . '"');
+    header('Content-Length: ' . strlen($out));
+    echo $out;
+    exit;
+}
+
+// ===== PDF =====
+$ink = [0.11, 0.12, 0.16];
+$muted = [0.42, 0.44, 0.49];
+$amber = [0.69, 0.46, 0.08];
+$rule = [0.86, 0.83, 0.77];
+$m = CalPdf::MARGIN;
+$width = CalPdf::W - 2 * $m;
+$bottom = CalPdf::H - $m - 18;
+
+$pdf = new CalPdf();
+$page = 0;
+$y = 0.0;
+
+$newPage = function () use ($pdf, &$page, &$y, $m, $muted, $amber, $heading): void {
+    $pdf->addPage();
+    $page++;
+    $pdf->rect(0, 0, CalPdf::W, 5, $amber);
+    $label = $heading . '  ·  ' . $page;
+    $pdf->text(CalPdf::W - $m - $pdf->width($label, 8), CalPdf::H - $m + 8, $label, 8, false, $muted);
+    $y = $m + 6;
+};
+
+/** Room for $h points, or a new page */
+$need = function (float $h) use (&$y, $bottom, $newPage): void {
+    if ($y + $h > $bottom) $newPage();
+};
+
+$newPage();
+$pdf->text($m, $y + 22, $heading, 24, true, $ink);
+$y += 40;
+$sub = trim($owner . ($owner !== '' ? '  ·  ' : '') . dy_long_date($today, $lang));
+$pdf->text($m, $y, $sub, 9.5, false, $muted);
+$y += 14;
+$pdf->line($m, $y, CalPdf::W - $m, $y, $rule, 0.8);
+$y += 26;
+
+foreach ($entries as $i => $e) {
+    $titleLines = $e['title'] !== '' ? $pdf->wrap($e['title'], $width, 14, true, 3) : [];
+    $meta = trim($metaLine($e) . (($metaLine($e) !== '' && $tagLine($e) !== '') ? '   ' : '') . $tagLine($e));
+    $metaLines = $meta !== '' ? $pdf->wrap($meta, $width, 9, false, 3) : [];
+
+    // Keep the heading of an entry together with its first lines of text
+    $need(16 + count($titleLines) * 18 + count($metaLines) * 12 + 40);
+
+    $pdf->text($m, $y, $whenLine($e), 9.5, true, $amber);
+    $y += 18;
+    foreach ($titleLines as $line) {
+        $pdf->text($m, $y, $line, 14, true, $ink);
+        $y += 18;
+    }
+    foreach ($metaLines as $line) {
+        $pdf->text($m, $y, $line, 9, false, $muted);
+        $y += 12;
+    }
+    $y += 6;
+
+    // Line by line, so the writer's line breaks and blank lines stay
+    foreach ($e['body'] !== '' ? explode("\n", $e['body']) : [] as $para) {
+        if (trim($para) === '') {
+            $y += 8;
+            continue;
+        }
+        foreach ($pdf->wrap($para, $width, 10.5, false, 100000) as $line) {
+            $need(15.5);
+            $pdf->text($m, $y, $line, 10.5, false, $ink);
+            $y += 15.5;
+        }
+    }
+
+    if ($i < count($entries) - 1) {
+        $y += 8;
+        $need(24);
+        $pdf->line($m, $y, $m + 60, $y, $amber, 0.8);
+        $y += 26;
+    }
+}
+
+$bytes = $pdf->output($heading . ($owner !== '' ? ' — ' . $owner : ''));
+header('Content-Type: application/pdf');
+header('Content-Disposition: attachment; filename="' . $fileName . '"');
+header('Content-Length: ' . strlen($bytes));
+echo $bytes;

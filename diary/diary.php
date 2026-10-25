@@ -1,389 +1,150 @@
 <?php
-// =====================================================================
-// /diary/diary.php — AI-Enhanced Premium Diary
-// =====================================================================
+declare(strict_types=1);
+/**
+ * Diary — "Light Through Glass", amber edition.
+ * The welcome page's atmosphere lit in amber, the colour the diary carries
+ * on the welcome tiles and in the calendar. A private place to write: only
+ * the owner ever sees an entry (also in their own calendar).
+ *
+ * The list, the reader and the writer are drawn by diary.js; the reader and
+ * the writer are full pages below the header, Back closes them.
+ * Links: ?entry=ID opens an entry, ?date=YYYY-MM-DD[&time=HH:MM] starts one.
+ */
 
-require_once __DIR__ . '/../security/auth_gate.php';
-require_once __DIR__ . '/../includes/languages.php';
+require_once dirname(__DIR__) . '/security/auth_gate.php';
+require_once __DIR__ . '/lib/diary.php';
 
-// -------------------------- Taal --------------------------------------
-$pageLang = $_SESSION['language'] ?? 'af';
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
-  $_SESSION['language'] = $_GET['lang'];
-  $pageLang = $_GET['lang'];
-  header('Location: /diary/diary.php');
-  exit;
-}
-// Translation helper using central 5-language system
-function t(string $key): string {
-  global $pageLang;
-  return __t($key, $pageLang);
+    $_SESSION['language'] = $_GET['lang'];
+    // The open entry lives in the #hash, which the browser keeps across this redirect
+    header('Location: /diary/diary.php');
+    exit;
 }
 
-function esc($s) { 
-  return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); 
-}
+$lang = dy_lang();
+$today = dy_now()->format('Y-m-d');
+$T = dy_js_strings($lang);
+$config = [
+    'lang' => $lang,
+    'csrf' => csrf_token(),
+    'userId' => dy_user_id(),
+    'today' => $today,
+    'moods' => DY_MOODS,
+    'weathers' => DY_WEATHERS,
+    'limits' => ['title' => DY_TITLE_MAX, 'body' => DY_BODY_MAX, 'tag' => DY_TAG_MAX, 'tags' => DY_TAGS_MAX],
+    't' => $T,
+];
 
-$userId = (int)($_SESSION['user_id'] ?? 0);
-
-// Get user info
-$user = null;
-try {
-  $stmt = $pdo->prepare("SELECT name, surname FROM users WHERE id = ?");
-  $stmt->execute([$userId]);
-  $user = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-  error_log("Diary user fetch error: " . $e->getMessage());
-}
-
-$userName = $user ? trim($user['name'] . ' ' . $user['surname']) : 'User';
-
+$icons = [
+    'diary' => '<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>',
+    'calendar' => '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>',
+    'book' => '<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>',
+    'history' => '<path d="M13 3a9 9 0 00-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0013 21a9 9 0 000-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>',
+    'pdf' => '<path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/>',
+    'notes' => '<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>',
+    'spark' => '<path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2zM19 15l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1 1-2.6z"/>',
+    'tag' => '<path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58s1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>',
+    'lock' => '<path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/>',
+];
 ?><!doctype html>
-<html lang="<?= $pageLang ?>">
+<html lang="<?= dy_e($lang) ?>">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= esc(t('ai_diary')) ?></title>
-  
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <style>
-    @font-face {
-      font-family: 'Parisienne';
-      src: url('/assets/fonts/Parisienne-Regular.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-  </style>
-  
-  <link rel="stylesheet" href="/diary/css/diary.css?v=<?= time() ?>">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= dy_e(__t('my_diary', $lang)) ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Parisienne&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= dy_asset('/diary/css/diary.css') ?>">
+    <script>window.DIARY = <?= dy_json_for_script($config) ?>;</script>
 </head>
-<body class="diary-body">
-  <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
+<body class="dy-body">
+    <?php require_once dirname(__DIR__) . '/header_footer/header.php'; ?>
 
-  <main class="diary-main">
-    <h2 class="diary-page-title"><?= esc(t('my_diary')) ?></h2>
+    <svg class="dy-sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+        <?php foreach ($icons as $id => $path): ?>
+        <symbol id="dy-i-<?= $id ?>" viewBox="0 0 24 24" fill="currentColor"><?= $path ?></symbol>
+        <?php endforeach; ?>
+    </defs></svg>
 
-    <!-- View Toggle -->
-    <section class="diary-view-toggle">
-      <button class="view-btn active" data-view="timeline" title="<?= esc(t('timeline')) ?>">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 10h18M3 14h18M8 6h13M8 18h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span><?= esc(t('timeline')) ?></span>
-      </button>
-      <button class="view-btn" data-view="gallery" title="<?= esc(t('gallery')) ?>">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-          <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-          <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-          <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        <span><?= esc(t('gallery')) ?></span>
-      </button>
-      <button class="view-btn" data-view="search" title="<?= esc(t('search')) ?>">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span><?= esc(t('search')) ?></span>
-      </button>
-    </section>
+    <div class="dy-aura" aria-hidden="true"><div class="dy-rays"></div><div class="dy-halo"></div></div>
 
-    <!-- Quick Actions -->
-    <section class="diary-actions">
-      <button class="action-btn action-primary" id="newEntryBtn">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span><?= esc(t('new_entry')) ?></span>
-      </button>
-    </section>
-
-    <!-- Timeline View -->
-    <section class="diary-view diary-timeline" id="timelineView">
-      <div class="timeline-filters">
-        <input type="text" class="filter-input" id="timelineSearch" placeholder="<?= esc(t('search_entries')) ?>">
-        <select class="filter-select" id="timelineSort">
-          <option value="newest"><?= esc(t('newest_first')) ?></option>
-          <option value="oldest"><?= esc(t('oldest_first')) ?></option>
-          <option value="title"><?= esc(t('title_az')) ?></option>
-        </select>
-        <select class="filter-select" id="timelineFilter">
-          <option value="all"><?= esc(t('all')) ?></option>
-          <option value="today"><?= esc(t('today')) ?></option>
-          <option value="week"><?= esc(t('this_week')) ?></option>
-          <option value="month"><?= esc(t('this_month')) ?></option>
-          <option value="year"><?= esc(t('this_year')) ?></option>
-        </select>
-      </div>
-      <div class="timeline-container" id="timelineContainer">
-        <div class="timeline-loading">
-          <div class="loading-spinner"></div>
-          <p><?= esc(t('loading_entries')) ?></p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Gallery View -->
-    <section class="diary-view diary-gallery" id="galleryView" style="display: none;">
-      <div class="gallery-grid" id="galleryGrid">
-        <div class="gallery-loading">
-          <div class="loading-spinner"></div>
-          <p><?= esc(t('loading_gallery')) ?></p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Search View -->
-    <section class="diary-view diary-search" id="searchView" style="display: none;">
-      <div class="search-panel">
-        <div class="search-header">
-          <input type="text" class="search-input" id="searchInput" placeholder="<?= esc(t('search_through_all')) ?>">
-          <button class="search-btn" id="searchBtn">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
-        </div>
-        <div class="search-filters">
-          <label class="search-filter">
-            <input type="checkbox" id="searchTitle" checked>
-            <span><?= esc(t('titles')) ?></span>
-          </label>
-          <label class="search-filter">
-            <input type="checkbox" id="searchBody" checked>
-            <span><?= esc(t('content')) ?></span>
-          </label>
-          <label class="search-filter">
-            <input type="checkbox" id="searchTags" checked>
-            <span><?= esc(t('tags')) ?></span>
-          </label>
-        </div>
-        <div class="search-results" id="searchResults">
-          <div class="search-placeholder">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <p><?= esc(t('start_typing_search')) ?></p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Entry Modal -->
-  <div class="modal" id="entryModal">
-    <div class="modal-overlay" id="modalOverlay"></div>
-    <div class="modal-container">
-      <div class="modal-header">
-        <h2 class="modal-title" id="modalTitle"><?= esc(t('new_entry')) ?></h2>
-        <button class="modal-close" id="modalClose">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form id="entryForm">
-          <input type="hidden" id="entryId" value="">
-          
-          <div class="form-group">
-            <label class="form-label"><?= esc(t('date_time')) ?></label>
-            <div class="form-row">
-              <input type="date" class="form-input" id="entryDate" required>
-              <input type="time" class="form-input" id="entryTime" value="00:00">
+    <main class="dy-main" id="dyMain">
+        <section class="dy-hero" aria-labelledby="dyTitle">
+            <p class="dy-eyebrow">
+                <svg class="dy-eyebrow-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#dy-i-diary"/></svg>
+                <span><?= dy_e(__t('diary', $lang)) ?></span>
+            </p>
+            <h2 class="dy-title" id="dyTitle"><span><?= dy_e(__t('my_diary', $lang)) ?></span></h2>
+            <p class="dy-sub" id="dySub"><?= dy_e(dy_long_date($today, $lang)) ?></p>
+            <p class="dy-private">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#dy-i-lock"/></svg>
+                <span><?= dy_e(__t('dy_private', $lang)) ?></span>
+            </p>
+            <div class="dy-hero-actions">
+                <button class="dy-btn dy-btn--primary dy-write-btn" id="dyWrite" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#dy-i-diary"/></svg>
+                    <span><?= dy_e(__t('dy_write_today', $lang)) ?></span>
+                </button>
             </div>
-          </div>
+        </section>
 
-          <div class="form-group">
-            <label class="form-label" for="entryTitle"><?= esc(t('title')) ?></label>
-            <input type="text" class="form-input" id="entryTitle" placeholder="<?= esc(t('my_thoughts_today')) ?>">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="entryBody"><?= esc(t('content')) ?></label>
-            <div class="editor-toolbar">
-              <button type="button" class="editor-btn" data-action="bold" title="Bold">
-                <strong>B</strong>
-              </button>
-              <button type="button" class="editor-btn" data-action="italic" title="Italic">
-                <em>I</em>
-              </button>
-              <button type="button" class="editor-btn" data-action="underline" title="Underline">
-                <u>U</u>
-              </button>
-              <button type="button" class="editor-btn" data-action="strikethrough" title="Strikethrough">
-                <s>S</s>
-              </button>
-              <span class="editor-divider"></span>
-              <button type="button" class="editor-btn" data-action="heading" title="Heading">
-                <span>H1</span>
-              </button>
-              <button type="button" class="editor-btn" data-action="bulletList" title="Bullet List">
-                <span>•</span>
-              </button>
-              <button type="button" class="editor-btn" data-action="numberedList" title="Numbered List">
-                <span>1.</span>
-              </button>
-              <span class="editor-divider"></span>
-              <button type="button" class="editor-btn" data-action="quote" title="Quote">
-                <span>"</span>
-              </button>
-              <button type="button" class="editor-btn" data-action="code" title="Code">
-                <span>&lt;/&gt;</span>
-              </button>
+        <section class="dy-card dy-toolbar" role="search" aria-label="<?= dy_e(__t('dy_search_label', $lang)) ?>">
+            <div class="dy-search">
+                <svg class="dy-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                <input class="dy-search-input" id="dySearch" type="search" enterkeyhint="search" autocomplete="off" maxlength="100"
+                       placeholder="<?= dy_e(__t('search_entries', $lang)) ?>" aria-label="<?= dy_e(__t('dy_search_label', $lang)) ?>">
+                <button class="dy-search-clear" id="dySearchClear" type="button" aria-label="<?= dy_e(__t('dy_clear_search', $lang)) ?>" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
             </div>
-            <textarea class="form-textarea" id="entryBody" rows="10" placeholder="<?= esc(t('write_thoughts_here')) ?>"></textarea>
-            <div class="word-count" id="wordCount">0 <?= esc(t('words')) ?></div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label"><?= esc(t('tags')) ?></label>
-            <div class="tags-container" id="tagsContainer"></div>
-            <input type="text" class="form-input" id="tagInput" placeholder="<?= esc(t('type_tag_enter')) ?>">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label"><?= esc(t('mood')) ?></label>
-            <div class="mood-selector">
-              <button type="button" class="mood-btn" data-mood="happy">😊</button>
-              <button type="button" class="mood-btn" data-mood="sad">😢</button>
-              <button type="button" class="mood-btn" data-mood="excited">🤗</button>
-              <button type="button" class="mood-btn" data-mood="calm">😌</button>
-              <button type="button" class="mood-btn" data-mood="thoughtful">🤔</button>
-              <button type="button" class="mood-btn" data-mood="grateful">🙏</button>
-              <button type="button" class="mood-btn" data-mood="inspired">✨</button>
-              <button type="button" class="mood-btn" data-mood="tired">😴</button>
-            </div>
-            <input type="hidden" id="entryMood">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label"><?= esc(t('weather')) ?></label>
-            <div class="weather-selector">
-              <button type="button" class="weather-btn" data-weather="sunny">☀️</button>
-              <button type="button" class="weather-btn" data-weather="cloudy">☁️</button>
-              <button type="button" class="weather-btn" data-weather="rainy">🌧️</button>
-              <button type="button" class="weather-btn" data-weather="stormy">⛈️</button>
-              <button type="button" class="weather-btn" data-weather="snowy">❄️</button>
-              <button type="button" class="weather-btn" data-weather="windy">🌬️</button>
-            </div>
-            <input type="hidden" id="entryWeather">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label"><?= esc(t('reminder')) ?></label>
-            <select class="form-select" id="reminderMinutes">
-              <option value="0"><?= esc(t('no_reminder')) ?></option>
-              <option value="15">15 <?= esc(t('minutes_before')) ?></option>
-              <option value="30">30 <?= esc(t('minutes_before')) ?></option>
-              <option value="60" selected>1 <?= esc(t('hour_before')) ?></option>
-              <option value="120">2 <?= esc(t('hours_before')) ?></option>
-              <option value="1440">1 <?= esc(t('day_before')) ?></option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="custom-checkbox">
-              <input type="checkbox" id="addToCalendar" checked>
-              <span class="checkmark"></span>
-              <span><?= esc(t('add_to_calendar')) ?> 📅</span>
-            </label>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" id="cancelBtn">
-              <?= esc(t('cancel')) ?>
+            <button class="dy-tool-btn" id="dySort" type="button" aria-label="<?= dy_e(__t('dy_sort_label', $lang)) ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>
+                <span id="dySortLabel"><?= dy_e(__t('newest_first', $lang)) ?></span>
             </button>
-            <button type="button" class="btn btn-ai" id="aiAssistBtn">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" fill="none"/>
-              </svg>
-              <?= esc(t('ai_assist')) ?>
+            <button class="dy-tool-btn" id="dyExport" type="button" aria-haspopup="dialog">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                <span><?= dy_e(__t('dy_export', $lang)) ?></span>
             </button>
-            <button type="submit" class="btn btn-primary" id="saveBtn">
-              <?= esc(t('save')) ?>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+        </section>
 
-  <!-- View Entry Modal (read-only) -->
-  <div class="modal" id="viewModal">
-    <div class="modal-overlay" id="viewModalOverlay"></div>
-    <div class="modal-container">
-      <div class="modal-header">
-        <h2 class="modal-title" id="viewModalTitle"></h2>
-        <button class="modal-close" id="viewModalClose">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body" id="viewModalBody">
-        <!-- Populated by JS -->
-      </div>
-      <div class="view-modal-footer">
-        <button type="button" class="btn btn-secondary" id="viewEditBtn"><?= esc(t('edit')) ?></button>
-        <button type="button" class="btn btn-secondary" id="viewShareBtn"><?= esc(t('share')) ?></button>
-        <button type="button" class="btn btn-secondary" id="viewDeleteBtn"><?= esc(t('delete')) ?></button>
-        <button type="button" class="btn btn-primary" id="viewCloseBtn"><?= esc(t('close')) ?></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Share Modal -->
-  <div class="modal" id="shareModal" style="display: none;">
-    <div class="modal-overlay"></div>
-    <div class="modal-container modal-sm">
-      <div class="modal-header">
-        <h2 class="modal-title"><?= esc(t('share_entry')) ?></h2>
-        <button class="modal-close" onclick="closeShareModal()">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="share-options">
-          <button class="share-option" onclick="shareAs('friend')">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <span><?= esc(t('share_with_friend')) ?></span>
-          </button>
-          <button class="share-option" onclick="shareAs('link')">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <span><?= esc(t('copy_link')) ?></span>
-          </button>
-          <button class="share-option" onclick="shareAs('export')">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5m0 0L7 8m5-5v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <span><?= esc(t('export_pdf')) ?></span>
-          </button>
+        <div class="dy-filters" id="dyFilters" role="group" aria-label="<?= dy_e(__t('dy_period', $lang)) ?>">
+            <?php foreach (['' => 'all', 'week' => 'this_week', 'month' => 'this_month', 'year' => 'this_year'] as $value => $key): ?>
+            <button class="dy-chip" type="button" data-period="<?= $value ?>" aria-pressed="<?= $value === '' ? 'true' : 'false' ?>"><?= dy_e(__t($key, $lang)) ?></button>
+            <?php endforeach; ?>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <script>
-    window.DIARY_LANG = '<?= $pageLang ?>';
-    window.USER_ID = <?= $userId ?>;
-  </script>
-  <script src="/diary/js/diary.js?v=<?= time() ?>"></script>
+        <section class="dy-card dy-otd" id="dyOtd" aria-labelledby="dyOtdTitle" hidden>
+            <h3 class="dy-label" id="dyOtdTitle">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#dy-i-history"/></svg>
+                <span><?= dy_e(__t('dy_on_this_day', $lang)) ?></span>
+            </h3>
+            <div class="dy-otd-list" id="dyOtdList"></div>
+        </section>
 
-  <?php require_once __DIR__ . '/../header_footer/footer.php'; ?>
+        <p class="dy-count" id="dyCount" aria-live="polite"></p>
 
+        <section class="dy-list" id="dyList" aria-busy="true" aria-label="<?= dy_e(__t('my_diary', $lang)) ?>">
+            <div class="dy-skel" aria-hidden="true"><i></i><i></i><i></i></div>
+            <p class="dy-sr"><?= dy_e(__t('loading_entries', $lang)) ?></p>
+        </section>
+
+        <div class="dy-more" id="dyMoreWrap" hidden>
+            <button class="dy-btn dy-btn--glass" id="dyMore" type="button"><span><?= dy_e(__t('dy_load_more', $lang)) ?></span></button>
+        </div>
+    </main>
+
+    <!-- New entry on phones: the same glass circle and slot as Gospel Media's new-post button -->
+    <button class="global-back-btn global-post-btn dy-fab" id="dyFab" type="button" aria-label="<?= dy_e(__t('new_entry', $lang)) ?>">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <div class="dy-toast" id="dyToast" role="status" aria-live="polite"></div>
+
+    <script defer src="<?= dy_asset('/diary/js/diary.js') ?>"></script>
+
+    <?php require_once dirname(__DIR__) . '/header_footer/footer.php'; ?>
 </body>
 </html>
