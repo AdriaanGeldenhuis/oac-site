@@ -76,8 +76,15 @@ try {
     $stmt = $pdo->prepare("DELETE FROM diaries WHERE user_id = ?");
     $stmt->execute([$targetId]);
     
-    // 6. Delete calendar visits
+    // 6. Delete calendar visits (and their shares)
     $stmt = $pdo->prepare("DELETE FROM calendar_visits WHERE user_id = ?");
+    $stmt->execute([$targetId]);
+
+    // 6b. Other people's visits to this person keep the visit, with the name as text
+    $stmt = $pdo->prepare("UPDATE calendar_visits v
+        JOIN users u ON u.id = v.linked_user_id
+        SET v.person_name = TRIM(CONCAT(COALESCE(u.name, ''), ' ', COALESCE(u.surname, ''))), v.linked_user_id = NULL
+        WHERE v.linked_user_id = ?");
     $stmt->execute([$targetId]);
     
     // 7. Delete shared calendar events
@@ -104,9 +111,14 @@ try {
     $stmt = $pdo->prepare("DELETE FROM comments WHERE user_id = ?");
     $stmt->execute([$targetId]);
     
-    // 13. Delete likes
-    $stmt = $pdo->prepare("DELETE FROM likes WHERE user_id = ?");
-    $stmt->execute([$targetId]);
+    // 13. Delete likes (this table does not exist on every install; without it
+    //     the whole delete used to fail and roll back)
+    try {
+        $stmt = $pdo->prepare("DELETE FROM likes WHERE user_id = ?");
+        $stmt->execute([$targetId]);
+    } catch (Throwable $e) {
+        // nothing to clean up
+    }
     
     // Finally, delete the user
     $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");

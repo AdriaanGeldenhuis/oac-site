@@ -55,14 +55,16 @@ try {
         exit;
     }
     
-    // Fetch calendar events (future events only)
+    // Fetch calendar events (future events only). Rows linked to a diary
+    // entry are that person's private diary: never shown to someone else.
     $stmt = $pdo->prepare("SELECT id, title, description, start_at, end_at, all_day 
         FROM calendar_events 
         WHERE user_id = ? 
         AND start_at >= CURDATE()
+        AND id NOT IN (SELECT calendar_event_id FROM diaries WHERE user_id = ? AND calendar_event_id IS NOT NULL)
         ORDER BY start_at ASC 
         LIMIT 50");
-    $stmt->execute([$targetUserId]);
+    $stmt->execute([$targetUserId, $targetUserId]);
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo json_encode([

@@ -310,7 +310,8 @@
     var parts = ev.date.split('-');
     var link = doc.createElement('a');
     link.className = 'wc-ev' + (isFirst ? ' wc-ev--first' : '');
-    link.href = '/calendar/calendar.php';
+    // Opens the calendar on that day, with the item itself open
+    link.href = '/calendar/calendar.php#d=' + encodeURIComponent(ev.date) + (ev.uid ? '&i=' + encodeURIComponent(ev.uid) : '');
 
     var stamp = doc.createElement('span');
     stamp.className = 'wc-ev-date';
@@ -381,8 +382,8 @@
       var upcoming = [];
       for (var i = 0; i < list.length; i++) {
         var ev = list[i];
-        // Gatherings and visits only — diary entries are private notes
-        if (!ev || (ev.type !== 'event' && ev.type !== 'visit') || !ev.date) { continue; }
+        // Gatherings, visits and appointments only — diary entries are private notes
+        if (!ev || (ev.type !== 'event' && ev.type !== 'visit' && ev.type !== 'appointment') || !ev.date) { continue; }
         ev.date = String(ev.date).slice(0, 10);
         var key = ev.date + ' ' + (ev.time ? String(ev.time).slice(0, 5) : '23:59');
         if (key >= nowKey && (ev.title || ev.person_name)) {
@@ -410,7 +411,8 @@
     var ctrl = win.AbortController ? new win.AbortController() : null;
     var timer = win.setTimeout(function () { if (ctrl) { ctrl.abort(); } }, 8000);
 
-    win.fetch('/calendar/api/list.php', {
+    // Only what is still to come (a year from "from"), only the kinds shown here
+    win.fetch('/calendar/api/list.php?types=event,visit,appointment&limit=40' + (data.today ? '&from=' + encodeURIComponent(data.today) : ''), {
       credentials: 'same-origin',
       headers: { 'Accept': 'application/json' },
       signal: ctrl ? ctrl.signal : undefined

@@ -62,7 +62,10 @@ try {
     $calendarStmt->execute([$appointment['target_user_id'], $targetTitle, $description, $datetime]);
     
     // Send notification to requester
-    createAdminNotification($appointment['requester_id'], 'appointment_confirmed', []);
+    createAdminNotification($appointment['requester_id'], 'appointment_confirmed', [
+        'date' => $appointment['appointment_date'],
+        'time' => $appointment['appointment_time']
+    ]);
     
     echo json_encode(['success' => true]);
 } catch (Throwable $e) {

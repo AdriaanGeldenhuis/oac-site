@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../security/auth_gate.php';
 require_once __DIR__ . '/../includes/languages.php';
+require_once __DIR__ . '/../calendar/lib/calendar.php';
 
 $lang = $_SESSION['language'] ?? 'af';
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
@@ -84,9 +85,11 @@ if ($meId === $targetId) {
     }
 }
 
-if ($myAmpId >= 1 && $myAmpId <= 9) {
-    $canExportCalendar = true;
-}
+// Calendar buttons follow the calendar's own rule, so they never lead to
+// "access denied" and export is only offered where the server allows it
+$calRights = cal_view_rights(['id' => $meId] + ($me ?: []), ['id' => $targetId] + $user);
+$canViewCalendar = $calRights['view'];
+$canExportCalendar = $calRights['export'];
 
 $fullName = trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
 $hasPhoto = !empty($user['photo']);

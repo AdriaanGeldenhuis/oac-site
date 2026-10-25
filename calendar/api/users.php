@@ -1,42 +1,38 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json; charset=utf-8');
+/**
+ * GET /calendar/api/users.php
+ * People a visit can be linked to: approved members of your own town
+ * (upsert.php accepts exactly this list and nobody else).
+ * Answer: {success, users: [{id, name, surname}]}
+ */
 
 require_once __DIR__ . '/../../security/auth_gate.php';
+require_once __DIR__ . '/../lib/calendar.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'db_unavailable']);
-    exit;
+    cal_fail('db_unavailable', 500);
 }
 
-$userId = (int)$_SESSION['user_id'];
+$me = cal_user($pdo, (int)$_SESSION['user_id']);
+$town = (int)($me['town_id'] ?? 0);
+if (!$me || $town <= 0) {
+    cal_json(['success' => true, 'users' => []]);
+}
 
 try {
-    // Get users in same town
-    $stmt = $pdo->prepare("
-        SELECT u.id, u.name, u.surname
-        FROM users u
-        WHERE u.status = 'approved' 
-          AND u.town_id = (SELECT town_id FROM users WHERE id = ?)
-          AND u.id != ?
-        ORDER BY u.name ASC, u.surname ASC
-    ");
-    $stmt->execute([$userId, $userId]);
-    
+    $st = $pdo->prepare("SELECT id, name, surname FROM users
+                         WHERE status = 'approved' AND town_id = ? AND id != ?
+                         ORDER BY name ASC, surname ASC
+                         LIMIT 2000");
+    $st->execute([$town, (int)$me['id']]);
+
     $users = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $users[] = [
-            'id' => (int)$row['id'],
-            'name' => $row['name'],
-            'surname' => $row['surname']
-        ];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $users[] = ['id' => (int)$row['id'], 'name' => (string)$row['name'], 'surname' => (string)$row['surname']];
     }
-    
-    echo json_encode(['success' => true, 'users' => $users]);
-    
+    cal_json(['success' => true, 'users' => $users]);
 } catch (Throwable $e) {
     error_log('Calendar users error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'server_error']);
+    cal_fail('server_error', 500);
 }

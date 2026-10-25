@@ -1,20 +1,25 @@
 package za.co.oacapp.oacapp
 
 import android.Manifest
+import android.app.DownloadManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.CalendarContract
 import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
+import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -82,7 +87,52 @@ class MainActivity : ComponentActivity() {
             fun logDebug(message: String) {
                 Log.d("WebViewBridge", message)
             }
+
+            /**
+             * Calendar / Gospel Media "add to my phone's calendar": opens the
+             * phone's own "new event" screen, filled in. Times are UTC
+             * milliseconds (as strings, so nothing is lost on the way).
+             * Returns false when no calendar app can take it; the page then
+             * downloads an .ics file instead.
+             */
+            @JavascriptInterface
+            fun addToCalendar(
+                title: String,
+                beginMillis: String,
+                endMillis: String,
+                allDay: Boolean,
+                location: String,
+                description: String
+            ): Boolean {
+                val begin = beginMillis.toLongOrNull() ?: return false
+                val end = endMillis.toLongOrNull() ?: (begin + 3_600_000L)
+                val intent = Intent(Intent.ACTION_INSERT).apply {
+                    data = CalendarContract.Events.CONTENT_URI
+                    putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, begin)
+                    putExtra(CalendarContract.EXTRA_EVENT_END_TIME, end)
+                    putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, allDay)
+                    putExtra(CalendarContract.Events.TITLE, title)
+                    putExtra(CalendarContract.Events.EVENT_LOCATION, location)
+                    putExtra(CalendarContract.Events.DESCRIPTION, description)
+                }
+                if (intent.resolveActivity(packageManager) == null) return false
+                runOnUiThread {
+                    try {
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        Log.w("MainActivity", "No calendar app", e)
+                    }
+                }
+                return true
+            }
         }, "NativeApp")
+
+        // Files the site hands out (calendar PDF / Excel / .ics) go to the
+        // phone's Downloads, with the session cookie so the server knows who
+        // asks. Without this the WebView silently ignores every download.
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+            startDownload(url, userAgent, contentDisposition, mimeType)
+        }
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
@@ -170,6 +220,36 @@ class MainActivity : ComponentActivity() {
             return true
         }
         return false
+    }
+
+    private fun startDownload(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
+        val scheme = Uri.parse(url).scheme?.lowercase()
+        if (scheme != "http" && scheme != "https") {
+            // blob: / data: links only exist inside the page
+            Log.w("MainActivity", "Cannot download $scheme link")
+            return
+        }
+        try {
+            val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
+            val request = DownloadManager.Request(Uri.parse(url)).apply {
+                CookieManager.getInstance().getCookie(url)?.let { addRequestHeader("Cookie", it) }
+                if (!userAgent.isNullOrEmpty()) addRequestHeader("User-Agent", userAgent)
+                if (!mimeType.isNullOrEmpty()) setMimeType(mimeType)
+                setTitle(fileName)
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                } else {
+                    // Older Android: the app's own folder needs no storage permission
+                    setDestinationInExternalFilesDir(this@MainActivity, Environment.DIRECTORY_DOWNLOADS, fileName)
+                }
+            }
+            val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            manager.enqueue(request)
+            Toast.makeText(this, fileName, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Download failed", e)
+        }
     }
 
     private fun askNotificationPermission() {

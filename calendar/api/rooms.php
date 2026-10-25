@@ -1,112 +1,38 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json; charset=utf-8');
+/**
+ * GET /calendar/api/rooms.php
+ * The rooms where the user may post an event: Gospel Media's own rules
+ * (lib/permissions.php). Gemeenskap rooms are left out, as in the feed's
+ * composer, which offers no event there.
+ * Answer: {success, rooms: [{id, name, type}]}
+ */
 
 require_once __DIR__ . '/../../security/auth_gate.php';
-require_once __DIR__ . '/../../gospel_media/lib/permissions.php';
-require_once __DIR__ . '/../../includes/languages.php';
+require_once __DIR__ . '/../lib/calendar.php';
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'db_unavailable']);
-    exit;
+    cal_fail('db_unavailable', 500);
 }
 
 $userId = (int)$_SESSION['user_id'];
-$pageLang = $_SESSION['language'] ?? 'af';
+$lang = cal_lang();
+$typeOrder = ['gemeente' => 0, 'opsienerskap' => 1, 'jeug' => 2, 'sondagskool' => 3];
 
 try {
-    // Get user info
-    $userStmt = $pdo->prepare("SELECT amp_id, town_id, congregation_id FROM users WHERE id = ?");
-    $userStmt->execute([$userId]);
-    $user = $userStmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$user) {
-        echo json_encode(['success' => false, 'rooms' => []]);
-        exit;
-    }
-    
-    $ampId = (int)($user['amp_id'] ?? 10);
-    $townId = (int)($user['town_id'] ?? 0);
-    $congId = (int)($user['congregation_id'] ?? 0);
-    
     $rooms = [];
-    
-    // Get rooms based on permissions
-    if ($ampId === 1) {
-        // Apostle: All opsienerskap rooms they are a member of
-        $stmt = $pdo->prepare("
-            SELECT r.id, r.name, r.type, r.town_id
-            FROM rooms r
-            JOIN room_memberships rm ON rm.room_id = r.id AND rm.user_id = ?
-            WHERE r.type = 'opsienerskap'
-            ORDER BY r.name
-        ");
-        $stmt->execute([$userId]);
-        $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } elseif ($ampId >= 2 && $ampId <= 5) {
-        // Amp 2-5: Own town opsienerskap rooms
-        $stmt = $pdo->prepare("
-            SELECT r.id, r.name, r.type, r.town_id
-            FROM rooms r
-            WHERE r.type = 'opsienerskap' AND r.town_id = ?
-            ORDER BY r.name
-        ");
-        $stmt->execute([$townId]);
-        $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach (cal_rooms($pdo, $userId) as $id => $info) {
+        $type = strtolower((string)($info['room']['type'] ?? ''));
+        if (!$info['post'] || $type === 'gemeenskap') continue;
+        $rooms[] = [
+            'id' => (int)$id,
+            'name' => cal_room_label($type, (string)($info['room']['name'] ?? ''), $lang),
+            'type' => $type,
+        ];
     }
-    
-    if ($ampId >= 5 && $ampId <= 9) {
-        // Amp 5-9: Own gemeente
-        $stmt = $pdo->prepare("
-            SELECT r.id, r.name, r.type, r.gemeente_id
-            FROM rooms r
-            WHERE r.type = 'gemeente' AND r.gemeente_id = ?
-            ORDER BY r.name
-        ");
-        $stmt->execute([$congId]);
-        $rooms = array_merge($rooms, $stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-    
-    if ($ampId < 10) {
-        // All except Amp 10: Jeug & Sondagskool
-        $stmt = $pdo->prepare("
-            SELECT r.id, r.name, r.type, r.town_id
-            FROM rooms r
-            WHERE r.type IN ('jeug', 'sondagskool') AND r.town_id = ?
-            ORDER BY r.type, r.name
-        ");
-        $stmt->execute([$townId]);
-        $rooms = array_merge($rooms, $stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-    
-    // Format names with translations
-    foreach ($rooms as &$room) {
-        $room['id'] = (int)$room['id'];
-        $type = $room['type'] ?? '';
-        $originalName = $room['name'] ?? '';
-        // Strip existing Afrikaans type prefix from room name to avoid duplication
-        $afPrefixes = ['gemeente' => 'Gemeente ', 'opsienerskap' => 'Opsienerskap ', 'jeug' => 'Jeug ', 'sondagskool' => 'Sondagskool '];
-        $tLower = strtolower($type);
-        if (isset($afPrefixes[$tLower]) && stripos($originalName, $afPrefixes[$tLower]) === 0) {
-            $originalName = substr($originalName, strlen($afPrefixes[$tLower]));
-        }
-        if ($type === 'jeug') {
-            $room['name'] = __t('youth', $pageLang) . ' ' . $originalName;
-        } elseif ($type === 'sondagskool') {
-            $room['name'] = __t('sunday_school', $pageLang) . ' ' . $originalName;
-        } elseif ($type === 'opsienerskap') {
-            $room['name'] = __t('oversight', $pageLang) . ' ' . $originalName;
-        } elseif ($type === 'gemeente') {
-            $room['name'] = __t('congregation', $pageLang) . ' ' . $originalName;
-        }
-    }
-    unset($room);
-    
-    echo json_encode(['success' => true, 'rooms' => $rooms]);
-    
+    usort($rooms, fn($a, $b) => [$typeOrder[$a['type']] ?? 9, $a['name']] <=> [$typeOrder[$b['type']] ?? 9, $b['name']]);
+    cal_json(['success' => true, 'rooms' => $rooms]);
 } catch (Throwable $e) {
     error_log('Calendar rooms error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'server_error']);
+    cal_fail('server_error', 500);
 }

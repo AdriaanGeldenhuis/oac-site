@@ -360,7 +360,10 @@ function openEntryModal(date = null, entryId = null) {
   if (date) {
     document.getElementById('entryDate').value = date;
   } else {
-    document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+    // Today on this device (toISOString() is UTC: before 02:00 it gave yesterday)
+    const now = new Date();
+    document.getElementById('entryDate').value = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
   }
   
   document.getElementById('entryTime').value = new Date().toTimeString().slice(0, 5);
@@ -894,6 +897,19 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Load initial view
   loadTimeline();
+
+  // Links from the calendar: ?date=YYYY-MM-DD[&time=HH:MM] starts a new
+  // entry on that day, ?entry=ID opens that entry
+  const linkParams = new URLSearchParams(window.location.search);
+  const linkEntry = parseInt(linkParams.get('entry') || '', 10);
+  const linkDate = linkParams.get('date') || '';
+  if (linkEntry > 0) {
+    viewEntry(linkEntry);
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(linkDate)) {
+    openEntryModal(linkDate);
+    const linkTime = linkParams.get('time') || '';
+    if (/^\d{2}:\d{2}$/.test(linkTime)) document.getElementById('entryTime').value = linkTime;
+  }
   
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
