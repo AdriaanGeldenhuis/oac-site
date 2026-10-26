@@ -1,81 +1,63 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json');
+/**
+ * POST /admin/api/spouse/request.php   (X-CSRF-Token)
+ * Ask another member to be your spouse. One pending request at a time,
+ * in any direction, and only between two unmarried members.
+ * Fields: receiver_id   Answer: {success} or {success:false, error}
+ */
+
 require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once __DIR__ . '/../../../includes/admin_api.php';
 require_once __DIR__ . '/../notifications/helper.php';
 
-$userId = $_SESSION['user_id'] ?? null;
-$receiverId = isset($_POST['receiver_id']) && is_numeric($_POST['receiver_id']) ? (int)$_POST['receiver_id'] : 0;
-
-if (!$userId || !$receiverId) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid request']);
-    exit;
-}
-
-if ($userId === $receiverId) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Cannot request yourself']);
-    exit;
+admin_api_require_post();
+$userId = admin_api_user_id();
+$receiverId = (int)($_POST['receiver_id'] ?? 0);
+if ($receiverId <= 0 || $receiverId === $userId) {
+    admin_api_fail('adm_err_invalid');
 }
 
 try {
-    // Check if requester is already married
-    $stmt = $pdo->prepare("SELECT spouse_user_id, marital_status FROM users WHERE id = ? LIMIT 1");
-    $stmt->execute([$userId]);
-    $requester = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!empty($requester['spouse_user_id'])) {
-        echo json_encode(['error' => 'You are already married / Jy is reeds getroud']);
-        exit;
+    $pdo->beginTransaction();
+
+    $people = $pdo->prepare("SELECT id, name, surname, spouse_user_id, status FROM users WHERE id IN (?, ?) FOR UPDATE");
+    $people->execute([$userId, $receiverId]);
+    $byId = [];
+    foreach ($people->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $byId[(int)$row['id']] = $row;
     }
-    
-    // Check if receiver is already married
-    $stmt = $pdo->prepare("SELECT spouse_user_id, marital_status FROM users WHERE id = ? LIMIT 1");
-    $stmt->execute([$receiverId]);
-    $receiver = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$receiver) {
-        http_response_code(404);
-        echo json_encode(['error' => 'User not found']);
-        exit;
+    if (!isset($byId[$userId], $byId[$receiverId]) || ($byId[$receiverId]['status'] ?? '') !== 'approved') {
+        $pdo->rollBack();
+        admin_api_fail('adm_err_not_found', 404);
     }
-    
-    if (!empty($receiver['spouse_user_id'])) {
-        echo json_encode(['error' => 'This person is already married / Hierdie persoon is reeds getroud']);
-        exit;
+    if (!empty($byId[$userId]['spouse_user_id']) || !empty($byId[$receiverId]['spouse_user_id'])) {
+        $pdo->rollBack();
+        admin_api_fail('adm_err_already_married', 409);
     }
-    
-    // Check if request already exists (either direction)
-    $checkStmt = $pdo->prepare("SELECT id FROM spouse_requests WHERE 
-        ((requester_id = ? AND receiver_id = ?) OR 
-         (requester_id = ? AND receiver_id = ?))
-        AND status = 'pending' LIMIT 1");
-    $checkStmt->execute([$userId, $receiverId, $receiverId, $userId]);
-    
-    if ($checkStmt->fetch()) {
-        echo json_encode(['error' => 'Request already exists / Versoek bestaan reeds']);
-        exit;
+
+    $check = $pdo->prepare("SELECT id FROM spouse_requests WHERE status = 'pending'
+        AND (requester_id IN (?, ?) OR receiver_id IN (?, ?)) LIMIT 1");
+    $check->execute([$userId, $receiverId, $userId, $receiverId]);
+    if ($check->fetch()) {
+        $pdo->rollBack();
+        admin_api_fail('adm_err_request_exists', 409);
     }
-    
-    // Create request
-    $stmt = $pdo->prepare("INSERT INTO spouse_requests (requester_id, receiver_id, status) VALUES (?, ?, 'pending')");
-    $stmt->execute([$userId, $receiverId]);
-    
-    // Get requester name
-    $userStmt = $pdo->prepare("SELECT name, surname FROM users WHERE id = ? LIMIT 1");
-    $userStmt->execute([$userId]);
-    $user = $userStmt->fetch(PDO::FETCH_ASSOC);
-    $requesterName = trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-    
-    // Create notification
+
+    $pdo->prepare("INSERT INTO spouse_requests (requester_id, receiver_id, status) VALUES (?, ?, 'pending')")
+        ->execute([$userId, $receiverId]);
+
+    $pdo->commit();
+
     createAdminNotification($receiverId, 'spouse_request', [
         'from_id' => $userId,
-        'from_name' => $requesterName
+        'from_name' => admin_full_name($byId[$userId]),
     ]);
-    
-    echo json_encode(['success' => true]);
+
+    admin_api_json(['success' => true]);
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    admin_api_server_error($e, 'spouse/request');
 }

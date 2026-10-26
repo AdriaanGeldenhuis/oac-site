@@ -1,76 +1,33 @@
-<div class="admin-section admin-stack">
+<?php /** Settings tab — change your password (admin.js sends it to api/users/change_password.php). */ ?>
+<div class="admin-section">
   <div class="admin-section-header">
     <div class="admin-icon-wrapper">
-      <svg class="admin-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-        <path d="M12 1v6m0 6v6M23 12h-6m-6 0H1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <svg class="admin-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="11" width="16" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 018 0v4"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= t('settings') ?></h2>
+    <h2 class="admin-section-title"><?= esc(t('settings')) ?></h2>
   </div>
 
-  <form id="password-form" class="admin-form">
-    <div class="admin-form-row">
-      <div class="admin-field">
-        <label for="current_password" class="admin-label"><?= t('current_password') ?></label>
-        <input type="password" id="current_password" name="current_password" required class="admin-input">
-      </div>
+  <form id="password-form" class="admin-form" novalidate>
+    <div class="admin-field">
+      <label for="current_password" class="admin-label"><?= esc(t('current_password')) ?></label>
+      <input type="password" id="current_password" name="current_password" class="admin-input" autocomplete="current-password" required>
     </div>
     <div class="admin-form-row">
       <div class="admin-field">
-        <label for="new_password" class="admin-label"><?= t('new_password') ?></label>
-        <input type="password" id="new_password" name="new_password" required class="admin-input">
+        <label for="new_password" class="admin-label"><?= esc(t('new_password')) ?></label>
+        <input type="password" id="new_password" name="new_password" class="admin-input" autocomplete="new-password" minlength="8" maxlength="72" required>
+        <span class="admin-hint"><?= esc(t('adm_pw_min')) ?></span>
       </div>
       <div class="admin-field">
-        <label for="confirm_password" class="admin-label"><?= t('confirm_password') ?></label>
-        <input type="password" id="confirm_password" name="confirm_password" required class="admin-input">
+        <label for="confirm_password" class="admin-label"><?= esc(t('confirm_password')) ?></label>
+        <input type="password" id="confirm_password" name="confirm_password" class="admin-input" autocomplete="new-password" maxlength="72" required>
       </div>
     </div>
     <div class="admin-right">
-      <button type="submit" class="admin-btn admin-btn-primary">
-        <?= t('change_password') ?>
-      </button>
+      <button type="submit" class="admin-btn admin-btn-primary"><?= esc(t('change_password')) ?></button>
     </div>
   </form>
 </div>
-
-<script>
-document.getElementById('password-form').addEventListener('submit', async function(e) {
-  e.preventDefault();
-
-  const current = document.getElementById('current_password').value;
-  const newPw = document.getElementById('new_password').value;
-  const confirm = document.getElementById('confirm_password').value;
-
-  if (newPw !== confirm) {
-    OACUI.toast(<?= json_encode(t('passwords_no_match')) ?>, 'error');
-    return;
-  }
-
-  if (newPw.length < 6) {
-    OACUI.toast(<?= json_encode(t('password_min_length')) ?>, 'error');
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/users/change_password.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        current_password: current,
-        new_password: newPw
-      })
-    });
-
-    const data = await response.json();
-    if (data.success) {
-      OACUI.toast(<?= json_encode(t('password_changed')) ?>, 'success');
-      this.reset();
-    } else {
-      OACUI.toast(data.error || <?= json_encode(t('password_change_failed')) ?>, 'error');
-    }
-  } catch (error) {
-    OACUI.toast(<?= json_encode(t('network_error')) ?> + ': ' + error.message, 'error');
-  }
-});
-</script>

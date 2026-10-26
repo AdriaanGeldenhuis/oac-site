@@ -1,70 +1,52 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json');
+/**
+ * POST /admin/api/ampte/cancel_appointment.php   (X-CSRF-Token)
+ * Either person cancels a pending or confirmed appointment; the other is told.
+ * The calendar reads ampte_appointments directly, so the status is all that
+ * changes (nothing in anyone's calendar is deleted).
+ * Fields: appointment_id   Answer: {success} or {success:false, error}
+ */
+
 require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once __DIR__ . '/../../../includes/admin_api.php';
 require_once __DIR__ . '/../notifications/helper.php';
 
-$userId = $_SESSION['user_id'] ?? null;
-$appointmentId = isset($_POST['appointment_id']) && is_numeric($_POST['appointment_id']) ? (int)$_POST['appointment_id'] : 0;
-
-if (!$userId || !$appointmentId) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid request']);
-    exit;
+admin_api_require_post();
+$userId = admin_api_user_id();
+$appointmentId = (int)($_POST['appointment_id'] ?? 0);
+if ($appointmentId <= 0) {
+    admin_api_fail('adm_err_invalid');
 }
 
 try {
-    // Get appointment details
-    $stmt = $pdo->prepare("SELECT * FROM ampte_appointments WHERE id = ? LIMIT 1");
+    $stmt = $pdo->prepare('SELECT requester_id, target_user_id, appointment_date, appointment_time FROM ampte_appointments WHERE id = ? LIMIT 1');
     $stmt->execute([$appointmentId]);
     $appointment = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$appointment) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Appointment not found']);
-        exit;
+
+    $requester = (int)($appointment['requester_id'] ?? 0);
+    $target = (int)($appointment['target_user_id'] ?? 0);
+    if (!$appointment || ($userId !== $requester && $userId !== $target)) {
+        admin_api_fail('adm_err_not_found', 404);
     }
-    
-    // Verify user is involved in appointment
-    if ((int)$appointment['requester_id'] !== $userId && (int)$appointment['target_user_id'] !== $userId) {
-        http_response_code(403);
-        echo json_encode(['error' => 'You are not authorized to cancel this appointment']);
-        exit;
+
+    $up = $pdo->prepare("UPDATE ampte_appointments SET status = 'cancelled' WHERE id = ? AND status IN ('pending', 'confirmed')");
+    $up->execute([$appointmentId]);
+    if ($up->rowCount() === 0) {
+        admin_api_fail('adm_err_done', 409);
     }
-    
-    // Update appointment status
-    $updateStmt = $pdo->prepare("UPDATE ampte_appointments SET status = 'cancelled' WHERE id = ?");
-    $updateStmt->execute([$appointmentId]);
-    
-    // Remove from calendars
-    $datetime = $appointment['appointment_date'] . ' ' . $appointment['appointment_time'];
-    $deleteCalStmt = $pdo->prepare("DELETE FROM calendar_events 
-        WHERE user_id IN (?, ?) 
-        AND start_at = ?
-        AND title LIKE '%Afspraak%'");
-    $deleteCalStmt->execute([
-        $appointment['requester_id'],
-        $appointment['target_user_id'],
-        $datetime
+
+    $stmt = $pdo->prepare('SELECT name, surname FROM users WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $me = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    createAdminNotification($userId === $requester ? $target : $requester, 'appointment_cancelled', [
+        'from_name' => admin_full_name($me),
+        'date' => (string)$appointment['appointment_date'],
+        'time' => substr((string)$appointment['appointment_time'], 0, 5),
     ]);
-    
-    // Send notification to other party
-    $otherId = ($userId === (int)$appointment['requester_id']) 
-        ? (int)$appointment['target_user_id'] 
-        : (int)$appointment['requester_id'];
-    
-    $userStmt = $pdo->prepare("SELECT name, surname FROM users WHERE id = ? LIMIT 1");
-    $userStmt->execute([$userId]);
-    $user = $userStmt->fetch(PDO::FETCH_ASSOC);
-    
-    createAdminNotification($otherId, 'appointment_cancelled', [
-        'from_name' => trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? '')),
-        'date' => $appointment['appointment_date'],
-        'time' => $appointment['appointment_time']
-    ]);
-    
-    echo json_encode(['success' => true]);
+
+    admin_api_json(['success' => true]);
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    admin_api_server_error($e, 'ampte/cancel_appointment');
 }

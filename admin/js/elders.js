@@ -2776,7 +2776,7 @@
     $('btn-verse').addEventListener('click', async () => {
         const bible = await loadBible(currentLang);
         if (!bible) {
-            alert(STR.bible_not_available);
+            OACUI.toast(STR.bible_not_available, 'error');
             return;
         }
         fillSelect($('v-book'), Object.keys(bible));
@@ -2849,7 +2849,7 @@
     $('btn-insert').addEventListener('click', () => {
         const pick = selectedVerses();
         if (!pick) {
-            alert(STR.select_all_fields);
+            OACUI.toast(STR.select_all_fields, 'error');
             return;
         }
         const html = '<p class="vref">' + escapeHtml(pick.ref) + '</p><p class="vtxt">' +
@@ -3015,7 +3015,7 @@
         }
 
         // The other tabs get overwritten - make sure the elder means it
-        if (!confirm(STR.translate_confirm)) return;
+        if (!(await OACUI.confirm(STR.translate_confirm, { danger: true }))) return;
 
         hidePastePop();
         const overlay = $('translate-overlay');
@@ -3065,9 +3065,9 @@
             console.error('Translation error:', e);
             flash('error', (errorLang ? errorLang.toUpperCase() + ': ' : '') + e.message, 8000);
             if (successCount > 0) {
-                alert(STR.translation_stopped + ' ' + (errorLang || '?').toUpperCase() + ': ' + e.message + '\n\n' + successCount + ' ' + STR.languages_completed);
+                OACUI.toast(STR.translation_stopped + ' ' + (errorLang || '?').toUpperCase() + ': ' + e.message + ' (' + successCount + ' ' + STR.languages_completed + ')', 'error', 9000);
             } else {
-                alert(e.message);
+                OACUI.toast(e.message, 'error', 9000);
             }
         } finally {
             overlayText.textContent = overlayTextDefault;

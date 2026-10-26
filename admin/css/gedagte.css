@@ -1,259 +1,160 @@
-/* ===== Daily Thought Admin ===== */
+/* =====================================================================
+   Daily thought tab — amethyst. Fields, buttons and cards come from
+   admin.css; this file only has the thought list.
+   ===================================================================== */
+
+.gedagte-textarea {
+  min-height: 200px;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
 
 .gedagte-form {
   margin-bottom: 36px;
 }
 
-.gedagte-field {
-  margin-bottom: 16px;
-}
-
-.gedagte-field label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-accent, #f3c3b1);
-  margin-bottom: 6px;
-  letter-spacing: 0.02em;
-}
-
-.gedagte-field textarea,
-.gedagte-field input[type="text"],
-.gedagte-field input[type="date"],
-.gedagte-field input[type="time"] {
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--card-bg-start, rgba(10, 10, 10, 0.85));
-  border: 1px solid var(--card-border, rgba(243, 195, 177, 0.15));
-  border-radius: 10px;
-  color: var(--text-primary, #f5d5c8);
-  font-family: var(--font-body, system-ui, sans-serif);
-  font-size: 0.95rem;
-  transition: border-color 0.3s ease;
-}
-
-.gedagte-field textarea:focus,
-.gedagte-field input:focus {
-  outline: none;
-  border-color: var(--color-rosegold, #f3c3b1);
-}
-
-.gedagte-field textarea {
-  resize: vertical;
-  min-height: 240px;
-}
-
-.gedagte-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.gedagte-actions {
-  margin-top: 8px;
-}
-
-/* ===== Thought list ===== */
 .gedagte-list-section {
-  border-top: 1px solid var(--card-border, rgba(243, 195, 177, 0.15));
-  padding-top: 24px;
+  padding-top: 8px;
 }
 
-.gedagte-list-title {
-  font-family: var(--font-body, system-ui, sans-serif);
-  font-size: 0.85rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-secondary, #c0c0c0);
-  margin-bottom: 16px;
+.gedagte-list {
+  display: grid;
+  gap: 14px;
 }
 
-.gedagte-empty {
-  color: var(--text-secondary, #c0c0c0);
-  font-size: 0.9rem;
-  font-style: italic;
-  opacity: 0.6;
-}
-
+/* ===== A thought — a small pane of glass ===== */
 .gedagte-item {
   position: relative;
-  padding: 16px;
-  background: var(--card-bg-start, rgba(10, 10, 10, 0.85));
-  border: 1px solid var(--card-border, rgba(243, 195, 177, 0.15));
-  border-radius: 12px;
-  margin-bottom: 12px;
-  transition: border-color 0.3s ease;
+  padding: 18px 20px 16px;
+  background:
+    radial-gradient(140% 100% at 0% 0%, rgba(var(--accent-rgb), 0.09) 0%, transparent 60%),
+    linear-gradient(160deg, var(--card-top) 0%, var(--bg-surface) 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 var(--sheen);
 }
 
 .gedagte-item--today {
-  border-color: var(--color-rosegold, #f3c3b1);
+  border-color: rgba(var(--accent-rgb), 0.55);
+  box-shadow: 0 16px 34px -20px rgba(var(--accent-rgb), 0.8), inset 0 1px 0 var(--sheen);
 }
 
 .gedagte-item--past {
-  opacity: 0.5;
+  opacity: 0.62;
 }
 
 .gedagte-item-date {
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-rosegold, #f3c3b1);
-  margin-bottom: 8px;
-}
-
-.gedagte-item-content {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: var(--text-primary, #f5d5c8);
-  margin-bottom: 4px;
-  white-space: pre-wrap;
-}
-
-.gedagte-item-author {
-  font-size: 0.85rem;
-  font-style: italic;
-  color: var(--text-secondary, #c0c0c0);
-  margin-bottom: 8px;
-}
-
-.gedagte-item-time {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--text-secondary, #c0c0c0);
-  background: rgba(243, 195, 177, 0.1);
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
-.gedagte-item-notif {
-  display: inline-block;
-  font-size: 0.65rem;
-  font-weight: 500;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-
-.gedagte-item-notif--sent {
-  color: #4caf50;
-  background: rgba(76, 175, 80, 0.1);
-}
-
-.gedagte-item-notif--pending {
-  color: var(--color-rosegold, #f3c3b1);
-  background: rgba(243, 195, 177, 0.1);
-}
-
-.gedagte-delete-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: none;
-  border: 1px solid rgba(200, 80, 80, 0.3);
-  color: #c85050;
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.gedagte-delete-btn:hover {
-  background: rgba(200, 80, 80, 0.15);
-  border-color: #c85050;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 640px) {
-  .gedagte-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* =====================================================================
-   LIGHT THEME - TRI-CORE FINISH
-   Light-only refinements: antique-gold accents instead of the rose glow,
-   hairline borders, soft long shadows, ivory fields and gold pill
-   buttons for the primary actions.
-   ===================================================================== */
-
-[data-theme="light"] .gedagte-field label {
-  color: #5a6474;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 10px;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--accent);
 }
 
-[data-theme="light"] .gedagte-field textarea,
-[data-theme="light"] .gedagte-field input[type="text"],
-[data-theme="light"] .gedagte-field input[type="date"],
-[data-theme="light"] .gedagte-field input[type="time"] {
-  background: #f6f5f1;
-  border-color: rgba(17, 24, 39, 0.18);
-  color: #111827;
+.gedagte-item-time {
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
 }
 
-[data-theme="light"] .gedagte-field textarea:focus,
-[data-theme="light"] .gedagte-field input:focus {
-  background: #ffffff;
-  border-color: #a47c38;
-  box-shadow: 0 0 0 4px rgba(164, 124, 56, 0.10);
-}
-
-[data-theme="light"] .gedagte-list-section {
-  border-top-color: rgba(17, 24, 39, 0.10);
-}
-
-[data-theme="light"] .gedagte-list-title {
-  color: #8a6427;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-}
-
-[data-theme="light"] .gedagte-item {
-  background: #ffffff;
-  border-color: rgba(17, 24, 39, 0.09);
-  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 14px 30px -24px rgba(7, 17, 31, 0.32);
-}
-
-[data-theme="light"] .gedagte-item--today {
-  border-color: #a47c38;
-  box-shadow: 0 0 0 3px rgba(199, 161, 90, 0.12), 0 14px 30px -24px rgba(7, 17, 31, 0.32);
-}
-
-[data-theme="light"] .gedagte-item-date {
-  color: #8a6427;
-  font-weight: 700;
-}
-
-[data-theme="light"] .gedagte-item-time {
-  color: #4a5361;
-  background: #eeece6;
-}
-
-[data-theme="light"] .gedagte-item-notif--sent {
-  color: #2e7d32;
-}
-
-[data-theme="light"] .gedagte-item-notif--pending {
-  color: #8a6427;
-  background: rgba(164, 124, 56, 0.10);
-}
-
-[data-theme="light"] .gedagte-delete-btn {
+.gedagte-item-notif {
+  padding: 2px 10px;
+  font-size: 0.68rem;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  color: #c62828;
-  border-color: rgba(198, 40, 40, 0.35);
 }
 
-[data-theme="light"] .gedagte-delete-btn:hover {
-  background: rgba(198, 40, 40, 0.06);
-  border-color: #c62828;
+.gedagte-item-notif--sent {
+  color: rgb(var(--ok-rgb));
+  background: rgba(var(--ok-rgb), 0.1);
+  border-color: rgba(var(--ok-rgb), 0.4);
+}
+
+.gedagte-item-notif--pending {
+  color: rgb(var(--amber-rgb));
+  background: rgba(var(--amber-rgb), 0.1);
+  border-color: rgba(var(--amber-rgb), 0.4);
+}
+
+.gedagte-item-content {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.gedagte-item-author {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.gedagte-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.gedagte-btn {
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease, transform 0.2s var(--ease);
+}
+
+.gedagte-btn:active {
+  transform: scale(0.96);
+}
+
+.gedagte-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gedagte-btn--danger {
+  color: rgb(var(--danger-rgb));
+  border-color: rgba(var(--danger-rgb), 0.4);
+}
+
+@media (hover: hover) {
+  .gedagte-btn:not(:disabled):hover {
+    color: var(--text-primary);
+    border-color: rgba(var(--accent-rgb), 0.6);
+    background: rgba(var(--accent-rgb), 0.08);
+  }
+
+  .gedagte-btn--danger:not(:disabled):hover {
+    color: rgb(var(--danger-rgb));
+    border-color: rgb(var(--danger-rgb));
+    background: rgba(var(--danger-rgb), 0.1);
+  }
+}
+
+/* Loading */
+.gedagte-skel {
+  display: grid;
+  gap: 14px;
+}
+
+.gedagte-skel i {
+  display: block;
+  height: 110px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(100deg, var(--bg-surface) 30%, rgba(var(--accent-rgb), 0.1) 50%, var(--bg-surface) 70%);
+  background-size: 250% 100%;
+  animation: admin-shimmer 1.6s linear infinite;
 }

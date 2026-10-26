@@ -6,8 +6,9 @@
   'use strict';
 
   const STR = Object.assign({
-    ok: 'Bevestig',
-    cancel: 'Kanselleer'
+    ok: 'OK',
+    cancel: 'Cancel',
+    networkError: 'Network error'
   }, window.OAC_UI_STRINGS || {});
 
   function toastWrap() {
@@ -33,7 +34,7 @@
 
     const el = document.createElement('div');
     el.className = 'oac-toast oac-toast--' + type;
-    el.setAttribute('role', 'status');
+    el.setAttribute('role', type === 'error' ? 'alert' : 'status');
     el.innerHTML =
       '<span class="oac-toast-icon">' + (ICONS[type] || ICONS.info) + '</span>' +
       '<span class="oac-toast-msg"></span>';
@@ -76,13 +77,35 @@
       const cancelBtn = overlay.querySelector('.oac-dialog-cancel');
       okBtn.textContent = opts.okText || STR.ok;
       cancelBtn.textContent = opts.cancelText || STR.cancel;
-      if (opts.danger) okBtn.classList.add('oac-dialog-ok--danger');
+      if (opts.danger) {
+        okBtn.classList.add('oac-dialog-ok--danger');
+        overlay.querySelector('.oac-dialog').classList.add('oac-dialog--danger');
+      }
+
+      const previouslyFocused = document.activeElement;
+      let done = false;
 
       function close(result) {
+        if (done) return;
+        done = true;
+        document.removeEventListener('keydown', onKey, true);
         overlay.classList.remove('show');
         document.body.style.overflow = '';
         setTimeout(() => overlay.remove(), 250);
+        if (previouslyFocused && previouslyFocused.focus) previouslyFocused.focus();
         resolve(result);
+      }
+
+      function onKey(e) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          close(false);
+        } else if (e.key === 'Tab') {
+          // keep the focus inside the card
+          const first = cancelBtn, last = okBtn;
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
       }
 
       okBtn.addEventListener('click', () => close(true));
@@ -90,12 +113,7 @@
       overlay.addEventListener('click', e => {
         if (e.target === overlay) close(false);
       });
-      document.addEventListener('keydown', function esc(e) {
-        if (e.key === 'Escape') {
-          document.removeEventListener('keydown', esc);
-          close(false);
-        }
-      });
+      document.addEventListener('keydown', onKey, true);
 
       document.body.appendChild(overlay);
       document.body.style.overflow = 'hidden';
@@ -104,5 +122,44 @@
     });
   }
 
-  window.OACUI = { toast: toast, confirm: confirmDialog };
+  // ===== POST helper: the session's CSRF token travels in X-CSRF-Token =====
+  function csrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return (meta && meta.content) || window.CSRF_TOKEN || '';
+  }
+
+  /**
+   * POST to an /admin/api/ endpoint and give back its JSON answer.
+   * `data` is an object, URLSearchParams or FormData. It always resolves
+   * with {success, error?, ...}: a network or server failure becomes
+   * {success:false, error:<message>} instead of a thrown error.
+   */
+  async function post(url, data) {
+    let body;
+    if (data instanceof FormData || data instanceof URLSearchParams) {
+      body = data;
+    } else {
+      body = new URLSearchParams();
+      Object.keys(data || {}).forEach(k => body.append(k, data[k]));
+    }
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        body: body,
+        credentials: 'same-origin',
+        headers: { 'X-CSRF-Token': csrfToken(), 'Accept': 'application/json' }
+      });
+      let json = null;
+      try { json = await res.json(); } catch (e) { json = null; }
+      if (json && typeof json === 'object') {
+        if (!res.ok && json.success !== true && !json.error) json.error = STR.networkError;
+        return json;
+      }
+      return { success: false, error: STR.networkError };
+    } catch (e) {
+      return { success: false, error: STR.networkError };
+    }
+  }
+
+  window.OACUI = { toast: toast, confirm: confirmDialog, post: post, csrf: csrfToken };
 })();

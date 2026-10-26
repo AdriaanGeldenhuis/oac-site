@@ -1,13 +1,13 @@
 /* =====================================================================
-   OAC Admin UI - shared toasts & confirm dialogs
-   Welcome design language; falls back gracefully if page variables
-   are missing.
+   OAC Admin UI — toasts and confirm cards (they replace alert/confirm)
+   "Light Through Glass". Reads the page's tokens (admin.css, account.css)
+   and falls back to the dark defaults if a page has none.
    ===================================================================== */
 
 /* ===== TOASTS ===== */
 .oac-toast-wrap {
   position: fixed;
-  bottom: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -29,28 +29,30 @@
 }
 
 .oac-toast {
+  --t-rgb: var(--accent-rgb, 66, 198, 148);
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 13px 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 40%),
-    linear-gradient(160deg, var(--bg-card, #171514) 0%, var(--bg-surface, #1d1a19) 100%);
-  border: 1px solid var(--border, rgba(232, 180, 168, 0.16));
-  border-radius: 14px;
+  padding: 12px 18px 12px 12px;
   color: var(--text-primary, #f5ebe6);
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 0.92rem;
-  line-height: 1.5;
-  box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  font-family: var(--font-body, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
+  font-size: 0.93rem;
+  line-height: 1.45;
+  background: linear-gradient(160deg, var(--card-top, #1d1a19) 0%, var(--bg-card, #171514) 70%);
+  border: 1px solid rgba(var(--t-rgb), 0.45);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.9), 0 0 24px -10px rgba(var(--t-rgb), 0.6), inset 0 1px 0 var(--sheen, rgba(255, 255, 255, 0.06));
   cursor: pointer;
   pointer-events: auto;
   opacity: 0;
   transform: translateY(14px);
-  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 0.3s ease, transform 0.35s var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+[data-theme="light"] .oac-toast {
+  background: #ffffff;
+  box-shadow: 0 24px 50px -22px rgba(7, 17, 31, 0.45), 0 0 0 1px rgba(17, 24, 39, 0.03);
 }
 
 .oac-toast.show {
@@ -58,55 +60,32 @@
   transform: none;
 }
 
-[data-theme="light"] .oac-toast {
-  background: #ffffff;
-  border-color: rgba(17, 24, 39, 0.12);
-  box-shadow: 0 24px 50px -20px rgba(7, 17, 31, 0.40);
-}
-
 .oac-toast-icon {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
+  color: rgb(var(--t-rgb));
+  background: rgba(var(--t-rgb), 0.15);
   border-radius: 50%;
-  flex-shrink: 0;
 }
 
 .oac-toast-icon svg {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
 }
 
-.oac-toast--success { border-color: rgba(102, 187, 106, 0.5); }
-.oac-toast--success .oac-toast-icon {
-  color: #66bb6a;
-  background: rgba(102, 187, 106, 0.14);
+.oac-toast-msg {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.oac-toast--error { border-color: rgba(239, 83, 80, 0.5); }
-.oac-toast--error .oac-toast-icon {
-  color: #ef5350;
-  background: rgba(239, 83, 80, 0.14);
-}
+.oac-toast--success { --t-rgb: var(--ok-rgb, 66, 198, 148); }
+.oac-toast--error   { --t-rgb: var(--danger-rgb, 240, 110, 90); }
 
-.oac-toast--info { border-color: var(--border-strong, rgba(232, 180, 168, 0.35)); }
-.oac-toast--info .oac-toast-icon {
-  color: var(--rose-gold, #e8b4a8);
-  background: rgba(232, 180, 168, 0.14);
-}
-
-[data-theme="light"] .oac-toast--success { border-color: rgba(46, 125, 50, 0.4); }
-[data-theme="light"] .oac-toast--success .oac-toast-icon { color: #2e7d32; }
-[data-theme="light"] .oac-toast--error { border-color: rgba(198, 40, 40, 0.4); }
-[data-theme="light"] .oac-toast--error .oac-toast-icon { color: #c62828; }
-[data-theme="light"] .oac-toast--info .oac-toast-icon {
-  color: #8a6427;
-  background: rgba(164, 124, 56, 0.12);
-}
-
-/* ===== CONFIRM DIALOG ===== */
+/* ===== CONFIRM CARD ===== */
 .oac-dialog-overlay {
   position: fixed;
   inset: 0;
@@ -114,8 +93,9 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
+  background: var(--scrim, rgba(4, 3, 3, 0.66));
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
   z-index: 29000;
   opacity: 0;
   transition: opacity 0.25s ease;
@@ -125,45 +105,47 @@
   opacity: 1;
 }
 
-[data-theme="light"] .oac-dialog-overlay {
-  background: rgba(7, 17, 31, 0.38);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
 .oac-dialog {
-  width: min(92vw, 400px);
+  --d-rgb: var(--accent-rgb, 66, 198, 148);
+  position: relative;
+  width: min(92vw, 420px);
   padding: 26px 24px 22px;
   background:
-    radial-gradient(140% 90% at 0% 0%, rgba(232, 180, 168, 0.07) 0%, transparent 55%),
-    linear-gradient(160deg, var(--bg-card, #171514) 0%, var(--bg-surface, #1d1a19) 100%);
-  border: 1px solid var(--border, rgba(232, 180, 168, 0.16));
-  border-radius: 18px;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    radial-gradient(120% 70% at 100% 0%, rgba(var(--d-rgb), 0.1) 0%, transparent 60%),
+    linear-gradient(160deg, var(--card-top, #1d1a19) 0%, var(--bg-card, #171514) 60%);
+  border: 1px solid var(--border-light, rgba(255, 255, 255, 0.07));
+  border-radius: 26px;
+  box-shadow: var(--shadow, 0 24px 60px -24px rgba(0, 0, 0, 0.9)), inset 0 1px 0 var(--sheen, rgba(255, 255, 255, 0.06));
   transform: translateY(12px) scale(0.98);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.3s var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+.oac-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(var(--d-rgb), 0.8), transparent);
+}
+
+.oac-dialog.oac-dialog--danger {
+  --d-rgb: var(--danger-rgb, 240, 110, 90);
 }
 
 .oac-dialog-overlay.show .oac-dialog {
   transform: none;
 }
 
-[data-theme="light"] .oac-dialog {
-  background: #ffffff;
-  border-color: rgba(17, 24, 39, 0.10);
-  border-radius: 22px;
-  box-shadow: 0 40px 90px -30px rgba(7, 17, 31, 0.45);
-}
-
 .oac-dialog-msg {
   margin: 0 0 22px;
   color: var(--text-primary, #f5ebe6);
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 0.98rem;
-  font-weight: 300;
-  line-height: 1.65;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .oac-dialog-actions {
@@ -173,86 +155,50 @@
 }
 
 .oac-dialog-btn {
-  padding: 10px 22px;
-  border-radius: 11px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
+  min-height: 46px;
+  padding: 0 24px;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.93rem;
+  font-weight: 600;
+  border-radius: 999px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.2s var(--ease, ease), box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 
 .oac-dialog-btn:active {
-  transform: translateY(1px);
+  transform: scale(0.96);
+}
+
+.oac-dialog-btn:focus-visible {
+  outline: 2px solid rgb(var(--d-rgb));
+  outline-offset: 2px;
 }
 
 .oac-dialog-cancel {
+  color: var(--text-secondary, #c8c0ba);
   background: transparent;
   border: 1px solid var(--border, rgba(232, 180, 168, 0.16));
-  color: var(--text-secondary, #c8c0ba);
 }
 
 .oac-dialog-cancel:hover {
-  border-color: var(--border-strong, rgba(232, 180, 168, 0.35));
   color: var(--text-primary, #f5ebe6);
+  border-color: rgba(var(--d-rgb), 0.55);
 }
 
 .oac-dialog-ok {
-  background:
-    radial-gradient(
-      circle at 30% 30%,
-      rgba(232, 180, 168, 0.18) 0%,
-      rgba(232, 180, 168, 0.08) 55%,
-      rgba(232, 180, 168, 0.03) 100%
-    ),
-    linear-gradient(160deg, var(--bg-card, #171514) 0%, var(--bg-base, #0a0a0a) 100%);
-  border: 1px solid rgba(232, 180, 168, 0.45);
-  color: var(--rose-gold, #e8b4a8);
-  font-weight: 600;
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.35),
-    0 0 14px var(--glow-rose, rgba(232, 180, 168, 0.25)),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  color: var(--accent-ink, #0c0a09);
+  background: linear-gradient(135deg, color-mix(in srgb, rgb(var(--d-rgb)) 58%, #fff) 0%, rgb(var(--d-rgb)) 46%, color-mix(in srgb, rgb(var(--d-rgb)) 72%, #000) 100%);
+  border: 1px solid rgba(var(--d-rgb), 0.7);
+  box-shadow: 0 14px 30px -14px rgba(var(--d-rgb), 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .oac-dialog-ok:hover {
   transform: translateY(-1px);
-  border-color: var(--rose-gold, #e8b4a8);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 20px var(--glow-rose, rgba(232, 180, 168, 0.25));
+  box-shadow: 0 18px 34px -14px rgba(var(--d-rgb), 1), 0 0 0 4px rgba(var(--d-rgb), 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
-[data-theme="light"] .oac-dialog-ok {
-  background: linear-gradient(135deg, #dcba6e 0%, #c7a15a 52%, #a8823f 100%);
-  border-color: rgba(168, 130, 63, 0.6);
-  border-radius: 999px;
-  color: #07111f;
-  font-weight: 700;
-  box-shadow: 0 10px 30px -10px rgba(199, 161, 90, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-.oac-dialog-ok--danger,
-[data-theme="light"] .oac-dialog-ok--danger {
-  background:
-    radial-gradient(
-      circle at 30% 30%,
-      rgba(217, 83, 79, 0.20) 0%,
-      rgba(217, 83, 79, 0.08) 55%,
-      rgba(217, 83, 79, 0.03) 100%
-    ),
-    linear-gradient(160deg, var(--bg-card, #171514) 0%, var(--bg-base, #0a0a0a) 100%);
-  border-color: rgba(217, 83, 79, 0.55);
-  color: #ef7672;
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.35),
-    0 0 14px rgba(217, 83, 79, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="light"] .oac-dialog-ok--danger {
-  background: #ffffff;
-  border-color: rgba(198, 40, 40, 0.45);
-  color: #c62828;
-  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.05);
+.oac-dialog-ok--danger {
+  color: #ffffff;
 }
 
 @media (max-width: 640px) {
@@ -262,7 +208,6 @@
 
   .oac-dialog-btn {
     width: 100%;
-    padding: 12px 22px;
   }
 }
 
@@ -272,38 +217,4 @@
   .oac-dialog-overlay {
     transition-duration: 0.01ms !important;
   }
-}
-
-/* =====================================================================
-   LIGHT THEME - TRI-CORE FINISH
-   Light-only refinements: antique-gold accents instead of the rose glow,
-   hairline borders, soft long shadows, ivory fields and gold pill
-   buttons for the primary actions.
-   ===================================================================== */
-
-[data-theme="light"] .oac-toast--info {
-  border-color: rgba(164, 124, 56, 0.45);
-}
-
-[data-theme="light"] .oac-dialog-cancel {
-  border-color: rgba(17, 24, 39, 0.20);
-  border-radius: 999px;
-  color: #111827;
-  font-weight: 600;
-}
-
-[data-theme="light"] .oac-dialog-cancel:hover {
-  border-color: #a47c38;
-  color: #8a6427;
-}
-
-[data-theme="light"] .oac-dialog-ok:hover {
-  border-color: #a8823f;
-  box-shadow: 0 18px 40px -12px rgba(199, 161, 90, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-
-[data-theme="light"] .oac-dialog-ok--danger:hover {
-  background: rgba(198, 40, 40, 0.06);
-  border-color: #c62828;
-  box-shadow: 0 12px 26px -16px rgba(198, 40, 40, 0.5);
 }

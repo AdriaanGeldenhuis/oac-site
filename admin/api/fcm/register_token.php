@@ -4,32 +4,21 @@
 // =====================================================================
 
 require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once __DIR__ . '/../../../includes/admin_api.php';
 
-header('Content-Type: application/json; charset=utf-8');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
-}
+// Called from the native app bridge (assets/js/fcm-bridge.js) with a JSON body
+admin_api_require_json_post();
+$userId = admin_api_user_id();
 
 try {
-    $json = file_get_contents('php://input');
-    $data = json_decode($json, true);
+    $data = json_decode((string)file_get_contents('php://input'), true);
+    $data = is_array($data) ? $data : [];
 
-    $token = trim($data['token'] ?? '');
-    $userId = $_SESSION['user_id'] ?? null;
-
-    if (!$userId) {
-        throw new Exception('User not logged in');
+    $token = trim((string)($data['token'] ?? ''));
+    if ($token === '' || strlen($token) > 500) {
+        admin_api_fail('adm_err_invalid');
     }
-
-    if (empty($token)) {
-        throw new Exception('Token is required');
-    }
-
-    // Use main database
-    global $pdo;
+    $deviceInfo = mb_substr(trim((string)($data['device_info'] ?? 'Android App')), 0, 255);
 
     // Create fcm_tokens table if not exists
     $pdo->exec("
@@ -45,7 +34,7 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
 
-    // Insert or update token
+    // Insert or update token (a phone that changes hands moves to the new user)
     $stmt = $pdo->prepare("
         INSERT INTO fcm_tokens (user_id, token, device_info, updated_at)
         VALUES (:user_id, :token, :device_info, NOW())
@@ -54,29 +43,13 @@ try {
             device_info = VALUES(device_info),
             updated_at = NOW()
     ");
-
-    $deviceInfo = $data['device_info'] ?? 'Android App';
-
-    $stmt->execute([
-        ':user_id' => $userId,
-        ':token' => $token,
-        ':device_info' => $deviceInfo
-    ]);
+    $stmt->execute([':user_id' => $userId, ':token' => $token, ':device_info' => $deviceInfo]);
 
     // Remember this device's token so logout.php can unlink it — otherwise the
     // phone keeps receiving the previous user's notifications after logout.
     $_SESSION['fcm_token'] = $token;
 
-    echo json_encode([
-        'success' => true,
-        'message' => 'Token registered'
-    ]);
-
-} catch (Exception $e) {
-    error_log('FCM register token error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+    admin_api_json(['success' => true, 'message' => 'Token registered']);
+} catch (Throwable $e) {
+    admin_api_server_error($e, 'fcm/register_token');
 }

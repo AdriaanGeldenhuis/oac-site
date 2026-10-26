@@ -8,12 +8,15 @@ require_once __DIR__ . '/../../config/fcm_config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Any logged-in user can test their own notifications
-$userId = $_SESSION['user_id'] ?? null;
+require_once __DIR__ . '/../../../includes/admin_api.php';
 
-if (!$userId) {
-    echo json_encode(['success' => false, 'error' => 'User not logged in']);
-    exit;
+// Diagnostics, like /admin/fcm-debug.php: office bearers (amp 1-6) only
+$userId = admin_api_user_id();
+$gate = $pdo->prepare('SELECT amp_id FROM users WHERE id = ? LIMIT 1');
+$gate->execute([$userId]);
+$gateAmp = (int)($gate->fetchColumn() ?: 0);
+if ($gateAmp < 1 || $gateAmp > 6) {
+    admin_api_fail('adm_err_forbidden', 403);
 }
 
 // Test 1: Check if service account file exists
@@ -43,6 +46,7 @@ try {
 // Test 4: Send test notification if requested
 $testResult = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    admin_api_require_json_post();
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
 

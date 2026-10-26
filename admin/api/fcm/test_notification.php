@@ -1,55 +1,37 @@
 <?php
 // =====================================================================
-// /admin/api/fcm/test_notification.php — Test createAdminNotification Flow
+// /admin/api/fcm/test_notification.php — Test createAdminNotification flow
+// POST (JSON) from /admin/fcm-debug.php; office bearers (amp 1-6) only.
 // =====================================================================
+declare(strict_types=1);
 
-// Catch all errors and return as JSON
-set_error_handler(function($severity, $message, $file, $line) {
-    throw new ErrorException($message, 0, $severity, $file, $line);
-});
+require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once __DIR__ . '/../../../includes/admin_api.php';
+require_once __DIR__ . '/../notifications/helper.php';
 
-header('Content-Type: application/json; charset=utf-8');
+admin_api_require_json_post();
+$userId = admin_api_user_id();
 
 try {
-    require_once __DIR__ . '/../../../security/auth_gate.php';
-    require_once __DIR__ . '/../notifications/helper.php';
-
-    $userId = $_SESSION['user_id'] ?? null;
-
-    if (!$userId) {
-        echo json_encode(['success' => false, 'error' => 'User not logged in']);
-        exit;
+    $gate = $pdo->prepare('SELECT amp_id FROM users WHERE id = ? LIMIT 1');
+    $gate->execute([$userId]);
+    $gateAmp = (int)($gate->fetchColumn() ?: 0);
+    if ($gateAmp < 1 || $gateAmp > 6) {
+        admin_api_fail('adm_err_forbidden', 403);
     }
 
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        echo json_encode(['success' => false, 'error' => 'POST required']);
-        exit;
-    }
-
-    // Create a test notification using the normal flow
+    // A test notification through the normal flow
     $result = createAdminNotification($userId, 'custom', [
         'title' => 'Test Notification',
         'message' => 'Hierdie is \'n toets notifikasie via createAdminNotification()',
         'link' => '/notifications/notifications.php',
-        'icon' => '🔔'
+        'icon' => '🔔',
     ]);
 
     if ($result) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Notification created! Check your phone AND /notifications/ page.'
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'error' => 'createAdminNotification returned false - check server error logs'
-        ]);
+        admin_api_json(['success' => true, 'message' => 'Notification created! Check your phone AND /notifications/ page.']);
     }
+    admin_api_json(['success' => false, 'error' => 'createAdminNotification returned false - check the server error log']);
 } catch (Throwable $e) {
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage(),
-        'file' => basename($e->getFile()),
-        'line' => $e->getLine()
-    ]);
+    admin_api_server_error($e, 'fcm/test_notification');
 }
