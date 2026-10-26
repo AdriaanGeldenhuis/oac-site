@@ -1,95 +1,37 @@
 <?php
-require_once __DIR__ . '/../../../security/auth_gate.php';
+declare(strict_types=1);
+/**
+ * POST /prayers/api/posts/create.php  (multipart: text, photo?; X-CSRF-Token)
+ * Shares a prayer. The writer's town is stored with it. Answers with the
+ * new card. At most 10 prayers an hour per member.
+ */
 
-global $pdo;
-header('Content-Type: application/json; charset=utf-8');
+require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/lib/prayers.php';
 
-$userId = $_SESSION['user_id'] ?? 0;
-$townId = $_SESSION['town_id'] ?? 0;
-
-if (!$userId) {
-  http_response_code(401);
-  echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-  exit;
+pr_require_post();
+pr_require_body();
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    pr_fail('db_unavailable', 500);
 }
 
-$kind = 'prayer';
-$text = trim($_POST['text'] ?? '');
-$visibility = $_POST['visibility'] ?? 'opsienerskap';
+[$text, $error] = pr_text_from($_POST['text'] ?? '', PR_TEXT_MAX);
+if ($error !== null) pr_fail($error);
 
-if (empty($text)) {
-  echo json_encode(['success' => false, 'error' => 'Text required']);
-  exit;
-}
+if (!pr_rate_ok('prayer_post', 10)) pr_fail('rate_limited', 429);
 
-// Helper: resize image to fit within max dimensions
-function resize_prayer_image($img, int $origW, int $origH, int $maxW, int $maxH) {
-    if ($origW <= $maxW && $origH <= $maxH) return $img;
-    $ratio = min($maxW / $origW, $maxH / $origH);
-    $newW = (int)round($origW * $ratio);
-    $newH = (int)round($origH * $ratio);
-    $resized = @imagecreatetruecolor($newW, $newH);
-    if (!$resized) return $img;
-    @imagealphablending($resized, false);
-    @imagesavealpha($resized, true);
-    @imagecopyresampled($resized, $img, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
-    return $resized;
-}
-
-// Process uploaded image: resize to max 1920px and save as WebP
-function process_prayer_image(string $tmpPath): ?string {
-    $info = @getimagesize($tmpPath);
-    if (!$info) return null;
-
-    $mime = $info['mime'];
-    $width = $info[0];
-    $height = $info[1];
-
-    $img = null;
-    switch ($mime) {
-        case 'image/jpeg': case 'image/jpg': $img = @imagecreatefromjpeg($tmpPath); break;
-        case 'image/png': $img = @imagecreatefrompng($tmpPath); break;
-        case 'image/gif': $img = @imagecreatefromgif($tmpPath); break;
-        case 'image/webp': $img = @imagecreatefromwebp($tmpPath); break;
-        default: return null;
-    }
-    if (!$img) return null;
-
-    $uploadDir = __DIR__ . '/../../../uploads/prayers/';
-    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-
-    $filename = 'prayer_' . uniqid() . '.webp';
-
-    $resized = resize_prayer_image($img, $width, $height, 1920, 1920);
-    $success = @imagewebp($resized, $uploadDir . $filename, 82);
-    if ($resized !== $img) @imagedestroy($resized);
-    @imagedestroy($img);
-
-    if (!$success) return null;
-
-    return '/uploads/prayers/' . $filename;
-}
-
-$photoUrl = null;
-if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-  $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
-  $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-  if (in_array($ext, $allowed)) {
-    $photoUrl = process_prayer_image($_FILES['photo']['tmp_name']);
-  }
-}
+[$photoUrl, $photoError] = pr_photo_from_upload();
+if ($photoError !== null) pr_fail($photoError);
 
 try {
-  $stmt = $pdo->prepare("
-    INSERT INTO prayers_posts (user_id, town_id, kind, text, photo_url, visibility)
-    VALUES (?, ?, ?, ?, ?, ?)
-  ");
-  $stmt->execute([$userId, $townId, $kind, $text, $photoUrl, $visibility]);
+    $me = pr_me($pdo);
+    $stmt = $pdo->prepare("INSERT INTO prayers_posts (user_id, town_id, kind, text, photo_url, visibility) VALUES (?, ?, 'prayer', ?, ?, 'opsienerskap')");
+    $stmt->execute([pr_user_id(), (int)($me['town_id'] ?? 0), $text, $photoUrl]);
+    $id = (int)$pdo->lastInsertId();
 
-  echo json_encode(['success' => true, 'post_id' => $pdo->lastInsertId()]);
-} catch (Exception $e) {
-  error_log('Prayers create error: ' . $e->getMessage());
-  http_response_code(500);
-  echo json_encode(['success' => false, 'error' => 'server_error']);
+    pr_json(['success' => true, 'post' => pr_post_by_id($pdo, $id, pr_lang())]);
+} catch (Throwable $e) {
+    pr_photo_delete($photoUrl);
+    error_log('Prayers create error: ' . $e->getMessage());
+    pr_fail('server_error', 500);
 }

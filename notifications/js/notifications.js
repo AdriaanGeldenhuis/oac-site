@@ -1,425 +1,587 @@
-// =====================================================================
-// AI Slimbybel Notifications - Complete Client Logic
-// =====================================================================
-
-(function() {
+/**
+ * Kennisgewings — the list, grouped by day, newest first.
+ *
+ * Reads:  /notifications/api/list.php (pages, ?filter= / ?before=)
+ * Writes: /notifications/api/mark_read.php (read, read_all, delete, delete_read),
+ *         POST + the session CSRF token (X-CSRF-Token)
+ *
+ * Tapping a notification marks it read and opens where it points (only
+ * links inside the site are offered by the server). Deleting is undoable
+ * for a few seconds: the rows go to the server when the toast closes, or
+ * at once when the page is left.
+ * Times arrive as Unix seconds; days are South African days.
+ */
+(function () {
   'use strict';
 
-  // ===== STATE =====
-  let notifications = [];
-  let currentFilter = 'all';
-  let autoRefreshTimer = null;
+  const CFG = window.NOTIFS;
+  if (!CFG) return;
+  const T = CFG.t || {};
+  const NS = 'http://www.w3.org/2000/svg';
+  const UNDO_MS = 5000;
 
-  // ===== DOM ELEMENTS =====
-  const notifList = document.getElementById('notifList');
-  const notifLoading = document.getElementById('notifLoading');
-  const markAllReadBtn = document.getElementById('markAllRead');
-  const filterToggle = document.getElementById('filterToggle');
-  const filterOptions = document.getElementById('filterOptions');
-  const filterButtons = document.querySelectorAll('.notif-filter-btn');
-
-  // ===== INIT =====
-  function init() {
-    loadNotifications();
-    attachEventListeners();
-    setupCardClickDelegation();
-    startAutoRefresh();
+  function tr(key, params) {
+    let s = T[key] || key;
+    if (params) {
+      for (const p in params) s = s.split('{' + p + '}').join(String(params[p]));
+    }
+    return s;
   }
 
-  // ===== EVENT LISTENERS =====
-  function attachEventListeners() {
-    if (markAllReadBtn) {
-      markAllReadBtn.addEventListener('click', markAllAsRead);
-    }
+  const ERRORS = { csrf: 'nt_err_session', session: 'nt_err_session', offline: 'nt_err_offline' };
+  const errorText = (code) => tr(ERRORS[code] || 'nt_err_generic');
 
-    if (filterToggle) {
-      filterToggle.addEventListener('click', () => {
-        if (filterOptions) {
-          filterOptions.hidden = !filterOptions.hidden;
-        }
-      });
-    }
+  // ===== DOM HELPERS =====
+  const $ = (s, root) => (root || document).querySelector(s);
 
-    if (filterButtons) {
-      filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          currentFilter = btn.dataset.filter;
-          filterButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          renderNotifications();
-        });
-      });
-    }
-  }
-
-  // ===== LOAD NOTIFICATIONS =====
-  async function loadNotifications() {
-    if (notifLoading) notifLoading.hidden = false;
-
-    try {
-      const response = await fetch('/notifications/api/list.php');
-      const data = await response.json();
-
-      if (data.success) {
-        notifications = data.notifications || [];
-        renderNotifications();
-        updateGlobalBadge();
-      } else {
-        showNotification(data.error || 'Failed to load notifications', 'error');
+  function el(tag, attrs, kids) {
+    const n = document.createElement(tag);
+    if (attrs) {
+      for (const k in attrs) {
+        const v = attrs[k];
+        if (v === null || v === undefined || v === false) continue;
+        if (k === 'class') n.className = v;
+        else if (k === 'text') n.textContent = v;
+        else if (k === 'on') { for (const ev in v) n.addEventListener(ev, v[ev]); }
+        else n.setAttribute(k, v === true ? '' : String(v));
       }
-    } catch (error) {
-      console.error('Load notifications error:', error);
-      showNotification('Network error', 'error');
-    } finally {
-      if (notifLoading) notifLoading.hidden = true;
     }
+    (kids || []).forEach((c) => { if (c !== null && c !== undefined && c !== false) n.append(c); });
+    return n;
   }
 
-  // ===== RENDER NOTIFICATIONS =====
-  function renderNotifications() {
-    if (!notifList) return;
+  function icon(id) {
+    const s = document.createElementNS(NS, 'svg');
+    s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('aria-hidden', 'true');
+    const u = document.createElementNS(NS, 'use');
+    u.setAttribute('href', '#nt-i-' + id);
+    s.appendChild(u);
+    return s;
+  }
 
-    let filtered = notifications;
+  function strokeIcon(d, cls) {
+    const s = document.createElementNS(NS, 'svg');
+    s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none');
+    s.setAttribute('stroke', 'currentColor');
+    s.setAttribute('stroke-width', '2.2');
+    s.setAttribute('stroke-linecap', 'round');
+    s.setAttribute('stroke-linejoin', 'round');
+    s.setAttribute('aria-hidden', 'true');
+    if (cls) s.setAttribute('class', cls);
+    const p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', d);
+    s.appendChild(p);
+    return s;
+  }
+  const ICON_TRASH = 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6';
+  const ICON_NEXT = 'M9 18l6-6-6-6';
 
-    // Apply filter. "reminder" covers time-bound notifications, "info" covers
-    // everything else (so account/spouse/ampte/appointment etc. aren't orphaned).
-    const reminderTypes = ['reminder', 'calendar', 'appointment', 'birthday'];
-    if (currentFilter === 'unread') {
-      filtered = notifications.filter(n => n.is_read === '0' || n.is_read === 0);
-    } else if (currentFilter === 'reminder') {
-      filtered = notifications.filter(n => reminderTypes.includes(n.type));
-    } else if (currentFilter === 'info') {
-      filtered = notifications.filter(n => !reminderTypes.includes(n.type));
+  // ===== KINDS: the jewel and icon of each type, and the group label =====
+  const KINDS = {
+    prayer: ['prayer', 'prayer'],
+    gospel: ['gospel', 'gospel'], comment: ['gospel', 'gospel'], reaction: ['gospel', 'gospel'], post: ['gospel', 'gospel'], tag: ['gospel', 'gospel'],
+    calendar: ['calendar', 'calendar'], reminder: ['calendar', 'calendar'], appointment: ['calendar', 'calendar'],
+    event: ['calendar', 'calendar'], visit: ['calendar', 'calendar'], diary: ['calendar', 'calendar'],
+    thought: ['thought', 'thought'],
+    birthday: ['birthday', 'cake'],
+    spouse: ['spouse', 'heart'], spouse_accepted: ['spouse', 'heart'], spouse_rejected: ['spouse', 'heart'],
+    ampte: ['ampte', 'star'],
+    account: ['account', 'person'], success: ['account', 'check'],
+    error: ['alert', 'alert'], warning: ['alert', 'alert']
+  };
+  const kindOf = (type) => KINDS[type] || ['info', 'bell'];
+  const GROUP_LABEL = { prayer: 'nt_group_prayer', gospel: 'nt_group_gospel', calendar: 'nt_group_calendar', thought: 'nt_group_thought' };
+
+  // ===== TIME (Unix seconds in, South African days out) =====
+  const pad = (n) => String(n).padStart(2, '0');
+  const SAST = 2 * 3600;
+  function sast(ts) {
+    const d = new Date((ts + SAST) * 1000);
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate(), w: d.getUTCDay(), h: d.getUTCHours(), i: d.getUTCMinutes() };
+  }
+  const dayKey = (ts) => { const s = sast(ts); return s.y + '-' + pad(s.m + 1) + '-' + pad(s.d); };
+  const nowTs = () => Math.floor(Date.now() / 1000);
+
+  function dayLabel(key, sampleTs) {
+    const now = nowTs();
+    if (key === dayKey(now)) return T.today;
+    if (key === dayKey(now - 86400)) return T.time_yesterday;
+    const s = sast(sampleTs);
+    if (now - sampleTs < 6 * 86400) return (T.days || [])[s.w] || key;
+    const thisYear = sast(now).y;
+    return s.d + ' ' + ((T.months || [])[s.m] || '') + (s.y !== thisYear ? ' ' + s.y : '');
+  }
+
+  function timeText(ts) {
+    const diff = nowTs() - ts;
+    if (dayKey(ts) === dayKey(nowTs())) {
+      if (diff < 60) return T.just_now;
+      if (diff < 3600) return tr('time_minutes_ago', { n: Math.floor(diff / 60) });
+      return tr('time_hours_ago', { n: Math.floor(diff / 3600) });
+    }
+    const s = sast(ts);
+    return pad(s.h) + ':' + pad(s.i);
+  }
+
+  // ===== API =====
+  async function api(url, opts) {
+    const o = Object.assign({ credentials: 'same-origin' }, opts || {});
+    o.headers = Object.assign({ Accept: 'application/json' }, o.headers || {});
+    let res;
+    try {
+      res = await fetch(url, o);
+    } catch (e) {
+      return { ok: false, error: 'offline' };
+    }
+    if (res.redirected && /\/login\.php/.test(res.url)) return { ok: false, error: 'session' };
+    let data = null;
+    try { data = JSON.parse(await res.text()); } catch (e) { data = null; }
+    if (data === null) return { ok: false, error: res.status === 401 ? 'session' : 'server_error' };
+    const ok = res.ok && data.success === true;
+    return { ok: ok, data: data, error: ok ? '' : (data.error || 'server_error') };
+  }
+
+  function post(body, keepalive) {
+    return api('/notifications/api/mark_read.php', {
+      method: 'POST',
+      keepalive: !!keepalive,
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CFG.csrf || '' },
+      body: JSON.stringify(body)
+    });
+  }
+
+  // ===== TOAST =====
+  let toastTimer = 0;
+  function toast(message, opts) {
+    opts = opts || {};
+    const t = $('#ntToast');
+    if (!t || !message) return;
+    const old = $('.nt-toast-btn', t);
+    if (old) old.remove();
+    $('.nt-toast-text', t).textContent = message;
+    t.classList.toggle('is-error', !!opts.error);
+    t.classList.toggle('has-action', !!opts.action);
+    if (opts.action) {
+      t.append(el('button', {
+        class: 'nt-toast-btn', type: 'button', text: opts.action,
+        on: { click: () => { hideToast(); opts.onAction(); } }
+      }));
+    }
+    t.classList.add('is-on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, opts.ms || (opts.error ? 4200 : 2400));
+  }
+  function hideToast() {
+    clearTimeout(toastTimer);
+    const t = $('#ntToast');
+    if (t) t.classList.remove('is-on', 'has-action');
+  }
+
+  // ===== STATE =====
+  const state = {
+    filter: 'all',
+    items: [],
+    counts: null,
+    hasMore: false,
+    loading: false,
+    error: '',
+    req: 0,
+    loadedAt: 0
+  };
+  const pending = { rows: [], timer: 0 }; // deletes waiting for their Undo to pass
+
+  const isUnread = (n) => !n.read;
+  const matches = (n) => state.filter === 'all' || (state.filter === 'unread' ? isUnread(n) : n.group === state.filter);
+
+  function adjustCounts(n, sign) {
+    if (!state.counts) return;
+    state.counts.all = Math.max(0, state.counts.all + sign);
+    state.counts[n.group] = Math.max(0, (state.counts[n.group] || 0) + sign);
+    if (isUnread(n)) state.counts.unread = Math.max(0, state.counts.unread + sign);
+  }
+
+  // ===== LOADING =====
+  async function load(more) {
+    const req = ++state.req;
+    state.loading = true;
+    state.error = '';
+    if (!more) render();
+    const moreBtn = $('#ntMore');
+    if (moreBtn) { moreBtn.disabled = true; moreBtn.classList.add('is-busy'); }
+
+    const p = new URLSearchParams({ filter: state.filter });
+    if (more && state.items.length) p.set('before', String(state.items[state.items.length - 1].id));
+    const res = await api('/notifications/api/list.php?' + p.toString());
+    if (req !== state.req) return;
+
+    state.loading = false;
+    if (moreBtn) { moreBtn.disabled = false; moreBtn.classList.remove('is-busy'); }
+    if (!res.ok) {
+      if (more) { toast(errorText(res.error), { error: true }); return; }
+      state.error = res.error;
+      state.items = [];
+      render();
+      return;
+    }
+    const d = res.data;
+    const hidden = new Set(pending.rows.map((r) => r.n.id));
+    const rows = (d.notifications || []).filter((n) => !hidden.has(n.id));
+    state.items = more ? state.items.concat(rows) : rows;
+    state.hasMore = !!d.has_more;
+    if (d.counts) {
+      state.counts = d.counts;
+      pending.rows.forEach((r) => adjustCounts(r.n, -1)); // still waiting to be deleted
+    }
+    state.loadedAt = Date.now();
+    render();
+  }
+
+  /** While the page is open: newer notifications slide in at the top */
+  async function refresh() {
+    if (state.loading || state.error || document.visibilityState !== 'visible' || layer) return;
+    const res = await api('/notifications/api/list.php?filter=' + encodeURIComponent(state.filter));
+    if (!res.ok || state.loading) return;
+    const top = state.items.length ? state.items[0].id : 0;
+    const hidden = new Set(pending.rows.map((r) => r.n.id));
+    const fresh = (res.data.notifications || []).filter((n) => n.id > top && !hidden.has(n.id));
+    if (res.data.counts) {
+      state.counts = res.data.counts;
+      pending.rows.forEach((r) => adjustCounts(r.n, -1));
+    }
+    if (fresh.length) state.items = fresh.concat(state.items);
+    state.loadedAt = Date.now();
+    render();
+  }
+
+  // ===== DRAWING =====
+  function itemNode(n) {
+    const kind = kindOf(n.type);
+    const group = GROUP_LABEL[n.group];
+    const meta = [el('time', { text: timeText(n.ts), datetime: new Date(n.ts * 1000).toISOString() })];
+    if (group) meta.push(el('span', { 'aria-hidden': 'true', text: '·' }), el('span', { class: 'nt-item-area', text: T[group] }));
+    if (isUnread(n)) meta.push(el('span', { class: 'nt-dot', title: T.nt_unread_label }), el('span', { class: 'nt-sr', text: T.nt_unread_label }));
+
+    const body = el('span', { class: 'nt-item-body' }, [
+      el('span', { class: 'nt-item-title', text: n.title }),
+      n.message ? el('span', { class: 'nt-item-msg', text: n.message }) : null,
+      el('span', { class: 'nt-item-meta' }, meta)
+    ]);
+    const orb = el('span', { class: 'nt-orb', 'aria-hidden': 'true' }, [icon(kind[1])]);
+
+    let main;
+    if (n.link) {
+      main = el('a', { class: 'nt-item-main', href: n.link, on: { click: (e) => open(e, n) } }, [orb, body, strokeIcon(ICON_NEXT, 'nt-item-go')]);
+    } else {
+      main = el('button', { class: 'nt-item-main', type: 'button', 'aria-expanded': 'false', on: { click: () => toggle(n, main) } }, [orb, body]);
     }
 
-    if (filtered.length === 0) {
-      notifList.innerHTML = `
-        <div class="notif-empty">
-          <svg class="notif-empty-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <p class="notif-empty-text">${window.T.noNotifications}</p>
-        </div>
-      `;
+    return el('article', { class: 'nt-item nt-k-' + kind[0] + (isUnread(n) ? ' is-unread' : ''), 'data-id': n.id }, [
+      main,
+      el('button', {
+        class: 'nt-item-del', type: 'button', 'aria-label': T.nt_delete_one + ': ' + n.title, title: T.delete,
+        on: { click: () => remove(n) }
+      }, [strokeIcon(ICON_TRASH)])
+    ]);
+  }
+
+  function emptyState() {
+    const box = el('div', { class: 'nt-empty' });
+    if (state.error) {
+      box.append(
+        el('div', { class: 'nt-empty-orb nt-empty-orb--quiet' }, [icon('bell')]),
+        el('p', { class: 'nt-empty-text', text: T.nt_load_failed }),
+        el('p', { class: 'nt-empty-hint', text: errorText(state.error) }),
+        el('button', { class: 'nt-btn nt-btn--glass', type: 'button', on: { click: () => load(false) } }, [el('span', { text: T.nt_retry })])
+      );
+    } else if (state.filter !== 'all') {
+      box.append(
+        el('div', { class: 'nt-empty-orb nt-empty-orb--quiet' }, [icon('check')]),
+        el('p', { class: 'nt-empty-text', text: T.nt_none_filter }),
+        el('button', { class: 'nt-btn nt-btn--glass', type: 'button', on: { click: () => setFilter('all') } }, [el('span', { text: T.nt_show_all })])
+      );
+    } else {
+      box.append(
+        el('div', { class: 'nt-empty-orb' }, [icon('check')]),
+        el('p', { class: 'nt-empty-text', text: T.nt_empty }),
+        el('p', { class: 'nt-empty-hint', text: T.nt_empty_hint })
+      );
+    }
+    return box;
+  }
+
+  function renderCounts() {
+    const c = state.counts;
+    const sub = $('#ntSub');
+    if (c) {
+      sub.textContent = c.unread === 0 ? T.nt_all_read : (c.unread === 1 ? T.nt_unread_one : tr('nt_unread_n', { n: c.unread }));
+      const readAllBtn = $('#ntReadAll');
+      readAllBtn.hidden = c.unread === 0;
+      readAllBtn.disabled = false;
+      const clearBtn = $('#ntClear');
+      clearBtn.hidden = c.all - c.unread === 0;
+      clearBtn.disabled = false;
+      document.querySelectorAll('.nt-chip-count').forEach((b) => {
+        const k = b.getAttribute('data-count');
+        const n = c[k] || 0;
+        b.textContent = n > 0 ? (n > 99 ? '99+' : String(n)) : '';
+        const chip = b.parentNode;
+        if (k !== 'all' && k !== 'unread') chip.hidden = n === 0 && state.filter !== k;
+      });
+      // The bell on every page
+      const badge = document.getElementById('globalNotifCount');
+      if (badge) {
+        badge.textContent = c.unread > 99 ? '99+' : String(c.unread);
+        badge.hidden = c.unread === 0;
+      }
+    }
+    document.querySelectorAll('.nt-chip').forEach((b) => {
+      b.setAttribute('aria-pressed', b.getAttribute('data-filter') === state.filter ? 'true' : 'false');
+    });
+  }
+
+  function render() {
+    renderCounts();
+    const list = $('#ntList');
+    const moreWrap = $('#ntMoreWrap');
+    list.setAttribute('aria-busy', state.loading ? 'true' : 'false');
+    list.classList.toggle('is-loading', state.loading && state.items.length > 0);
+
+    if (state.loading && !state.items.length) {
+      list.replaceChildren(el('div', { class: 'nt-skel', 'aria-hidden': 'true' }, [el('i'), el('i'), el('i'), el('i')]));
+      moreWrap.hidden = true;
+      return;
+    }
+    if (state.loading) return;
+
+    const shown = state.items.filter(matches);
+    if (!shown.length && !(state.hasMore && !state.error)) {
+      list.replaceChildren(emptyState());
+      moreWrap.hidden = true;
       return;
     }
 
-    // Sort by created_at desc
-    const sorted = [...filtered].sort((a, b) => {
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
-
-    notifList.innerHTML = sorted.map(notif => {
-      const icon = notif.icon || getNotificationIcon(notif.type);
-      const isUnread = notif.is_read === '0' || notif.is_read === 0;
-      const timeAgo = getTimeAgo(notif.created_at);
-
-      return `
-        <div class="notif-card ${isUnread ? 'unread' : ''}" data-id="${notif.id}" ${notif.link ? `data-link="${escapeHtml(notif.link)}" style="cursor:pointer;"` : ''}>
-          <div class="notif-icon-type">${icon}</div>
-          <div class="notif-content">
-              <h3 class="notif-title">${escapeHtml(notif.title)}</h3>
-              ${notif.message ? `<p class="notif-message">${escapeHtml(notif.message)}</p>` : ''}
-            <span class="notif-time">${timeAgo}</span>
-          </div>
-          <div class="notif-actions-inline">
-            ${isUnread ? `
-              <button class="notif-action-btn" onclick="window.NotificationSystem.markAsRead(${notif.id})" aria-label="${window.T.markRead}" title="${window.T.markRead}">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-            ` : ''}
-            <button class="notif-action-btn" onclick="window.NotificationSystem.deleteNotification(${notif.id})" aria-label="${window.T.delete}" title="${window.T.delete}">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // ===== CLICK NOTIFICATION (event delegation on notifList) =====
-  function setupCardClickDelegation() {
-    if (!notifList) return;
-    // Use a single delegated listener (idempotent — only attached once)
-    if (notifList._notifClickBound) return;
-    notifList._notifClickBound = true;
-
-    notifList.addEventListener('click', function(event) {
-      // Don't trigger if clicking action buttons
-      if (event.target.closest('.notif-actions-inline')) return;
-
-      const card = event.target.closest('.notif-card[data-link]');
-      if (!card) return;
-
-      const id = card.dataset.id;
-      const link = card.dataset.link;
-
-      // Mark as read (fire-and-forget so navigation isn't delayed)
-      const notif = notifications.find(n => String(n.id) === String(id));
-      if (notif && (notif.is_read === '0' || notif.is_read === 0)) {
-        const body = new URLSearchParams({ id: id });
-        fetch('/notifications/api/mark_read.php', {
-          method: 'POST',
-          body: body,
-          keepalive: true
-        }).catch(() => {});
-        // Update local state immediately
-        notif.is_read = 1;
-        updateGlobalBadge();
+    const groups = [];
+    let current = null;
+    shown.forEach((n) => {
+      const key = dayKey(n.ts);
+      if (!current || current.key !== key) {
+        current = { key: key, ts: n.ts, items: [] };
+        groups.push(current);
       }
-
-      // Navigate to the link
-      window.location.href = link;
+      current.items.push(n);
     });
+    list.replaceChildren(...groups.map((g) => el('section', { class: 'nt-day' }, [
+      el('h3', { class: 'nt-day-label', text: dayLabel(g.key, g.ts) }),
+      el('div', { class: 'nt-day-items' }, g.items.map(itemNode))
+    ])));
+    moreWrap.hidden = !state.hasMore;
   }
 
-  // ===== MARK AS READ =====
-  async function markAsRead(id) {
-    try {
-      const formData = new FormData();
-      formData.append('id', id);
+  function setFilter(f) {
+    if (state.filter === f) return;
+    state.filter = f;
+    load(false);
+  }
 
-      const response = await fetch('/notifications/api/mark_read.php', {
-        method: 'POST',
-        body: formData
+  // ===== READING =====
+  function markReadLocally(n) {
+    if (!isUnread(n)) return false;
+    n.read = true;
+    if (state.counts) state.counts.unread = Math.max(0, state.counts.unread - 1);
+    return true;
+  }
+
+  /** Mark read and follow the link (the request survives the page change) */
+  function open(e, n) {
+    if (e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey) {
+      if (markReadLocally(n)) { post({ action: 'read', ids: [n.id] }, true); render(); }
+      return;
+    }
+    e.preventDefault();
+    flushDeletes(true);
+    if (markReadLocally(n)) post({ action: 'read', ids: [n.id] }, true);
+    window.location.href = n.link;
+  }
+
+  /** No link: the whole message unfolds, and it counts as read */
+  function toggle(n, btn) {
+    const item = btn.closest('.nt-item');
+    const openNow = item.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', openNow ? 'true' : 'false');
+    if (markReadLocally(n)) {
+      item.classList.remove('is-unread');
+      const dot = $('.nt-dot', item);
+      if (dot) { dot.nextSibling && dot.nextSibling.remove(); dot.remove(); }
+      renderCounts();
+      post({ action: 'read', ids: [n.id] }).then((r) => {
+        if (r.ok && r.data.counts) { state.counts = r.data.counts; pending.rows.forEach((p) => adjustCounts(p.n, -1)); renderCounts(); }
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        await loadNotifications();
-      } else {
-        showNotification(data.error || window.T.error, 'error');
-      }
-    } catch (error) {
-      console.error('Mark read error:', error);
-      showNotification(window.T.error, 'error');
     }
   }
 
-  // ===== MARK ALL AS READ =====
-  async function markAllAsRead() {
-    try {
-      const response = await fetch('/notifications/api/mark_read.php', {
-        method: 'POST',
-        body: new URLSearchParams({ all: '1' })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showNotification(window.T.success, 'success');
-        await loadNotifications();
-      } else {
-        showNotification(data.error || window.T.error, 'error');
-      }
-    } catch (error) {
-      console.error('Mark all read error:', error);
-      showNotification(window.T.error, 'error');
+  async function readAll() {
+    const btn = $('#ntReadAll');
+    btn.disabled = true;
+    const res = await post({ action: 'read_all' });
+    if (!res.ok) {
+      btn.disabled = false;
+      toast(errorText(res.error), { error: true });
+      return;
     }
+    state.items.forEach((n) => { n.read = true; });
+    pending.rows.forEach((r) => { r.n.read = true; });
+    state.counts = res.data.counts;
+    pending.rows.forEach((r) => adjustCounts(r.n, -1));
+    if (state.filter === 'unread') { state.items = []; state.hasMore = false; } // nothing unread is left anywhere
+    render();
+    toast(T.nt_all_marked);
   }
 
-  // ===== DELETE NOTIFICATION =====
-  async function deleteNotification(id) {
-    if (!confirm(window.T.confirm)) return;
-
-    try {
-      const formData = new FormData();
-      formData.append('id', id);
-      formData.append('delete', '1');
-
-      const response = await fetch('/notifications/api/mark_read.php', {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showNotification(window.T.success, 'success');
-        await loadNotifications();
-      } else {
-        showNotification(data.error || window.T.error, 'error');
-      }
-    } catch (error) {
-      console.error('Delete error:', error);
-      showNotification(window.T.error, 'error');
-    }
-  }
-
-  // ===== UPDATE GLOBAL BADGE =====
-  function updateGlobalBadge() {
-    const unreadCount = notifications.filter(n => n.is_read === '0' || n.is_read === 0).length;
-    
-    // Update badge in global notification button (if exists)
-    const globalBadge = document.getElementById('globalNotifCount');
-    if (globalBadge) {
-      if (unreadCount > 0) {
-        globalBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-        globalBadge.hidden = false;
-      } else {
-        globalBadge.hidden = true;
-      }
-    }
-  }
-
-  // ===== AUTO REFRESH =====
-  function startAutoRefresh() {
-    // Refresh every 30 seconds
-    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-    autoRefreshTimer = setInterval(loadNotifications, 30000);
-
-    // Stop polling when the page is backgrounded or unloaded.
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && autoRefreshTimer) {
-        clearInterval(autoRefreshTimer);
-        autoRefreshTimer = null;
-      } else if (!document.hidden && !autoRefreshTimer) {
-        autoRefreshTimer = setInterval(loadNotifications, 30000);
-        loadNotifications();
-      }
-    });
-    window.addEventListener('pagehide', () => {
-      if (autoRefreshTimer) {
-        clearInterval(autoRefreshTimer);
-        autoRefreshTimer = null;
-      }
-    });
-  }
-
-  // ===== GET NOTIFICATION ICON =====
-  function getNotificationIcon(type) {
-    const icons = {
-      // Admin
-      'success': '✅',
-      'error': '❌',
-      'warning': '⚠️',
-      'info': 'ℹ️',
-      'account': '👤',
-      'spouse': '💍',
-      'ampte': '⭐',
-      'appointment': '📅',
-      
-      // Calendar
-      'calendar': '📅',
-      'reminder': '⏰',
-      'event': '🎉',
-      'diary': '📓',
-      'visit': '🏠',
-      
-      // Gospel
-      'gospel': '📢',
-      'comment': '💬',
-      'reaction': '❤️',
-      'post': '✍️',
-      'tag': '🏷️',
-      
-      // Bible
-      'bible': '📖',
-      'prayer': '🙏',
-
-      // Daily thought & birthdays
-      'thought': '💭',
-      'birthday': '🎂'
+  // ===== DELETING (with Undo) =====
+  function remove(n) {
+    const index = state.items.indexOf(n);
+    if (index === -1 || n.leaving) return; // a second tap during the animation
+    n.leaving = true;
+    const node = document.querySelector('.nt-item[data-id="' + n.id + '"]');
+    const finish = () => {
+      n.leaving = false;
+      const at = state.items.indexOf(n);
+      if (at === -1) return; // the list was reloaded meanwhile
+      state.items.splice(at, 1);
+      adjustCounts(n, -1);
+      pending.rows.push({ n: n, index: index });
+      render();
+      const count = pending.rows.length;
+      toast(count === 1 ? T.nt_deleted : tr('nt_deleted_n', { n: count }), { action: T.nt_undo, onAction: undoDeletes, ms: UNDO_MS });
+      clearTimeout(pending.timer);
+      pending.timer = setTimeout(() => flushDeletes(false), UNDO_MS);
     };
-    
-    return icons[type] || '🔔';
-  }
-
-  // ===== GET TIME AGO =====
-  function getTimeAgo(dateStr) {
-    if (!dateStr) return '';
-    
-    try {
-      const now = new Date();
-      const past = new Date(dateStr);
-      const diffMs = now - past;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-
-      if (diffMins < 1) {
-        return window.T.justNow;
-      } else if (diffMins < 60) {
-        return `${diffMins} ${window.T.minutesAgo}`;
-      } else if (diffHours < 24) {
-        return `${diffHours} ${window.T.hoursAgo}`;
-      } else {
-        return `${diffDays} ${window.T.daysAgo}`;
-      }
-    } catch (e) {
-      return dateStr;
+    if (node && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      node.classList.add('is-leaving');
+      setTimeout(finish, 220);
+    } else {
+      finish();
     }
   }
 
-  // ===== HELPERS =====
-  // Escapes all five HTML-significant chars — textContent→innerHTML does not
-  // escape " or ', so values interpolated into attributes would break.
-  function escapeHtml(text) {
-    if (text === null || text === undefined || text === '') return '';
-    return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+  function undoDeletes() {
+    clearTimeout(pending.timer);
+    const rows = pending.rows.splice(0);
+    rows.sort((a, b) => a.index - b.index).forEach((r) => {
+      state.items.splice(Math.min(r.index, state.items.length), 0, r.n);
+      adjustCounts(r.n, 1);
+    });
+    state.items.sort((a, b) => b.id - a.id);
+    render();
   }
 
-  function showNotification(message, type = 'info') {
-    // Create toast notification
-    const toast = document.createElement('div');
-    toast.className = `notif-toast notif-toast-${type}`;
-    toast.textContent = message;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.classList.add('show'), 10);
-    
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
+  async function flushDeletes(keepalive) {
+    clearTimeout(pending.timer);
+    if (!pending.rows.length) return;
+    const rows = pending.rows.splice(0);
+    const res = await post({ action: 'delete', ids: rows.map((r) => r.n.id) }, keepalive);
+    if (keepalive) return;
+    if (!res.ok) {
+      // Nothing was deleted: put them back
+      rows.forEach((r) => { state.items.push(r.n); adjustCounts(r.n, 1); });
+      state.items.sort((a, b) => b.id - a.id);
+      render();
+      toast(errorText(res.error), { error: true });
+      return;
+    }
+    if (res.data.counts) {
+      state.counts = res.data.counts;
+      pending.rows.forEach((r) => adjustCounts(r.n, -1));
+      renderCounts();
+    }
   }
 
-  // ===== EXPOSE TO GLOBAL =====
-  window.NotificationSystem = {
-    show: async function(title, message, type = 'info', link = '', icon = '') {
-      try {
-        const formData = new FormData();
-        formData.append('user_id', window.USER_ID || '');
-        formData.append('title', title);
-        formData.append('message', message);
-        formData.append('type', type);
-        if (link) formData.append('link', link);
-        if (icon) formData.append('icon', icon);
+  // ===== CLEAR EVERYTHING ALREADY READ (asks first) =====
+  let layer = null;
 
-        await fetch('/notifications/api/create.php', {
-          method: 'POST',
-          body: formData
-        });
+  function confirmCard(title, text, okLabel) {
+    return new Promise((resolve) => {
+      const prevFocus = document.activeElement;
+      const id = 'ntConfirm' + Math.random().toString(36).slice(2, 8);
+      const cancel = el('button', { class: 'nt-btn nt-btn--glass', type: 'button', text: T.cancel });
+      const ok = el('button', { class: 'nt-btn nt-btn--danger', type: 'button', text: okLabel });
+      const panel = el('div', { class: 'nt-sheet', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': id, tabindex: '-1' }, [
+        el('h2', { class: 'nt-sheet-title', id: id, text: title }),
+        el('p', { class: 'nt-sheet-text', text: text }),
+        el('div', { class: 'nt-sheet-actions' }, [cancel, ok])
+      ]);
+      const back = el('div', { class: 'nt-layer' }, [panel]);
+      const close = (value) => {
+        if (!layer) return;
+        layer = null;
+        document.removeEventListener('keydown', onKey, true);
+        back.classList.add('is-closing');
+        setTimeout(() => back.remove(), 180);
+        document.body.classList.remove('nt-locked');
+        if (prevFocus && prevFocus.focus && document.body.contains(prevFocus)) prevFocus.focus();
+        resolve(value);
+      };
+      const onKey = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); close(false); }
+        else if (e.key === 'Tab') {
+          e.preventDefault();
+          (document.activeElement === cancel ? ok : cancel).focus();
+        }
+      };
+      layer = { close: close };
+      back.addEventListener('click', (e) => { if (e.target === back) close(false); });
+      cancel.addEventListener('click', () => close(false));
+      ok.addEventListener('click', () => close(true));
+      document.addEventListener('keydown', onKey, true);
+      document.body.append(back);
+      document.body.classList.add('nt-locked');
+      cancel.focus();
+    });
+  }
 
-        await loadNotifications();
-      } catch (error) {
-        console.error('Create notification error:', error);
-      }
-    },
-    
-    refresh: loadNotifications,
-    markAsRead: markAsRead,
-    deleteNotification: deleteNotification
-  };
+  async function clearRead() {
+    const readCount = state.counts ? state.counts.all - state.counts.unread : 0;
+    if (readCount <= 0) { toast(T.nt_nothing_to_clear); return; }
+    const yes = await confirmCard(T.nt_clear_read_q, tr('nt_clear_read_text', { n: readCount }), T.nt_clear_read);
+    if (!yes) return;
+    await flushDeletes(false);
+    const btn = $('#ntClear');
+    btn.disabled = true;
+    const res = await post({ action: 'delete_read' });
+    if (!res.ok) {
+      btn.disabled = false;
+      toast(errorText(res.error), { error: true });
+      return;
+    }
+    state.items = state.items.filter(isUnread);
+    state.counts = res.data.counts;
+    render();
+    toast(tr('nt_cleared_n', { n: res.data.changed || 0 }));
+    if (!state.items.length && state.hasMore) load(false);
+  }
 
   // ===== START =====
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  function bind() {
+    document.querySelectorAll('.nt-chip').forEach((b) => b.addEventListener('click', () => setFilter(b.getAttribute('data-filter'))));
+    $('#ntReadAll').addEventListener('click', readAll);
+    $('#ntClear').addEventListener('click', clearRead);
+    $('#ntMore').addEventListener('click', () => load(true));
+
+    // Deletes still waiting for their Undo go out when the page is left
+    window.addEventListener('pagehide', () => flushDeletes(true));
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        if (pending.rows.length) hideToast(); // its Undo no longer applies
+        flushDeletes(true);
+        return;
+      }
+      if (Date.now() - state.loadedAt > 60000) refresh();
+    });
+    setInterval(refresh, 60000);
   }
 
+  bind();
+  load(false);
 })();

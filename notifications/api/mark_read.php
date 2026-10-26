@@ -1,96 +1,71 @@
 <?php
-// =====================================================================
-// /notifications/api/mark_read.php — Mark Notifications as Read or Delete
-// =====================================================================
+declare(strict_types=1);
+/**
+ * POST /notifications/api/mark_read.php  (JSON body, X-CSRF-Token header)
+ *   {"action": "read", "ids": [1, 2]}      mark these as read
+ *   {"action": "read_all"}                mark everything as read
+ *   {"action": "delete", "ids": [1, 2]}   delete these
+ *   {"action": "delete_read"}             delete everything already read
+ * Only ever touches the signed-in user's own rows. Answers with the new counts.
+ */
 
-require_once __DIR__ . '/../../security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/security/auth_gate.php';
+require_once dirname(__DIR__) . '/lib/notifications.php';
 
-header('Content-Type: application/json; charset=utf-8');
+nt_require_post();
+$userId = nt_user_id();
+$in = nt_input();
+$action = (string)($in['action'] ?? '');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-    exit;
+$ids = [];
+if (isset($in['ids']) && is_array($in['ids'])) {
+    foreach (array_slice($in['ids'], 0, 200) as $id) {
+        if (is_int($id) || (is_string($id) && ctype_digit($id))) {
+            $id = (int)$id;
+            if ($id > 0) $ids[$id] = $id;
+        }
+    }
+    $ids = array_values($ids);
 }
 
 try {
-    // Ensure data directory exists (tolerate concurrent creation)
-    $dataDir = __DIR__ . '/../../data';
-    if (!is_dir($dataDir) && !@mkdir($dataDir, 0775, true) && !is_dir($dataDir)) {
-        throw new Exception('Failed to create data directory');
+    $db = nt_db();
+    $changed = 0;
+    $marks = $ids ? implode(',', array_fill(0, count($ids), '?')) : '';
+
+    switch ($action) {
+        case 'read':
+            if (!$ids) nt_fail('invalid_input');
+            $st = $db->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0 AND id IN ($marks)");
+            $st->execute(array_merge([$userId], $ids));
+            $changed = $st->rowCount();
+            break;
+
+        case 'read_all':
+            $st = $db->prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0');
+            $st->execute([$userId]);
+            $changed = $st->rowCount();
+            break;
+
+        case 'delete':
+            if (!$ids) nt_fail('invalid_input');
+            $st = $db->prepare("DELETE FROM notifications WHERE user_id = ? AND id IN ($marks)");
+            $st->execute(array_merge([$userId], $ids));
+            $changed = $st->rowCount();
+            break;
+
+        case 'delete_read':
+            $st = $db->prepare('DELETE FROM notifications WHERE user_id = ? AND is_read = 1');
+            $st->execute([$userId]);
+            $changed = $st->rowCount();
+            break;
+
+        default:
+            nt_fail('invalid_action');
     }
-    
-    $dbPath = $dataDir . '/notifications.db';
-    
-    $db = new PDO('sqlite:' . $dbPath);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // Create table if not exists
-    $db->exec("
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            message TEXT,
-            type TEXT DEFAULT 'info',
-            is_read INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT (datetime('now')),
-            link TEXT,
-            icon TEXT,
-            title_key TEXT,
-            message_key TEXT,
-            params TEXT
-        )
-    ");
-    
-    $userId = $_SESSION['user_id'] ?? null;
-    
-    if (!$userId) {
-        throw new Exception('User not logged in');
-    }
-    
-    // DELETE
-    if (isset($_POST['delete']) && $_POST['delete'] === '1') {
-        $id = $_POST['id'] ?? null;
-        
-        if (!$id) {
-            echo json_encode(['success' => false, 'error' => 'ID required']);
-            exit;
-        }
-        
-        $stmt = $db->prepare("DELETE FROM notifications WHERE id = :id AND user_id = :user_id");
-        $stmt->execute(['id' => $id, 'user_id' => $userId]);
-        
-        echo json_encode(['success' => true, 'message' => 'Notification deleted']);
-        exit;
-    }
-    
-    // MARK ALL AS READ
-    if (isset($_POST['all']) && $_POST['all'] === '1') {
-        $stmt = $db->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = :user_id");
-        $stmt->execute(['user_id' => $userId]);
-        
-        echo json_encode(['success' => true, 'message' => 'All notifications marked as read']);
-        exit;
-    }
-    
-    // MARK SINGLE AS READ
-    $id = $_POST['id'] ?? null;
-    
-    if (!$id) {
-        echo json_encode(['success' => false, 'error' => 'ID required']);
-        exit;
-    }
-    
-    $stmt = $db->prepare("UPDATE notifications SET is_read = 1 WHERE id = :id AND user_id = :user_id");
-    $stmt->execute(['id' => $id, 'user_id' => $userId]);
-    
-    echo json_encode(['success' => true, 'message' => 'Notification marked as read']);
-    
-} catch (Exception $e) {
-    error_log('Mark read error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+
+    nt_json(['success' => true, 'changed' => $changed, 'counts' => nt_counts($db, $userId)]);
+} catch (Throwable $e) {
+    error_log('Notifications write error: ' . $e->getMessage());
+    nt_fail('server_error', 500);
 }

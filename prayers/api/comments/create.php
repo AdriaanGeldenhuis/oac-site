@@ -1,66 +1,51 @@
 <?php
-require_once __DIR__ . '/../../../security/auth_gate.php';
-require_once __DIR__ . '/../notifications/helper.php';
+declare(strict_types=1);
+/**
+ * POST /prayers/api/comments/create.php  {"post_id": N, "text": "..."}  (X-CSRF-Token)
+ * Adds an encouraging word to a prayer and answers with the new comment.
+ * The writer of the prayer is told after the answer has gone.
+ * At most 40 comments an hour per member.
+ */
 
-global $pdo;
-header('Content-Type: application/json; charset=utf-8');
+require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/lib/prayers.php';
+require_once dirname(__DIR__) . '/notifications/helper.php';
 
-$userId = $_SESSION['user_id'] ?? 0;
-
-if (!$userId) {
-  http_response_code(401);
-  echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-  exit;
+pr_require_post();
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    pr_fail('db_unavailable', 500);
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-$postId = (int)($input['post_id'] ?? 0);
-$text = trim($input['text'] ?? '');
+$in = pr_input();
+$postId = (int)($in['post_id'] ?? 0);
+[$text, $error] = pr_text_from($in['text'] ?? '', PR_COMMENT_MAX);
+if ($postId <= 0) pr_fail('invalid_input');
+if ($error !== null) pr_fail($error);
 
-if (!$postId || empty($text)) {
-  echo json_encode(['success' => false, 'error' => 'Invalid input']);
-  exit;
-}
+$post = pr_post_row($pdo, $postId);
+if (!$post) pr_fail('not_found', 404);
+if (!pr_rate_ok('prayer_comment', 40)) pr_fail('rate_limited', 429);
 
 try {
-  // Get post owner so we can notify them of the new comment
-  $postStmt = $pdo->prepare("SELECT user_id FROM prayers_posts WHERE id = ?");
-  $postStmt->execute([$postId]);
-  $post = $postStmt->fetch();
-
-  if (!$post) {
-    http_response_code(404);
-    echo json_encode(['success' => false, 'error' => 'post_not_found']);
-    exit;
-  }
-
-  $postOwnerId = (int)$post['user_id'];
-
-  $stmt = $pdo->prepare("INSERT INTO prayers_comments (post_id, user_id, text) VALUES (?, ?, ?)");
-  $stmt->execute([$postId, $userId, $text]);
-
-  echo json_encode(['success' => true, 'comment_id' => $pdo->lastInsertId()]);
-
-  // Flush response, then notify in background
-  if (function_exists('fastcgi_finish_request')) {
-    fastcgi_finish_request();
-  } else {
-    if (ob_get_level() > 0) ob_end_flush();
-    flush();
-  }
-
-  if ($postOwnerId !== (int)$userId) {
-    $userStmt = $pdo->prepare("SELECT name, surname FROM users WHERE id = ?");
-    $userStmt->execute([$userId]);
-    $user = $userStmt->fetch();
-    $userName = trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-
-    createPrayerNotification($pdo, $postOwnerId, 'comment_on_post', [
-      'commenter_name' => $userName
-    ]);
-  }
-} catch (Exception $e) {
-  error_log('Prayers comment create error: ' . $e->getMessage());
-  http_response_code(500);
-  echo json_encode(['success' => false, 'error' => 'server_error']);
+    $pdo->prepare('INSERT INTO prayers_comments (post_id, user_id, text) VALUES (?, ?, ?)')->execute([$postId, pr_user_id(), $text]);
+    $id = (int)$pdo->lastInsertId();
+    $st = $pdo->prepare(pr_comment_select() . ' WHERE c.id = ? LIMIT 1');
+    $st->execute([$id]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    error_log('Prayers comment create error: ' . $e->getMessage());
+    pr_fail('server_error', 500);
 }
+
+$response = ['success' => true, 'comment' => $row ? pr_comment_out($row, $pdo, pr_lang()) : null];
+$ownerId = (int)$post['user_id'];
+if ($ownerId === pr_user_id()) pr_json($response);
+
+// Answer first, then tell the writer of the prayer
+pr_answer_and_continue($response);
+
+createPrayerNotification($pdo, $ownerId, 'comment_on_post', [
+    'commenter_name' => pr_full_name(pr_me($pdo)),
+    'post_id' => $postId,
+]);
+exit;

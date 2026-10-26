@@ -1,61 +1,27 @@
 <?php
 // =====================================================================
-// /notifications/api/count.php — Get Unread Count
+// /notifications/api/count.php — Get Unread Count (the bell on every page)
 // =====================================================================
 
 require_once __DIR__ . '/../../security/auth_gate.php';
 require_once __DIR__ . '/../../cron/auto_thought_cron.php';
+require_once __DIR__ . '/../lib/notifications.php';
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: private, no-store');
 
 try {
-    // Ensure data directory exists (tolerate concurrent creation)
-    $dataDir = __DIR__ . '/../../data';
-    if (!is_dir($dataDir) && !@mkdir($dataDir, 0775, true) && !is_dir($dataDir)) {
-        throw new Exception('Failed to create data directory');
-    }
-    
-    $dbPath = $dataDir . '/notifications.db';
-    
-    $db = new PDO('sqlite:' . $dbPath);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // Create table if not exists
-    $db->exec("
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            message TEXT,
-            type TEXT DEFAULT 'info',
-            is_read INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT (datetime('now')),
-            link TEXT,
-            icon TEXT,
-            title_key TEXT,
-            message_key TEXT,
-            params TEXT
-        )
-    ");
-    
-    $userId = $_SESSION['user_id'] ?? null;
-    
+    $userId = nt_user_id();
     if (!$userId) {
         throw new Exception('User not logged in');
     }
-    
-    $stmt = $db->prepare("
-        SELECT COUNT(*) as count 
-        FROM notifications 
-        WHERE user_id = :user_id AND is_read = 0
-    ");
-    
-    $stmt->execute(['user_id' => $userId]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $stmt = nt_db()->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+    $stmt->execute([$userId]);
 
     echo json_encode([
         'success' => true,
-        'count' => (int)$result['count']
+        'count' => (int)$stmt->fetchColumn()
     ]);
 
     // Auto-cron: check for pending thought notifications AFTER the response has
@@ -76,7 +42,7 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage(),
+        'error' => 'server_error',
         'count' => 0
     ]);
 }

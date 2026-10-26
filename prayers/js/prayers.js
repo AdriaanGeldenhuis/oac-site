@@ -1,690 +1,1035 @@
-(() => {
+/**
+ * Gebede — the prayer wall.
+ *
+ * Reads:  /prayers/api/posts/list.php (pages, ?filter= / ?before=, or ?id=),
+ *         posts/reactions.php (who prays along), comments/list.php
+ * Writes: posts/create.php, update.php (multipart), delete.php, react.php,
+ *         comments/create.php, update.php, delete.php
+ * Every POST carries the session CSRF token (X-CSRF-Token).
+ *
+ * Everything people wrote is drawn with textContent (links are built as
+ * real nodes), never as HTML. Sheets (composer, comments, ...) have their
+ * own history entry, so the phone's Back button, the app's and the floating
+ * back button close the sheet instead of leaving the page.
+ * Times arrive as Unix seconds and are shown in South African time.
+ */
+(function () {
   'use strict';
 
-  // Use server-provided translations for all 5 languages
-  const T = (key) => (window.JS_T && window.JS_T[key]) ? window.JS_T[key] : key;
-  const userId = window.CURRENT_USER_ID || 0;
-  const userName = window.CURRENT_USER_NAME || 'User';
-  const userPic = window.CURRENT_USER_PIC || '/assets/default-avatar.png';
+  const CFG = window.PRAYERS;
+  if (!CFG) return;
+  const T = CFG.t || {};
+  const NS = 'http://www.w3.org/2000/svg';
+  const LIMITS = CFG.limits || { text: 3000, comment: 1000 };
+  const ICON_PRAY = '/assets/icons/amen.png';
+  const ICON_HEART = '/assets/icons/heart.png';
 
-  let currentKind = 'prayer';
-  let editingPostId = null;
-  let editingPostPhotoUrl = null;
-  let editingCommentId = null;
+  function tr(key, params) {
+    let s = T[key] || key;
+    if (params) {
+      for (const p in params) s = s.split('{' + p + '}').join(String(params[p]));
+    }
+    return s;
+  }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const openBtn = document.getElementById('open-composer');
-    if (openBtn) openBtn.addEventListener('click', () => openComposerOverlay());
-    loadPosts();
-    initModal();
+  const ERRORS = {
+    csrf: 'pr_err_session', session: 'pr_err_session', offline: 'pr_err_offline', rate_limited: 'pr_err_rate',
+    too_long: 'pr_err_too_long', empty: 'pr_err_empty', photo_invalid: 'pr_err_photo', photo_failed: 'pr_err_photo',
+    photo_too_big: 'pr_err_photo_big', forbidden: 'pr_err_forbidden', not_found: 'pr_not_found'
+  };
+  const errorText = (code) => tr(ERRORS[code] || 'pr_err_generic');
+
+  // ===== DOM HELPERS =====
+  const $ = (s, root) => (root || document).querySelector(s);
+
+  function el(tag, attrs, kids) {
+    const n = document.createElement(tag);
+    if (attrs) {
+      for (const k in attrs) {
+        const v = attrs[k];
+        if (v === null || v === undefined || v === false) continue;
+        if (k === 'class') n.className = v;
+        else if (k === 'text') n.textContent = v;
+        else if (k === 'on') { for (const ev in v) n.addEventListener(ev, v[ev]); }
+        else n.setAttribute(k, v === true ? '' : String(v));
+      }
+    }
+    (kids || []).forEach((c) => { if (c !== null && c !== undefined && c !== false) n.append(c); });
+    return n;
+  }
+
+  function icon(id) {
+    const s = document.createElementNS(NS, 'svg');
+    s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('aria-hidden', 'true');
+    const u = document.createElementNS(NS, 'use');
+    u.setAttribute('href', '#pr-i-' + id);
+    s.appendChild(u);
+    return s;
+  }
+
+  function strokeIcon(d, sw) {
+    const s = document.createElementNS(NS, 'svg');
+    s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('fill', 'none');
+    s.setAttribute('stroke', 'currentColor');
+    s.setAttribute('stroke-width', String(sw || 2.2));
+    s.setAttribute('stroke-linecap', 'round');
+    s.setAttribute('stroke-linejoin', 'round');
+    s.setAttribute('aria-hidden', 'true');
+    const p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', d);
+    s.appendChild(p);
+    return s;
+  }
+  const ICON_CLOSE = 'M6 6l12 12M18 6L6 18';
+  const ICON_EDIT = 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z';
+  const ICON_TRASH = 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6';
+  const ICON_CHAT = 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z';
+  const ICON_SEND = 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z';
+  const ICON_CHEVRON = 'M6 9l6 6 6-6';
+  const ICON_DOTS = 'M12 5h.01M12 12h.01M12 19h.01';
+
+  function img(src, alt) {
+    return el('img', { src: src, alt: alt || '', width: 21, height: 21, decoding: 'async' });
+  }
+
+  function avatar(person, small) {
+    const cls = 'pr-avatar' + (small ? ' pr-avatar--sm' : '');
+    if (person.photo) {
+      const i = el('img', { class: cls, src: person.photo, alt: '', loading: 'lazy', decoding: 'async', width: small ? 36 : 46, height: small ? 36 : 46 });
+      // A missing photo falls back to the initials
+      i.addEventListener('error', () => i.replaceWith(el('span', { class: cls + ' pr-initials', 'aria-hidden': 'true', text: person.initials || '?' })), { once: true });
+      return i;
+    }
+    return el('span', { class: cls + ' pr-initials', 'aria-hidden': 'true', text: person.initials || '?' });
+  }
+
+  // Only http(s) links, built as real nodes: the text itself is never parsed as HTML
+  const URL_RE = /\b(?:https?:\/\/|www\.)[^\s<>"']+/gi;
+  function fillText(node, text) {
+    text = String(text || '');
+    let last = 0;
+    let m;
+    URL_RE.lastIndex = 0;
+    while ((m = URL_RE.exec(text)) !== null) {
+      let url = m[0];
+      const trail = url.match(/[.,!?;:)\]]+$/);
+      if (trail) url = url.slice(0, -trail[0].length);
+      if (m.index > last) node.append(text.slice(last, m.index));
+      node.append(el('a', { href: /^www\./i.test(url) ? 'https://' + url : url, target: '_blank', rel: 'noopener noreferrer nofollow ugc', text: url }));
+      last = m.index + url.length;
+      URL_RE.lastIndex = last;
+    }
+    if (last < text.length) node.append(text.slice(last));
+    return node;
+  }
+
+  // ===== TIME (Unix seconds in, South African time out) =====
+  const pad = (n) => String(n).padStart(2, '0');
+  function sast(ts) {
+    const d = new Date((ts + 7200) * 1000);
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate(), w: d.getUTCDay(), h: d.getUTCHours(), i: d.getUTCMinutes() };
+  }
+  const dayKey = (ts) => { const s = sast(ts); return s.y * 10000 + s.m * 100 + s.d; };
+  const nowTs = () => Math.floor(Date.now() / 1000);
+
+  function timeText(ts) {
+    if (!ts) return '';
+    const now = nowTs();
+    const diff = Math.max(0, now - ts);
+    const s = sast(ts);
+    const hm = pad(s.h) + ':' + pad(s.i);
+    if (dayKey(ts) === dayKey(now)) {
+      if (diff < 60) return T.just_now;
+      if (diff < 3600) return tr('time_minutes_ago', { n: Math.floor(diff / 60) });
+      return tr('time_hours_ago', { n: Math.floor(diff / 3600) });
+    }
+    if (dayKey(ts) === dayKey(now - 86400)) return T.time_yesterday + ' ' + hm;
+    if (diff < 6 * 86400) return ((T.days || [])[s.w] || '') + ' ' + hm;
+    return s.d + ' ' + ((T.months || [])[s.m] || '') + (s.y !== sast(now).y ? ' ' + s.y : '');
+  }
+
+  function timeNode(ts, cls) {
+    const s = sast(ts);
+    return el('time', {
+      class: cls || null,
+      datetime: new Date(ts * 1000).toISOString(),
+      title: s.d + ' ' + ((T.months || [])[s.m] || '') + ' ' + s.y + ' ' + pad(s.h) + ':' + pad(s.i),
+      text: timeText(ts)
+    });
+  }
+
+  // ===== API =====
+  async function api(url, opts) {
+    const o = Object.assign({ credentials: 'same-origin' }, opts || {});
+    o.headers = Object.assign({ Accept: 'application/json' }, o.headers || {});
+    let res;
+    try {
+      res = await fetch(url, o);
+    } catch (e) {
+      return { ok: false, error: 'offline' };
+    }
+    if (res.redirected && /\/login\.php/.test(res.url)) return { ok: false, error: 'session' };
+    let data = null;
+    try { data = JSON.parse(await res.text()); } catch (e) { data = null; }
+    if (data === null) return { ok: false, error: res.status === 413 ? 'photo_too_big' : (res.status === 401 ? 'session' : 'server_error') };
+    const ok = res.ok && data.success === true;
+    return { ok: ok, data: data, error: ok ? '' : (data.error || 'server_error') };
+  }
+
+  function postJSON(url, body) {
+    return api(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CFG.csrf || '' },
+      body: JSON.stringify(body)
+    });
+  }
+
+  function postForm(url, form) {
+    return api(url, { method: 'POST', headers: { 'X-CSRF-Token': CFG.csrf || '' }, body: form });
+  }
+
+  // ===== STORAGE (a convenience; the page works without it) =====
+  function store(key, value) {
+    try {
+      if (value === undefined) return localStorage.getItem('pr_' + key);
+      localStorage.setItem('pr_' + key, value);
+    } catch (e) { /* private mode */ }
+    return null;
+  }
+
+  // ===== TOAST =====
+  let toastTimer = 0;
+  function toast(message, isError) {
+    const t = $('#prToast');
+    if (!t || !message) return;
+    t.textContent = message;
+    t.classList.toggle('is-error', !!isError);
+    t.classList.add('is-on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('is-on'), isError ? 4600 : 2600);
+  }
+
+  function setBusy(btn, busy, label) {
+    if (!btn) return;
+    btn.disabled = !!busy;
+    btn.classList.toggle('is-busy', !!busy);
+    const span = btn.querySelector('span');
+    if (!span) return;
+    if (busy && label !== undefined) {
+      btn.dataset.label = span.textContent;
+      span.textContent = label;
+    } else if (!busy && btn.dataset.label) {
+      span.textContent = btn.dataset.label;
+      delete btn.dataset.label;
+    }
+  }
+
+  // ===== LAYERS (sheets, the confirm card, the photo) =====
+  // One stack: Escape, the scrim and Back close the top layer, Tab stays
+  // inside it, focus returns to where it was. The first layer adds a
+  // history entry, so Back closes it instead of leaving the page.
+  const layers = [];
+  let historyArmed = false;
+  let ignorePop = false;
+
+  function armHistory() {
+    if (historyArmed) return;
+    try {
+      history.pushState({ pr: 'layer' }, '', window.location.href);
+      historyArmed = true;
+    } catch (e) { /* old WebView: Back just leaves the page */ }
+  }
+
+  function disarmHistory() {
+    if (!historyArmed) return;
+    historyArmed = false;
+    if (history.state && history.state.pr === 'layer') {
+      ignorePop = true;
+      history.back();
+    }
+  }
+
+  window.addEventListener('popstate', () => {
+    if (ignorePop) { ignorePop = false; return; }
+    if (!historyArmed) return;
+    historyArmed = false;
+    const top = layers[layers.length - 1];
+    if (top) top.close({ fromHistory: true });
+    if (layers.length) armHistory();
   });
 
-  // ==================== COMPOSER OVERLAY ====================
-  function openComposerOverlay(editId, editText, editPhotoUrl) {
-    // Remove existing overlay if any
-    const existing = document.querySelector('.pr-composer-overlay');
-    if (existing) existing.remove();
-
-    const isEdit = !!editId;
-    if (isEdit) {
-      editingPostId = editId;
-      editingPostPhotoUrl = editPhotoUrl || null;
-    } else {
-      editingPostId = null;
-      editingPostPhotoUrl = null;
-    }
-
-    const overlay = document.createElement('div');
-    overlay.className = 'pr-composer-overlay';
-
-    const photoPreviewHTML = editingPostPhotoUrl ? `
-      <div class="pr-photo-preview">
-        <img src="${editingPostPhotoUrl}" alt="Current photo">
-        <button type="button" class="pr-remove-photo-btn" id="overlayRemovePhoto">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
-          ${T('remove_photo')}
-        </button>
-      </div>
-    ` : '';
-
-    overlay.innerHTML = `
-      <div class="pr-composer-overlay-panel">
-        <div class="pr-composer-overlay-header">
-          <h2 class="pr-composer-overlay-title">${isEdit ? T('edit') : T('share')}</h2>
-          <button type="button" class="pr-composer-overlay-close" id="closeComposerOverlay">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-        <form id="composerForm" class="pr-form" enctype="multipart/form-data">
-          <textarea id="overlayPostText" name="text" class="pr-textarea" placeholder="${T('prayer')}" rows="4" required>${isEdit ? escapeHtml(editText || '') : ''}</textarea>
-
-          ${photoPreviewHTML}
-
-          <div class="pr-form-row">
-            <div class="pr-file-input-wrapper">
-              <input type="file" id="overlayPhotoInput" name="photo" accept="image/*" class="pr-file-input">
-              <label for="overlayPhotoInput" class="pr-file-label">
-                <svg class="pr-file-icon" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="currentColor" opacity="0.3"/>
-                </svg>
-                <span id="overlayFileLabel">${T('choose_photo')}</span>
-              </label>
-            </div>
-            <button type="submit" class="pr-btn pr-btn-primary" id="overlaySubmitBtn">
-              <span class="pr-btn-shine"></span>
-              <svg class="pr-btn-icon" viewBox="0 0 24 24" fill="none">
-                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span class="pr-btn-text">${isEdit ? T('update') : T('share')}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add('open'));
-
-    // Wire close
-    const closeBtn = overlay.querySelector('#closeComposerOverlay');
-    closeBtn.addEventListener('click', () => closeComposerOverlay());
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeComposerOverlay();
-    });
-
-    // Wire escape key
-    const onEsc = (e) => {
-      if (e.key === 'Escape') { closeComposerOverlay(); document.removeEventListener('keydown', onEsc); }
-    };
-    document.addEventListener('keydown', onEsc);
-
-    // Wire file input
-    const fileInput = overlay.querySelector('#overlayPhotoInput');
-    const fileLabel = overlay.querySelector('#overlayFileLabel');
-    fileInput.addEventListener('change', (e) => {
-      fileLabel.textContent = e.target.files[0] ? e.target.files[0].name : T('choose_photo');
-    });
-
-    // Wire remove photo button
-    const removePhotoBtn = overlay.querySelector('#overlayRemovePhoto');
-    if (removePhotoBtn) {
-      removePhotoBtn.addEventListener('click', async () => {
-        await removePostPhoto(editId);
-        const preview = overlay.querySelector('.pr-photo-preview');
-        if (preview) preview.remove();
-      });
-    }
-
-    // Wire form submit
-    const form = overlay.querySelector('#composerForm');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const textarea = overlay.querySelector('#overlayPostText');
-      const formData = new FormData(form);
-
-      if (isEdit) {
-        await updatePost(editId, textarea.value, formData);
-      } else {
-        await createPost(formData);
-      }
-    });
-
-    // Focus textarea
-    setTimeout(() => overlay.querySelector('#overlayPostText').focus(), 200);
+  function lockScroll() {
+    document.body.classList.toggle('pr-locked', layers.length > 0);
   }
 
-  function closeComposerOverlay() {
-    const overlay = document.querySelector('.pr-composer-overlay');
-    if (!overlay) return;
-    overlay.classList.remove('open');
-    setTimeout(() => overlay.remove(), 300);
-    editingPostId = null;
-    editingPostPhotoUrl = null;
-  }
-
-  async function createPost(formData) {
-    const submitBtn = document.querySelector('#overlaySubmitBtn');
-
-    formData.append('kind', currentKind);
-
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.querySelector('.pr-btn-text').textContent = T('posting');
+  function openLayer(panel, opts) {
+    opts = opts || {};
+    const back = el('div', { class: opts.backClass || 'pr-layer' });
+    if (!opts.bare) {
+      panel.setAttribute('role', panel.getAttribute('role') || 'dialog');
+      panel.setAttribute('aria-modal', 'true');
+      if (opts.labelledBy) panel.setAttribute('aria-labelledby', opts.labelledBy);
+      panel.setAttribute('tabindex', '-1');
     }
+    back.appendChild(panel);
 
-    try {
-      const res = await fetch('/prayers/api/posts/create.php', {
-        method: 'POST',
-        body: formData
-      });
+    const prevFocus = document.activeElement;
+    const layer = { back: back, panel: panel, onClose: null, beforeClose: null };
 
-      const data = await res.json();
-
-      if (data.success) {
-        closeComposerOverlay();
-        showToast(T('prayer_shared'), 'success');
-        loadPosts();
-      } else {
-        showToast(data.error || T('error'), 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(T('could_not_post'), 'error');
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.querySelector('.pr-btn-text').textContent = T('share');
-      }
-    }
-  }
-
-  async function updatePost(postId, text, formData) {
-    const submitBtn = document.querySelector('#overlaySubmitBtn');
-
-    formData.append('post_id', postId);
-    formData.append('text', text);
-
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.querySelector('.pr-btn-text').textContent = T('posting');
-    }
-
-    try {
-      const res = await fetch('/prayers/api/posts/update.php', {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        closeComposerOverlay();
-        showToast(T('post_updated'), 'success');
-        loadPosts();
-      } else {
-        showToast(data.error || T('error'), 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(T('could_not_update'), 'error');
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.querySelector('.pr-btn-text').textContent = T('update');
-      }
-    }
-  }
-
-  async function removePostPhoto(postId) {
-    if (!confirm(T('delete_photo'))) return;
-
-    const textEl = document.querySelector('#overlayPostText');
-    try {
-      const res = await fetch('/prayers/api/posts/update.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          post_id: postId,
-          text: textEl ? textEl.value : '',
-          remove_photo: true
-        })
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        showToast(T('photo_removed'), 'success');
-        editingPostPhotoUrl = null;
-      } else {
-        showToast(data.error || T('error'), 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(T('could_not_remove'), 'error');
-    }
-  }
-
-  async function deletePost(postId) {
-    if (!confirm(T('delete_post'))) return;
-
-    try {
-      const res = await fetch('/prayers/api/posts/delete.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_id: postId })
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        showToast(T('post_deleted'), 'success');
-        loadPosts();
-      } else {
-        showToast(data.error || T('error'), 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(T('could_not_delete'), 'error');
-    }
-  }
-
-  function startEditPost(postId, text, photoUrl) {
-    openComposerOverlay(postId, text, photoUrl);
-  }
-
-  // ==================== LOAD POSTS ====================
-  async function loadPosts() {
-    const container = document.getElementById('postsContainer');
-    container.innerHTML = `
-      <div class="pr-loading">
-        <div class="pr-spinner"></div>
-        <p>${T('loading_prayers')}</p>
-      </div>
-    `;
-
-    try {
-      const res = await fetch('/prayers/api/posts/list.php');
-      const data = await res.json();
-
-      if (data.success && data.posts.length > 0) {
-        container.innerHTML = data.posts.map(post => renderPost(post)).join('');
-        attachPostListeners();
-      } else {
-        container.innerHTML = `
-          <div class="pr-loading">
-            <p>${T('no_prayers')}</p>
-          </div>
-        `;
-      }
-    } catch (err) {
-      console.error(err);
-      container.innerHTML = `
-        <div class="pr-loading">
-          <p>${T('could_not_load')}</p>
-        </div>
-      `;
-    }
-  }
-
-  // ==================== RENDER POST ====================
-  
-  // In /prayers/js/prayers.js - UPDATE renderPost function
-
-function renderPost(post) {
-  const photoHTML = post.photo_url 
-    ? `<img src="${post.photo_url}" alt="Post photo" class="pr-post-photo">` 
-    : '';
-  
-  const heartActive = post.user_hearted ? 'active' : '';
-  const prayActive = post.user_prayed ? 'active' : '';
-
-  // Avatar: use photo or initials
-  const avatarHTML = post.user_pic
-    ? `<img src="${post.user_pic}" alt="${post.username}" class="pr-post-avatar">`
-    : `<div class="pr-post-avatar pr-avatar-initials">${post.initials || '??'}</div>`;
-
-  const actionsHTML = post.can_edit ? `
-    <button class="pr-action-btn pr-edit-post-btn" data-id="${post.id}" data-text="${escapeHtml(post.text)}" data-photo="${post.photo_url || ''}">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span>${T('edit')}</span>
-    </button>
-  ` : '';
-
-  const deleteHTML = post.can_delete ? `
-    <button class="pr-action-btn pr-delete-post-btn" data-id="${post.id}">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span>${T('delete')}</span>
-    </button>
-  ` : '';
-
-  return `
-    <article class="pr-post-card" data-id="${post.id}">
-      <div class="pr-post-header">
-        ${avatarHTML}
-        <div class="pr-post-meta">
-          <div class="pr-post-user">${post.username}</div>
-          <div class="pr-post-date">${post.created_at}${post.town_name ? ' • ' + post.town_name : ''}</div>
-        </div>
-      </div>
-      ${photoHTML}
-      <div class="pr-post-body">
-        <p class="pr-post-text">${post.text}</p>
-        <div class="pr-post-actions">
-          <button class="pr-action-btn pr-heart-btn ${heartActive}" data-id="${post.id}">
-            <img src="/assets/icons/heart.png" alt="Heart" class="pr-icon-img">
-            <span>${post.heart_count}</span>
-          </button>
-          <button class="pr-action-btn pr-pray-btn ${prayActive}" data-id="${post.id}">
-            <img src="/assets/icons/amen.png" alt="Amen" class="pr-icon-img">
-            <span>${post.pray_count}</span>
-          </button>
-          <button class="pr-action-btn pr-comment-btn" data-id="${post.id}">
-            <img src="/assets/icons/comment.png" alt="Comment" class="pr-icon-img">
-            <span>${post.comment_count}</span>
-          </button>
-          ${actionsHTML}
-          ${deleteHTML}
-        </div>
-      </div>
-    </article>
-  `;
-}
-
-// Helper function for escaping HTML
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-  // [attachPostListeners, toggleReaction, modal functions, etc.]
-  
-  function attachPostListeners() {
-    document.querySelectorAll('.pr-heart-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const postId = btn.dataset.id;
-        await toggleReaction(postId, 'heart', btn);
-      });
-    });
-
-    document.querySelectorAll('.pr-pray-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const postId = btn.dataset.id;
-        await toggleReaction(postId, 'pray', btn);
-      });
-    });
-
-    document.querySelectorAll('.pr-comment-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const postId = btn.dataset.id;
-        openCommentsModal(postId);
-      });
-    });
-
-    document.querySelectorAll('.pr-edit-post-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const postId = btn.dataset.id;
-        const text = btn.dataset.text;
-        const photo = btn.dataset.photo;
-        startEditPost(postId, text, photo);
-      });
-    });
-
-    document.querySelectorAll('.pr-delete-post-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const postId = btn.dataset.id;
-        deletePost(postId);
-      });
-    });
-  }
-
-  async function toggleReaction(postId, type, btn) {
-    try {
-      const res = await fetch('/prayers/api/posts/react.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_id: postId, type })
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        if (data.active) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
+    layer.close = async function (how) {
+      how = how || {};
+      // A forced close goes through even while "Discard?" is still being asked
+      if (layer.closed || (layer.closing && !how.force)) return;
+      if (layer.beforeClose && !how.force) {
+        layer.closing = true;
+        const ok = await layer.beforeClose();
+        layer.closing = false;
+        if (layer.closed) return; // closed by force meanwhile
+        if (!ok) {
+          if (how.fromHistory) armHistory(); // Back was used up: put the entry back
+          return;
         }
-        const countSpan = btn.querySelector('span');
-        countSpan.textContent = data.count;
       }
-    } catch (err) {
-      console.error(err);
+      layer.closed = true;
+      layer.closing = true;
+      back.classList.add('is-closing');
+      setTimeout(() => back.remove(), 180);
+      const i = layers.indexOf(layer);
+      if (i !== -1) layers.splice(i, 1);
+      lockScroll();
+      // The last layer gone: take our history entry away again (after a Back
+      // the popstate handler has already let go of it, unless a nested card
+      // added a new one, which goes here too)
+      if (!layers.length) disarmHistory();
+      if (layer.onClose) layer.onClose();
+      if (prevFocus && prevFocus.focus && document.body.contains(prevFocus)) {
+        try { prevFocus.focus({ preventScroll: true }); } catch (e) { prevFocus.focus(); }
+      }
+    };
+
+    layers.push(layer);
+    armHistory();
+    back.addEventListener('click', (e) => { if (e.target === back || opts.closeOnAnyClick) layer.close(); });
+    document.body.appendChild(back);
+    lockScroll();
+    enableSwipeDown(panel, layer);
+
+    const first = panel.querySelector('[autofocus]') || panel;
+    try { first.focus({ preventScroll: true }); } catch (e) { first.focus(); }
+    return layer;
+  }
+
+  // Phones: pull a sheet down by its handle to close it
+  function enableSwipeDown(panel, layer) {
+    const grip = panel.querySelector('.pr-sheet-grip');
+    if (!grip) return;
+    let startY = 0;
+    let dy = 0;
+    grip.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; dy = 0; }, { passive: true });
+    grip.addEventListener('touchmove', (e) => {
+      dy = Math.max(0, e.touches[0].clientY - startY);
+      panel.style.transform = 'translateY(' + dy + 'px)';
+    }, { passive: true });
+    grip.addEventListener('touchend', () => {
+      panel.style.transform = '';
+      if (dy > 90) layer.close();
+    });
+  }
+
+  /** A sheet (phone) / card (desktop) with a title, a close button, a body and a foot */
+  function sheet(title, cls) {
+    const id = 'prSheet' + Math.random().toString(36).slice(2, 8);
+    const panel = el('div', { class: 'pr-sheet' + (cls ? ' ' + cls : '') });
+    const body = el('div', { class: 'pr-sheet-body' });
+    const foot = el('div', { class: 'pr-sheet-foot', hidden: true });
+    let layer = null;
+    panel.append(
+      el('span', { class: 'pr-sheet-grip', 'aria-hidden': 'true' }),
+      el('div', { class: 'pr-sheet-head' }, [
+        el('h2', { class: 'pr-sheet-title', id: id, text: title }),
+        el('button', { class: 'pr-sheet-close', type: 'button', 'aria-label': T.close, on: { click: () => layer.close() } }, [strokeIcon(ICON_CLOSE)])
+      ]),
+      body,
+      foot
+    );
+    layer = openLayer(panel, { labelledBy: id });
+    layer.body = body;
+    layer.foot = foot;
+    return layer;
+  }
+
+  /** A confirm card instead of confirm() (which shows the site address in the app) */
+  function confirmCard(title, text, okLabel, cancelLabel, danger) {
+    return new Promise((resolve) => {
+      const id = 'prConfirm' + Math.random().toString(36).slice(2, 8);
+      let answered = false;
+      const ok = el('button', { class: 'pr-btn ' + (danger ? 'pr-btn--danger' : 'pr-btn--primary'), type: 'button', text: okLabel });
+      const cancel = el('button', { class: 'pr-btn pr-btn--glass', type: 'button', text: cancelLabel || T.cancel, autofocus: true });
+      const panel = el('div', { class: 'pr-sheet pr-confirm', role: 'alertdialog' }, [
+        el('h2', { class: 'pr-sheet-title', id: id, text: title }),
+        text ? el('p', { class: 'pr-confirm-text', text: text }) : null,
+        el('div', { class: 'pr-form-actions' }, [cancel, ok])
+      ]);
+      const layer = openLayer(panel, { labelledBy: id });
+      const finish = (v) => { if (answered) return; answered = true; layer.close(); resolve(v); };
+      layer.onClose = () => { if (!answered) { answered = true; resolve(false); } };
+      ok.addEventListener('click', () => finish(true));
+      cancel.addEventListener('click', () => finish(false));
+    });
+  }
+
+  function trapTab(e, root) {
+    const focusable = Array.prototype.filter.call(
+      root.querySelectorAll('button, [href], input, textarea, [tabindex]:not([tabindex="-1"])'),
+      (n) => !n.disabled && n.offsetParent !== null
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === root)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
     }
   }
 
-  function initModal() {
-    const modal = document.getElementById('commentsModal');
-    const closeBtn = document.getElementById('closeModal');
-    const overlay = modal.querySelector('.pr-modal-overlay');
-    const form = document.getElementById('addCommentForm');
+  function autoGrow(ta, max) {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight + 2, max) + 'px';
+  }
 
-    closeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      modal.setAttribute('hidden', '');
-      editingCommentId = null;
-      form.reset();
+  // ===== STATE =====
+  const FILTERS = ['all', 'town', 'mine'];
+  const savedFilter = store('filter');
+  const state = {
+    filter: FILTERS.indexOf(savedFilter) !== -1 && (savedFilter !== 'town' || CFG.town) ? savedFilter : 'all',
+    posts: [],
+    hasMore: false,
+    loading: false,
+    error: '',
+    req: 0,
+    loadedAt: 0
+  };
+  const byId = (id) => state.posts.find((p) => p.id === id) || null;
+
+  // ===== LOADING =====
+  async function load(more) {
+    const req = ++state.req;
+    state.loading = true;
+    state.error = '';
+    if (!more) render();
+    setBusy($('#prMore'), true);
+
+    const p = new URLSearchParams({ filter: state.filter });
+    if (more && state.posts.length) p.set('before', String(state.posts[state.posts.length - 1].id));
+    const res = await api('/prayers/api/posts/list.php?' + p.toString());
+    if (req !== state.req) return;
+
+    state.loading = false;
+    setBusy($('#prMore'), false);
+    if (!res.ok) {
+      if (more) { toast(errorText(res.error), true); return; }
+      state.error = res.error;
+      state.posts = [];
+      render();
+      return;
+    }
+    const rows = res.data.posts || [];
+    if (more) {
+      const known = new Set(state.posts.map((x) => x.id));
+      state.posts = state.posts.concat(rows.filter((x) => !known.has(x.id)));
+    } else {
+      state.posts = rows;
+    }
+    state.hasMore = !!res.data.has_more;
+    state.loadedAt = Date.now();
+    render();
+  }
+
+  // ===== DRAWING =====
+  function tallyNode(p) {
+    const parts = [];
+    if (p.pray_count) parts.push(el('span', { class: 'pr-tally-item' }, [img(ICON_PRAY), el('span', { text: p.pray_count === 1 ? T.pr_tally_pray_one : tr('pr_tally_pray_n', { n: p.pray_count }) })]));
+    if (p.heart_count) parts.push(el('span', { class: 'pr-tally-item' }, [img(ICON_HEART), el('span', { text: p.heart_count === 1 ? T.pr_tally_heart_one : tr('pr_tally_heart_n', { n: p.heart_count }) })]));
+    if (p.comment_count) parts.push(el('span', { class: 'pr-tally-item pr-tally-comments', text: p.comment_count === 1 ? T.pr_tally_comments_one : tr('pr_tally_comments_n', { n: p.comment_count }) }));
+    if (!parts.length) return null;
+    return el('button', {
+      class: 'pr-tally', type: 'button',
+      on: { click: () => (p.pray_count || p.heart_count) ? openWho(p) : openComments(p) }
+    }, parts);
+  }
+
+  function actionsNode(p) {
+    const pray = el('button', {
+      class: 'pr-act pr-act--pray', type: 'button', 'aria-pressed': p.prayed ? 'true' : 'false',
+      on: { click: () => react(p, 'pray') }
+    }, [img(ICON_PRAY), el('span', { text: p.prayed ? T.pr_praying : T.pr_pray })]);
+    const heart = el('button', {
+      class: 'pr-act pr-act--heart pr-act--icon', type: 'button', 'aria-pressed': p.hearted ? 'true' : 'false',
+      'aria-label': T.pr_heart, title: T.pr_heart, on: { click: () => react(p, 'heart') }
+    }, [img(ICON_HEART)]);
+    const talk = el('button', {
+      class: 'pr-act pr-act--talk pr-act--icon', type: 'button', 'aria-label': T.pr_comment, title: T.pr_comment,
+      on: { click: () => openComments(p) }
+    }, [strokeIcon(ICON_CHAT, 2)]);
+    return el('div', { class: 'pr-actions' }, [pray, heart, talk]);
+  }
+
+  function postCard(p) {
+    const meta = [];
+    if (p.author.town) meta.push(icon('pin'), el('span', { text: p.author.town }), el('span', { 'aria-hidden': 'true', text: '·' }));
+    meta.push(timeNode(p.ts));
+    if (p.edited) meta.push(el('span', { 'aria-hidden': 'true', text: '·' }), el('span', { text: T.pr_edited }));
+
+    const text = fillText(el('div', { class: 'pr-text' }), p.text);
+    const card = el('article', { class: 'pr-post', id: 'post-' + p.id, 'data-id': p.id }, [
+      el('header', { class: 'pr-post-head' }, [
+        avatar(p.author),
+        el('div', { class: 'pr-who' }, [
+          el('div', { class: 'pr-name', text: p.author.name }),
+          el('div', { class: 'pr-meta' }, meta)
+        ]),
+        (p.can_edit || p.can_delete) ? el('button', {
+          class: 'pr-menu-btn', type: 'button', 'aria-label': T.pr_options, 'aria-haspopup': 'dialog',
+          on: { click: () => openMenu(p) }
+        }, [strokeIcon(ICON_DOTS, 3)]) : null
+      ]),
+      text,
+      p.photo ? el('button', { class: 'pr-photo', type: 'button', 'aria-label': T.pr_photo_alt, on: { click: () => lightbox(p.photo) } }, [
+        el('img', { src: p.photo, alt: T.pr_photo_alt, loading: 'lazy', decoding: 'async' })
+      ]) : null,
+      tallyNode(p),
+      actionsNode(p)
+    ]);
+    return card;
+  }
+
+  /** Long prayers fold after eight lines (measured once they are on the page) */
+  function foldLong(root) {
+    root.querySelectorAll('.pr-text:not([data-folded])').forEach((text) => {
+      text.setAttribute('data-folded', '');
+      text.classList.add('is-clamped');
+      if (text.scrollHeight <= text.clientHeight + 4) {
+        text.classList.remove('is-clamped');
+        return;
+      }
+      const label = el('span', { text: T.read_more });
+      const btn = el('button', { class: 'pr-fold', type: 'button', 'aria-expanded': 'false' }, [label, strokeIcon(ICON_CHEVRON)]);
+      btn.addEventListener('click', () => {
+        const open = text.classList.toggle('is-clamped') === false;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        label.textContent = open ? T.read_less : T.read_more;
+      });
+      text.after(btn);
+    });
+  }
+
+  function emptyState() {
+    const box = el('div', { class: 'pr-card pr-empty' });
+    if (state.error) {
+      box.append(
+        el('div', { class: 'pr-empty-orb pr-empty-orb--quiet' }, [icon('prayer')]),
+        el('p', { class: 'pr-empty-text', text: T.pr_load_failed }),
+        el('p', { class: 'pr-empty-hint', text: errorText(state.error) }),
+        el('button', { class: 'pr-btn pr-btn--glass', type: 'button', on: { click: () => load(false) } }, [el('span', { text: T.pr_retry })])
+      );
+      return box;
+    }
+    const text = state.filter === 'mine' ? T.pr_empty_mine : (state.filter === 'town' ? tr('pr_empty_town', { town: CFG.town }) : T.pr_empty);
+    box.append(
+      el('div', { class: 'pr-empty-orb' }, [icon('prayer')]),
+      el('p', { class: 'pr-empty-text', text: text }),
+      el('p', { class: 'pr-empty-hint', text: T.pr_empty_hint }),
+      el('button', { class: 'pr-btn pr-btn--primary', type: 'button', on: { click: () => openComposer(null) } }, [el('span', { text: T.share_prayer_testimony })])
+    );
+    return box;
+  }
+
+  function render() {
+    document.querySelectorAll('.pr-chip').forEach((b) => b.setAttribute('aria-pressed', b.getAttribute('data-filter') === state.filter ? 'true' : 'false'));
+    const feed = $('#prFeed');
+    const moreWrap = $('#prMoreWrap');
+    feed.setAttribute('aria-busy', state.loading ? 'true' : 'false');
+    feed.classList.toggle('is-loading', state.loading && state.posts.length > 0);
+
+    if (state.loading && !state.posts.length) {
+      feed.replaceChildren(el('div', { class: 'pr-skel', 'aria-hidden': 'true' }, [el('i'), el('i')]));
+      moreWrap.hidden = true;
+      return;
+    }
+    if (state.loading) return;
+    if (state.error || !state.posts.length) {
+      feed.replaceChildren(emptyState());
+      moreWrap.hidden = true;
+      return;
+    }
+    feed.replaceChildren(...state.posts.map(postCard));
+    foldLong(feed);
+    moreWrap.hidden = !state.hasMore;
+  }
+
+  /** Redraw one card (after an edit) */
+  function patchCard(p) {
+    const old = document.getElementById('post-' + p.id);
+    if (!old) return;
+    const fresh = postCard(p);
+    fresh.style.animation = 'none';
+    old.replaceWith(fresh);
+    foldLong(fresh.parentNode || document);
+  }
+
+  /** Update a card's counts and buttons in place (an opened prayer stays open, focus stays put) */
+  function patchCounts(p) {
+    const card = document.getElementById('post-' + p.id);
+    if (!card) return;
+    const pray = $('.pr-act--pray', card);
+    const heart = $('.pr-act--heart', card);
+    if (pray) {
+      pray.setAttribute('aria-pressed', p.prayed ? 'true' : 'false');
+      $('span', pray).textContent = p.prayed ? T.pr_praying : T.pr_pray;
+    }
+    if (heart) heart.setAttribute('aria-pressed', p.hearted ? 'true' : 'false');
+    const old = $('.pr-tally', card);
+    const fresh = tallyNode(p);
+    if (old && fresh) old.replaceWith(fresh);
+    else if (old) old.remove();
+    else if (fresh) $('.pr-actions', card).before(fresh);
+  }
+
+  function setFilter(f) {
+    if (state.filter === f) return;
+    state.filter = f;
+    store('filter', f);
+    load(false);
+  }
+
+  // ===== REACTIONS =====
+  const reacting = new Set();
+
+  async function react(p, type) {
+    const key = p.id + type;
+    if (reacting.has(key)) return;
+    reacting.add(key);
+    // Shown at once; the server's answer settles the counts
+    const field = type === 'pray' ? 'prayed' : 'hearted';
+    const count = type === 'pray' ? 'pray_count' : 'heart_count';
+    const before = { prayed: p.prayed, hearted: p.hearted, pray_count: p.pray_count, heart_count: p.heart_count };
+    p[field] = !p[field];
+    p[count] = Math.max(0, p[count] + (p[field] ? 1 : -1));
+    patchCounts(p);
+
+    const res = await postJSON('/prayers/api/posts/react.php', { post_id: p.id, type: type });
+    reacting.delete(key);
+    if (!res.ok) {
+      Object.assign(p, before);
+      patchCounts(p);
+      toast(errorText(res.error), true);
+      return;
+    }
+    Object.assign(p, {
+      prayed: !!res.data.prayed, hearted: !!res.data.hearted,
+      pray_count: res.data.pray_count || 0, heart_count: res.data.heart_count || 0
+    });
+    patchCounts(p);
+  }
+
+  // ===== WHO PRAYS ALONG =====
+  async function openWho(p) {
+    const layer = sheet(T.pr_who_title);
+    const tabs = el('div', { class: 'pr-tabs', role: 'tablist' });
+    const list = el('div', { class: 'pr-people', role: 'tabpanel' }, [el('div', { class: 'pr-skel', 'aria-hidden': 'true' }, [el('i')])]);
+    layer.body.append(tabs, list);
+
+    const res = await api('/prayers/api/posts/reactions.php?post_id=' + p.id);
+    if (!res.ok) {
+      list.replaceChildren(el('p', { class: 'pr-c-empty', text: errorText(res.error) }));
+      return;
+    }
+    const groups = { pray: res.data.pray || [], heart: res.data.heart || [] };
+    let current = groups.pray.length || !groups.heart.length ? 'pray' : 'heart';
+
+    function draw() {
+      tabs.replaceChildren(...['pray', 'heart'].map((k) => el('button', {
+        class: 'pr-tab', type: 'button', role: 'tab', 'aria-selected': k === current ? 'true' : 'false',
+        on: { click: () => { current = k; draw(); } }
+      }, [img(k === 'pray' ? ICON_PRAY : ICON_HEART), el('span', { text: (k === 'pray' ? T.pr_tab_pray : T.pr_tab_heart) + ' · ' + groups[k].length })])));
+      const people = groups[current];
+      list.replaceChildren(...(people.length
+        ? people.map((person) => el('div', { class: 'pr-person' }, [avatar(person, true), el('span', { text: person.me ? person.name + ' (' + T.pr_you + ')' : person.name })]))
+        : [el('p', { class: 'pr-c-empty', text: T.pr_who_none })]));
+    }
+    draw();
+  }
+
+  // ===== PHOTO VIEWER =====
+  function lightbox(src) {
+    const close = el('button', { class: 'pr-sheet-close', type: 'button', 'aria-label': T.close }, [strokeIcon(ICON_CLOSE)]);
+    const panel = el('div', { class: 'pr-lightbox-inner', role: 'dialog', 'aria-modal': 'true', 'aria-label': T.pr_photo_alt, tabindex: '-1' }, [
+      el('img', { src: src, alt: T.pr_photo_alt }),
+      close
+    ]);
+    openLayer(panel, { backClass: 'pr-lightbox', closeOnAnyClick: true, bare: true });
+  }
+
+  // ===== MENU / DELETE =====
+  function openMenu(p) {
+    const layer = sheet(T.pr_options);
+    const list = el('div', { class: 'pr-actions-list' });
+    if (p.can_edit) {
+      list.append(el('button', { class: 'pr-action', type: 'button', on: { click: () => { layer.close({ force: true }); setTimeout(() => openComposer(p), 200); } } }, [strokeIcon(ICON_EDIT, 2), el('span', { text: T.pr_edit })]));
+    }
+    if (p.can_delete) {
+      list.append(el('button', { class: 'pr-action is-danger', type: 'button', on: { click: () => { layer.close({ force: true }); setTimeout(() => removePost(p), 200); } } }, [strokeIcon(ICON_TRASH, 2), el('span', { text: T.pr_delete })]));
+    }
+    layer.body.append(list);
+  }
+
+  async function removePost(p) {
+    const yes = await confirmCard(T.pr_delete_q, T.pr_delete_text, T.pr_delete, T.cancel, true);
+    if (!yes) return;
+    const res = await postJSON('/prayers/api/posts/delete.php', { post_id: p.id });
+    if (!res.ok) { toast(errorText(res.error), true); return; }
+    const card = document.getElementById('post-' + p.id);
+    const done = () => {
+      state.posts = state.posts.filter((x) => x.id !== p.id);
+      render();
+      toast(T.pr_deleted);
+    };
+    if (card) { card.classList.add('is-leaving'); setTimeout(done, 260); } else done();
+  }
+
+  // ===== COMPOSER =====
+  /** Resize + convert a photo in the browser so uploads stay small (the server re-encodes anyway) */
+  function shrinkPhoto(file) {
+    return new Promise((resolve) => {
+      if (!file || !/^image\//.test(file.type || '') || !window.URL || !URL.createObjectURL) return resolve(file);
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const ratio = Math.min(1, 1920 / Math.max(image.naturalWidth, image.naturalHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob((blob) => {
+            if (!blob || blob.size > file.size) return resolve(file);
+            resolve(new File([blob], 'photo.' + (blob.type === 'image/webp' ? 'webp' : 'jpg'), { type: blob.type }));
+          }, 'image/webp', 0.86);
+        } catch (e) {
+          URL.revokeObjectURL(url);
+          resolve(file);
+        }
+      };
+      image.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      image.src = url;
+    });
+  }
+
+  function openComposer(post, opts) {
+    opts = opts || {};
+    const editing = !!post;
+    const layer = sheet(editing ? T.pr_edit_title : T.pr_new_title, 'pr-sheet--compose');
+    const ta = el('textarea', {
+      class: 'pr-textarea', rows: 5, maxlength: LIMITS.text + 200, placeholder: T.pr_text_ph,
+      'aria-label': editing ? T.pr_edit_title : T.pr_new_title, autofocus: !opts.pickPhoto
+    });
+    ta.value = editing ? post.text : '';
+    const counter = el('span', { class: 'pr-counter', 'aria-live': 'polite' });
+    const file = el('input', { class: 'pr-file', type: 'file', accept: 'image/*', tabindex: '-1', 'aria-hidden': 'true' });
+    const pickLabel = el('span');
+    const pick = el('button', { class: 'pr-pick', type: 'button', on: { click: () => file.click() } }, [icon('photo'), pickLabel]);
+    const preview = el('div', { class: 'pr-preview', hidden: true });
+    const submit = el('button', { class: 'pr-btn pr-btn--primary', type: 'button' }, [
+      strokeIcon(ICON_SEND, 2), el('span', { text: editing ? T.pr_save_btn : T.pr_share_btn })
+    ]);
+
+    let photoFile = null;              // a newly chosen photo
+    let keepOld = editing && !!post.photo;
+    let previewUrl = '';
+
+    function drawPhoto() {
+      if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = ''; }
+      const src = photoFile ? (previewUrl = URL.createObjectURL(photoFile)) : (keepOld ? post.photo : '');
+      pickLabel.textContent = src ? T.pr_change_photo : T.pr_add_photo;
+      preview.hidden = !src;
+      preview.replaceChildren();
+      if (!src) return;
+      preview.append(
+        el('img', { src: src, alt: T.pr_photo_alt }),
+        el('button', {
+          class: 'pr-preview-x', type: 'button',
+          on: { click: () => { photoFile = null; keepOld = false; drawPhoto(); } }
+        }, [strokeIcon(ICON_CLOSE), el('span', { text: T.pr_remove_photo })])
+      );
+    }
+
+    function updateCounter() {
+      const left = LIMITS.text - ta.value.trim().length;
+      counter.textContent = left < 300 ? tr('pr_chars_left', { n: left }) : '';
+      counter.classList.toggle('is-near', left < 300 && left >= 0);
+      counter.classList.toggle('is-over', left < 0);
+      ta.classList.toggle('is-invalid', left < 0);
+    }
+
+    const dirty = () => editing
+      ? (ta.value.trim() !== post.text || !!photoFile || keepOld !== !!post.photo)
+      : (ta.value.trim() !== '' || !!photoFile);
+
+    file.addEventListener('change', () => {
+      const f = file.files && file.files[0];
+      file.value = '';
+      if (!f) return;
+      if (!/^image\//.test(f.type || '')) { toast(T.pr_err_photo, true); return; }
+      photoFile = f;
+      drawPhoto();
+    });
+    ta.addEventListener('input', () => { updateCounter(); autoGrow(ta, Math.round(window.innerHeight * 0.45)); });
+    ta.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); save(); }
     });
 
-    overlay.addEventListener('click', (e) => {
-      e.preventDefault();
-      modal.setAttribute('hidden', '');
-      editingCommentId = null;
-      form.reset();
+    async function save() {
+      if (submit.disabled) return; // already sending (a second Ctrl+Enter)
+      const text = ta.value.trim();
+      if (!text) { toast(T.pr_err_empty, true); ta.focus(); return; }
+      if (text.length > LIMITS.text) { toast(T.pr_err_too_long, true); ta.focus(); return; }
+      setBusy(submit, true, editing ? T.pr_saving : T.pr_posting);
+      const form = new FormData();
+      form.append('text', text);
+      if (editing) {
+        form.append('post_id', String(post.id));
+        if (!keepOld && !photoFile && post.photo) form.append('remove_photo', '1');
+      }
+      if (photoFile) form.append('photo', await shrinkPhoto(photoFile));
+
+      const res = await postForm(editing ? '/prayers/api/posts/update.php' : '/prayers/api/posts/create.php', form);
+      setBusy(submit, false);
+      if (!res.ok) { toast(errorText(res.error), true); return; }
+      const saved = res.data.post;
+      layer.close({ force: true });
+      if (saved) {
+        if (editing) {
+          const i = state.posts.findIndex((x) => x.id === saved.id);
+          if (i !== -1) state.posts[i] = saved;
+          patchCard(saved);
+        } else {
+          if (state.filter === 'all' || state.filter === 'mine' || (state.filter === 'town' && saved.author.town === CFG.town)) {
+            state.posts.unshift(saved);
+            render();
+            const card = document.getElementById('post-' + saved.id);
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      }
+      toast(editing ? T.pr_saved : T.pr_shared);
+    }
+    submit.addEventListener('click', save);
+
+    layer.body.append(
+      el('div', { class: 'pr-compose-who' }, [avatar(CFG.me), el('span', { text: CFG.me.name })]),
+      ta,
+      el('div', { class: 'pr-compose-tools' }, [pick, file, counter]),
+      preview
+    );
+    layer.foot.hidden = false;
+    layer.foot.append(el('div', { class: 'pr-form-actions' }, [
+      el('button', { class: 'pr-btn pr-btn--glass', type: 'button', text: T.cancel, on: { click: () => layer.close() } }),
+      submit
+    ]));
+    layer.beforeClose = async () => !dirty() || confirmCard(T.pr_discard_q, '', T.pr_discard, T.pr_keep, true);
+    layer.onClose = () => { if (previewUrl) URL.revokeObjectURL(previewUrl); };
+
+    drawPhoto();
+    updateCounter();
+    autoGrow(ta, Math.round(window.innerHeight * 0.45));
+    // Still inside the tap that opened the composer, so the picker may open
+    if (opts.pickPhoto) file.click();
+  }
+
+  // ===== COMMENTS =====
+  async function openComments(p) {
+    const layer = sheet(T.comments, 'pr-sheet--talk');
+    const list = el('div', { class: 'pr-c-list', 'aria-live': 'polite' }, [el('div', { class: 'pr-skel', 'aria-hidden': 'true' }, [el('i')])]);
+    const about = el('p', { class: 'pr-talk-about', text: '“' + p.text.replace(/\s+/g, ' ').slice(0, 160) + (p.text.length > 160 ? '…' : '') + '”' });
+    layer.body.append(about, list);
+
+    const input = el('textarea', { class: 'pr-c-input', rows: 1, maxlength: LIMITS.comment + 100, placeholder: T.write_encouraging_word, 'aria-label': T.write_encouraging_word });
+    const send = el('button', { class: 'pr-send', type: 'button', 'aria-label': T.send, title: T.send, disabled: true }, [strokeIcon(ICON_SEND, 2)]);
+    layer.foot.hidden = false;
+    layer.foot.append(el('div', { class: 'pr-c-compose' }, [input, send]));
+    layer.beforeClose = async () => !input.value.trim() || confirmCard(T.pr_discard_q, '', T.pr_discard, T.pr_keep, true);
+
+    let comments = [];
+
+    function setCount(n) {
+      p.comment_count = n;
+      const live = byId(p.id);
+      if (live && live !== p) live.comment_count = n;
+      patchCounts(live || p);
+    }
+
+    function commentNode(c) {
+      const textNode = fillText(el('div', { class: 'pr-c-text' }), c.text);
+      const bubble = el('div', { class: 'pr-c-bubble' }, [el('span', { class: 'pr-c-name', text: c.author.name }), textNode]);
+      const foot = el('div', { class: 'pr-c-foot' }, [timeNode(c.ts)]);
+      const node = el('div', { class: 'pr-c' + (c.mine ? ' is-mine' : ''), 'data-id': c.id }, [
+        avatar(c.author, true),
+        el('div', { class: 'pr-c-body' }, [bubble, foot])
+      ]);
+      if (c.can_edit) foot.append(el('button', { class: 'pr-c-btn', type: 'button', text: T.pr_comment_edit, on: { click: () => editComment(c, node) } }));
+      if (c.can_delete) foot.append(el('button', { class: 'pr-c-btn is-danger', type: 'button', text: T.pr_delete, on: { click: () => deleteComment(c) } }));
+      return node;
+    }
+
+    function draw() {
+      list.replaceChildren(...(comments.length ? comments.map(commentNode) : [el('p', { class: 'pr-c-empty', text: T.pr_no_comments })]));
+    }
+
+    function editComment(c, node) {
+      const ta = el('textarea', { class: 'pr-c-input', rows: 2, maxlength: LIMITS.comment + 100, 'aria-label': T.pr_comment_edit });
+      ta.value = c.text;
+      const save = el('button', { class: 'pr-btn pr-btn--primary', type: 'button' }, [el('span', { text: T.pr_save_btn })]);
+      const cancel = el('button', { class: 'pr-btn pr-btn--glass', type: 'button', text: T.cancel, on: { click: draw } });
+      save.addEventListener('click', async () => {
+        const text = ta.value.trim();
+        if (!text) { toast(T.pr_err_empty, true); return; }
+        setBusy(save, true, T.pr_saving);
+        const res = await postJSON('/prayers/api/comments/update.php', { comment_id: c.id, text: text });
+        setBusy(save, false);
+        if (!res.ok) { toast(errorText(res.error), true); return; }
+        const i = comments.findIndex((x) => x.id === c.id);
+        if (i !== -1 && res.data.comment) comments[i] = res.data.comment;
+        draw();
+        toast(T.pr_comment_saved);
+      });
+      const body = $('.pr-c-body', node);
+      body.replaceChildren(el('div', { class: 'pr-c-edit' }, [ta, el('div', { class: 'pr-form-actions' }, [cancel, save])]));
+      autoGrow(ta, 220);
+      ta.addEventListener('input', () => autoGrow(ta, 220));
+      ta.focus();
+    }
+
+    async function deleteComment(c) {
+      const yes = await confirmCard(T.pr_comment_delete_q, '', T.pr_delete, T.cancel, true);
+      if (!yes) return;
+      const res = await postJSON('/prayers/api/comments/delete.php', { comment_id: c.id });
+      if (!res.ok) { toast(errorText(res.error), true); return; }
+      comments = comments.filter((x) => x.id !== c.id);
+      draw();
+      setCount(comments.length);
+      toast(T.pr_comment_deleted);
+    }
+
+    async function submit() {
+      if (send.classList.contains('is-busy')) return; // already sending
+      const text = input.value.trim();
+      if (!text) return;
+      if (text.length > LIMITS.comment) { toast(T.pr_err_too_long, true); return; }
+      send.disabled = true;
+      send.classList.add('is-busy');
+      const res = await postJSON('/prayers/api/comments/create.php', { post_id: p.id, text: text });
+      send.classList.remove('is-busy');
+      if (!res.ok) {
+        send.disabled = false;
+        toast(errorText(res.error), true);
+        return;
+      }
+      input.value = '';
+      autoGrow(input, 140);
+      if (res.data.comment) comments.push(res.data.comment);
+      draw();
+      setCount(comments.length);
+      layer.body.scrollTop = layer.body.scrollHeight;
+    }
+
+    input.addEventListener('input', () => { send.disabled = !input.value.trim(); autoGrow(input, 140); });
+    input.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submit(); }
     });
+    send.addEventListener('click', submit);
+
+    const res = await api('/prayers/api/comments/list.php?post_id=' + p.id);
+    if (!layer.panel.isConnected) return;
+    if (!res.ok) {
+      list.replaceChildren(el('p', { class: 'pr-c-empty', text: errorText(res.error) }));
+      return;
+    }
+    comments = res.data.comments || [];
+    draw();
+    if (comments.length !== p.comment_count) setCount(comments.length);
+    layer.body.scrollTop = layer.body.scrollHeight;
+  }
+
+  // ===== A PRAYER FROM A NOTIFICATION (#post-12, #post-12-c opens its comments) =====
+  async function openTarget(id, talk) {
+    let p = byId(id);
+    if (!p) {
+      const res = await api('/prayers/api/posts/list.php?id=' + id);
+      if (!res.ok || !res.data.posts || !res.data.posts[0]) { toast(T.pr_not_found, true); return; }
+      p = res.data.posts[0];
+      state.posts = [p].concat(state.posts.filter((x) => x.id !== p.id));
+      render();
+    }
+    document.querySelectorAll('.pr-post.is-target').forEach((n) => n.classList.remove('is-target'));
+    const card = document.getElementById('post-' + id);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      card.classList.add('is-target');
+      setTimeout(() => card.classList.remove('is-target'), 3000);
+    }
+    if (talk) setTimeout(() => openComments(p), 350);
+  }
+
+  // ===== START =====
+  function bind() {
+    const compose = () => openComposer(null);
+    $('#prPrompt').addEventListener('click', compose);
+    $('#prPromptPhoto').addEventListener('click', () => openComposer(null, { pickPhoto: true }));
+    const fab = $('#prFab');
+    if (fab) fab.addEventListener('click', compose);
+    document.querySelectorAll('.pr-chip').forEach((b) => b.addEventListener('click', () => setFilter(b.getAttribute('data-filter'))));
+    $('#prMore').addEventListener('click', () => load(true));
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.hasAttribute('hidden')) {
-        modal.setAttribute('hidden', '');
-        editingCommentId = null;
-        form.reset();
-      }
+      if (!layers.length) return;
+      const top = layers[layers.length - 1];
+      if (e.key === 'Escape') { e.preventDefault(); top.close(); }
+      else if (e.key === 'Tab') trapTab(e, top.panel);
     });
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const postId = document.getElementById('commentPostId').value;
-      const text = document.getElementById('commentText').value.trim();
-      
-      if (editingCommentId) {
-        await updateComment(editingCommentId, text);
-      } else {
-        await createComment(postId, text);
-      }
+    // Back after a while: fresh prayers (others may have shared or prayed)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !layers.length && Date.now() - state.loadedAt > 120000) load(false);
     });
   }
 
-  async function openCommentsModal(postId) {
-    const modal = document.getElementById('commentsModal');
-    document.getElementById('commentPostId').value = postId;
-    editingCommentId = null;
-    document.getElementById('addCommentForm').reset();
-    modal.removeAttribute('hidden');
-    await loadComments(postId);
+  /** #post-12 / #post-12-c in the address: show that prayer (the address is tidied up again) */
+  function takeHash() {
+    const m = /^#post-(\d+)(-c)?$/.exec(window.location.hash || '');
+    if (!m) return null;
+    try { history.replaceState(history.state, '', window.location.pathname); } catch (e) { /* old WebView */ }
+    return { id: +m[1], talk: !!m[2] };
   }
 
-  async function createComment(postId, text) {
-    if (!text.trim()) return;
-
-    try {
-      const res = await fetch('/prayers/api/comments/create.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_id: postId, text })
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        document.getElementById('addCommentForm').reset();
-        loadComments(postId);
-        loadPosts();
-        showToast(T('comment_posted'), 'success');
-      } else {
-        showToast(data.error || T('error'), 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(T('could_not_post'), 'error');
-    }
-  }
-
-  async function updateComment(commentId, text) {
-    if (!text.trim()) return;
-
-    try {
-      const res = await fetch('/prayers/api/comments/update.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comment_id: commentId, text })
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        editingCommentId = null;
-        document.getElementById('addCommentForm').reset();
-        const postId = document.getElementById('commentPostId').value;
-        loadComments(postId);
-        showToast(T('comment_updated'), 'success');
-      } else {
-        showToast(data.error || T('error'), 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(T('could_not_update'), 'error');
-    }
-  }
-
-  async function deleteComment(commentId) {
-    if (!confirm(T('delete_comment'))) return;
-
-    try {
-      const res = await fetch('/prayers/api/comments/delete.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comment_id: commentId })
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        const postId = document.getElementById('commentPostId').value;
-        loadComments(postId);
-        loadPosts();
-        showToast(T('comment_deleted'), 'success');
-      } else {
-        showToast(data.error || T('error'), 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(T('could_not_delete'), 'error');
-    }
-  }
-
-  async function loadComments(postId) {
-    const container = document.getElementById('commentsContainer');
-    container.innerHTML = `
-      <div class="pr-loading">
-        <div class="pr-spinner"></div>
-      </div>
-    `;
-
-    try {
-      const res = await fetch(`/prayers/api/comments/list.php?post_id=${postId}`);
-      const data = await res.json();
-
-      if (data.success && data.comments.length > 0) {
-        container.innerHTML = data.comments.map(c => renderComment(c)).join('');
-        attachCommentListeners();
-      } else {
-        container.innerHTML = `<p style="text-align:center;color:var(--color-silver-dark);">${T('no_comments')}</p>`;
-      }
-    } catch (err) {
-      console.error(err);
-      container.innerHTML = `<p style="text-align:center;color:var(--color-silver-dark);">${T('could_not_load')}</p>`;
-    }
-  }
-
-  // In /prayers/js/prayers.js - UPDATE renderComment function
-
-function renderComment(c) {
-  // Avatar: use photo or initials
-  const avatarHTML = c.user_pic
-    ? `<img src="${c.user_pic}" alt="${c.username}" class="pr-comment-avatar">`
-    : `<div class="pr-comment-avatar pr-avatar-initials pr-avatar-initials-sm">${c.initials || '??'}</div>`;
-
-  const actionsHTML = c.can_edit || c.can_delete ? `
-    <div class="pr-comment-actions">
-      ${c.can_edit ? `
-        <button class="pr-action-btn pr-btn-sm pr-edit-comment-btn" data-id="${c.id}" data-text="${escapeHtml(c.text)}">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span>${T('edit')}</span>
-        </button>
-      ` : ''}
-      ${c.can_delete ? `
-        <button class="pr-action-btn pr-btn-sm pr-delete-comment-btn" data-id="${c.id}">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span>${T('delete')}</span>
-        </button>
-      ` : ''}
-    </div>
-  ` : '';
-
-  return `
-    <div class="pr-comment" data-id="${c.id}">
-      ${avatarHTML}
-      <div class="pr-comment-content">
-        <div class="pr-comment-header">
-          <span class="pr-comment-user">${c.username}</span>
-          <span class="pr-comment-date">${c.created_at}</span>
-        </div>
-        <p class="pr-comment-text">${c.text}</p>
-        ${actionsHTML}
-      </div>
-    </div>
-  `;
-}
-
-  function attachCommentListeners() {
-    document.querySelectorAll('.pr-edit-comment-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        editingCommentId = btn.dataset.id;
-        const text = btn.dataset.text;
-        const textarea = document.getElementById('commentText');
-        textarea.value = text;
-        textarea.focus();
-      });
+  async function start() {
+    const target = takeHash();
+    bind();
+    // A notification opened while the page is already showing
+    window.addEventListener('hashchange', () => {
+      const t = takeHash();
+      if (!t) return;
+      layers.slice().reverse().forEach((l) => l.close({ force: true }));
+      openTarget(t.id, t.talk);
     });
-
-    document.querySelectorAll('.pr-delete-comment-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const commentId = btn.dataset.id;
-        deleteComment(commentId);
-      });
-    });
+    await load(false);
+    if (target) openTarget(target.id, target.talk);
   }
 
-  function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `pr-toast pr-toast-${type}`;
-    toast.textContent = message;
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      padding: 16px 24px;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-      border: 2px solid ${type === 'success' ? 'var(--color-rosegold)' : 'var(--color-silver)'};
-      border-radius: 12px;
-      color: var(--color-peach);
-      font-size: 14px;
-      box-shadow: var(--shadow-lg), var(--glow-rosegold);
-      z-index: 10000;
-      animation: slide-in-right 0.3s ease-out;
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      toast.style.animation = 'slide-out-right 0.3s ease-out';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
+  start();
 })();

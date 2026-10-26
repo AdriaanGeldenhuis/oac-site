@@ -1,89 +1,80 @@
 <?php
-require_once __DIR__ . '/../../../security/auth_gate.php';
-require_once __DIR__ . '/../notifications/helper.php';
+declare(strict_types=1);
+/**
+ * POST /prayers/api/posts/react.php  {"post_id": N, "type": "pray"|"heart"}  (X-CSRF-Token)
+ * Switches my "I pray along" / heart on or off and answers with both counts.
+ * The prayer row is locked while toggling, so a double tap never counts twice.
+ * The writer is told once (not on every off/on), after the answer has gone.
+ */
 
-global $pdo;
-header('Content-Type: application/json; charset=utf-8');
+require_once dirname(__DIR__, 3) . '/security/auth_gate.php';
+require_once dirname(__DIR__, 2) . '/lib/prayers.php';
+require_once dirname(__DIR__) . '/notifications/helper.php';
 
-$userId = $_SESSION['user_id'] ?? 0;
-
-if (!$userId) {
-  http_response_code(401);
-  echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-  exit;
+pr_require_post();
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    pr_fail('db_unavailable', 500);
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-$postId = (int)($input['post_id'] ?? 0);
-$type = $input['type'] ?? '';
+$in = pr_input();
+$postId = (int)($in['post_id'] ?? 0);
+$type = (string)($in['type'] ?? '');
+if ($postId <= 0 || !in_array($type, ['heart', 'pray'], true)) pr_fail('invalid_input');
 
-if (!in_array($type, ['heart', 'pray'])) {
-  echo json_encode(['success' => false, 'error' => 'Invalid type']);
-  exit;
-}
-
+$me = pr_user_id();
 try {
-  $pdo->beginTransaction();
+    $pdo->beginTransaction();
+    $post = pr_post_row($pdo, $postId, true);
+    if (!$post) {
+        $pdo->rollBack();
+        pr_fail('not_found', 404);
+    }
 
-  // Get post owner so we can notify them of new reactions
-  $postStmt = $pdo->prepare("SELECT user_id FROM prayers_posts WHERE id = ?");
-  $postStmt->execute([$postId]);
-  $post = $postStmt->fetch();
+    $st = $pdo->prepare('SELECT id FROM prayers_reactions WHERE post_id = ? AND user_id = ? AND type = ?');
+    $st->execute([$postId, $me, $type]);
+    $had = (bool)$st->fetchColumn();
 
-  if (!$post) {
-    $pdo->rollBack();
-    http_response_code(404);
-    echo json_encode(['success' => false, 'error' => 'post_not_found']);
-    exit;
-  }
+    if ($had) {
+        $pdo->prepare('DELETE FROM prayers_reactions WHERE post_id = ? AND user_id = ? AND type = ?')->execute([$postId, $me, $type]);
+    } else {
+        $pdo->prepare('INSERT INTO prayers_reactions (post_id, user_id, type) VALUES (?, ?, ?)')->execute([$postId, $me, $type]);
+    }
 
-  $postOwnerId = (int)$post['user_id'];
-
-  $stmt = $pdo->prepare("SELECT id FROM prayers_reactions WHERE post_id = ? AND user_id = ? AND type = ?");
-  $stmt->execute([$postId, $userId, $type]);
-  $exists = $stmt->fetch();
-
-  $notifyOwner = false;
-
-  if ($exists) {
-    $stmt = $pdo->prepare("DELETE FROM prayers_reactions WHERE post_id = ? AND user_id = ? AND type = ?");
-    $stmt->execute([$postId, $userId, $type]);
-  } else {
-    $stmt = $pdo->prepare("INSERT INTO prayers_reactions (post_id, user_id, type) VALUES (?, ?, ?)");
-    $stmt->execute([$postId, $userId, $type]);
-    $notifyOwner = true;
-  }
-
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM prayers_reactions WHERE post_id = ? AND type = ?");
-  $stmt->execute([$postId, $type]);
-  $count = $stmt->fetchColumn();
-
-  $pdo->commit();
-
-  echo json_encode(['success' => true, 'count' => (int)$count, 'active' => !$exists]);
-
-  // Flush response, then notify in background so the tap feels instant
-  if (function_exists('fastcgi_finish_request')) {
-    fastcgi_finish_request();
-  } else {
-    if (ob_get_level() > 0) ob_end_flush();
-    flush();
-  }
-
-  if ($notifyOwner && $postOwnerId !== (int)$userId) {
-    $userStmt = $pdo->prepare("SELECT name, surname FROM users WHERE id = ?");
-    $userStmt->execute([$userId]);
-    $user = $userStmt->fetch();
-    $userName = trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-
-    createPrayerNotification($pdo, $postOwnerId, 'reaction_on_post', [
-      'reactor_name' => $userName,
-      'reaction_type' => $type
-    ]);
-  }
-} catch (Exception $e) {
-  if ($pdo->inTransaction()) $pdo->rollBack();
-  error_log('Prayers react error: ' . $e->getMessage());
-  http_response_code(500);
-  echo json_encode(['success' => false, 'error' => 'server_error']);
+    // Members who still exist, as the "who is praying" list shows them
+    $counts = $pdo->prepare("SELECT
+        SUM(r.type = 'pray') AS pray_count, SUM(r.type = 'heart') AS heart_count,
+        SUM(r.type = 'pray' AND r.user_id = ?) AS prayed, SUM(r.type = 'heart' AND r.user_id = ?) AS hearted
+        FROM prayers_reactions r JOIN users u ON u.id = r.user_id WHERE r.post_id = ?");
+    $counts->execute([$me, $me, $postId]);
+    $c = $counts->fetch(PDO::FETCH_ASSOC) ?: [];
+    $pdo->commit();
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log('Prayers react error: ' . $e->getMessage());
+    pr_fail('server_error', 500);
 }
+
+$response = [
+    'success' => true,
+    'active' => !$had,
+    'pray_count' => (int)($c['pray_count'] ?? 0),
+    'heart_count' => (int)($c['heart_count'] ?? 0),
+    'prayed' => (int)($c['prayed'] ?? 0) > 0,
+    'hearted' => (int)($c['hearted'] ?? 0) > 0,
+];
+
+// Answer first, so the tap feels instant; then tell the writer
+$ownerId = (int)$post['user_id'];
+$notify = !$had && $ownerId !== $me;
+if (!$notify) pr_json($response);
+pr_answer_and_continue($response);
+
+// Once an hour per person, prayer and kind: switching off and on again is no news
+if (pr_rate_ok('prayer_notify_' . $type . '_' . $postId, 1)) {
+    createPrayerNotification($pdo, $ownerId, 'reaction_on_post', [
+        'reactor_name' => pr_full_name(pr_me($pdo)),
+        'reaction_type' => $type,
+        'post_id' => $postId,
+    ]);
+}
+exit;
