@@ -1,56 +1,65 @@
-<link rel="stylesheet" href="/admin/css/gedagte.css?v=<?= $VER ?>">
-
-<div class="admin-section admin-stack">
+<?php /** Daily thought tab (elders, amp 1-5) — gedagte.js talks to api/gedagte/. */ ?>
+<div class="admin-section">
   <div class="admin-section-header">
     <div class="admin-icon-wrapper">
-      <svg class="admin-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z" fill="currentColor"/>
+      <svg class="admin-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 21h6M10 17h4M12 2a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2V15h5v-.1c0-.8.4-1.5 1-2A6 6 0 0012 2z"/>
       </svg>
     </div>
-    <h2 class="admin-section-title"><?= t('manage_thoughts') ?></h2>
+    <h2 class="admin-section-title"><?= esc(t('manage_thoughts')) ?></h2>
   </div>
 
-  <!-- Add new thought form -->
-  <form id="gedagteForm" class="gedagte-form">
-    <div class="gedagte-field">
-      <label for="thoughtContent"><?= t('thought_content') ?></label>
-      <textarea id="thoughtContent" name="content" rows="10" required placeholder="<?= esc(t('thought_content')) ?>"></textarea>
+  <form id="gedagteForm" class="gedagte-form admin-form" novalidate>
+    <div class="admin-field">
+      <label for="thoughtContent" class="admin-label"><?= esc(t('thought_content')) ?></label>
+      <textarea id="thoughtContent" name="content" rows="8" maxlength="2000" required class="admin-textarea gedagte-textarea"></textarea>
+      <span class="admin-hint" id="thoughtCount" aria-live="polite"></span>
     </div>
 
-    <div class="gedagte-row">
-      <div class="gedagte-field">
-        <label for="thoughtDate"><?= t('thought_date') ?></label>
-        <input type="date" id="thoughtDate" name="display_date" required>
+    <div class="admin-field">
+      <label for="thoughtAuthor" class="admin-label"><?= esc(t('adm_author')) ?></label>
+      <input type="text" id="thoughtAuthor" name="author" maxlength="255" class="admin-input" autocomplete="off">
+    </div>
+
+    <div class="admin-form-row">
+      <div class="admin-field">
+        <label for="thoughtDate" class="admin-label"><?= esc(t('thought_date')) ?></label>
+        <input type="date" id="thoughtDate" name="display_date" required class="admin-input">
       </div>
-      <div class="gedagte-field">
-        <label for="thoughtTime"><?= t('thought_time') ?></label>
-        <input type="time" id="thoughtTime" name="display_time" value="07:00">
+      <div class="admin-field">
+        <label for="thoughtTime" class="admin-label"><?= esc(t('thought_time')) ?></label>
+        <input type="time" id="thoughtTime" name="display_time" value="07:00" class="admin-input">
       </div>
     </div>
 
-    <div class="gedagte-actions">
-      <button type="submit" class="admin-btn admin-btn-primary"><?= t('save_thought') ?></button>
+    <div class="admin-right">
+      <button type="button" class="admin-btn admin-btn-secondary" id="thoughtReset" hidden><?= esc(t('cancel')) ?></button>
+      <button type="submit" class="admin-btn admin-btn-primary"><?= esc(t('save_thought')) ?></button>
     </div>
   </form>
 
-  <!-- Upcoming thoughts list -->
   <div class="gedagte-list-section">
-    <h3 class="gedagte-list-title"><?= t('upcoming_thoughts') ?></h3>
-    <div id="gedagteList" class="gedagte-list">
-      <p class="gedagte-empty"><?= t('no_upcoming') ?></p>
+    <h3 class="admin-subtitle"><?= esc(t('upcoming_thoughts')) ?></h3>
+    <div id="gedagteList" class="gedagte-list" aria-live="polite" aria-busy="true">
+      <div class="gedagte-skel" aria-hidden="true"><i></i><i></i></div>
     </div>
   </div>
 </div>
 
 <script>
-  window.GEDAGTE_LANG = {
-    saved: <?= json_encode(t('thought_saved')) ?>,
-    deleted: <?= json_encode(t('thought_deleted')) ?>,
-    confirmDelete: <?= json_encode(t('confirm_delete_thought')) ?>,
-    noUpcoming: <?= json_encode(t('no_upcoming')) ?>,
-    deleteLabel: <?= json_encode(t('delete')) ?>,
-    notifSent: <?= json_encode(t('notif_sent')) ?>,
-    notifPending: <?= json_encode(t('notif_pending')) ?>
-  };
+  window.GEDAGTE_LANG = <?= json_encode([
+      'lang' => $lang,
+      'saved' => t('thought_saved'),
+      'deleted' => t('thought_deleted'),
+      'confirmDelete' => t('confirm_delete_thought'),
+      'noUpcoming' => t('no_upcoming'),
+      'deleteLabel' => t('delete'),
+      'editLabel' => t('edit'),
+      'notifSent' => t('notif_sent'),
+      'notifPending' => t('notif_pending'),
+      'today' => t('today'),
+      'loadFailed' => t('adm_load_failed'),
+      'charsLeft' => t('adm_chars_left'),
+  ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
-<script src="/admin/js/gedagte.js?v=<?= $VER ?>"></script>
+<script src="<?= admin_asset('/admin/js/gedagte.js') ?>"></script>

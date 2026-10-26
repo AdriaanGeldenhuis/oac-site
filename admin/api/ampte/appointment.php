@@ -1,80 +1,83 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json');
+/**
+ * POST /admin/api/ampte/appointment.php   (X-CSRF-Token)
+ * Ask an office holder for an appointment (the Afsprake tab, amp 1–9).
+ * The calendar reads ampte_appointments directly, so this writes that one
+ * row and nothing else; the person asked is told in their own language.
+ * Fields: target_user_id, appointment_date (Y-m-d), appointment_time (H:i),
+ *         location, notes   Answer: {success, appointment_id} or {success:false, error}
+ */
+
 require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once __DIR__ . '/../../../security/rate_limit.php';
+require_once __DIR__ . '/../../../includes/admin_api.php';
 require_once __DIR__ . '/../notifications/helper.php';
 
-$userId = $_SESSION['user_id'] ?? null;
-$targetUserId = isset($_POST['target_user_id']) && is_numeric($_POST['target_user_id']) ? (int)$_POST['target_user_id'] : 0;
-$appointmentDate = trim($_POST['appointment_date'] ?? '');
-$appointmentTime = trim($_POST['appointment_time'] ?? '');
-$location = trim($_POST['location'] ?? '');
-$notes = trim($_POST['notes'] ?? '');
+admin_api_require_post();
+$userId = admin_api_user_id();
 
-if (!$userId || !$targetUserId || !$appointmentDate || !$appointmentTime) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Missing required fields']);
-    exit;
+// Appointments are made in SAST, whatever the server clock says
+$tz = new DateTimeZone('Africa/Johannesburg');
+
+$targetUserId = (int)($_POST['target_user_id'] ?? 0);
+$date = trim((string)($_POST['appointment_date'] ?? ''));
+$time = trim((string)($_POST['appointment_time'] ?? ''));
+$location = mb_substr(trim((string)($_POST['location'] ?? '')), 0, 255);
+$notes = mb_substr(trim((string)($_POST['notes'] ?? '')), 0, 2000);
+
+if ($targetUserId <= 0 || $targetUserId === $userId
+    || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !preg_match('/^\d{2}:\d{2}$/', $time)) {
+    admin_api_fail('adm_err_invalid');
 }
 
-if ($userId === $targetUserId) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Cannot create appointment with yourself']);
-    exit;
+$when = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $date . ' ' . $time, $tz);
+$errors = DateTimeImmutable::getLastErrors();
+if (!$when || ($errors && ($errors['warning_count'] || $errors['error_count'])) || $when <= new DateTimeImmutable('now', $tz)) {
+    admin_api_fail('adm_err_past');
 }
 
 try {
-    // Validate date/time
-    $datetime = $appointmentDate . ' ' . $appointmentTime;
-    $timestamp = strtotime($datetime);
-    
-    if ($timestamp === false || $timestamp < time()) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Invalid date/time']);
-        exit;
+    // The Afsprake tab is for amp 1–9
+    $stmt = $pdo->prepare('SELECT name, surname, amp_id FROM users WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $me = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$me || (int)$me['amp_id'] < 1 || (int)$me['amp_id'] > 9) {
+        admin_api_fail('adm_err_forbidden', 403);
     }
-    
-    // Create appointment
-    $stmt = $pdo->prepare("INSERT INTO ampte_appointments 
+
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND status = 'approved' LIMIT 1");
+    $stmt->execute([$targetUserId]);
+    if (!$stmt->fetch()) {
+        admin_api_fail('adm_err_not_found', 404);
+    }
+
+    // A flood of requests helps nobody
+    if (!rate_limit_check('appt:' . $userId, 20, 15)) {
+        admin_api_fail('adm_err_rate', 429);
+    }
+
+    // The same request twice (double tap, second tab) is one request
+    $stmt = $pdo->prepare("SELECT id FROM ampte_appointments WHERE requester_id = ? AND target_user_id = ?
+        AND appointment_date = ? AND appointment_time = ? AND status IN ('pending', 'confirmed') LIMIT 1");
+    $stmt->execute([$userId, $targetUserId, $date, $time . ':00']);
+    if ($stmt->fetch()) {
+        admin_api_fail('adm_err_request_exists', 409);
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO ampte_appointments
         (requester_id, target_user_id, appointment_date, appointment_time, location, notes, status)
         VALUES (?, ?, ?, ?, ?, ?, 'pending')");
-    $stmt->execute([$userId, $targetUserId, $appointmentDate, $appointmentTime, $location, $notes]);
-    
+    $stmt->execute([$userId, $targetUserId, $date, $time . ':00', $location, $notes]);
     $appointmentId = (int)$pdo->lastInsertId();
-    
-    // Send notification to target user
-    $userStmt = $pdo->prepare("SELECT name, surname FROM users WHERE id = ? LIMIT 1");
-    $userStmt->execute([$userId]);
-    $user = $userStmt->fetch(PDO::FETCH_ASSOC);
-    
+
     createAdminNotification($targetUserId, 'appointment_request', [
-        'from_name' => trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? '')),
-        'date' => $appointmentDate,
-        'time' => $appointmentTime
+        'from_name' => admin_full_name($me),
+        'date' => $date,
+        'time' => $time,
     ]);
-    
-    // Add to calendar for both users
-    $calendarStmt = $pdo->prepare("INSERT INTO calendar_events 
-        (user_id, title, description, start_at, visibility)
-        VALUES (?, ?, ?, ?, 'private')");
-    
-    $title = 'Afspraak met ' . trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-    $description = $notes ?: 'Afspraak';
-    $startAt = $appointmentDate . ' ' . $appointmentTime;
-    
-    // Requester's calendar
-    $calendarStmt->execute([$userId, $title, $description, $startAt]);
-    
-    // Target's calendar (pending)
-    $targetUserStmt = $pdo->prepare("SELECT name, surname FROM users WHERE id = ? LIMIT 1");
-    $targetUserStmt->execute([$targetUserId]);
-    $targetUser = $targetUserStmt->fetch(PDO::FETCH_ASSOC);
-    
-    $targetTitle = 'Afspraak versoek van ' . trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-    $calendarStmt->execute([$targetUserId, $targetTitle, $description, $startAt]);
-    
-    echo json_encode(['success' => true, 'appointment_id' => $appointmentId]);
+
+    admin_api_json(['success' => true, 'appointment_id' => $appointmentId]);
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    admin_api_server_error($e, 'ampte/appointment');
 }

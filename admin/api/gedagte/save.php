@@ -4,6 +4,8 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/security/config.php';
 require_once dirname(__DIR__, 3) . '/security/session.php';
 require_once dirname(__DIR__, 3) . '/security/auth.php';
+require_once dirname(__DIR__, 3) . '/security/csrf.php';
+require_once dirname(__DIR__, 3) . '/includes/admin_api.php';
 
 // Align date/time comparisons with South African local time (SAST, UTC+2)
 // regardless of MySQL server timezone, so manual saves aren't deferred for hours.
@@ -48,12 +50,8 @@ try {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    ob_end_clean();
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
-}
+// POST only, with the session's CSRF token
+admin_api_require_post();
 
 $content = trim((string)($_POST['content'] ?? ''));
 $author = trim((string)($_POST['author'] ?? ''));
@@ -64,6 +62,13 @@ if ($content === '') {
     ob_end_clean();
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Content is required']);
+    exit;
+}
+
+if (mb_strlen($content) > 2000 || mb_strlen($author) > 255) {
+    ob_end_clean();
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => __t('adm_err_invalid', admin_api_lang())]);
     exit;
 }
 

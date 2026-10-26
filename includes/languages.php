@@ -7815,6 +7815,352 @@ define('UI_TRANSLATIONS', [
         'xh' => '1 Tesalonika 5:17',
         'pt' => '1 Tessalonicenses 5:17',
         'st' => '1 Bathesalonika 5:17'
+    ],
+
+    // ==================== ADMIN "LIGHT THROUGH GLASS" ====================
+    'adm_eyebrow' => [
+        'af' => 'Bestuur',
+        'en' => 'Manage',
+        'zu' => 'Phatha',
+        'xh' => 'Lawula',
+        'pt' => 'Gerir',
+        'st' => 'Laola'
+    ],
+    'adm_err_method' => [
+        'af' => 'Daardie versoek word nie toegelaat nie.',
+        'en' => 'That request is not allowed.',
+        'zu' => 'Lesi sicelo asivunyelwe.',
+        'xh' => 'Esi sicelo asivumelekanga.',
+        'pt' => 'Esse pedido não é permitido.',
+        'st' => 'Kopo eo ha e a lumelloa.'
+    ],
+    'adm_err_session' => [
+        'af' => 'Jou sessie het verval. Herlaai die bladsy en probeer weer.',
+        'en' => 'Your session has expired. Please refresh the page and try again.',
+        'zu' => 'Isikhathi sakho sesiphelile. Vuselela ikhasi bese uzama futhi.',
+        'xh' => 'Iseshoni yakho iphelelwe lixesha. Hlaziya iphepha uzame kwakhona.',
+        'pt' => 'A sua sessão expirou. Atualize a página e tente novamente.',
+        'st' => 'Nako ea hau e fedile. Ntlafatsa leqephe \'me o leke hape.'
+    ],
+    'adm_err_invalid' => [
+        'af' => 'Iets in die versoek is nie reg nie.',
+        'en' => 'Something in the request is not right.',
+        'zu' => 'Kukhona okungalungile esicelweni.',
+        'xh' => 'Kukho into engachanekanga kwisicelo.',
+        'pt' => 'Algo no pedido não está correto.',
+        'st' => 'Ho na le ntho e fosahetseng kopong.'
+    ],
+    'adm_err_forbidden' => [
+        'af' => 'Jy mag dit nie doen nie.',
+        'en' => 'You are not allowed to do that.',
+        'zu' => 'Awuvunyelwe ukukwenza lokho.',
+        'xh' => 'Awuvumelekanga ukwenza oko.',
+        'pt' => 'Não tem permissão para fazer isso.',
+        'st' => 'Ha o lumelloe ho etsa joalo.'
+    ],
+    'adm_err_server' => [
+        'af' => 'Iets het aan ons kant skeefgeloop. Probeer asseblief weer.',
+        'en' => 'Something went wrong on our side. Please try again.',
+        'zu' => 'Kukhona okungahambanga kahle ohlangothini lwethu. Sicela uzame futhi.',
+        'xh' => 'Kukho into engahambanga kakuhle kwicala lethu. Nceda uzame kwakhona.',
+        'pt' => 'Algo correu mal do nosso lado. Tente novamente.',
+        'st' => 'Ho na le ntho e fosahetseng ka lehlakoreng la rona. Ka kopo leka hape.'
+    ],
+    'adm_err_not_found' => [
+        'af' => 'Ons kon dit nie vind nie.',
+        'en' => 'We could not find that.',
+        'zu' => 'Asikutholanga lokho.',
+        'xh' => 'Asikufumananga oko.',
+        'pt' => 'Não foi possível encontrar.',
+        'st' => 'Ha re a ka ra e fumana.'
+    ],
+    'adm_err_rate' => [
+        'af' => 'Te veel pogings. Wag \'n paar minute.',
+        'en' => 'Too many tries. Please wait a few minutes.',
+        'zu' => 'Imizamo eminingi kakhulu. Sicela ulinde imizuzu embalwa.',
+        'xh' => 'Imizamo emininzi kakhulu. Nceda ulinde imizuzu embalwa.',
+        'pt' => 'Demasiadas tentativas. Aguarde alguns minutos.',
+        'st' => 'Maiteko a mangata haholo. Ka kopo ema metsotso e seng mekae.'
+    ],
+    'adm_err_done' => [
+        'af' => 'Dit is reeds afgehandel.',
+        'en' => 'That has already been dealt with.',
+        'zu' => 'Lokho sekuvele kwenziwe.',
+        'xh' => 'Oko sele kwenziwe.',
+        'pt' => 'Isso já foi tratado.',
+        'st' => 'Seo se se entsoe.'
+    ],
+    'adm_err_already_married' => [
+        'af' => 'Een van hulle is reeds aan \'n eggenoot gekoppel.',
+        'en' => 'One of them is already linked to a spouse.',
+        'zu' => 'Omunye wabo usevele uhlanganiswe nomlingani.',
+        'xh' => 'Omnye wabo sele edityaniswe nomlingane.',
+        'pt' => 'Um deles já está ligado a um cônjuge.',
+        'st' => 'E mong oa bona o se a hokahantšoe le molekane.'
+    ],
+    'adm_err_request_exists' => [
+        'af' => 'Daardie versoek bestaan reeds.',
+        'en' => 'That request already exists.',
+        'zu' => 'Lesi sicelo sesivele sikhona.',
+        'xh' => 'Esi sicelo sele sikhona.',
+        'pt' => 'Esse pedido já existe.',
+        'st' => 'Kopo eo e se e ntse e le teng.'
+    ],
+    'adm_err_past' => [
+        'af' => 'Kies \'n datum en tyd in die toekoms.',
+        'en' => 'Pick a date and time in the future.',
+        'zu' => 'Khetha usuku nesikhathi esizayo.',
+        'xh' => 'Khetha umhla nexesha elizayo.',
+        'pt' => 'Escolha uma data e hora no futuro.',
+        'st' => 'Khetha letsatsi le nako e tlang.'
+    ],
+    'adm_user_approved' => [
+        'af' => 'Lid goedgekeur.',
+        'en' => 'Member approved.',
+        'zu' => 'Ilungu livunyiwe.',
+        'xh' => 'Ilungu livunyiwe.',
+        'pt' => 'Membro aprovado.',
+        'st' => 'Setho se lumelletsoe.'
+    ],
+    'adm_user_rejected' => [
+        'af' => 'Lid afgewys.',
+        'en' => 'Member rejected.',
+        'zu' => 'Ilungu alamukelwanga.',
+        'xh' => 'Ilungu alamkelwanga.',
+        'pt' => 'Membro rejeitado.',
+        'st' => 'Setho ha se a amoheloa.'
+    ],
+    'adm_confirm_reject' => [
+        'af' => 'Is jy seker jy wil hierdie lid afwys?',
+        'en' => 'Are you sure you want to reject this member?',
+        'zu' => 'Uqinisekile ukuthi ufuna ukwenqaba lelilungu?',
+        'xh' => 'Uqinisekile ukuba ufuna ukwala eli lungu?',
+        'pt' => 'Tem a certeza de que quer rejeitar este membro?',
+        'st' => 'Na u kholisehile hore u batla ho hana setho sena?'
+    ],
+    'adm_confirm_spouse_link' => [
+        'af' => 'Koppel hierdie twee lidmate as huweliksmaats?',
+        'en' => 'Link these two members as spouses?',
+        'zu' => 'Uyabahlanganisa laba bangamalungu ababili njengabalingani bomshado?',
+        'xh' => 'Ubadibanisa aba balungu bobabini njengabalingane bomtshato?',
+        'pt' => 'Ligar estes dois membros como cônjuges?',
+        'st' => 'Hokahanya ba babeli ba setho e le balekane ba lenyalo?'
+    ],
+    'adm_confirm_spouse_reject' => [
+        'af' => 'Is jy seker jy wil hierdie huweliksversoek afwys?',
+        'en' => 'Are you sure you want to turn down this marriage request?',
+        'zu' => 'Uqinisekile ukuthi ufuna ukwenqaba lesi sicelo somshado?',
+        'xh' => 'Uqinisekile ukuba ufuna ukwala esi sicelo somtshato?',
+        'pt' => 'Tem a certeza de que quer recusar este pedido de casamento?',
+        'st' => 'Na u kholisehile hore u batla ho hana kopo ena ea lenyalo?'
+    ],
+    'adm_spouse_linked' => [
+        'af' => 'Huweliksmaats gekoppel.',
+        'en' => 'Spouses linked.',
+        'zu' => 'Abalingani bahlanganisiwe.',
+        'xh' => 'Abalingane badityanisiwe.',
+        'pt' => 'Cônjuges ligados.',
+        'st' => 'Balekane ba hokahantšoe.'
+    ],
+    'adm_spouse_rejected' => [
+        'af' => 'Versoek afgewys.',
+        'en' => 'Request turned down.',
+        'zu' => 'Isicelo senqatshiwe.',
+        'xh' => 'Isicelo siwaliwe.',
+        'pt' => 'Pedido recusado.',
+        'st' => 'Kopo e hanetsoe.'
+    ],
+    'adm_spouse_unlinked' => [
+        'af' => 'Huweliksmaats ontkoppel.',
+        'en' => 'Spouses unlinked.',
+        'zu' => 'Abalingani bahlukanisiwe.',
+        'xh' => 'Abalingane bahlukaniswe.',
+        'pt' => 'Cônjuges desligados.',
+        'st' => 'Balekane ba arohantšoe.'
+    ],
+    'adm_pw_min' => [
+        'af' => 'Die nuwe wagwoord moet minstens 8 karakters hê.',
+        'en' => 'The new password must have at least 8 characters.',
+        'zu' => 'Iphasiwedi entsha kumele ibe nezinhlamvu okungenani eziyi-8.',
+        'xh' => 'Iphasiwedi entsha kufuneka ibe neempawu ubuncinane ezi-8.',
+        'pt' => 'A nova senha deve ter pelo menos 8 caracteres.',
+        'st' => 'Phasewete e ncha e tlameha ho ba le litlhaku tse 8 bonyane.'
+    ],
+    'adm_pw_max' => [
+        'af' => 'Die wagwoord mag hoogstens 72 karakters wees.',
+        'en' => 'The password can be at most 72 characters.',
+        'zu' => 'Iphasiwedi ingaba nezinhlamvu ezingafika ku-72 kuphela.',
+        'xh' => 'Iphasiwedi inokuba neempawu ezingafikelela kwi-72 kuphela.',
+        'pt' => 'A senha pode ter no máximo 72 caracteres.',
+        'st' => 'Phasewete e ka ba le litlhaku tse 72 ka ho fetisisa.'
+    ],
+    'adm_pw_same' => [
+        'af' => 'Die nuwe wagwoord moet verskil van die huidige een.',
+        'en' => 'The new password must be different from the current one.',
+        'zu' => 'Iphasiwedi entsha kumele yehluke kweyamanje.',
+        'xh' => 'Iphasiwedi entsha kufuneka yahluke kweyangoku.',
+        'pt' => 'A nova senha deve ser diferente da atual.',
+        'st' => 'Phasewete e ncha e tlameha ho fapana le ea hona joale.'
+    ],
+    'adm_pw_wrong' => [
+        'af' => 'Die huidige wagwoord is nie reg nie.',
+        'en' => 'The current password is not correct.',
+        'zu' => 'Iphasiwedi yamanje ayilungile.',
+        'xh' => 'Iphasiwedi yangoku ayichanekanga.',
+        'pt' => 'A senha atual não está correta.',
+        'st' => 'Phasewete ea hona joale ha e nepahale.'
+    ],
+    'adm_author' => [
+        'af' => 'Skrywer (opsioneel)',
+        'en' => 'Author (optional)',
+        'zu' => 'Umbhali (akuphoqelekile)',
+        'xh' => 'Umbhali (akunyanzelekanga)',
+        'pt' => 'Autor (opcional)',
+        'st' => 'Mongoli (ha ho qobelloe)'
+    ],
+    'adm_load_failed' => [
+        'af' => 'Kon nie laai nie. Probeer weer.',
+        'en' => 'Could not load. Please try again.',
+        'zu' => 'Ayilayishekanga. Sicela uzame futhi.',
+        'xh' => 'Ayilayishekanga. Nceda uzame kwakhona.',
+        'pt' => 'Não foi possível carregar. Tente novamente.',
+        'st' => 'Ha ea ka ea laolloa. Ka kopo leka hape.'
+    ],
+    'adm_chars_left' => [
+        'af' => '{n} karakters oor',
+        'en' => '{n} characters left',
+        'zu' => 'Zisele izinhlamvu: {n}',
+        'xh' => 'Ziseleyo iimpawu: {n}',
+        'pt' => 'Restam {n} caracteres',
+        'st' => 'Ho setse litlhaku tse {n}'
+    ],
+    'adm_appt_sent' => [
+        'af' => 'Afspraakversoek gestuur.',
+        'en' => 'Appointment request sent.',
+        'zu' => 'Isicelo sokuhlangana sithunyelwe.',
+        'xh' => 'Isicelo sokudibana sithunyelwe.',
+        'pt' => 'Pedido de marcação enviado.',
+        'st' => 'Kopo ea ho kopana e rometsoe.'
+    ],
+    'adm_appt_confirmed' => [
+        'af' => 'Afspraak bevestig.',
+        'en' => 'Appointment confirmed.',
+        'zu' => 'Ukuhlangana kuqinisekisiwe.',
+        'xh' => 'Ukudibana kuqinisekisiwe.',
+        'pt' => 'Marcação confirmada.',
+        'st' => 'Kopano e netefalitsoe.'
+    ],
+    'adm_appt_cancelled' => [
+        'af' => 'Afspraak gekanselleer.',
+        'en' => 'Appointment cancelled.',
+        'zu' => 'Ukuhlangana kukhanseliwe.',
+        'xh' => 'Ukudibana kurhoxisiwe.',
+        'pt' => 'Marcação cancelada.',
+        'st' => 'Kopano e hlakotsoe.'
+    ],
+    'adm_appt_confirm_cancel' => [
+        'af' => 'Kanselleer hierdie afspraak?',
+        'en' => 'Cancel this appointment?',
+        'zu' => 'Khansela lokhu kuhlangana?',
+        'xh' => 'Rhoxisa olu dibano?',
+        'pt' => 'Cancelar esta marcação?',
+        'st' => 'Hlakola kopano ena?'
+    ],
+    'adm_appt_pick' => [
+        'af' => 'Kies \'n datum en \'n tyd.',
+        'en' => 'Choose a date and a time.',
+        'zu' => 'Khetha usuku nesikhathi.',
+        'xh' => 'Khetha umhla nexesha.',
+        'pt' => 'Escolha uma data e uma hora.',
+        'st' => 'Khetha letsatsi le nako.'
+    ],
+    'adm_acc_bad_birthdate' => [
+        'af' => 'Daardie geboortedatum is nie geldig nie.',
+        'en' => 'That birth date is not valid.',
+        'zu' => 'Usuku lokuzalwa alulungile.',
+        'xh' => 'Umhla wokuzalwa awunjalo.',
+        'pt' => 'Essa data de nascimento não é válida.',
+        'st' => 'Letsatsi lena la tsoalo ha le nepahale.'
+    ],
+    'adm_acc_name_required' => [
+        'af' => 'Vul asseblief jou naam en van in.',
+        'en' => 'Please fill in your name and surname.',
+        'zu' => 'Sicela ugcwalise igama nesibongo sakho.',
+        'xh' => 'Nceda ugcwalise igama nefani lakho.',
+        'pt' => 'Preencha o seu nome e apelido.',
+        'st' => 'Ka kopo tlatsa lebitso la hau le sefane.'
+    ],
+    'adm_acc_bad_email' => [
+        'af' => 'Daardie e-posadres is nie geldig nie.',
+        'en' => 'That email address is not valid.',
+        'zu' => 'Leli kheli le-imeyili alilungile.',
+        'xh' => 'Eli dilesi ye-imeyile alichanekanga.',
+        'pt' => 'Esse e-mail não é válido.',
+        'st' => 'Aterese ena ea imeile ha e nepahale.'
+    ],
+    'adm_acc_email_taken' => [
+        'af' => '\'n Ander lid gebruik reeds daardie e-posadres.',
+        'en' => 'Another member already uses that email address.',
+        'zu' => 'Elinye ilungu selivele lisebenzisa leli kheli le-imeyili.',
+        'xh' => 'Elinye ilungu selisebenzisa eli dilesi ye-imeyile.',
+        'pt' => 'Outro membro já usa esse e-mail.',
+        'st' => 'Setho se seng se se se sebelisa aterese eo ea imeile.'
+    ],
+    'adm_acc_bad_photo' => [
+        'af' => 'Daardie foto kon nie gebruik word nie. Gebruik \'n JPEG-, PNG- of WebP-prent.',
+        'en' => 'That photo could not be used. Use a JPEG, PNG or WebP picture.',
+        'zu' => 'Leso sithombe asikwazanga ukusetshenziswa. Sebenzisa isithombe se-JPEG, PNG noma WebP.',
+        'xh' => 'Loo mfanekiso awukwazanga ukusetyenziswa. Sebenzisa umfanekiso we-JPEG, PNG okanye WebP.',
+        'pt' => 'Não foi possível usar essa foto. Use uma imagem JPEG, PNG ou WebP.',
+        'st' => 'Setšoantšo seo se ke ke sa sebelisoa. Sebelisa setšoantšo sa JPEG, PNG kapa WebP.'
+    ],
+    'adm_email' => [
+        'af' => 'E-pos',
+        'en' => 'Email',
+        'zu' => 'I-imeyili',
+        'xh' => 'I-imeyile',
+        'pt' => 'E-mail',
+        'st' => 'Imeile'
+    ],
+    'adm_crop_title' => [
+        'af' => 'Posisioneer jou foto',
+        'en' => 'Position your photo',
+        'zu' => 'Beka isithombe sakho',
+        'xh' => 'Beka umfanekiso wakho',
+        'pt' => 'Posicione a sua foto',
+        'st' => 'Beha setšoantšo sa hau'
+    ],
+    'adm_crop_hint' => [
+        'af' => 'Sleep om te skuif • gebruik die glyer om te zoem',
+        'en' => 'Drag to move • use the slider to zoom',
+        'zu' => 'Hudula ukuze unyakaze • sebenzisa isilayidi ukusondeza',
+        'xh' => 'Tsala ukuze utshintshe indawo • sebenzisa isilayidi ukusondeza',
+        'pt' => 'Arraste para mover • use o cursor para ampliar',
+        'st' => 'Hula ho tsamaisa • sebelisa slaeda ho hakanya'
+    ],
+    'adm_zoom_in' => [
+        'af' => 'Zoem in',
+        'en' => 'Zoom in',
+        'zu' => 'Sondeza',
+        'xh' => 'Sondeza',
+        'pt' => 'Aproximar',
+        'st' => 'Hakanya'
+    ],
+    'adm_zoom_out' => [
+        'af' => 'Zoem uit',
+        'en' => 'Zoom out',
+        'zu' => 'Hlehlisa',
+        'xh' => 'Hlehlisa',
+        'pt' => 'Afastar',
+        'st' => 'Fokotsa'
+    ],
+    'adm_photo_chosen' => [
+        'af' => 'Foto gereed — stoor om dit te hou.',
+        'en' => 'Photo ready — save to keep it.',
+        'zu' => 'Isithombe sesilungile — gcina ukusigcina.',
+        'xh' => 'Umfanekiso ulungile — gcina ukuwugcina.',
+        'pt' => 'Foto pronta — guarde para a manter.',
+        'st' => 'Setšoantšo se loketse — boloka ho se boloka.'
     ]
 
 ]);

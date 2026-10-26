@@ -4,6 +4,8 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/security/config.php';
 require_once dirname(__DIR__, 3) . '/security/session.php';
 require_once dirname(__DIR__, 3) . '/security/auth.php';
+require_once dirname(__DIR__, 3) . '/security/csrf.php';
+require_once dirname(__DIR__, 3) . '/includes/admin_api.php';
 
 ob_start();
 header('Content-Type: application/json; charset=utf-8');
@@ -38,12 +40,8 @@ try {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    ob_end_clean();
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
-}
+// POST only, with the session's CSRF token
+admin_api_require_post();
 
 $id = (int)($_POST['id'] ?? 0);
 if ($id < 1) {

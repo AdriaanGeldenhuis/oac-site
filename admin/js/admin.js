@@ -1,26 +1,18 @@
 /**
- * Admin Dashboard - Approvals & Spouse Request Actions
- * (Tab switching is server-side via ?tab= links; toasts/dialogs in ui.js.)
+ * Admin dashboard — the buttons on the Approvals tab and the password form
+ * on the Settings tab. Tabs are server-side (?tab=…). Every write is a POST
+ * through OACUI.post() (ui.js), which adds the session's CSRF token.
+ * The words come from window.OAC_ADMIN (index.php), in the member's language.
  */
-(function() {
+(function () {
   'use strict';
 
   const root = document.querySelector('.admin-body');
-  if (!root) return;
+  if (!root || !window.OACUI) return;
 
-  async function postForm(url, params) {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(params)
-    });
-    return response.json();
-  }
+  const T = window.OAC_ADMIN || {};
 
-  function removeRow(id) {
-    const row = document.getElementById(id);
-    if (row) row.remove();
-  }
+  // ===== Approvals =====
 
   function decrementBadge() {
     const badge = document.querySelector('.admin-tab-badge');
@@ -33,134 +25,106 @@
     }
   }
 
-  // ===== User approvals =====
-  document.querySelectorAll('.approve-btn').forEach(btn => {
-    btn.addEventListener('click', async function() {
-      const userId = this.getAttribute('data-id');
-      if (!userId) return;
+  // Take a row out; when it was the last one, the group says so (or goes)
+  function removeRow(id, countsInBadge) {
+    const row = document.getElementById(id);
+    if (!row) return;
+    const group = row.closest('[data-group]');
+    row.remove();
+    if (countsInBadge) decrementBadge();
 
-      this.disabled = true;
-      try {
-        const data = await postForm('/admin/api/approve_user.php', { user_id: userId });
-        if (data.success) {
-          removeRow(`row-${userId}`);
-          decrementBadge();
-          OACUI.toast(data.message || 'Gebruiker goedgekeur', 'success');
-        } else {
-          OACUI.toast(data.error || 'Kon nie goedkeur nie', 'error');
-          this.disabled = false;
-        }
-      } catch (error) {
-        OACUI.toast('Netwerkfout: ' + error.message, 'error');
-        this.disabled = false;
+    if (!group || group.querySelector('tbody tr')) return;
+    if (group.getAttribute('data-group') === 'users') {
+      const wrap = group.querySelector('.admin-table-wrap');
+      if (wrap) {
+        const empty = document.createElement('p');
+        empty.className = 'admin-muted';
+        empty.textContent = T.noPending || '';
+        wrap.replaceWith(empty);
       }
-    });
-  });
+    } else {
+      group.remove();
+    }
+  }
 
-  document.querySelectorAll('.reject-btn').forEach(btn => {
-    btn.addEventListener('click', async function() {
-      const userId = this.getAttribute('data-id');
-      if (!userId) return;
+  // One handler for every approve / reject / unlink button (works for rows added later too)
+  const ACTIONS = {
+    'approve-btn':        { url: '/admin/api/approve_user.php',    field: 'user_id',    row: 'row-',        badge: true,  ok: () => T.approved },
+    'reject-btn':         { url: '/admin/api/reject_user.php',     field: 'user_id',    row: 'row-',        badge: true,  ok: () => T.rejected, confirm: () => T.confirmReject, danger: true },
+    'spouse-approve-btn': { url: '/admin/api/spouse/approve.php',  field: 'request_id', row: 'spouse-row-', badge: true,  ok: () => T.spouseLinked, confirm: () => T.confirmSpouseLink },
+    'spouse-reject-btn':  { url: '/admin/api/spouse/reject.php',   field: 'request_id', row: 'spouse-row-', badge: true,  ok: () => T.spouseRejected, confirm: () => T.confirmSpouseReject, danger: true },
+    'spouse-unlink-btn':  { url: '/admin/api/spouse/unlink.php',   field: 'user_id',    row: 'couple-row-', badge: false, ok: () => T.spouseUnlinked, confirm: () => T.confirmUnlink, danger: true }
+  };
 
-      const sure = await OACUI.confirm('Is jy seker jy wil hierdie gebruiker afwys?', { danger: true });
+  root.addEventListener('click', async function (e) {
+    const btn = e.target.closest('button[data-id]');
+    if (!btn) return;
+    const cls = Object.keys(ACTIONS).find(c => btn.classList.contains(c));
+    if (!cls) return;
+
+    const action = ACTIONS[cls];
+    const id = btn.getAttribute('data-id');
+    if (!id || btn.disabled) return;
+
+    if (action.confirm) {
+      const sure = await OACUI.confirm(action.confirm(), { danger: !!action.danger });
       if (!sure) return;
+    }
 
-      this.disabled = true;
-      try {
-        const data = await postForm('/admin/api/reject_user.php', { user_id: userId });
-        if (data.success) {
-          removeRow(`row-${userId}`);
-          decrementBadge();
-          OACUI.toast(data.message || 'Gebruiker afgekeur', 'success');
-        } else {
-          OACUI.toast(data.error || 'Kon nie afwys nie', 'error');
-          this.disabled = false;
-        }
-      } catch (error) {
-        OACUI.toast('Netwerkfout: ' + error.message, 'error');
-        this.disabled = false;
-      }
-    });
+    btn.disabled = true;
+    const data = await OACUI.post(action.url, { [action.field]: id });
+    if (data.success) {
+      removeRow(action.row + id, action.badge);
+      OACUI.toast(data.message || action.ok() || '', 'success');
+    } else {
+      OACUI.toast(data.error || '', 'error');
+      btn.disabled = false;
+    }
   });
 
-  // ===== Spouse requests (office bearer approval) =====
-  document.querySelectorAll('.spouse-approve-btn').forEach(btn => {
-    btn.addEventListener('click', async function() {
-      const requestId = this.getAttribute('data-id');
-      if (!requestId) return;
+  // ===== Settings: change password =====
 
-      const sure = await OACUI.confirm('Koppel hierdie twee lidmate as huweliksmaats?');
-      if (!sure) return;
+  const form = document.getElementById('password-form');
+  if (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
 
-      this.disabled = true;
-      try {
-        const data = await postForm('/admin/api/spouse/approve.php', { request_id: requestId });
-        if (data.success) {
-          removeRow(`spouse-row-${requestId}`);
-          decrementBadge();
-          OACUI.toast('Huweliksmaats gekoppel', 'success');
-        } else {
-          OACUI.toast(data.error || 'Kon nie goedkeur nie', 'error');
-          this.disabled = false;
-        }
-      } catch (error) {
-        OACUI.toast('Netwerkfout: ' + error.message, 'error');
-        this.disabled = false;
+      const current = form.elements.current_password.value;
+      const next = form.elements.new_password.value;
+      const confirmPw = form.elements.confirm_password.value;
+      const btn = form.querySelector('button[type="submit"]');
+
+      if (next !== confirmPw) {
+        OACUI.toast(T.pwNoMatch, 'error');
+        form.elements.confirm_password.focus();
+        return;
+      }
+      if (next.length < 8) {
+        OACUI.toast(T.pwMin, 'error');
+        form.elements.new_password.focus();
+        return;
+      }
+      if (next === current) {
+        OACUI.toast(T.pwSame, 'error');
+        form.elements.new_password.focus();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.classList.add('is-busy');
+      const data = await OACUI.post('/admin/api/users/change_password.php', {
+        current_password: current,
+        new_password: next
+      });
+      btn.disabled = false;
+      btn.classList.remove('is-busy');
+
+      if (data.success) {
+        OACUI.toast(T.pwChanged, 'success');
+        form.reset();
+      } else {
+        OACUI.toast(data.error || T.pwFailed, 'error');
       }
     });
-  });
-
-  document.querySelectorAll('.spouse-reject-btn').forEach(btn => {
-    btn.addEventListener('click', async function() {
-      const requestId = this.getAttribute('data-id');
-      if (!requestId) return;
-
-      const sure = await OACUI.confirm('Is jy seker jy wil hierdie huweliksversoek afwys?', { danger: true });
-      if (!sure) return;
-
-      this.disabled = true;
-      try {
-        const data = await postForm('/admin/api/spouse/reject.php', { request_id: requestId });
-        if (data.success) {
-          removeRow(`spouse-row-${requestId}`);
-          decrementBadge();
-          OACUI.toast('Versoek afgewys', 'success');
-        } else {
-          OACUI.toast(data.error || 'Kon nie afwys nie', 'error');
-          this.disabled = false;
-        }
-      } catch (error) {
-        OACUI.toast('Netwerkfout: ' + error.message, 'error');
-        this.disabled = false;
-      }
-    });
-  });
-
-  // ===== Linked spouses (office bearer unlink) =====
-  document.querySelectorAll('.spouse-unlink-btn').forEach(btn => {
-    btn.addEventListener('click', async function() {
-      const targetId = this.getAttribute('data-id');
-      if (!targetId) return;
-
-      const msg = (window.OAC_APPROVALS_LANG && window.OAC_APPROVALS_LANG.confirmUnlink) ||
-        'Is jy seker jy wil hierdie huweliksmaats ontkoppel?';
-      const sure = await OACUI.confirm(msg, { danger: true });
-      if (!sure) return;
-
-      this.disabled = true;
-      try {
-        const data = await postForm('/admin/api/spouse/unlink.php', { user_id: targetId });
-        if (data.success) {
-          removeRow(`couple-row-${targetId}`);
-          OACUI.toast('Huweliksmaats ontkoppel', 'success');
-        } else {
-          OACUI.toast(data.error || 'Kon nie ontkoppel nie', 'error');
-          this.disabled = false;
-        }
-      } catch (error) {
-        OACUI.toast('Netwerkfout: ' + error.message, 'error');
-        this.disabled = false;
-      }
-    });
-  });
+  }
 })();

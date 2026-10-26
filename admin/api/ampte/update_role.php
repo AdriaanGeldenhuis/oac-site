@@ -2,6 +2,10 @@
 declare(strict_types=1);
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../../security/auth_gate.php';
+require_once __DIR__ . '/../../../includes/admin_api.php';
+
+// Changes data: POST only, with the session's CSRF token
+admin_api_require_post();
 require_once __DIR__ . '/../notifications/helper.php';
 
 $userId = $_SESSION['user_id'] ?? null;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../security/auth_gate.php';
 require_once __DIR__ . '/../includes/languages.php';
 require_once __DIR__ . '/../includes/teaching.php';
+require_once __DIR__ . '/../includes/admin_page.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: /login.php');
@@ -120,26 +121,37 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
     <meta charset="UTF-8">
     <!-- resizes-content: the on-screen keyboard shrinks the page, so the
          toolbar and the paste bar stay visible above it -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title><?= e(t('edit_teaching')) ?></title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Parisienne&family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Parisienne&family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="<?= admin_asset('/admin/css/admin.css') ?>">
+    <link rel="stylesheet" href="<?= admin_asset('/admin/css/ui.css') ?>">
     <link rel="stylesheet" href="/admin/css/elders.css?v=<?= e($VER) ?>">
 </head>
-<body>
+<body class="admin-body" data-tab="teaching">
     <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
+
+    <div class="admin-aura" aria-hidden="true"><div class="admin-rays"></div><div class="admin-halo"></div></div>
+
+    <section class="admin-hero elders-hero" aria-labelledby="eldersTitle">
+        <p class="admin-eyebrow">
+            <svg class="admin-eyebrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+            <span><?= e(t('teaching')) ?></span>
+        </p>
+        <h1 class="admin-title" id="eldersTitle"><span><?= e(t('monthly_teaching')) ?></span></h1>
+        <p class="admin-sub"><?= e(t('edit_teaching_desc')) ?></p>
+    </section>
 
     <div class="container">
         <div class="header">
-            <div>
-                <h1><?= t('monthly_teaching') ?></h1>
-                <span class="location">
-                    <?= e($cityName) ?>, <?= e($provinceName) ?>
-                </span>
-            </div>
+            <span class="location">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                <?= e($cityName) ?>, <?= e($provinceName) ?>
+            </span>
             <!-- Language tabs for viewing different translations -->
             <div class="lang-tabs" role="tablist">
                 <?php foreach (SUPPORTED_LANGS as $code): ?>
@@ -426,6 +438,10 @@ $VER = (string)@filemtime(__DIR__ . '/js/elders.js') . '.' . (string)@filemtime(
         </div>
     </div>
 
+    <script>
+    window.OAC_UI_STRINGS = <?= json_encode(['ok' => t('confirm'), 'cancel' => t('cancel'), 'networkError' => t('network_error')], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    </script>
+    <script src="<?= admin_asset('/admin/js/ui.js') ?>"></script>
     <script type="application/json" id="eldersData"><?= json_encode($editorData, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '{}' ?></script>
     <script src="/admin/js/elders.js?v=<?= e($VER) ?>"></script>
 
