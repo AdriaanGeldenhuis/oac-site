@@ -5114,6 +5114,183 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Pensamento do Dia',
         'st' => 'Mohopolo oa Letsatsi'
     ],
+    // Daily thought: language, spelling check and translations (admin)
+    'thought_lang' => [
+        'af' => 'Taal van die gedagte',
+        'en' => 'Language of the thought',
+        'zu' => 'Ulimi lomcabango',
+        'xh' => 'Ulwimi lwengcinga',
+        'pt' => 'Língua do pensamento',
+        'st' => 'Puo ea mohopolo'
+    ],
+    'gd_check_btn' => [
+        'af' => 'Kontroleer spelling',
+        'en' => 'Check spelling',
+        'zu' => 'Hlola ukupela',
+        'xh' => 'Khangela upelo',
+        'pt' => 'Verificar a ortografia',
+        'st' => 'Hlahloba mopeleto'
+    ],
+    'gd_check_title' => [
+        'af' => 'Voorgestelde verbeterings',
+        'en' => 'Suggested corrections',
+        'zu' => 'Izilungiso eziphakanyisiwe',
+        'xh' => 'Izilungiso ezicetywayo',
+        'pt' => 'Correções sugeridas',
+        'st' => 'Litokiso tse sisintsoeng'
+    ],
+    'gd_check_use' => [
+        'af' => 'Gebruik verbetering',
+        'en' => 'Use correction',
+        'zu' => 'Sebenzisa isilungiso',
+        'xh' => 'Sebenzisa isilungiso',
+        'pt' => 'Usar a correção',
+        'st' => 'Sebelisa tokiso'
+    ],
+    'gd_check_keep' => [
+        'af' => 'Hou my teks',
+        'en' => 'Keep my text',
+        'zu' => 'Gcina umbhalo wami',
+        'xh' => 'Gcina umbhalo wam',
+        'pt' => 'Manter o meu texto',
+        'st' => 'Boloka mongolo oa ka'
+    ],
+    'gd_check_none' => [
+        'af' => 'Geen foute gevind nie.',
+        'en' => 'No mistakes found.',
+        'zu' => 'Awekho amaphutha atholakele.',
+        'xh' => 'Akukho zimpazamo zifunyenweyo.',
+        'pt' => 'Não foram encontrados erros.',
+        'st' => 'Ha ho liphoso tse fumanoeng.'
+    ],
+    'gd_check_failed' => [
+        'af' => 'Kon nie nou die spelling kontroleer nie. Probeer weer.',
+        'en' => 'Could not check the spelling right now. Please try again.',
+        'zu' => 'Akukwazekanga ukuhlola ukupela manje. Sicela uzame futhi.',
+        'xh' => 'Akukwazekanga ukukhangela upelo ngoku. Nceda uzame kwakhona.',
+        'pt' => 'Não foi possível verificar a ortografia agora. Tente novamente.',
+        'st' => 'Ha ho a khoneha ho hlahloba mopeleto hona joale. Ka kopo leka hape.'
+    ],
+    'gd_saving' => [
+        'af' => 'Stoor en vertaal…',
+        'en' => 'Saving and translating…',
+        'zu' => 'Kuyagcinwa futhi kuyahunyushwa…',
+        'xh' => 'Kuyagcinwa kwaye kuyaguqulelwa…',
+        'pt' => 'A guardar e a traduzir…',
+        'st' => 'E a boloka le ho fetolela…'
+    ],
+    'gd_saved_translated' => [
+        'af' => 'Gedagte gestoor en in al die tale vertaal.',
+        'en' => 'Thought saved and translated into every language.',
+        'zu' => 'Umcabango ugciniwe futhi wahunyushelwa kuzo zonke izilimi.',
+        'xh' => 'Ingcinga igciniwe yaza yaguqulelwa kuzo zonke iilwimi.',
+        'pt' => 'Pensamento guardado e traduzido para todas as línguas.',
+        'st' => 'Mohopolo o bolokiloe mme o fetoletsoe ka lipuo tsohle.'
+    ],
+    'gd_saved_missing' => [
+        'af' => 'Gedagte gestoor, maar die vertaling het misluk vir: {langs}. Probeer weer in die lys hieronder.',
+        'en' => 'Thought saved, but the translation failed for: {langs}. Try again in the list below.',
+        'zu' => 'Umcabango ugciniwe, kodwa ukuhumusha kwehlulekile kulezi zilimi: {langs}. Zama futhi ohlwini olungezansi.',
+        'xh' => 'Ingcinga igciniwe, kodwa ukuguqulela akuphumelelanga kwezi lwimi: {langs}. Zama kwakhona kuluhlu olungezantsi.',
+        'pt' => 'Pensamento guardado, mas a tradução falhou para: {langs}. Tente novamente na lista abaixo.',
+        'st' => 'Mohopolo o bolokiloe, empa phetolelo e hlolehile lipuong tsena: {langs}. Leka hape lethathamong le ka tlase.'
+    ],
+    'gd_translate_missing' => [
+        'af' => 'Vertaal ontbrekende tale',
+        'en' => 'Translate missing languages',
+        'zu' => 'Humusha izilimi ezisele',
+        'xh' => 'Guqulela iilwimi ezishiyekileyo',
+        'pt' => 'Traduzir as línguas em falta',
+        'st' => 'Fetolela lipuo tse setseng'
+    ],
+    'gd_translated' => [
+        'af' => 'Vertalings bygewerk.',
+        'en' => 'Translations updated.',
+        'zu' => 'Ukuhumusha kubuyekeziwe.',
+        'xh' => 'Iinguqulelo zihlaziyiwe.',
+        'pt' => 'Traduções atualizadas.',
+        'st' => 'Liphetolelo li ntlafalitsoe.'
+    ],
+    'gd_translate_failed' => [
+        'af' => 'Kon nie nou vertaal nie. Probeer later weer.',
+        'en' => 'Could not translate right now. Please try again later.',
+        'zu' => 'Akukwazekanga ukuhumusha manje. Sicela uzame futhi emuva kwesikhashana.',
+        'xh' => 'Akukwazekanga ukuguqulela ngoku. Nceda uzame kwakhona kamva.',
+        'pt' => 'Não foi possível traduzir agora. Tente novamente mais tarde.',
+        'st' => 'Ha ho a khoneha ho fetolela hona joale. Ka kopo leka hape hamorao.'
+    ],
+    'gd_original' => [
+        'af' => 'Oorspronklik',
+        'en' => 'Original',
+        'zu' => 'Okwangempela',
+        'xh' => 'Eyokuqala',
+        'pt' => 'Original',
+        'st' => 'Ea mantlha'
+    ],
+    'gd_edit_translation' => [
+        'af' => 'Wysig vertaling',
+        'en' => 'Edit translation',
+        'zu' => 'Hlela ukuhumusha',
+        'xh' => 'Hlela inguqulelo',
+        'pt' => 'Editar a tradução',
+        'st' => 'Fetola phetolelo'
+    ],
+    'gd_translation_saved' => [
+        'af' => 'Vertaling gestoor.',
+        'en' => 'Translation saved.',
+        'zu' => 'Ukuhumusha kugciniwe.',
+        'xh' => 'Inguqulelo igciniwe.',
+        'pt' => 'Tradução guardada.',
+        'st' => 'Phetolelo e bolokiloe.'
+    ],
+    'gd_by_hand' => [
+        'af' => 'Met die hand reggemaak',
+        'en' => 'Corrected by hand',
+        'zu' => 'Kulungiswe ngesandla',
+        'xh' => 'Ilungiswe ngesandla',
+        'pt' => 'Corrigida à mão',
+        'st' => 'E lokisitsoe ka letsoho'
+    ],
+    'gd_not_translated' => [
+        'af' => 'Nog nie vertaal nie — lede in hierdie taal sien die oorspronklike.',
+        'en' => 'Not translated yet — members in this language see the original.',
+        'zu' => 'Akukahunyushwa — amalungu akulolu limi abona okwangempela.',
+        'xh' => 'Ayikaguqulelwa — amalungu akolu lwimi abona eyokuqala.',
+        'pt' => 'Ainda não traduzido — os membros nesta língua veem o original.',
+        'st' => 'Ha e so fetoleloe — litho tsa puo ena li bona ea mantlha.'
+    ],
+    'gd_ai_off' => [
+        'af' => 'Die vertaaldiens is nie opgestel nie (OpenAI-sleutel ontbreek).',
+        'en' => 'The translation service is not set up (OpenAI key missing).',
+        'zu' => 'Insiza yokuhumusha ayikahlelwa (ukhiye we-OpenAI awukho).',
+        'xh' => 'Inkonzo yokuguqulela ayikalungiswa (isitshixo se-OpenAI asikho).',
+        'pt' => 'O serviço de tradução não está configurado (falta a chave da OpenAI).',
+        'st' => 'Tšebeletso ea phetolelo ha e so hlophisoe (senotlolo sa OpenAI ha se eo).'
+    ],
+    'gd_too_long' => [
+        'af' => 'Die gedagte is te lank (hoogstens {n} karakters).',
+        'en' => 'The thought is too long (at most {n} characters).',
+        'zu' => 'Umcabango mude kakhulu (izinhlamvu ezingafika ku-{n}).',
+        'xh' => 'Ingcinga inde kakhulu (iimpawu ezingafikelela kwi-{n}).',
+        'pt' => 'O pensamento é demasiado longo (no máximo {n} caracteres).',
+        'st' => 'Mohopolo o molelele haholo (litlhaku tse {n} ka ho fetisisa).'
+    ],
+    'adm_chars_over' => [
+        'af' => '{n} karakters te veel',
+        'en' => '{n} characters too many',
+        'zu' => 'Izinhlamvu ezingu-{n} ngaphezu kwalokho okuvunyelwe',
+        'xh' => 'Iimpawu ezi-{n} ngaphezu kokuvumelekileyo',
+        'pt' => '{n} caracteres a mais',
+        'st' => 'Litlhaku tse {n} ho feta tse lumelloang'
+    ],
+    'gd_langs_label' => [
+        'af' => 'Tale',
+        'en' => 'Languages',
+        'zu' => 'Izilimi',
+        'xh' => 'Iilwimi',
+        'pt' => 'Línguas',
+        'st' => 'Lipuo'
+    ],
 
     // Bybel Opsomming (Bible Summary) module
     'bible_summary' => [

@@ -62,9 +62,11 @@ define('BIBLE_VERSIONS', [
 // OPENAI CHAT FUNCTION (NON-STREAMING - MORE RELIABLE)
 // =============================================================================
 
-function openai_chat(array $messages): array {
-    error_log('openai_chat: Starting API call with ' . OPENAI_MODEL);
-
+/**
+ * The request body for a chat call. $extra adds fields such as
+ * response_format.
+ */
+function openai_body(array $messages, array $extra = []): array {
     $body = [
         'model' => OPENAI_MODEL,
         'messages' => $messages
@@ -82,6 +84,14 @@ function openai_chat(array $messages): array {
         $body['max_tokens'] = OPENAI_MAX_TOKENS;
         $body['temperature'] = OPENAI_TEMPERATURE;
     }
+
+    return array_merge($body, $extra);
+}
+
+function openai_chat(array $messages): array {
+    error_log('openai_chat: Starting API call with ' . OPENAI_MODEL);
+
+    $body = openai_body($messages);
 
     $payload = json_encode($body, JSON_UNESCAPED_UNICODE);
 
@@ -137,6 +147,77 @@ function openai_chat(array $messages): array {
 
     error_log('openai_chat: Success! Response length: ' . strlen($data['choices'][0]['message']['content']));
     return $data;
+}
+
+/**
+ * Several chat calls at the same time (e.g. one translation per language),
+ * so the wait is the slowest call instead of all of them added up.
+ *
+ * @param array $requests key => ['messages' => [...], 'extra' => [...]]
+ * @return array key => the answer text, or null for a call that failed
+ *               (error, HTTP status other than 200, or cut off at the token limit)
+ */
+function openai_chat_parallel(array $requests, int $timeout = 60): array {
+    $out = [];
+    if (!$requests) {
+        return $out;
+    }
+
+    $multi = curl_multi_init();
+    $handles = [];
+    foreach ($requests as $key => $req) {
+        $payload = json_encode(openai_body($req['messages'] ?? [], $req['extra'] ?? []), JSON_UNESCAPED_UNICODE);
+        $ch = curl_init(OPENAI_API_URL);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . OPENAI_API_KEY
+            ],
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_ENCODING => ''
+        ]);
+        curl_multi_add_handle($multi, $ch);
+        $handles[$key] = $ch;
+    }
+
+    do {
+        $status = curl_multi_exec($multi, $active);
+        if ($active && curl_multi_select($multi, 1.0) === -1) {
+            usleep(10000); // select not supported: avoid a busy loop
+        }
+    } while ($active && $status === CURLM_OK);
+
+    foreach ($handles as $key => $ch) {
+        $response = (string)curl_multi_getcontent($ch);
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_multi_remove_handle($multi, $ch);
+        curl_close($ch);
+
+        $out[$key] = null;
+        $data = json_decode($response, true);
+        if ($httpCode !== 200) {
+            error_log('openai_chat_parallel [' . $key . ']: HTTP ' . $httpCode . ' '
+                . ($curlError !== '' ? $curlError : (string)($data['error']['message'] ?? '')));
+            continue;
+        }
+        $text = $data['choices'][0]['message']['content'] ?? null;
+        if (!is_string($text) || ($data['choices'][0]['finish_reason'] ?? '') === 'length') {
+            error_log('openai_chat_parallel [' . $key . ']: empty or cut-off answer');
+            continue;
+        }
+        $out[$key] = $text;
+    }
+    curl_multi_close($multi);
+
+    return $out;
 }
 
 // =============================================================================
