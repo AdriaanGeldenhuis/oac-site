@@ -5,6 +5,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- OfflineAssets: offline, the Bible and hymns inside the app are used as they are -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- "Add to my phone's calendar": lets the app see that a calendar app
          can take a new event (package visibility, Android 11+) -->

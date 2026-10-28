@@ -17,12 +17,18 @@ import android.webkit.JavascriptInterface
 import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.webkit.ServiceWorkerClientCompat
+import androidx.webkit.ServiceWorkerControllerCompat
+import androidx.webkit.WebViewFeature
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.messaging.FirebaseMessaging
 import za.co.oacapp.oacapp.MyFirebaseMessagingService.Companion.EXTRA_NOTIFICATION_LINK
@@ -30,6 +36,7 @@ import za.co.oacapp.oacapp.MyFirebaseMessagingService.Companion.EXTRA_NOTIFICATI
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
+    private lateinit var offlineAssets: OfflineAssets
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
     private val baseUrl = "https://oacapp.co.za/"
 
@@ -62,6 +69,19 @@ class MainActivity : ComponentActivity() {
         webView.settings.domStorageEnabled = true
         webView.settings.allowFileAccess = true
         webView.settings.allowContentAccess = true
+
+        // The Bible and the hymn book inside the app (see OfflineAssets). The
+        // site's service worker (/sw.js) fetches through its own client, so
+        // both the page and the worker are answered from the app.
+        offlineAssets = OfflineAssets(applicationContext)
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_BASIC_USAGE) &&
+            WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_SHOULD_INTERCEPT_REQUEST)
+        ) {
+            ServiceWorkerControllerCompat.getInstance().setServiceWorkerClient(object : ServiceWorkerClientCompat() {
+                override fun shouldInterceptRequest(request: WebResourceRequest): WebResourceResponse? =
+                    offlineAssets.intercept(request)
+            })
+        }
 
         webView.addJavascriptInterface(object {
             @JavascriptInterface
@@ -154,6 +174,20 @@ class MainActivity : ComponentActivity() {
                 }
                 return true
             }
+
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? =
+                request?.let { offlineAssets.intercept(it) }
+
+            // A page of ours could not load at all: no connection, and the
+            // site's offline copy is not on this phone yet (first start, or
+            // before the first login). Show our own page instead of the
+            // WebView's error; it offers to try that address again.
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                super.onReceivedError(view, request, error)
+                if (request == null || !request.isForMainFrame) return
+                if (request.url.host !in OfflineAssets.HOSTS) return
+                view?.loadUrl(NO_CONNECTION_PAGE + "?u=" + Uri.encode(request.url.toString()))
+            }
         }
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -181,6 +215,18 @@ class MainActivity : ComponentActivity() {
         // OnBackPressedDispatcher is the modern replacement.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                // On the "no connection" page the entry before it is the
+                // address that failed: step over it, or that page would only
+                // fail again
+                if (webView.url?.startsWith(NO_CONNECTION_PAGE) == true) {
+                    if (webView.canGoBackOrForward(-2)) {
+                        webView.goBackOrForward(-2)
+                    } else {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                    return
+                }
                 if (webView.canGoBack()) {
                     webView.goBack()
                 } else if (webView.url != baseUrl) {
@@ -250,6 +296,10 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             Log.e("MainActivity", "Download failed", e)
         }
+    }
+
+    companion object {
+        private const val NO_CONNECTION_PAGE = "file:///android_asset/no_connection.html"
     }
 
     private fun askNotificationPermission() {
