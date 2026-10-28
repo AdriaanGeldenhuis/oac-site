@@ -637,9 +637,61 @@
   }
 
   // ---------------------------------------------------------------------
+  // Offline copy: the app may show this page as it was saved hours ago
+  // (sw.js). Greeting, date line and sky tint then follow the phone's clock
+  // in South African time (UTC+2, no daylight saving), like the server's.
+  // ---------------------------------------------------------------------
+  function pad2(n) {
+    return (n < 10 ? '0' : '') + n;
+  }
+
+  function initClock() {
+    if (!data.today || !data.tod || !data.now) { return; }
+    // Only an old copy: a freshly served page keeps the server's clock, even
+    // when the phone's own clock is a little off
+    var m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(data.now);
+    if (!m) { return; }
+    var savedAt = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - 2 * 3600 * 1000;
+    if (Date.now() - savedAt < 15 * 60 * 1000) { return; }
+
+    var sa = new Date(Date.now() + 2 * 3600 * 1000);
+    var h = sa.getUTCHours();
+    var tod = h < 12 ? 'morning' : (h < 18 ? 'afternoon' : 'evening');
+    var today = sa.getUTCFullYear() + '-' + pad2(sa.getUTCMonth() + 1) + '-' + pad2(sa.getUTCDate());
+    if (today === data.today && tod === data.tod) { return; }
+
+    var greetings = T.greetings || {};
+    var greet = doc.querySelector('.wc-hello-greet');
+    if (greet && greetings[tod]) {
+      var comma = /,\s*$/.test(greet.textContent) ? ',' : '';
+      greet.textContent = greetings[tod] + comma;
+    }
+
+    var chip = byId('wcDateChip');
+    var dayName = (T.days || [])[sa.getUTCDay()];
+    var monthName = (T.months || [])[sa.getUTCMonth()];
+    if (chip && chip.lastChild && chip.lastChild.nodeType === 3 && dayName && monthName) {
+      chip.lastChild.nodeValue = ' ' + dayName + ', ' + sa.getUTCDate() + ' ' + monthName + ' ';
+    }
+
+    var aura = byId('wcAura');
+    if (aura) { aura.setAttribute('data-tod', tod); }
+    var icon = doc.querySelector('.wc-eyebrow .wc-tod');
+    // Our own static SVG paths from #wcData, never user content
+    if (icon && data.todIcons && data.todIcons[tod]) { icon.innerHTML = data.todIcons[tod]; }
+
+    // "Today" / "Tomorrow" in Up next
+    var tomorrow = new Date(sa.getTime() + 24 * 3600 * 1000);
+    data.today = today;
+    data.tomorrow = tomorrow.getUTCFullYear() + '-' + pad2(tomorrow.getUTCMonth() + 1) + '-' + pad2(tomorrow.getUTCDate());
+    data.tod = tod;
+  }
+
+  // ---------------------------------------------------------------------
   // Go
   // ---------------------------------------------------------------------
   var features = [
+    initClock,
     initReveal, initEmbers, initParallax, initTiles, initNotifBadge,
     initUpNext, initThought, initThoughtFold, initTeaching
   ];
