@@ -20,6 +20,8 @@ function t_ftr(string $key): string {
 // Auto-update notification count
 (async function updateNotifCount() {
   try {
+    // Offline (the app's offline copy): ask again once there is a connection
+    if (navigator.onLine === false) throw null;
     const response = await fetch('/notifications/api/count.php');
     const data = await response.json();
     
@@ -35,7 +37,7 @@ function t_ftr(string $key): string {
       }
     }
   } catch (error) {
-    console.error('Update notif count error:', error);
+    if (error) console.error('Update notif count error:', error);
   }
   
   // Update every 30 seconds

@@ -8466,6 +8466,13 @@ define('UI_TRANSLATIONS', [
         'xh' => 'Umfanekiso ulungile — gcina ukuwugcina.',
         'pt' => 'Foto pronta — guarde para a manter.',
         'st' => 'Setšoantšo se loketse — boloka ho se boloka.'
+    ],
+
+    // Offline in the app (offline/js/offline.js). zu/xh/st fall back to English.
+    'offline_pill' => [
+        'af' => 'Jy is aflyn',
+        'en' => 'You are offline',
+        'pt' => 'Está offline'
     ]
 
 ]);

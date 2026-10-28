@@ -6,6 +6,7 @@ header('Pragma: no-cache');
 require_once __DIR__ . '/security/auth_gate.php';
 require_once __DIR__ . '/includes/languages.php';
 require_once __DIR__ . '/includes/teaching.php';
+require_once __DIR__ . '/includes/offline.php';
 require_once __DIR__ . '/gedagtes/lib/gedagtes.php';
 require_once __DIR__ . '/security/config.php';
 
@@ -99,8 +100,6 @@ try {
     error_log("Daily thought fetch error: " . $e->getMessage());
 }
 
-$VER = time();
-
 // "Now" in South Africa. Drives the greeting, the date line and the sky tint,
 // and is handed to the JS so "Today"/"Tomorrow" agree with the server.
 $now      = new DateTimeImmutable('now', new DateTimeZone('Africa/Johannesburg'));
@@ -109,11 +108,14 @@ $tod      = $hour < 12 ? 'morning' : ($hour < 18 ? 'afternoon' : 'evening');
 $greeting = t('greeting_' . $tod);
 $dateLine = t(strtolower($now->format('l'))) . ', ' . $now->format('j') . ' ' . t(strtolower($now->format('F')));
 
-// Everything the JS needs: server clock + the strings it renders
+// Everything the JS needs: server clock + the strings it renders. The app can
+// show this page from its offline copy later; welcome.js then sets the
+// greeting, date and sky tint from the phone's clock (tod + greetings).
 $wcData = [
     'now'      => $now->format('Y-m-d H:i'),
     'today'    => $now->format('Y-m-d'),
     'tomorrow' => $now->modify('+1 day')->format('Y-m-d'),
+    'tod'      => $tod,
     'i18n'     => [
         'days'     => array_map(fn($k) => t($k), ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']),
         'months'   => array_map(fn($k) => t($k), ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']),
@@ -123,6 +125,11 @@ $wcData = [
         'copied'   => t('copied'),
         'readMore' => t('read_more'),
         'readLess' => t('read_less'),
+        'greetings' => [
+            'morning'   => t('greeting_morning'),
+            'afternoon' => t('greeting_afternoon'),
+            'evening'   => t('greeting_evening'),
+        ],
     ],
 ];
 
@@ -147,6 +154,7 @@ $todIcons = [
     'afternoon' => '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
     'evening'   => '<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>',
 ];
+$wcData['todIcons'] = $todIcons;
 
 // Addressed by office and surname, e.g. "Oudste Geldenhuis" / "Broer Geldenhuis" /
 // "Priester Geldenhuis". Same title lookup the profile page uses. If the surname
@@ -180,7 +188,7 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Parisienne&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/welcome/css/welcome.css?v=<?= $VER ?>">
+  <link rel="stylesheet" href="<?= wc_e(oac_asset('/welcome/css/welcome.css')) ?>">
 </head>
 <body class="welcome-body wc-home">
   <?php require_once __DIR__ . '/header_footer/header.php'; ?>
@@ -219,7 +227,7 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
         <?php endif; ?>
       </h2>
       <div class="wc-meta">
-        <span class="wc-chip">
+        <span class="wc-chip" id="wcDateChip">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><?= $navItems[3]['icon'] ?></svg>
           <?= wc_e($dateLine) ?>
         </span>
@@ -346,7 +354,7 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
   <div class="wc-toast" id="wcToast" role="status" aria-live="polite"></div>
 
   <script type="application/json" id="wcData"><?= json_encode($wcData, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '{}' ?></script>
-  <script src="/welcome/js/welcome.js?v=<?= $VER ?>" defer></script>
+  <script src="<?= wc_e(oac_asset('/welcome/js/welcome.js')) ?>" defer></script>
   <?php require_once __DIR__ . '/header_footer/footer.php'; ?>
 
 </body>

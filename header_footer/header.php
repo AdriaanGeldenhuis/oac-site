@@ -9,6 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Include languages config
 require_once __DIR__ . '/../includes/languages.php';
+require_once __DIR__ . '/../includes/offline.php';
 
 // Language handling - support all 5 languages
 if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
@@ -86,7 +87,8 @@ function isActive($url, $currentPath) {
   return strpos($currentPath, $url) !== false;
 }
 ?>
-<link rel="stylesheet" href="/header_footer/css/header.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= oac_asset('/header_footer/css/header.css') ?>">
+<link rel="stylesheet" href="<?= oac_asset('/offline/css/offline.css') ?>">
 
 <header class="ghf-header" id="ghfHeader">
   <div class="ghf-container">
@@ -184,5 +186,9 @@ function isActive($url, $currentPath) {
   </ul>
 </nav>
 
-<script src="/header_footer/js/header.js?v=<?= time() ?>"></script>
-<script src="/assets/js/fcm-bridge.js?v=<?= time() ?>"></script>
+<!-- Shown by offline.js while the phone has no connection -->
+<div class="oac-offline-pill" id="oacOfflinePill" role="status" hidden><?= htmlspecialchars(t_hdr('offline_pill'), ENT_QUOTES, 'UTF-8') ?></div>
+
+<script src="<?= oac_asset('/header_footer/js/header.js') ?>"></script>
+<script src="<?= oac_asset('/assets/js/fcm-bridge.js') ?>"></script>
+<script src="<?= oac_asset('/offline/js/offline.js') ?>"></script>

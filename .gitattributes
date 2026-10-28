@@ -1,0 +1,6 @@
+# Bible and hymn data stay byte-for-byte the same on every checkout, Windows
+# included: the server (includes/offline.php) and the Android app
+# (App Files/app/build.gradle.kts) compare their md5 to know the copy inside
+# the app is current. A CRLF conversion would make them differ.
+bible/bibles/*.json -text
+singemmanuel/songs/*.json -text

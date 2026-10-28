@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="af">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>OAC — Aflyn / Offline</title>
+  <!--
+    Shown by the app's service worker (/sw.js) for a page that needs the
+    server while the phone is offline. Static on purpose: no PHP and no
+    member data, so it is kept on the phone for everyone. Self-contained
+    (inline style and script) so it never depends on another download.
+  -->
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #171514;
+      --border: rgba(232, 180, 168, 0.16);
+      --border-strong: rgba(232, 180, 168, 0.35);
+      --text: #f5ebe6;
+      --muted: #c8c0ba;
+      --accent: #e8b4a8;
+      --glow: rgba(232, 180, 168, 0.12);
+    }
+    [data-theme="light"] {
+      --bg: #f6f5f1;
+      --card: #ffffff;
+      --border: rgba(17, 24, 39, 0.11);
+      --border-strong: rgba(164, 124, 56, 0.4);
+      --text: #111827;
+      --muted: #4a5361;
+      --accent: #8a6427;
+      --glow: rgba(164, 124, 56, 0.1);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+      background: radial-gradient(120% 80% at 50% 0%, var(--glow), transparent 60%), var(--bg);
+      color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    main { width: 100%; max-width: 420px; text-align: center; }
+    .dot {
+      width: 56px; height: 56px; margin: 0 auto 18px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--card);
+      border: 1px solid var(--border-strong);
+      color: var(--accent);
+    }
+    .dot svg { width: 26px; height: 26px; }
+    h1 { margin: 0 0 4px; font-size: 1.45rem; font-weight: 650; }
+    .sub { margin: 0 0 22px; color: var(--muted); }
+    .sub [lang="en"] { display: block; font-size: 0.92em; opacity: 0.85; }
+    nav { display: grid; gap: 10px; margin-bottom: 18px; }
+    .go {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      min-height: 52px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      text-align: left;
+    }
+    .go:focus-visible, .retry:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .go small { display: block; font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+    .go::after { content: '›'; font-size: 1.4rem; color: var(--accent); line-height: 1; }
+    .go.is-missing { opacity: 0.55; }
+    .retry {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--border-strong);
+      background: transparent;
+      color: var(--accent);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+  <script>
+    try { var t = localStorage.getItem('theme'); if (t === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  </script>
+</head>
+<body>
+  <main>
+    <div class="dot" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l20 20"/><path d="M8.5 16.5a5 5 0 017 0"/><path d="M2 8.82a15 15 0 014.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="M16.85 11.25a10 10 0 012.22 1.68"/><path d="M5 13a10 10 0 015.24-2.76"/><path d="M12 20h.01"/></svg>
+    </div>
+    <h1>Jy is aflyn</h1>
+    <p class="sub">
+      Hierdie bladsy het internet nodig. Dié werk sonder internet:
+      <span lang="en">You are offline. This page needs the internet. These work without it:</span>
+    </p>
+
+    <nav aria-label="Aflyn / Offline">
+      <a class="go" href="/welcome.php" data-key="/welcome.php">
+        <span>Welkom<small lang="en">Welcome</small></span>
+      </a>
+      <a class="go" href="/bible/bible.php" data-key="/bible/bible.php">
+        <span>Bybel<small lang="en">Bible</small></span>
+      </a>
+      <a class="go" href="/singemmanuel/singemmanuel.php" data-key="/singemmanuel/singemmanuel.php">
+        <span>Sing Emmanuel<small lang="en">Hymns</small></span>
+      </a>
+    </nav>
+
+    <button type="button" class="retry" id="retry">Probeer weer · Try again</button>
+  </main>
+
+  <script>
+    (function () {
+      document.getElementById('retry').addEventListener('click', function () {
+        window.location.reload();
+      });
+      // Dim what is not on this phone yet (never opened online since login)
+      if (!window.caches) return;
+      document.querySelectorAll('.go[data-key]').forEach(function (link) {
+        caches.match(link.getAttribute('data-key')).then(function (hit) {
+          if (!hit) link.classList.add('is-missing');
+        }).catch(function () {});
+      });
+    })();
+  </script>
+</body>
+</html>
