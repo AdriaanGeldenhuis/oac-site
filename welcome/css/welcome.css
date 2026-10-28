@@ -40,6 +40,8 @@
   /* Stained-glass jewels, as bare RGB so they can be alpha-mixed */
   --rose-rgb: 232, 180, 168;
   --ruby-rgb: 236, 98, 124;
+  --gold-rgb: 212, 175, 55;
+  --silver-rgb: 190, 199, 212;
   --amber-rgb: 245, 186, 74;
   --emerald-rgb: 66, 198, 148;
   --sapphire-rgb: 98, 152, 255;
@@ -98,6 +100,8 @@
   /* Deeper jewels so they hold against white */
   --rose-rgb: 164, 124, 56;
   --ruby-rgb: 190, 52, 84;
+  --gold-rgb: 150, 112, 16;
+  --silver-rgb: 84, 98, 118;
   --amber-rgb: 176, 118, 20;
   --emerald-rgb: 22, 128, 94;
   --sapphire-rgb: 44, 98, 214;
@@ -855,6 +859,13 @@ html {
 .wc-tile--sapphire { --c-rgb: var(--sapphire-rgb); }
 .wc-tile--amethyst { --c-rgb: var(--amethyst-rgb); }
 .wc-tile--rose     { --c-rgb: var(--rose-rgb); }
+.wc-tile--gold     { --c-rgb: var(--gold-rgb); }
+.wc-tile--silver   { --c-rgb: var(--silver-rgb); }
+
+/* Silver is light: its icon is dark ink, not white */
+.wc-tile--silver .wc-tile-orb { color: #10151c; }
+[data-theme="light"] .wc-tile--silver .wc-tile-orb { color: #ffffff; }
+.wc-tile--silver .wc-tile-orb svg { filter: none; }
 
 /* Light that follows the pointer / the finger */
 .wc-tile::before {
