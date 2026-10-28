@@ -278,17 +278,20 @@ function nt_out(array $r, string $lang): array {
     $messageKey = $r['message_key'] ?? null;
     $params = $r['params'] ?? null;
 
+    $type = (string)($r['type'] ?? 'info');
+
     $title = nt_translate((string)($r['title'] ?? ''), $titleKey, $params, $lang);
     if (!$titleKey) $title = nt_legacy_title($title, $lang);
     $message = nt_translate((string)($r['message'] ?? ''), $messageKey, $params, $lang);
-    if (!$messageKey) $message = nt_legacy_message($message, $lang);
+    // A thought is free text (already in the member's language): the legacy
+    // patterns would "translate" a sentence like "... het in ... geplaas."
+    if (!$messageKey && $type !== 'thought') $message = nt_legacy_message($message, $lang);
 
     // The page draws its own icon, so a leading emoji in the title is dropped
     // (the push on the phone keeps it; a reaction's emoji is in the message too)
     $bare = preg_replace('/^[\p{Extended_Pictographic}\x{FE0F}\x{200D}\x{20E3}\s]+/u', '', $title);
     if (is_string($bare) && trim($bare) !== '') $title = $bare;
 
-    $type = (string)($r['type'] ?? 'info');
     return [
         'id' => (int)$r['id'],
         'title' => trim($title),

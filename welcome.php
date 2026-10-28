@@ -6,6 +6,7 @@ header('Pragma: no-cache');
 require_once __DIR__ . '/security/auth_gate.php';
 require_once __DIR__ . '/includes/languages.php';
 require_once __DIR__ . '/includes/teaching.php';
+require_once __DIR__ . '/gedagtes/lib/gedagtes.php';
 require_once __DIR__ . '/security/config.php';
 
 // Handle language change via GET parameter - redirect to apply cleanly
@@ -89,33 +90,11 @@ try {
 // falling back to English, then Afrikaans (see includes/teaching.php)
 $teachingHtml = teaching_reader_html(teaching_dir((string)$province, (string)$town), $lang);
 
-// Fetch today's thought (only if display_time has passed or is NULL)
+// Today's thought once its display_time has come, in the reader's language.
+// Same rules as the thoughts page (South African time, not the database clock).
 $dailyThought = null;
 try {
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS daily_thoughts (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            content TEXT NOT NULL,
-            author VARCHAR(255) DEFAULT NULL,
-            display_date DATE NOT NULL,
-            display_time TIME DEFAULT NULL,
-            notification_sent TINYINT(1) DEFAULT 0,
-            created_by INT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY unique_date (display_date),
-            INDEX idx_display_date (display_date),
-            INDEX idx_created_by (created_by)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
-    $stmt = $pdo->prepare('
-        SELECT content, author
-        FROM daily_thoughts
-        WHERE display_date = CURDATE()
-          AND (display_time IS NULL OR display_time <= CURTIME())
-        LIMIT 1
-    ');
-    $stmt->execute();
-    $dailyThought = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    $dailyThought = gd_today($pdo, $lang)['thought'];
 } catch (Throwable $e) {
     error_log("Daily thought fetch error: " . $e->getMessage());
 }
@@ -258,7 +237,7 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
 
           <div class="wc-fold-body" id="wcThoughtBody">
             <div class="wc-thought-main">
-              <blockquote class="wc-thought-text" id="wcThoughtText"><?= wc_e($dailyThought['content']) ?></blockquote>
+              <blockquote class="wc-thought-text" id="wcThoughtText" lang="<?= wc_e($dailyThought['lang']) ?>"><?= wc_e($dailyThought['text']) ?></blockquote>
               <?php if (!empty($dailyThought['author'])): ?>
                 <figcaption class="wc-thought-author" id="wcThoughtAuthor"><?= wc_e($dailyThought['author']) ?></figcaption>
               <?php endif; ?>

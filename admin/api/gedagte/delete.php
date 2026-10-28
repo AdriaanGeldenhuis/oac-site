@@ -1,66 +1,38 @@
 <?php
 declare(strict_types=1);
+/** POST /admin/api/gedagte/delete.php — delete a thought and its translations (elders, amp 1-5). Field: id */
 
 require_once dirname(__DIR__, 3) . '/security/config.php';
 require_once dirname(__DIR__, 3) . '/security/session.php';
 require_once dirname(__DIR__, 3) . '/security/auth.php';
 require_once dirname(__DIR__, 3) . '/security/csrf.php';
 require_once dirname(__DIR__, 3) . '/includes/admin_api.php';
+require_once dirname(__DIR__, 3) . '/includes/daily_thoughts.php';
 
 ob_start();
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
-if (!auth_logged_in()) {
-    ob_end_clean();
-    http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-    exit;
-}
-
-$userId = auth_user_id();
-
-// Check Elder permissions
-try {
-    $stmt = $pdo->prepare('SELECT amp_id FROM users WHERE id = ? LIMIT 1');
-    $stmt->execute([$userId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    $ampId = (int)($user['amp_id'] ?? 0);
-    if ($ampId < 1 || $ampId > 5) {
-        ob_end_clean();
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
-        exit;
-    }
-} catch (Throwable $e) {
-    ob_end_clean();
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error']);
-    exit;
-}
+dt_admin_guard($pdo);
 
 // POST only, with the session's CSRF token
 admin_api_require_post();
 
-$id = (int)($_POST['id'] ?? 0);
+$id = (int)dt_post('id');
 if ($id < 1) {
-    ob_end_clean();
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Invalid ID']);
-    exit;
+    admin_api_fail('adm_err_invalid');
 }
 
 try {
-    $stmt = $pdo->prepare('DELETE FROM daily_thoughts WHERE id = ?');
-    $stmt->execute([$id]);
+    dt_ensure_schema($pdo); // before the transaction: DDL commits
 
-    ob_end_clean();
-    echo json_encode(['success' => true]);
+    $pdo->beginTransaction();
+    $pdo->prepare('DELETE FROM daily_thought_translations WHERE thought_id = ?')->execute([$id]);
+    $pdo->prepare('DELETE FROM daily_thoughts WHERE id = ?')->execute([$id]);
+    $pdo->commit();
+
+    admin_api_json(['success' => true]);
 } catch (Throwable $e) {
-    error_log('Daily thought delete error: ' . $e->getMessage());
-    ob_end_clean();
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Failed to delete']);
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    admin_api_server_error($e, 'gedagte/delete');
 }
-exit;

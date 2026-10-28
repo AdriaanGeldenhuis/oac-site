@@ -8,9 +8,11 @@
  * Or via URL (with cron service like cron-job.org):
  *   https://oacapp.co.za/cron/thought_notifications.php?key=YOUR_SECRET_KEY
  *
- * Checks if today's thought has reached its display_time and sends
- * push notifications to users in the same town (opsienerskap) as the
- * thought creator, in their preferred language.
+ * Checks if today's thought has reached its display_time (South African
+ * time) and sends it to the members in the same town (opsienerskap) as the
+ * thought creator, each in their own language. The work is dt_send_due() in
+ * includes/daily_thoughts.php, shared with the auto-cron, so the two can
+ * never send the same thought twice.
  */
 
 declare(strict_types=1);
@@ -19,177 +21,32 @@ $isCliMode = (php_sapi_name() === 'cli');
 $secretKey = 'oac_thought_cron_2024_secure';
 
 if (!$isCliMode) {
-    if (($_GET['key'] ?? '') !== $secretKey) {
+    if (!hash_equals($secretKey, (string)($_GET['key'] ?? ''))) {
         http_response_code(403);
         die('Forbidden');
     }
     header('Content-Type: application/json');
 }
 
-require_once __DIR__ . '/../lib/db.php';
-require_once __DIR__ . '/../admin/config/fcm_config.php';
-require_once __DIR__ . '/../includes/languages.php';
+// Translations and a large fan-out can take a while
+@set_time_limit(300);
 
-// Evaluate CURDATE()/CURTIME() in South African local time so scheduled
-// display_time values match what admins see in the UI.
-date_default_timezone_set('Africa/Johannesburg');
+require_once __DIR__ . '/../lib/db.php';
+require_once __DIR__ . '/../includes/daily_thoughts.php';
+
 $pdo = db();
-try { $pdo->exec("SET time_zone = '+02:00'"); } catch (Throwable $e) { /* ignore */ }
-$results = ['sent' => 0, 'errors' => 0, 'skipped' => false];
+$results = ['sent' => 0, 'skipped' => false];
 
 try {
-    // Add columns if they don't exist (safe migration)
-    try {
-        $pdo->exec("ALTER TABLE daily_thoughts ADD COLUMN display_time TIME DEFAULT NULL AFTER display_date");
-    } catch (Throwable $e) { /* already exists */ }
-    try {
-        $pdo->exec("ALTER TABLE daily_thoughts ADD COLUMN notification_sent TINYINT(1) DEFAULT 0 AFTER display_time");
-    } catch (Throwable $e) { /* already exists */ }
-
-    // Find today's thought that is ready to display but notification not yet sent
-    // Join with users to get the creator's town_id for scoping
-    $stmt = $pdo->prepare("
-        SELECT dt.id, dt.content, dt.author, dt.created_by, u.town_id
-        FROM daily_thoughts dt
-        LEFT JOIN users u ON u.id = dt.created_by
-        WHERE dt.display_date = CURDATE()
-          AND dt.notification_sent = 0
-          AND (dt.display_time IS NULL OR dt.display_time <= CURTIME())
-        LIMIT 1
-    ");
-    $stmt->execute();
-    $thought = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$thought) {
+    $sent = dt_send_due($pdo);
+    if ($sent === null) {
         $results['skipped'] = true;
         $results['message'] = 'No thought ready for notification';
-        if (!$isCliMode) echo json_encode($results);
-        else echo "No thought ready for notification.\n";
-        exit;
-    }
-
-    // Atomically claim the thought so a concurrent sender (e.g. the auto-cron)
-    // can never push the same thought twice.
-    $updateStmt = $pdo->prepare("UPDATE daily_thoughts SET notification_sent = 1 WHERE id = ? AND notification_sent = 0");
-    $updateStmt->execute([$thought['id']]);
-    if ($updateStmt->rowCount() === 0) {
-        $results['skipped'] = true;
-        $results['message'] = 'Thought already claimed by another sender';
-        if (!$isCliMode) echo json_encode($results);
-        else echo "Thought already claimed by another sender.\n";
-        exit;
-    }
-
-    // Get the creator's town_id to scope notifications
-    $creatorTownId = $thought['town_id'] ? (int)$thought['town_id'] : null;
-
-    // Get approved users in the same town (opsienerskap/town scoping)
-    if ($creatorTownId) {
-        $userStmt = $pdo->prepare("
-            SELECT id, name, language
-            FROM users
-            WHERE status = 'approved'
-              AND town_id = ?
-        ");
-        $userStmt->execute([$creatorTownId]);
     } else {
-        // Fallback: if no town_id on creator, send to all approved users
-        $userStmt = $pdo->prepare("
-            SELECT id, name, language
-            FROM users
-            WHERE status = 'approved'
-        ");
-        $userStmt->execute();
+        $results['sent'] = $sent['members'];
+        $results['thought_id'] = $sent['id'];
+        $results['message'] = 'Thought notifications sent successfully';
     }
-    $users = $userStmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // SQLite notification database
-    $notifDb = new PDO('sqlite:' . __DIR__ . '/../data/notifications.db');
-    $notifDb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    $notifDb->exec("
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            message TEXT,
-            type TEXT DEFAULT 'info',
-            is_read INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT (datetime('now')),
-            link TEXT,
-            icon TEXT,
-            title_key TEXT,
-            message_key TEXT,
-            params TEXT
-        )
-    ");
-
-    // Migrate older databases that pre-date the translation-key columns
-    $cols = $notifDb->query("PRAGMA table_info(notifications)")->fetchAll(PDO::FETCH_COLUMN, 1);
-    if (!in_array('title_key', $cols)) {
-        $notifDb->exec("ALTER TABLE notifications ADD COLUMN title_key TEXT");
-    }
-    if (!in_array('message_key', $cols)) {
-        $notifDb->exec("ALTER TABLE notifications ADD COLUMN message_key TEXT");
-    }
-    if (!in_array('params', $cols)) {
-        $notifDb->exec("ALTER TABLE notifications ADD COLUMN params TEXT");
-    }
-
-    $thoughtContent = strip_tags($thought['content']);
-    // Truncate for push notification body (max 200 chars)
-    $pushBody = mb_strlen($thoughtContent) > 200
-        ? mb_substr($thoughtContent, 0, 197) . '...'
-        : $thoughtContent;
-
-    $insertNotif = $notifDb->prepare("
-        INSERT INTO notifications (user_id, title, message, type, link, icon, title_key, message_key, params)
-        VALUES (:user_id, :title, :message, :type, :link, :icon, :title_key, :message_key, :params)
-    ");
-
-    foreach ($users as $user) {
-        $userId = (int)$user['id'];
-        $userLang = $user['language'] ?? 'af';
-
-        // Get translated title
-        $title = __t('notif_thought_title', $userLang) ?: 'Thought of the Day';
-
-        // Create in-app notification
-        try {
-            $insertNotif->execute([
-                'user_id' => $userId,
-                'title' => $title,
-                'message' => $pushBody,
-                'type' => 'thought',
-                'link' => '/gedagtes/gedagtes.php',
-                'icon' => '💭',
-                'title_key' => 'notif_thought_title',
-                'message_key' => null,
-                'params' => json_encode(['content' => $pushBody])
-            ]);
-        } catch (Throwable $e) {
-            error_log("Thought notification insert error for user $userId: " . $e->getMessage());
-        }
-
-        // Send FCM push notification
-        try {
-            sendPushToUser($userId, $title, $pushBody, [
-                'type' => 'thought',
-                'link' => '/gedagtes/gedagtes.php',
-                'titleKey' => 'notif_thought_title'
-            ]);
-            $results['sent']++;
-        } catch (Throwable $e) {
-            $results['errors']++;
-            error_log("Thought FCM error for user $userId: " . $e->getMessage());
-        }
-    }
-
-    $results['message'] = 'Thought notifications sent successfully';
-    $results['thought_id'] = $thought['id'];
-    $results['town_id'] = $creatorTownId;
-    $results['user_count'] = count($users);
-
 } catch (Throwable $e) {
     $results['error'] = $e->getMessage();
     error_log('Thought notification cron error: ' . $e->getMessage());
@@ -198,6 +55,6 @@ try {
 if (!$isCliMode) {
     echo json_encode($results, JSON_PRETTY_PRINT);
 } else {
-    echo "Thought notifications complete.\n";
-    echo "Sent: {$results['sent']}, Errors: {$results['errors']}\n";
+    echo ($results['message'] ?? ('Error: ' . ($results['error'] ?? 'unknown'))) . "\n";
+    echo "Members: {$results['sent']}\n";
 }

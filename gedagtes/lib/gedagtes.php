@@ -8,12 +8,17 @@ declare(strict_types=1);
  * (all day when no time is set). "Now" is South African time, computed in
  * PHP like the thought cron does, so the database's own clock never matters.
  *
+ * Every reader gets the thought in their own language: its translation
+ * (includes/daily_thoughts.php) when there is a current one, else the
+ * original. Search looks in the text the reader sees.
+ *
  * The text is plain: the admin is a textarea. Older thoughts may carry the
  * few tags the admin used to allow (<p>, <br>, <b> ...); they are turned
  * into line breaks / removed on the way out, never sent as HTML.
  */
 
 require_once dirname(__DIR__, 2) . '/includes/languages.php';
+require_once dirname(__DIR__, 2) . '/includes/daily_thoughts.php';
 
 const GD_TZ = 'Africa/Johannesburg';
 const GD_PAGE = 30;          // thoughts per page in the archive
@@ -61,38 +66,42 @@ function gd_json_for_script($data): string {
 
 /** Stored text → plain text with its line breaks */
 function gd_plain(?string $s): string {
-    $s = (string)$s;
-    $s = preg_replace('~<\s*br\s*/?\s*>~i', "\n", $s) ?? $s;
-    $s = preg_replace('~<\s*/\s*p\s*>~i', "\n\n", $s) ?? $s;
-    $s = strip_tags($s);
-    $s = html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    $s = str_replace(["\r\n", "\r"], "\n", $s);
-    $s = preg_replace('/[\x00-\x09\x0B-\x1F\x7F]+/u', '', $s) ?? $s;
-    $s = preg_replace("/[ \t]+\n/", "\n", $s) ?? $s;
-    $s = preg_replace("/\n{3,}/", "\n\n", $s) ?? $s;
-    return trim($s);
+    return dt_plain($s);
 }
 
 function gd_line(?string $s): string {
-    $s = gd_plain($s);
-    return trim(preg_replace('/\s+/u', ' ', $s) ?? $s);
+    return dt_line($s);
 }
 
-/** A thought for the client */
+/**
+ * The thought and its translation into the reader's language (when it has a
+ * current one, i.e. made from the text as it is now). Takes the reader's
+ * language as its first parameter.
+ */
+const GD_FROM = 'daily_thoughts dt
+    LEFT JOIN daily_thought_translations tr
+      ON tr.thought_id = dt.id AND tr.lang = ? AND tr.lang <> dt.lang AND tr.source_hash = dt.source_hash';
+
+/** A thought for the client, in the reader's language when it has been translated */
 function gd_out(array $r): array {
+    $tr = trim((string)($r['tr_content'] ?? '')) !== '';
+    $author = $tr && trim((string)($r['tr_author'] ?? '')) !== '' ? $r['tr_author'] : ($r['author'] ?? '');
     return [
         'date' => (string)$r['display_date'],
-        'text' => gd_plain($r['content'] ?? ''),
-        'author' => gd_line($r['author'] ?? ''),
+        'text' => gd_plain($tr ? $r['tr_content'] : ($r['content'] ?? '')),
+        'author' => gd_line($author),
+        // The language the text is really in (the original when there is no translation)
+        'lang' => $tr ? (string)$r['tr_lang'] : dt_lang($r['lang'] ?? null),
     ];
 }
 
 /** Today's thought once it is visible, or ['pending' => 'HH:MM'] while it is still to come */
-function gd_today(PDO $pdo): array {
+function gd_today(PDO $pdo, string $lang): array {
     $now = gd_now();
-    $st = $pdo->prepare('SELECT content, author, display_date, display_time FROM daily_thoughts WHERE display_date = ? LIMIT 1');
-    $st->execute([$now->format('Y-m-d')]);
-    $row = $st->fetch(PDO::FETCH_ASSOC);
+    $row = dt_run($pdo, 'SELECT dt.content, dt.author, dt.lang, dt.display_date, dt.display_time,
+                                tr.content AS tr_content, tr.author AS tr_author, tr.lang AS tr_lang
+                         FROM ' . GD_FROM . ' WHERE dt.display_date = ? LIMIT 1', [$lang, $now->format('Y-m-d')])
+        ->fetch(PDO::FETCH_ASSOC);
     if (!$row) return ['thought' => null, 'pending' => null];
 
     $time = $row['display_time'] ?? null;
@@ -109,35 +118,36 @@ function gd_like(string $s): string {
 }
 
 /**
- * A page of earlier thoughts (before today), newest first.
+ * A page of earlier thoughts (before today), newest first, in the reader's language.
  * ?before=YYYY-MM-DD continues the list, ?q= finds every word in the text or the author.
  */
-function gd_archive(PDO $pdo, array $src): array {
+function gd_archive(PDO $pdo, array $src, string $lang): array {
     $today = gd_now()->format('Y-m-d');
-    $where = ['display_date < ?'];
-    $params = [$today];
+    $where = ['dt.display_date < ?'];
+    $params = [$lang, $today];
 
     $before = trim(gd_str($src['before'] ?? ''));
     $isFirstPage = !(preg_match('/^\d{4}-\d{2}-\d{2}$/', $before)
         && checkdate((int)substr($before, 5, 2), (int)substr($before, 8, 2), (int)substr($before, 0, 4)));
     if (!$isFirstPage) {
-        $where[] = 'display_date < ?';
+        $where[] = 'dt.display_date < ?';
         $params[] = $before;
     }
 
     $q = trim(preg_replace('/\s+/u', ' ', mb_substr(gd_str($src['q'] ?? ''), 0, 100, 'UTF-8')) ?? '');
     $words = $q === '' ? [] : array_slice(preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [], 0, GD_SEARCH_WORDS);
     foreach ($words as $word) {
-        $where[] = '(content LIKE ? OR author LIKE ?)';
+        // The words the reader sees: the translation when there is one
+        $where[] = "(COALESCE(tr.content, dt.content) LIKE ? OR COALESCE(NULLIF(tr.author, ''), dt.author) LIKE ?)";
         $like = gd_like($word);
         array_push($params, $like, $like);
     }
 
-    $sql = 'SELECT content, author, display_date FROM daily_thoughts WHERE ' . implode(' AND ', $where)
-         . ' ORDER BY display_date DESC LIMIT ' . (GD_PAGE + 1);
-    $st = $pdo->prepare($sql);
-    $st->execute($params);
-    $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+    $sql = 'SELECT dt.content, dt.author, dt.lang, dt.display_date,
+                   tr.content AS tr_content, tr.author AS tr_author, tr.lang AS tr_lang
+            FROM ' . GD_FROM . ' WHERE ' . implode(' AND ', $where)
+         . ' ORDER BY dt.display_date DESC LIMIT ' . (GD_PAGE + 1);
+    $rows = dt_run($pdo, $sql, $params)->fetchAll(PDO::FETCH_ASSOC);
 
     $hasMore = count($rows) > GD_PAGE;
     $rows = array_slice($rows, 0, GD_PAGE);
@@ -146,9 +156,7 @@ function gd_archive(PDO $pdo, array $src): array {
 
     // The total only for the first page (the count line above the list)
     if ($isFirstPage) {
-        $cst = $pdo->prepare('SELECT COUNT(*) FROM daily_thoughts WHERE ' . implode(' AND ', $where));
-        $cst->execute($params);
-        $out['total'] = (int)$cst->fetchColumn();
+        $out['total'] = (int)dt_run($pdo, 'SELECT COUNT(*) FROM ' . GD_FROM . ' WHERE ' . implode(' AND ', $where), $params)->fetchColumn();
     }
     return $out;
 }

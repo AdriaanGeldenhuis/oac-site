@@ -27,7 +27,7 @@ $todayDate = $now->format('Y-m-d');
 $today = ['thought' => null, 'pending' => null];
 try {
     if (isset($pdo) && $pdo instanceof PDO) {
-        $today = gd_today($pdo);
+        $today = gd_today($pdo, $lang);
     }
 } catch (Throwable $e) {
     error_log('Gedagtes today error: ' . $e->getMessage());
@@ -88,7 +88,7 @@ $copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
             <h3 class="gd-label" id="gdTodayLabel"><?= gd_e(__t('today', $lang)) ?></h3>
             <?php if ($thought !== null): ?>
             <figure class="gd-card gd-pane" id="gdToday" data-date="<?= gd_e($thought['date']) ?>">
-                <blockquote class="gd-pane-text" id="gdTodayText"><?= gd_e($thought['text']) ?></blockquote>
+                <blockquote class="gd-pane-text" id="gdTodayText" lang="<?= gd_e($thought['lang']) ?>"><?= gd_e($thought['text']) ?></blockquote>
                 <?php if ($thought['author'] !== ''): ?>
                 <figcaption class="gd-pane-author" id="gdTodayAuthor"><?= gd_e($thought['author']) ?></figcaption>
                 <?php endif; ?>

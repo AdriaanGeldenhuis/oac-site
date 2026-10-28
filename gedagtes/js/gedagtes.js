@@ -226,7 +226,7 @@
   }
 
   function itemCard(t) {
-    const text = el('blockquote', { class: 'gd-item-text' });
+    const text = el('blockquote', { class: 'gd-item-text', lang: t.lang || null });
     text.append(marked(t.text, words()));
     const author = t.author ? el('p', { class: 'gd-item-author' }) : null;
     if (author) author.append(marked(t.author, words()));
