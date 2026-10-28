@@ -10,6 +10,16 @@
   // Afrikaans readers get Afrikaans; everyone else reads the English text,
   // so they get English messages (never Afrikaans by accident)
   const tr = (af, en) => (window.BIBLE && window.BIBLE.lang === 'af') ? af : en;
+
+  // Offline (the app's offline copy, see /sw.js): reading works, saving and
+  // the AI / cross references need the server. Say so instead of "failed".
+  const offline = () => navigator.onLine === false;
+  const saveFailText = (af, en) => offline()
+    ? tr('Jy is aflyn — dit kan net aanlyn gestoor word.', 'You are offline — this can only be saved online.')
+    : tr(af, en);
+  const onlineOnlyText = (af, en) => offline()
+    ? tr('Jy is aflyn — dit het internet nodig.', 'You are offline — this needs the internet.')
+    : tr(af, en);
   const I18N = (window.BIBLE && window.BIBLE.i18n) || {};
 
   const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -157,6 +167,27 @@
       }
     });
   }
+
+  // A new Bible file version (its ?v= is the file's content hash) leaves the
+  // old copy behind: ~5 MB each. Keep only the versions in use now.
+  function pruneOldBibles(keepKeys) {
+    if (!db) return;
+    try {
+      const store = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME);
+      const request = store.getAllKeys();
+      request.onsuccess = () => {
+        (request.result || []).forEach((key) => {
+          if (typeof key === 'string' && /^bible_v\d+_/.test(key) && !keepKeys.includes(key)) {
+            store.delete(key);
+          }
+        });
+      };
+    } catch (e) {
+      /* only tidying up */
+    }
+  }
+
+  const bibleCacheKey = (url) => `bible_v6_${url}`;
 
   // ===== BOOK NAME MAPPINGS =====
   // Names MUST match exactly what's in af_1933_53.json (including special characters)
@@ -436,7 +467,7 @@
 
   // ===== DATA LOADING =====
   async function loadJSON(url, onProgress) {
-    const cacheKey = `bible_v6_${url}`;
+    const cacheKey = bibleCacheKey(url);
     
     const cached = await getFromDB(cacheKey);
     if (cached) {
@@ -1142,7 +1173,7 @@
       }
     } catch (e) {
       console.error('Highlight save failed:', e);
-      toast(tr('Kon nie die kleur stoor nie', 'Could not save highlight'), true);
+      toast(saveFailText('Kon nie die kleur stoor nie', 'Could not save highlight'), true);
     }
 
     hideContextMenu();
@@ -1187,7 +1218,7 @@
       }
     } catch (e) {
       console.error('Bookmark toggle failed:', e);
-      toast(tr('Kon nie boekmerk stoor nie', 'Could not save bookmark'), true);
+      toast(saveFailText('Kon nie boekmerk stoor nie', 'Could not save bookmark'), true);
     }
 
     hideContextMenu();
@@ -1252,7 +1283,7 @@
           }
         } catch (err) {
           console.error('Bookmark delete failed:', err);
-          toast(tr('Kon nie boekmerk verwyder nie', 'Could not delete bookmark'), true);
+          toast(saveFailText('Kon nie boekmerk verwyder nie', 'Could not delete bookmark'), true);
         }
       });
       
@@ -1447,7 +1478,7 @@
             }
           } catch (e) {
             console.error('Note delete failed:', e);
-            toast(tr('Kon nie nota verwyder nie', 'Could not delete note'), true);
+            toast(saveFailText('Kon nie nota verwyder nie', 'Could not delete note'), true);
           }
         }
       });
@@ -1507,7 +1538,7 @@
       }
     } catch (e) {
       console.error('Note save failed:', e);
-      toast(tr('Kon nie nota stoor nie', 'Could not save note'), true);
+      toast(saveFailText('Kon nie nota stoor nie', 'Could not save note'), true);
     }
   }
 
@@ -2047,7 +2078,7 @@
         throw new Error(data.error);
       }
     } catch (e) {
-      els.aiOutput.innerHTML = `<p class="bible-error">${tr('Kon nie kommentaar kry nie.', 'Could not get commentary.')}</p>`;
+      els.aiOutput.innerHTML = `<p class="bible-error">${esc(onlineOnlyText('Kon nie kommentaar kry nie.', 'Could not get commentary.'))}</p>`;
       console.error('AI Commentary error:', e);
     }
   }
@@ -2083,7 +2114,7 @@
       console.error('Cross references error:', e);
       // Wys darem die paneel met 'n boodskap i.p.v. om stilweg niks te doen nie.
       if (els.crossRefPanel && els.crossRefList) {
-        els.crossRefList.innerHTML = `<p class="bible-empty-state">${tr('Kon nie kruisverwysings laai nie.', 'Could not load cross-references.')}</p>`;
+        els.crossRefList.innerHTML = `<p class="bible-empty-state">${esc(onlineOnlyText('Kon nie kruisverwysings laai nie.', 'Could not load cross-references.'))}</p>`;
         showPanel(els.crossRefPanel);
       }
     }
@@ -2477,6 +2508,7 @@
 
       state.dataAF = dataAF;
       state.dataEN = dataEN;
+      pruneOldBibles([bibleCacheKey(state.paths.af), bibleCacheKey(state.paths.en)]);
       state.booksAF = extractBooks(state.dataAF);
       state.booksEN = extractBooks(state.dataEN);
 

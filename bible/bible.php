@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../security/auth_gate.php';
 require_once __DIR__ . '/../includes/languages.php';
+require_once __DIR__ . '/../includes/offline.php';
 
 $pageLang = $_SESSION['language'] ?? 'af';
 if (!in_array($pageLang, SUPPORTED_LANGS, true)) {
@@ -46,9 +47,11 @@ function icon(string $name, string $cls = ''): string {
 
 $bibleData = [
   'lang' => $pageLang,
+  // Versioned by content (not file time) so a deploy does not mean a new
+  // 10 MB download; the app carries these same files (App Files, OfflineAssets.kt)
   'paths' => [
-    'af' => bible_asset('bibles/af_1933_53.json'),
-    'en' => bible_asset('bibles/en_kjv1611.json'),
+    'af' => oac_data_url('/bible/bibles/af_1933_53.json'),
+    'en' => oac_data_url('/bible/bibles/en_kjv1611.json'),
   ],
   'userId' => (int)($_SESSION['user_id'] ?? 0),
   'csrfToken' => csrf_token(),
