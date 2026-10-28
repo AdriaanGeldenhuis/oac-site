@@ -969,14 +969,22 @@
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     /* Compact title block, so the editor starts higher up the screen */
+    /* No wrapping here: a wrapping column grows to its widest child, and the
+       language row would then make the whole page wider than the phone */
     .header {
         flex-direction: column;
+        flex-wrap: nowrap;
         align-items: stretch;
         gap: 12px;
         padding: 16px;
         margin-bottom: 12px;
     }
+    .location {
+        align-self: flex-start;
+        max-width: 100%;
+    }
     .lang-tabs {
+        min-width: 0;
         flex-wrap: nowrap;
         overflow-x: auto;
         scrollbar-width: none;

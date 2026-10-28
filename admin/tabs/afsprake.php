@@ -108,6 +108,32 @@ try {
   error_log('Admin afsprake pending: ' . $e->getMessage());
   $myAppointments = [];
 }
+
+// What is coming up: confirmed appointments (either side) and the requests I sent
+$upcoming = [];
+try {
+  $stmt = $pdo->prepare("SELECT aa.id, aa.requester_id, aa.appointment_date, aa.appointment_time, aa.location, aa.status,
+    r.name AS r_name, r.surname AS r_surname, tu.name AS t_name, tu.surname AS t_surname
+    FROM ampte_appointments aa
+    JOIN users r ON r.id = aa.requester_id
+    JOIN users tu ON tu.id = aa.target_user_id
+    WHERE aa.appointment_date >= CURDATE()
+    AND ((aa.status = 'confirmed' AND (aa.requester_id = ? OR aa.target_user_id = ?))
+      OR (aa.status = 'pending' AND aa.requester_id = ?))
+    ORDER BY aa.appointment_date ASC, aa.appointment_time ASC
+    LIMIT 30");
+  $stmt->execute([$userId, $userId, $userId]);
+  $upcoming = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+  error_log('Admin afsprake upcoming: ' . $e->getMessage());
+  $upcoming = [];
+}
+
+// "Afspraak met <strong>Name</strong>", in the member's language
+$apptWith = static function (string $name): string {
+  $parts = explode('{name}', t('cal_appt_with'), 2);
+  return esc($parts[0]) . '<strong>' . esc($name) . '</strong>' . esc($parts[1] ?? '');
+};
 ?>
 <div class="afsprake-section" id="afsprakeRoot">
   <div class="admin-section-header">
@@ -121,8 +147,8 @@ try {
   </div>
 
   <?php if (!empty($myAppointments)): ?>
-  <section class="afsprake-pending-section" id="afsprakePending">
-    <h3 class="admin-subtitle"><?= esc(t('pending_requests')) ?></h3>
+  <section class="afsprake-pending-section" id="afsprakePending" data-appt-section>
+    <h3 class="admin-subtitle"><span><?= esc(t('pending_requests')) ?><span class="admin-count" data-count><?= count($myAppointments) ?></span></span></h3>
     <div class="afsprake-list">
       <?php foreach ($myAppointments as $appt): ?>
       <article class="afsprake-card" data-card="<?= (int)$appt['id'] ?>">
@@ -140,7 +166,7 @@ try {
             <span><?= esc(substr((string)$appt['appointment_time'], 0, 5)) ?></span>
           </span>
           <?php if (!empty($appt['location'])): ?>
-          <span class="afsprake-detail-item">
+          <span class="afsprake-detail-item afsprake-detail-item--place">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <span><?= esc($appt['location']) ?></span>
           </span>
@@ -158,6 +184,53 @@ try {
     </div>
   </section>
   <?php endif; ?>
+
+  <!-- Coming up; afsprake.js refreshes this slot after a confirm, a cancel or a new request -->
+  <div id="afsprakeUpcomingSlot">
+    <?php if (!empty($upcoming)): ?>
+    <section class="afsprake-pending-section" data-appt-section>
+      <h3 class="admin-subtitle"><span><?= esc(t('adm_appt_upcoming')) ?><span class="admin-count" data-count><?= count($upcoming) ?></span></span></h3>
+      <div class="afsprake-list">
+        <?php foreach ($upcoming as $appt):
+          $iAsked = (int)$appt['requester_id'] === $userId;
+          $other = $iAsked ? trim($appt['t_name'] . ' ' . $appt['t_surname']) : trim($appt['r_name'] . ' ' . $appt['r_surname']);
+          $isPending = $appt['status'] === 'pending';
+          $calLink = '/calendar/calendar.php#d=' . rawurlencode((string)$appt['appointment_date']) . '&i=' . rawurlencode('appointment-' . (int)$appt['id']);
+        ?>
+        <article class="afsprake-card afsprake-card--upcoming" data-card="<?= (int)$appt['id'] ?>">
+          <div class="afsprake-card-top">
+            <p class="afsprake-header"><?= $apptWith($other) ?></p>
+            <span class="admin-badge <?= $isPending ? 'admin-badge-warning' : 'admin-badge-success' ?>"><?= esc(t($isPending ? 'cal_status_pending' : 'cal_status_confirmed')) ?></span>
+          </div>
+          <div class="afsprake-details">
+            <span class="afsprake-detail-item">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+              <time data-date="<?= esc($appt['appointment_date']) ?>" datetime="<?= esc($appt['appointment_date']) ?>"><?= esc($appt['appointment_date']) ?></time>
+            </span>
+            <span class="afsprake-detail-item">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span><?= esc(substr((string)$appt['appointment_time'], 0, 5)) ?></span>
+            </span>
+            <?php if (!empty($appt['location'])): ?>
+            <span class="afsprake-detail-item afsprake-detail-item--place">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span><?= esc($appt['location']) ?></span>
+            </span>
+            <?php endif; ?>
+          </div>
+          <div class="afsprake-actions">
+            <a class="admin-btn admin-btn-secondary" href="<?= esc($calLink) ?>">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+              <span><?= esc(t('dy_open_calendar')) ?></span>
+            </a>
+            <button type="button" class="admin-btn admin-btn-danger cancel-appointment" data-id="<?= (int)$appt['id'] ?>">&#10007; <?= esc(t('cancel')) ?></button>
+          </div>
+        </article>
+        <?php endforeach; ?>
+      </div>
+    </section>
+    <?php endif; ?>
+  </div>
 
   <?php if (!empty($groupedAmptes)): ?>
   <div class="afsprake-search-wrapper">

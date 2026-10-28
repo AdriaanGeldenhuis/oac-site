@@ -42,16 +42,32 @@
   margin-top: 12px;
 }
 
+/* A long place name wraps inside the card instead of running off it */
 .afsprake-detail-item {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+  min-width: 0;
+  max-width: 100%;
   font-size: 0.93rem;
+  line-height: 1.4;
   color: var(--text-secondary);
+}
+
+.afsprake-detail-item > span,
+.afsprake-detail-item > time {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The place gets a line of its own */
+.afsprake-detail-item--place {
+  flex-basis: 100%;
 }
 
 .afsprake-detail-item svg {
   flex: none;
+  margin-top: 1px;
   width: 17px;
   height: 17px;
   fill: none;
@@ -76,6 +92,7 @@
   color: var(--text-primary);
 }
 
+/* Side by side when the words fit, otherwise one under the other (never cut off) */
 .afsprake-actions {
   display: flex;
   flex-wrap: wrap;
@@ -84,7 +101,35 @@
 }
 
 .afsprake-actions .admin-btn {
-  flex: 1 1 140px;
+  flex: 1 1 auto;
+  min-height: 46px;
+  padding: 0 18px;
+}
+
+.afsprake-actions .admin-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Coming up: the person on the left, the status on the right */
+.afsprake-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.afsprake-card-top .admin-badge {
+  flex: none;
+  margin-top: 4px;
+}
+
+.afsprake-card--upcoming {
+  border-color: var(--border-light);
 }
 
 /* ===== Search ===== */

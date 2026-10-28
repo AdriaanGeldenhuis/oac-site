@@ -1,135 +1,96 @@
 /**
- * AI Slimbybel Profile - Complete JavaScript
- * Handles edit, delete, export and modal interactions
+ * A member's profile — change the office, delete the account, export the
+ * calendar. The buttons are only on the page for those allowed; the APIs
+ * check every right again. Writes go through OACUI.post() (admin/js/ui.js),
+ * which adds the session's CSRF token; the words come from
+ * window.OAC_PROFILE (profile/index.php), in the member's language.
  */
-
-(function() {
+(function () {
   'use strict';
 
-  // Every write carries the session's CSRF token (meta tag in profile/index.php)
-  function csrfToken() {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return (meta && meta.content) || '';
-  }
+  const CFG = window.OAC_PROFILE || {};
+  const T = CFG.t || {};
+  if (!window.OACUI) return;
 
-  // Open Edit Modal
-  window.openEditModal = async function(userId) {
-    try {
-      // Fetch user data
-      const response = await fetch(`/profile/api/get_user.php?id=${userId}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        document.getElementById('editUserId').value = userId;
-        document.getElementById('editAmpId').value = data.user.amp_id;
-        
-        document.getElementById('editModal').style.display = 'flex';
-      } else {
-        showToast(data.error || 'Could not load user data', 'error');
-      }
-    } catch (error) {
-      showToast('Network error', 'error');
-      console.error('Load user error:', error);
+  // ===== A broken photo becomes the initials =====
+  document.querySelectorAll('img[data-initials]').forEach(function (img) {
+    img.addEventListener('error', function () {
+      const span = document.createElement('span');
+      span.className = img.className + ' prf-avatar--initials';
+      span.setAttribute('aria-hidden', 'true');
+      span.textContent = img.getAttribute('data-initials') || '';
+      img.replaceWith(span);
+    });
+  });
+
+  // ===== Export: the file downloads in place, so say something =====
+  document.querySelectorAll('[data-export]').forEach(function (a) {
+    a.addEventListener('click', function () { OACUI.toast(T.exporting || '', 'info'); });
+  });
+
+  // ===== Change the office =====
+  const dialog = document.getElementById('officeDialog');
+  const form = document.getElementById('officeForm');
+  const openBtn = document.querySelector('[data-open-office]');
+
+  if (dialog && form && openBtn) {
+    const select = form.querySelector('select');
+    const saveBtn = form.querySelector('button[type="submit"]');
+    const start = select.value;
+
+    openBtn.addEventListener('click', function () {
+      select.value = start;
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+      select.focus();
+    });
+
+    function close() {
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog.removeAttribute('open');
+      openBtn.focus();
     }
-  };
 
-  // Close Edit Modal
-  window.closeEditModal = function() {
-    document.getElementById('editModal').style.display = 'none';
-  };
+    dialog.addEventListener('click', function (e) {
+      // The close buttons, or a tap on the dimmed backdrop around the card
+      if (e.target.closest('[data-close-office]') || e.target === dialog) close();
+    });
 
-  // Handle Edit Form Submit
-  const editForm = document.getElementById('editForm');
-  if (editForm) {
-    editForm.addEventListener('submit', async function(e) {
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
-      
-      const formData = new FormData(editForm);
-      
-      try {
-        const response = await fetch('/profile/api/update_user.php', {
-          method: 'POST',
-          headers: {'X-CSRF-Token': csrfToken()},
-          body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          showToast('Updated successfully', 'success');
-          closeEditModal();
-          setTimeout(() => location.reload(), 1000);
-        } else {
-          showToast(data.error || 'Update failed', 'error');
-        }
-      } catch (error) {
-        showToast('Network error', 'error');
-        console.error('Update error:', error);
+      if (select.value === start) { close(); return; }
+      saveBtn.disabled = true;
+      saveBtn.classList.add('is-busy');
+      const data = await OACUI.post('/profile/api/update_user.php', new FormData(form));
+      saveBtn.disabled = false;
+      saveBtn.classList.remove('is-busy');
+      if (data.success) {
+        close();
+        OACUI.toast(T.saved || '', 'success');
+        setTimeout(function () { location.reload(); }, 900);
+      } else {
+        OACUI.toast(data.error || '', 'error');
       }
     });
   }
 
-  // Delete User
-  window.deleteUser = async function(userId, userName) {
-    const confirmMsg = `Are you sure you want to delete ${userName}?\n\nWeet jy seker jy wil ${userName} verwyder?\n\nThis action cannot be undone / Hierdie aksie kan nie ongedaan gemaak word nie.`;
-    
-    if (!confirm(confirmMsg)) return;
-    
-    try {
-      const response = await fetch('/profile/api/delete_user.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': csrfToken()},
-        body: `user_id=${userId}`
-      });
-      
-      const data = await response.json();
-      
+  // ===== Delete the account =====
+  const delBtn = document.querySelector('[data-delete-member]');
+  if (delBtn) {
+    delBtn.addEventListener('click', async function () {
+      const sure = await OACUI.confirm((T.deleteQ || '') + ' ' + (T.cannotUndo || ''), { danger: true, okText: T.delete });
+      if (!sure) return;
+      delBtn.disabled = true;
+      delBtn.classList.add('is-busy');
+      const data = await OACUI.post('/profile/api/delete_user.php', { user_id: CFG.userId });
       if (data.success) {
-        showToast('User deleted successfully', 'success');
-        setTimeout(() => window.location.href = '/admin/index.php?tab=afsprake', 1500);
+        OACUI.toast(T.deleted || '', 'success');
+        setTimeout(function () { window.location.href = '/admin/index.php?tab=afsprake'; }, 1200);
       } else {
-        showToast(data.error || 'Delete failed', 'error');
+        delBtn.disabled = false;
+        delBtn.classList.remove('is-busy');
+        OACUI.toast(data.error || '', 'error');
       }
-    } catch (error) {
-      showToast('Network error', 'error');
-      console.error('Delete error:', error);
-    }
-  };
-
-  // Export Calendar: a plain download link (blob: downloads do nothing in the app's WebView)
-  window.exportCalendar = function(userId) {
-    showToast('Preparing export...', 'success');
-    window.location.href = '/profile/api/export_calendar.php?user_id=' + encodeURIComponent(userId);
-  };
-
-  // Show Toast
-  function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `profile-toast profile-toast-${type}`;
-    toast.textContent = message;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.classList.add('show'), 10);
-    
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    });
   }
-
-  // Close modal on overlay click
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('profile-modal-overlay')) {
-      closeEditModal();
-    }
-  });
-
-  // Close modal on Escape
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeEditModal();
-    }
-  });
-
 })();

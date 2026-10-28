@@ -23,12 +23,30 @@
   let lastFocus = null;
 
   // ===== Dates in the member's language =====
-  document.querySelectorAll('time[data-date]').forEach(function (t) {
-    const d = new Date(t.getAttribute('data-date') + 'T00:00:00');
-    if (!isNaN(d)) {
-      t.textContent = d.toLocaleDateString(L.lang || undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    }
-  });
+  function localDates(scope) {
+    scope.querySelectorAll('time[data-date]').forEach(function (t) {
+      const d = new Date(t.getAttribute('data-date') + 'T00:00:00');
+      if (!isNaN(d)) {
+        t.textContent = d.toLocaleDateString(L.lang || undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      }
+    });
+  }
+  localDates(root);
+
+  // ===== "Coming up": fetched again from this page after every change =====
+  async function refreshUpcoming() {
+    const slot = document.getElementById('afsprakeUpcomingSlot');
+    if (!slot || !window.DOMParser) return;
+    try {
+      const res = await fetch('/admin/index.php?tab=afsprake', { credentials: 'same-origin' });
+      if (!res.ok) return;
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      const fresh = doc.getElementById('afsprakeUpcomingSlot');
+      if (!fresh) return;
+      slot.innerHTML = fresh.innerHTML;
+      localDates(slot);
+    } catch (e) { /* the list stays as it was; a reload shows the rest */ }
+  }
 
   function localISO(d) {
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -108,6 +126,7 @@
     if (data.success) {
       OACUI.toast(L.requestSent || '', 'success');
       closeAppointment();
+      refreshUpcoming();
     } else {
       OACUI.toast(data.error || '', 'error');
     }
@@ -135,13 +154,17 @@
     });
   }
 
-  // ===== Answer a request =====
+  // ===== Answer a request, or cancel one that is coming up =====
   function cardGone(card) {
-    const section = card.closest('#afsprakePending');
+    const section = card.closest('[data-appt-section]');
     card.remove();
-    if (section && !section.querySelector('.afsprake-card')) {
+    if (!section) return;
+    if (!section.querySelector('.afsprake-card')) {
       section.remove();
+      return;
     }
+    const count = section.querySelector('[data-count]');
+    if (count) count.textContent = String(section.querySelectorAll('.afsprake-card').length);
   }
 
   root.addEventListener('click', async function (e) {
@@ -165,6 +188,8 @@
     if (data.success) {
       OACUI.toast(yes ? L.confirmed : L.cancelled, 'success');
       if (card) cardGone(card);
+      // A confirmed request now belongs under "coming up"
+      if (yes) refreshUpcoming();
     } else {
       OACUI.toast(data.error || '', 'error');
       buttons.forEach(function (b) { b.disabled = false; });

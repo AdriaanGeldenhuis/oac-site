@@ -11,13 +11,11 @@ $meId = (int)($_SESSION['user_id'] ?? 0);
 $targetId = isset($_POST['user_id']) && is_numeric($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
 
 if (!$targetId) {
-    echo json_encode(['success' => false, 'error' => 'Invalid user_id']);
-    exit;
+    admin_api_fail('adm_err_invalid');
 }
 
 if ($meId === $targetId) {
-    echo json_encode(['success' => false, 'error' => 'Cannot delete yourself']);
-    exit;
+    admin_api_fail('adm_err_invalid');
 }
 
 try {
@@ -31,28 +29,24 @@ try {
     $target = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$me || !$target) {
-        echo json_encode(['success' => false, 'error' => 'User not found']);
-        exit;
+        admin_api_fail('adm_err_not_found', 404);
     }
     
     $myAmpId = (int)($me['amp_id'] ?? 10);
     $targetAmpId = (int)($target['amp_id'] ?? 10);
     
     if ($myAmpId >= $targetAmpId) {
-        echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
-        exit;
+        admin_api_fail('adm_err_forbidden', 403);
     }
     
     // Check scope
     if ($myAmpId >= 6) {
         if ($me['congregation_id'] !== $target['congregation_id']) {
-            echo json_encode(['success' => false, 'error' => 'Outside jurisdiction']);
-            exit;
+            admin_api_fail('adm_err_forbidden', 403);
         }
     } elseif ($myAmpId >= 2) {
         if ($me['town_id'] !== $target['town_id']) {
-            echo json_encode(['success' => false, 'error' => 'Outside jurisdiction']);
-            exit;
+            admin_api_fail('adm_err_forbidden', 403);
         }
     }
     

@@ -381,8 +381,13 @@ $accountData = [
             </span>
           </button>
           <div class="admin-field account-photo-field">
-            <label for="photo" class="admin-label"><?= esc(t('profile_photo')) ?></label>
-            <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" class="account-input-file">
+            <span class="admin-label" id="photoLabel"><?= esc(t('profile_photo')) ?></span>
+            <!-- The real input stays in the form (and in the tab order); the button is its label, in the member's language -->
+            <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" class="account-input-file" aria-labelledby="photoLabel" aria-describedby="photoHint">
+            <label for="photo" class="admin-btn admin-btn-secondary account-photo-btn">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span><?= esc(t('adm_photo_pick')) ?></span>
+            </label>
             <span class="admin-hint" id="photoHint"><?= esc(t('photo_hint')) ?></span>
           </div>
         </div>

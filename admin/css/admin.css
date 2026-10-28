@@ -396,6 +396,7 @@ html {
 .admin-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;   /* a two-line label never makes one row taller than the other */
   gap: 10px;
   margin: 0 0 18px;
   animation: admin-rise 0.7s var(--ease) 0.24s both;
@@ -453,14 +454,17 @@ html {
   stroke-linejoin: round;
 }
 
+/* Up to two lines on the phone tiles ("Daaglikse Gedagte"), never cut off */
 .admin-tab-label {
+  display: -webkit-box;
   max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.2;
+  text-wrap: balance;
 }
 
 .admin-tab.active {
@@ -718,18 +722,18 @@ p.admin-muted {
   border-radius: 999px;
 }
 
+/* The heart sits in the line of text, so it stays beside the words when they wrap */
 .admin-spouse-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px !important;
+  margin-top: 10px !important;
   font-size: 0.9rem !important;
 }
 
 .admin-spouse-link svg {
-  flex: none;
+  display: inline-block;
   width: 16px;
   height: 16px;
+  margin-right: 6px;
+  vertical-align: -3px;
   color: rgb(var(--ruby-rgb));
   fill: rgba(var(--ruby-rgb), 0.35);
   stroke: currentColor;
@@ -889,6 +893,65 @@ p.admin-muted {
   color: var(--text-muted);
 }
 
+/* A password field with its eye (show / hide) inside, on the right */
+.admin-pw {
+  position: relative;
+}
+
+.admin-pw .admin-input {
+  padding-right: 54px;
+}
+
+.admin-pw-toggle {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.admin-pw-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-pw-eye-off,
+.admin-pw-toggle[aria-pressed="true"] .admin-pw-eye {
+  display: none;
+}
+
+.admin-pw-toggle[aria-pressed="true"] .admin-pw-eye-off {
+  display: block;
+}
+
+.admin-pw-toggle[aria-pressed="true"],
+.admin-pw-toggle:focus-visible {
+  color: var(--accent);
+}
+
+@media (hover: hover) {
+  .admin-pw-toggle:hover {
+    color: var(--text-primary);
+    background: rgba(var(--accent-rgb), 0.1);
+  }
+}
+
 /* ===== TABLES — a real table on wide screens, stacked cards on phones ===== */
 .admin-table-wrap {
   overflow: hidden;
@@ -958,16 +1021,66 @@ p.admin-muted {
   justify-content: center;
   gap: 7px;
   min-width: 44px;
-  min-height: 44px;
-  padding: 0 14px;
-  font-size: 1.05rem;
-  font-weight: 700;
+  min-height: 42px;
+  padding: 0 16px 0 13px;
+  font-size: 0.88rem;
+  font-weight: 600;
   line-height: 1;
+  white-space: nowrap;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
   transition: transform 0.2s var(--ease), background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.2s ease;
+}
+
+.approval-actions svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Who is asking: the name, and their e-mail under it */
+.ap-name {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ap-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.ap-meta {
+  color: var(--text-secondary);
+}
+
+/* How many are waiting, right after the label's last word (also when it wraps) */
+.admin-count {
+  min-width: 24px;
+  height: 22px;
+  margin-left: 8px;
+  padding: 0 8px;
+  display: inline-flex;
+  vertical-align: 1px;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  border-radius: 999px;
 }
 
 .approve-btn,
@@ -983,21 +1096,6 @@ p.admin-muted {
   color: rgb(var(--danger-rgb));
   background: rgba(var(--danger-rgb), 0.08);
   border-color: rgba(var(--danger-rgb), 0.4);
-}
-
-.spouse-unlink-btn {
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.spouse-unlink-btn svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .approve-btn:active,
@@ -1178,10 +1276,6 @@ p.admin-muted {
     text-align: center;
   }
 
-  .admin-spouse-link {
-    justify-content: center;
-  }
-
   .admin-right .admin-btn {
     width: 100%;
   }
@@ -1241,6 +1335,70 @@ p.admin-muted {
 
   .approval-actions {
     justify-content: flex-start;
+  }
+
+  /* Approval rows: the name (and e-mail), then "office · congregation", then the buttons */
+  .admin-table tr.ap-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    padding: 16px 16px 14px;
+  }
+
+  .admin-table tr.ap-row td {
+    width: auto;
+    padding: 0;
+  }
+
+  .admin-table tr.ap-row .ap-person {
+    width: 100%;
+  }
+
+  .admin-table tr.ap-row .ap-meta {
+    margin-top: 6px;
+    font-size: 0.9rem;
+  }
+
+  .admin-table tr.ap-row .ap-meta:empty {
+    display: none;
+  }
+
+  .admin-table tr.ap-row .ap-meta:not(:empty) ~ .ap-meta:not(:empty)::before {
+    content: '·';
+    margin: 0 8px;
+    color: var(--text-muted);
+  }
+
+  /* A couple as one line of text, "Nomsa Zulu & Bongani Zulu", wrapping like a sentence */
+  .admin-table tr.ap-row--pair {
+    display: block;
+  }
+
+  .admin-table tr.ap-row--pair .ap-person,
+  .admin-table tr.ap-row--pair .ap-name {
+    display: inline;
+  }
+
+  .admin-table tr.ap-row--pair .ap-actions {
+    display: block;
+  }
+
+  .admin-table tr.ap-row--pair .ap-partner::before {
+    content: '&';
+    margin: 0 8px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .admin-table tr.ap-row .ap-actions {
+    width: 100%;
+    margin-top: 14px;
+  }
+
+  .ap-row .approval-actions {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
   }
 }
 
@@ -1306,7 +1464,9 @@ p.admin-muted {
   }
 
   .admin-tab-label {
+    display: block;
     font-size: 0.88rem;
+    white-space: nowrap;
   }
 
   .admin-tab-badge {

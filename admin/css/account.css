@@ -123,27 +123,34 @@
   flex: 1;
 }
 
+/* The browser's own file control ("Choose File / No file chosen", always in
+   English) is hidden but still focusable; the button below is its label. */
 .account-input-file {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  background: var(--bg-input);
-  border: 1px dashed var(--border);
-  border-radius: 14px;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  opacity: 0;
 }
 
-.account-input-file::file-selector-button {
-  margin-right: 12px;
-  padding: 8px 16px;
-  font: inherit;
-  font-weight: 600;
-  color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.1);
-  border: 1px solid rgba(var(--accent-rgb), 0.35);
-  border-radius: 999px;
-  cursor: pointer;
+.account-photo-btn {
+  min-height: 44px;
+  padding: 0 20px;
+}
+
+.account-photo-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.account-input-file:focus-visible + .account-photo-btn {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* ===== Save bar ===== */

@@ -33,6 +33,14 @@
     row.remove();
     if (countsInBadge) decrementBadge();
 
+    // The count beside the section label
+    const count = group && group.querySelector('[data-count]');
+    if (count) {
+      const left = parseInt(count.textContent, 10) - 1;
+      if (left > 0) count.textContent = String(left);
+      else count.remove();
+    }
+
     if (!group || group.querySelector('tbody tr')) return;
     if (group.getAttribute('data-group') === 'users') {
       const wrap = group.querySelector('.admin-table-wrap');
@@ -84,6 +92,19 @@
 
   // ===== Settings: change password =====
 
+  // The eye in a password field: show / hide what was typed
+  root.addEventListener('click', function (e) {
+    const eye = e.target.closest('[data-pw-toggle]');
+    if (!eye) return;
+    const input = document.getElementById(eye.getAttribute('data-pw-toggle'));
+    if (!input) return;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    eye.setAttribute('aria-pressed', String(show));
+    eye.setAttribute('aria-label', show ? (T.pwHide || '') : (T.pwShow || ''));
+    input.focus();
+  });
+
   const form = document.getElementById('password-form');
   if (form) {
     form.addEventListener('submit', async function (e) {
@@ -122,6 +143,13 @@
       if (data.success) {
         OACUI.toast(T.pwChanged, 'success');
         form.reset();
+        // Hidden again, so the next person at this phone sees dots
+        form.querySelectorAll('[data-pw-toggle]').forEach(function (eye) {
+          const input = document.getElementById(eye.getAttribute('data-pw-toggle'));
+          if (input) input.type = 'password';
+          eye.setAttribute('aria-pressed', 'false');
+          eye.setAttribute('aria-label', T.pwShow || '');
+        });
       } else {
         OACUI.toast(data.error || T.pwFailed, 'error');
       }
