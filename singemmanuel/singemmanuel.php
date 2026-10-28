@@ -44,26 +44,32 @@ function se_asset(string $path): string {
 
 /**
  * The verses as blocks to draw: a numbered verse ("1 Heilig, heilig ..."),
- * a chorus (the text after a "Koor" / "Chorus" line) or a plain stanza.
+ * a chorus (everything after a "Koor" / "Chorus" line up to the next
+ * numbered verse; some choruses have two parts) or a plain stanza.
  */
 function se_blocks(array $verses): array {
     $blocks = [];
     $inChorus = false;
+    $newChorus = false;
     foreach ($verses as $v) {
         if (!is_string($v)) continue;
         $v = trim($v);
         if ($v === '') continue;
         if (preg_match('/^(koor|chorus|refrein|refrain)[:.]?$/iu', $v)) {
             $inChorus = true;
-            continue;
-        }
-        if ($inChorus) {
-            $blocks[] = ['type' => 'chorus', 'text' => $v];
-            $inChorus = false;
+            $newChorus = true;
             continue;
         }
         if (preg_match('/^(\d{1,2})[.)]?\s*(?=\D)(.+)$/su', $v, $m) && (int)$m[1] >= 1 && (int)$m[1] <= 20) {
+            $inChorus = false;
             $blocks[] = ['type' => 'verse', 'num' => (string)(int)$m[1], 'text' => trim($m[2])];
+        } elseif ($inChorus) {
+            if ($newChorus) {
+                $blocks[] = ['type' => 'chorus', 'lines' => [$v]];
+                $newChorus = false;
+            } else {
+                $blocks[count($blocks) - 1]['lines'][] = $v;
+            }
         } else {
             $blocks[] = ['type' => 'stanza', 'text' => $v];
         }
@@ -74,7 +80,7 @@ function se_blocks(array $verses): array {
 /** The hymn's opening words, for under its number ("Heilig, heilig, heilig, Here God Almagtig!") */
 function se_first_line(array $blocks): string {
     if (!$blocks) return '';
-    $text = preg_replace('/\s+/u', ' ', $blocks[0]['text']);
+    $text = preg_replace('/\s+/u', ' ', $blocks[0]['text'] ?? ($blocks[0]['lines'][0] ?? ''));
     if (preg_match('/^(.{12,70}?[!?.;:])(\s|$)/u', $text, $m)) {
         return rtrim($m[1], '.;:,');
     }
@@ -172,6 +178,9 @@ $songNumber = $selectedSong ? (string)$selectedSong['number'] : '';
 $songLang = $languageFallback ? $fallbackLang : ($lang === 'en' ? 'en' : 'af');
 $blocks = ($selectedSong && !empty($selectedSong['verses']) && is_array($selectedSong['verses'])) ? se_blocks($selectedSong['verses']) : [];
 $firstLine = se_first_line($blocks);
+// Hymns without verse numbers (1, 306) use the whole width; otherwise an
+// unnumbered stanza lines up with the verses' text
+$hasNumbers = (bool)array_filter($blocks, fn($b) => $b['type'] === 'verse');
 $chorusLabel = $songLang === 'en' ? 'Chorus' : 'Koor';
 
 // Previous / next hymn, through every number the book has (either language)
@@ -270,7 +279,7 @@ $icons = [
           <button type="button" class="se-size-btn se-size-btn--lg" id="seSizeUp" aria-label="<?= se_e(t('increase')) ?>" title="<?= se_e(t('increase')) ?>">A</button>
         </div>
 
-        <div class="se-verses">
+        <div class="se-verses<?= $hasNumbers ? '' : ' se-verses--unnumbered' ?>">
           <?php foreach ($blocks as $b): ?>
             <?php if ($b['type'] === 'verse'): ?>
               <div class="se-verse">
@@ -280,7 +289,9 @@ $icons = [
             <?php elseif ($b['type'] === 'chorus'): ?>
               <div class="se-chorus">
                 <span class="se-chorus-label"><?= se_e($chorusLabel) ?></span>
-                <p class="se-chorus-text"><?= se_e($b['text']) ?></p>
+                <?php foreach ($b['lines'] as $line): ?>
+                  <p class="se-chorus-text"><?= se_e($line) ?></p>
+                <?php endforeach; ?>
               </div>
             <?php else: ?>
               <div class="se-verse se-verse--plain">
