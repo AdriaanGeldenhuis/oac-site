@@ -8331,6 +8331,54 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Escolha uma data e uma hora.',
         'st' => 'Khetha letsatsi le nako.'
     ],
+    'adm_appt_upcoming' => [
+        'af' => 'Komende afsprake',
+        'en' => 'Upcoming appointments',
+        'zu' => 'Izicelo ezizayo',
+        'xh' => 'Iintlanganiso ezizayo',
+        'pt' => 'Próximos compromissos',
+        'st' => 'Likopano tse tlang'
+    ],
+    'adm_pw_show' => [
+        'af' => 'Wys wagwoord',
+        'en' => 'Show password',
+        'zu' => 'Bonisa iphasiwedi',
+        'xh' => 'Bonisa iphasiwedi',
+        'pt' => 'Mostrar senha',
+        'st' => 'Bontša phasewete'
+    ],
+    'adm_pw_hide' => [
+        'af' => 'Versteek wagwoord',
+        'en' => 'Hide password',
+        'zu' => 'Fihla iphasiwedi',
+        'xh' => 'Fihla iphasiwedi',
+        'pt' => 'Ocultar senha',
+        'st' => 'Pata phasewete'
+    ],
+    'adm_photo_pick' => [
+        'af' => 'Kies \'n foto',
+        'en' => 'Choose a photo',
+        'zu' => 'Khetha isithombe',
+        'xh' => 'Khetha umfanekiso',
+        'pt' => 'Escolher uma foto',
+        'st' => 'Khetha senepe'
+    ],
+    'prf_change_office' => [
+        'af' => 'Verander amp',
+        'en' => 'Change office',
+        'zu' => 'Shintsha isikhundla',
+        'xh' => 'Tshintsha isikhundla',
+        'pt' => 'Alterar cargo',
+        'st' => 'Fetola kantoro'
+    ],
+    'prf_delete_q' => [
+        'af' => 'Verwyder {name} se rekening?',
+        'en' => 'Delete {name}\'s account?',
+        'zu' => 'Susa i-akhawunti ka-{name}?',
+        'xh' => 'Cima iakhawunti ka-{name}?',
+        'pt' => 'Eliminar a conta de {name}?',
+        'st' => 'Hlakola akhaonto ea {name}?'
+    ],
     'adm_acc_bad_birthdate' => [
         'af' => 'Daardie geboortedatum is nie geldig nie.',
         'en' => 'That birth date is not valid.',

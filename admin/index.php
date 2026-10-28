@@ -134,6 +134,8 @@ $adminStrings = [
     'pwSame' => t('adm_pw_same'),
     'pwChanged' => t('password_changed'),
     'pwFailed' => t('password_change_failed'),
+    'pwShow' => t('adm_pw_show'),
+    'pwHide' => t('adm_pw_hide'),
 ];
 ?><!doctype html>
 <html lang="<?= esc($lang) ?>">

@@ -55,6 +55,8 @@ if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !
   $pageTitle = t_hdr('thought_history');
 } elseif (strpos($reqPath, '/notifications/notifications.php') !== false) {
   $pageTitle = t_hdr('notifications');
+} elseif (strpos($reqPath, '/profile/') === 0) {
+  $pageTitle = t_hdr('profile');
 } elseif (strpos($reqPath, '/policy') !== false) {
   $pageTitle = t_hdr('privacy_policy');
 } elseif (strpos($reqPath, '/admin/') !== false) {

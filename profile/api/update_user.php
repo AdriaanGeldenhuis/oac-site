@@ -12,8 +12,7 @@ $targetId = isset($_POST['user_id']) && is_numeric($_POST['user_id']) ? (int)$_P
 $newAmpId = isset($_POST['amp_id']) && is_numeric($_POST['amp_id']) ? (int)$_POST['amp_id'] : 0;
 
 if (!$targetId || !$newAmpId) {
-    echo json_encode(['success' => false, 'error' => 'Missing parameters']);
-    exit;
+    admin_api_fail('adm_err_invalid');
 }
 
 try {
@@ -28,8 +27,7 @@ try {
     $target = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$me || !$target) {
-        echo json_encode(['success' => false, 'error' => 'User not found']);
-        exit;
+        admin_api_fail('adm_err_not_found', 404);
     }
     
     $myAmpId = (int)($me['amp_id'] ?? 10);
@@ -37,13 +35,11 @@ try {
     
     // Check permissions
     if ($myAmpId >= $targetAmpId) {
-        echo json_encode(['success' => false, 'error' => 'Insufficient permissions']);
-        exit;
+        admin_api_fail('adm_err_forbidden', 403);
     }
     
     if ($newAmpId <= $myAmpId) {
-        echo json_encode(['success' => false, 'error' => 'Cannot assign role equal to or above your level']);
-        exit;
+        admin_api_fail('adm_err_forbidden', 403);
     }
 
     // Only an office that exists (the list the edit form offers)
@@ -57,14 +53,12 @@ try {
     if ($myAmpId >= 6) {
         // Congregation scope
         if ($me['congregation_id'] !== $target['congregation_id']) {
-            echo json_encode(['success' => false, 'error' => 'Outside jurisdiction']);
-            exit;
+            admin_api_fail('adm_err_forbidden', 403);
         }
     } elseif ($myAmpId >= 2) {
         // Town scope
         if ($me['town_id'] !== $target['town_id']) {
-            echo json_encode(['success' => false, 'error' => 'Outside jurisdiction']);
-            exit;
+            admin_api_fail('adm_err_forbidden', 403);
         }
     }
     
@@ -74,6 +68,5 @@ try {
     
     echo json_encode(['success' => true]);
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Server error']);
+    admin_api_server_error($e, 'profile/update_user');
 }
