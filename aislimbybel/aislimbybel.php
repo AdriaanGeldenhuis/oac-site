@@ -275,6 +275,7 @@ if (isset($_GET['stream']) && $_GET['stream'] === '1') {
   // Plain text, at most 500 characters (the form allows no more)
   $q = isset($_GET['q']) && is_string($_GET['q']) ? trim($_GET['q']) : '';
   $q = mb_substr($q, 0, 500, 'UTF-8');
+  $sbUserId = (int)($_SESSION['user_id'] ?? 0);
   // Nothing below writes the session: release it, so the member's other
   // pages (and the notification poll) are not held up while the answer streams
   session_write_close();
@@ -299,6 +300,14 @@ if (isset($_GET['stream']) && $_GET['stream'] === '1') {
 
   if ($q === '') { $sse('error', t('empty_question')); $sse('done', 'end'); exit; }
   if (!$OPENAI_API_KEY) { $sse('error', t('missing_api_key')); $sse('done', 'end'); exit; }
+
+  // Every question costs OpenAI credit: at most 20 per member per 10 minutes.
+  // rate_limit_check() keeps a count for an hour, so the 10-minute window is
+  // in the key (a fresh count each window). Fails open, like the login limiter.
+  require_once __DIR__ . '/../security/rate_limit.php';
+  if (!rate_limit_check('slimbybel:' . $sbUserId . ':' . intdiv(time(), 600), 20, 10)) {
+    $sse('error', t('sb_err_rate')); $sse('done', 'end'); exit;
+  }
 
   // =====================================================================
   // FETCH BIBLE VERSES FROM SERVER - STRICT word-for-word requirement

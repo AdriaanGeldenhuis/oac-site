@@ -4129,6 +4129,14 @@ define('UI_TRANSLATIONS', [
         'pt' => 'A resposta foi interrompida.',
         'st' => 'Karabo e khaohile.'
     ],
+    'sb_err_rate' => [
+        'af' => 'Jy het baie vrae kort na mekaar gevra. Wag asseblief \'n paar minute en probeer dan weer.',
+        'en' => 'You have asked many questions in a short time. Please wait a few minutes and try again.',
+        'zu' => 'Ubuze imibuzo eminingi ngesikhathi esifushane. Sicela ulinde imizuzu embalwa bese uzama futhi.',
+        'xh' => 'Ubuze imibuzo emininzi ngexesha elifutshane. Nceda ulinde imizuzu embalwa uze uzame kwakhona.',
+        'pt' => 'Fez muitas perguntas em pouco tempo. Aguarde alguns minutos e tente novamente.',
+        'st' => 'U botsitse lipotso tse ngata ka nako e khutšoane. Ka kopo ema metsotso e seng mekae ebe u leka hape.'
+    ],
     'sb_stop' => [
         'af' => 'Stop',
         'en' => 'Stop',
