@@ -8,9 +8,8 @@
 
   const openBtn = document.getElementById('openPlayer');
   const overlay = document.getElementById('playerOverlay');
-  if (!openBtn || !overlay) return;
+  if (!openBtn || !overlay || !window.SE) return;
 
-  const closeBtn = document.getElementById('closePlayer');
   const playBtn = document.getElementById('playerToggle');
   const statusEl = document.getElementById('playerStatus');
   const barEl = document.getElementById('playerBar');
@@ -268,19 +267,18 @@
     if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
   }
 
-  // Eers vra hoeveel verse; die speler wys eers ná die keuse
+  // Eers vra hoeveel verse; die speler wys eers ná die keuse.
+  // singemmanuel.js wys die laag (Terug, Escape en die skerm agter sluit dit).
   function openPlayer() {
     choiceEl.hidden = false;
     bodyEl.hidden = true;
-    overlay.hidden = false;
-    document.body.style.overflow = 'hidden';
-    const first = choiceEl.querySelector('.se-verse-btn');
-    if (first) first.focus();
+    window.SE.openLayer(overlay, { onClose: resetPlayer, focus: choiceEl.querySelector('.se-verse-btn') });
   }
 
   function chooseVerses(btn) {
     verses = btn.getAttribute('data-verses') === '2' ? '2' : '1';
-    versesEl.textContent = btn.textContent;
+    const label = btn.querySelector('span');
+    versesEl.textContent = (label || btn).textContent;
     choiceEl.hidden = true;
     bodyEl.hidden = false;
     load().then(function() {
@@ -291,7 +289,8 @@
     });
   }
 
-  function closePlayer() {
+  // Hoe die laag ook al toegaan: stil die orrel en begin weer van voor
+  function resetPlayer() {
     stop();
     loadSeq++;
     parsed = null;
@@ -299,9 +298,6 @@
     statusEl.textContent = '';
     barEl.style.width = '0%';
     timeEl.textContent = '0:00';
-    overlay.hidden = true;
-    document.body.style.overflow = '';
-    openBtn.focus();
   }
 
   openBtn.addEventListener('click', function(e) {
@@ -316,22 +312,9 @@
     chooseVerses(btn);
   });
 
-  closeBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    closePlayer();
-  });
-
-  overlay.addEventListener('click', function(e) {
-    if (e.target.classList.contains('se-overlay-backdrop')) closePlayer();
-  });
-
   playBtn.addEventListener('click', function(e) {
     e.preventDefault();
     toggle();
-  });
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !overlay.hidden) closePlayer();
   });
 
   // Hou die skerm aan wanneer die gebruiker terugkeer en dit nog speel

@@ -3919,6 +3919,38 @@ define('UI_TRANSLATIONS', [
         'pt' => 'Esta canção não está disponível em Inglês. Mostrando versão em Africâner.',
         'st' => 'Sefela sena ha se fumaneha ka Senyesemane. Ho bontšoa phetolelo ea Seafrikanse.'
     ],
+    'se_prev' => [
+        'af' => 'Vorige',
+        'en' => 'Previous',
+        'zu' => 'Okwedlule',
+        'xh' => 'Okwangaphambili',
+        'pt' => 'Anterior',
+        'st' => 'E fetileng'
+    ],
+    'se_next' => [
+        'af' => 'Volgende',
+        'en' => 'Next',
+        'zu' => 'Okulandelayo',
+        'xh' => 'Okulandelayo',
+        'pt' => 'Seguinte',
+        'st' => 'E latelang'
+    ],
+    'se_text_size' => [
+        'af' => 'Teksgrootte',
+        'en' => 'Text size',
+        'zu' => 'Usayizi wombhalo',
+        'xh' => 'Ubungakanani bombhalo',
+        'pt' => 'Tamanho do texto',
+        'st' => 'Boholo ba mongolo'
+    ],
+    'se_song_language' => [
+        'af' => 'Taal van die lied',
+        'en' => 'Language of the hymn',
+        'zu' => 'Ulimi lwehubo',
+        'xh' => 'Ulwimi lweculo',
+        'pt' => 'Idioma do hino',
+        'st' => 'Puo ea sefela'
+    ],
 
     // ==================== AI SLIMBYBEL PAGE ====================
     'ai_slimbybel' => [
@@ -4072,6 +4104,46 @@ define('UI_TRANSLATIONS', [
         'xh' => 'UBukumkani bukaThixo',
         'pt' => 'Reino de Deus',
         'st' => 'Mmuso oa Molimo'
+    ],
+    'sb_ai_note' => [
+        'af' => 'Antwoorde word deur KI (OpenAI) geskryf. Toets alles aan die Skrif.',
+        'en' => 'Answers are written by AI (OpenAI). Test everything against Scripture.',
+        'zu' => 'Izimpendulo zibhalwa yi-AI (OpenAI). Hlola konke ngeZibhalo.',
+        'xh' => 'Iimpendulo zibhalwa yi-AI (OpenAI). Vavanya yonke into ngeZibhalo.',
+        'pt' => 'As respostas são escritas por IA (OpenAI). Examine tudo à luz das Escrituras.',
+        'st' => 'Likarabo li ngoloa ke AI (OpenAI). Lekola tsohle ka Mangolo.'
+    ],
+    'sb_error' => [
+        'af' => 'Kon nie \'n antwoord kry nie. Probeer asseblief weer.',
+        'en' => 'Could not get an answer. Please try again.',
+        'zu' => 'Akukwazekanga ukuthola impendulo. Sicela uzame futhi.',
+        'xh' => 'Akukwazekanga ukufumana impendulo. Nceda uzame kwakhona.',
+        'pt' => 'Não foi possível obter uma resposta. Tente novamente.',
+        'st' => 'Ha ho a khoneha ho fumana karabo. Ka kopo leka hape.'
+    ],
+    'sb_cut_off' => [
+        'af' => 'Die antwoord is onderbreek.',
+        'en' => 'The answer was cut off.',
+        'zu' => 'Impendulo inqamukile.',
+        'xh' => 'Impendulo iqhawukile.',
+        'pt' => 'A resposta foi interrompida.',
+        'st' => 'Karabo e khaohile.'
+    ],
+    'sb_stop' => [
+        'af' => 'Stop',
+        'en' => 'Stop',
+        'zu' => 'Misa',
+        'xh' => 'Yeka',
+        'pt' => 'Parar',
+        'st' => 'Emisa'
+    ],
+    'sb_new_question' => [
+        'af' => 'Nuwe vraag',
+        'en' => 'New question',
+        'zu' => 'Umbuzo omusha',
+        'xh' => 'Umbuzo omtsha',
+        'pt' => 'Nova pergunta',
+        'st' => 'Potso e ncha'
     ],
 
     // =====================================================================
