@@ -272,7 +272,12 @@ function fetchReferencedVerses(string $text, string $lang): string {
 
 // ------------------------- SSE ROUTE ----------------------------------
 if (isset($_GET['stream']) && $_GET['stream'] === '1') {
-  $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+  // Plain text, at most 500 characters (the form allows no more)
+  $q = isset($_GET['q']) && is_string($_GET['q']) ? trim($_GET['q']) : '';
+  $q = mb_substr($q, 0, 500, 'UTF-8');
+  // Nothing below writes the session: release it, so the member's other
+  // pages (and the notification poll) are not held up while the answer streams
+  session_write_close();
 
   header('Content-Type: text/event-stream');
   header('Cache-Control: no-cache');
@@ -401,132 +406,140 @@ $allVerses
 }
 
 // -------------------------- HTML UI -----------------------------------
+// "Light Through Glass", emerald edition: the welcome page's atmosphere lit
+// in emerald, the colour AI Slimbybel carries on the welcome tiles.
 function esc($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+
+/** Cache-bust by file time, so browsers keep the assets until they change */
+function sb_asset(string $path): string {
+  $mtime = @filemtime(dirname(__DIR__) . $path);
+  return $path . '?v=' . ($mtime ?: '1');
+}
+
+// Example questions, each in its own jewel
+$examples = [
+  ['q' => 'water',   'accent' => 'sapphire', 'icon' => '<path d="M12 2.7l5.66 5.66a8 8 0 11-11.31 0z"/>'],
+  ['q' => 'sower',   'accent' => 'emerald',  'icon' => '<path d="M6.05 8.05c-2.73 2.73-2.73 7.15-.02 9.88 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.39 9.32 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z"/>'],
+  ['q' => 'spirit',  'accent' => 'amethyst', 'icon' => '<path d="M11.2 3h1.6v4.2h-1.6z"/><path d="M12.6 5.4c1-1.9 3-2.9 5.2-2.6-.7 2-2.6 3.3-5.2 2.6z"/><circle cx="7.4" cy="10" r="2.5"/><circle cx="12" cy="10" r="2.5"/><circle cx="16.6" cy="10" r="2.5"/><circle cx="9.7" cy="14.2" r="2.5"/><circle cx="14.3" cy="14.2" r="2.5"/><circle cx="12" cy="18.4" r="2.5"/>'],
+  ['q' => 'kingdom', 'accent' => 'amber',    'icon' => '<path d="M3 7.5l4.6 3.9L12 4.5l4.4 6.9L21 7.5 19.2 18H4.8L3 7.5zM4.8 19.5h14.4V21H4.8z"/>'],
+];
+
+$sbConfig = [
+  'max' => 500,
+  't' => [
+    'title'   => t('ai_slimbybel'),
+    'copied'  => t('copied'),
+    'copyFail'=> t('gd_copy_failed'),
+    'error'   => t('sb_error'),
+    'cutOff'  => t('sb_cut_off'),
+  ],
+];
 ?><!doctype html>
-<html lang="<?= $pageLang ?>">
+<html lang="<?= esc($pageLang) ?>">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title><?= esc(t('ai_slimbybel')) ?></title>
-  
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <style>
-    @font-face {
-      font-family: 'Parisienne';
-      src: url('/assets/fonts/Parisienne-Regular.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-  </style>
-  
-  <link rel="stylesheet" href="/aislimbybel/css/aislimbybel.css?v=<?= time() ?>">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Parisienne&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="<?= sb_asset('/aislimbybel/css/aislimbybel.css') ?>">
+  <script>window.SLIMBYBEL = <?= json_encode($sbConfig, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '{}' ?>;</script>
 </head>
-<body class="aislimbybel-body">
+<body class="sb-body">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <main class="sb-main">
-    <!-- Search Section -->
-    <section class="sb-section sb-search-section">
-      <h2 class="sb-page-title">AI Slimbybel</h2>
-      <div class="sb-section-header">
-        <div class="sb-icon-wrapper">
-          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h2 class="sb-section-title"><?= esc(t('ask_scripture')) ?></h2>
-      </div>
+  <svg class="sb-sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+    <symbol id="sb-i-ask" viewBox="0 0 24 24" fill="currentColor"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></symbol>
+    <symbol id="sb-i-book" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></symbol>
+    <?php foreach ($examples as $ex): ?>
+    <symbol id="sb-i-<?= $ex['q'] ?>" viewBox="0 0 24 24" fill="currentColor"><?= $ex['icon'] ?></symbol>
+    <?php endforeach; ?>
+  </defs></svg>
 
-      <form id="sbForm" class="sb-form" action="#" method="get">
-        <div class="sb-input-group">
-          <input 
-            type="text" 
-            id="q_input" 
-            name="q" 
-            class="sb-input" 
-            autocomplete="off" 
-            placeholder="<?= esc(t('ask_placeholder')) ?>"
-          >
-          <button class="sb-btn sb-btn-primary" id="askBtn" type="submit">
-            <span class="sb-btn-shine"></span>
-            <svg class="sb-btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="sb-btn-text"><?= esc(t('explain')) ?></span>
+  <!-- Atmosphere: rays and a halo of emerald light (purely decorative) -->
+  <div class="sb-aura" aria-hidden="true"><div class="sb-rays"></div><div class="sb-halo"></div></div>
+
+  <main class="sb-main" id="sbMain">
+    <section class="sb-hero" aria-labelledby="sbTitle">
+      <p class="sb-eyebrow">
+        <svg class="sb-eyebrow-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#sb-i-ask"/></svg>
+        <span><?= esc(t('ask_scripture')) ?></span>
+      </p>
+      <h2 class="sb-title" id="sbTitle"><span><?= esc(t('ai_slimbybel')) ?></span></h2>
+      <p class="sb-tagline"><?= esc(t('spiritual_wisdom_ai')) ?></p>
+      <p class="sb-sub"><?= esc(t('spiritual_interpretation_help')) ?></p>
+    </section>
+
+    <!-- The question -->
+    <form id="sbForm" class="sb-card sb-ask" action="#" method="get" role="search">
+      <label class="sb-ask-label" for="q_input">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#sb-i-book"/></svg>
+        <span><?= esc(t('ask_scripture')) ?></span>
+      </label>
+      <textarea id="q_input" name="q" class="sb-input" rows="2" maxlength="500"
+                autocomplete="off" enterkeyhint="send"
+                placeholder="<?= esc(t('ask_placeholder')) ?>"></textarea>
+      <div class="sb-ask-foot">
+        <p class="sb-ask-note"><?= esc(t('sb_ai_note')) ?></p>
+        <button class="sb-btn sb-btn--primary" id="askBtn" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          <span><?= esc(t('explain')) ?></span>
+        </button>
+      </div>
+    </form>
+
+    <!-- The answer (shown from the first question on) -->
+    <section class="sb-answer-section" id="sbAnswerSection" aria-labelledby="sbAnswerLabel" hidden>
+      <h3 class="sb-label" id="sbAnswerLabel"><?= esc(t('answer')) ?></h3>
+      <article class="sb-card sb-answer" id="answerBox">
+        <p class="sb-answer-q" id="sbQuestion"></p>
+        <div class="sb-answer-content" id="answerContent" aria-live="polite" aria-busy="false"></div>
+        <div class="sb-typing" id="loadingIndicator" hidden>
+          <i></i><i></i><i></i>
+          <span class="sb-sr"><?= esc(t('loading')) ?></span>
+        </div>
+        <p class="sb-error" id="sbError" role="alert" hidden></p>
+        <div class="sb-answer-actions" id="sbActions" hidden>
+          <button class="sb-btn sb-btn--glass" id="sbStop" type="button" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+            <span><?= esc(t('sb_stop')) ?></span>
+          </button>
+          <button class="sb-btn sb-btn--glass" id="sbCopy" type="button" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h10a2 2 0 012 2v12M16 8H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V10a2 2 0 00-2-2z"/></svg>
+            <span><?= esc(t('copy')) ?></span>
+          </button>
+          <button class="sb-btn sb-btn--glass" id="sbShare" type="button" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>
+            <span><?= esc(t('share')) ?></span>
+          </button>
+          <button class="sb-btn sb-btn--glass" id="sbAgain" type="button" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+            <span><?= esc(t('sb_new_question')) ?></span>
           </button>
         </div>
-      </form>
-
-      <div class="sb-help">
-        <svg class="sb-help-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M12 16v.01M12 8v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        <p class="sb-help-text"><?= esc(t('spiritual_interpretation_help')) ?></p>
-      </div>
+      </article>
     </section>
 
-    <!-- Answer Section -->
-    <section class="sb-section sb-answer-section">
-      <div class="sb-section-header">
-        <div class="sb-icon-wrapper">
-          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-8-5z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h2 class="sb-section-title"><?= esc(t('answer')) ?></h2>
-        <div class="sb-loading" id="loadingIndicator" hidden>
-          <div class="sb-spinner"></div>
-        </div>
-      </div>
-
-      <div class="sb-answer-panel">
-        <div class="sb-answer-scroll" id="answerBox">
-          <div class="sb-placeholder" id="placeholder">
-            <svg class="sb-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor" opacity="0.3"/>
-            </svg>
-            <p><?= esc(t('answer_placeholder')) ?></p>
-          </div>
-          <div class="sb-answer-content" id="answerContent" hidden></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Examples Section -->
-    <section class="sb-section sb-examples-section">
-      <h3 class="sb-examples-title"><?= esc(t('example_questions')) ?></h3>
-      <div class="sb-examples-grid">
-        <button class="sb-example-card" data-question="<?= esc(t('water_question_full')) ?>">
-          <div class="sb-example-icon">💧</div>
-          <p class="sb-example-text"><?= esc(t('water_question_short')) ?></p>
-          <div class="sb-card-shine"></div>
-        </button>
-        <button class="sb-example-card" data-question="<?= esc(t('sower_question_full')) ?>">
-          <div class="sb-example-icon">🌱</div>
-          <p class="sb-example-text"><?= esc(t('sower_question_short')) ?></p>
-          <div class="sb-card-shine"></div>
-        </button>
-        <button class="sb-example-card" data-question="<?= esc(t('spirit_question_full')) ?>">
-          <div class="sb-example-icon">🍇</div>
-          <p class="sb-example-text"><?= esc(t('spirit_question_short')) ?></p>
-          <div class="sb-card-shine"></div>
-        </button>
-        <button class="sb-example-card" data-question="<?= esc(t('kingdom_question_full')) ?>">
-          <div class="sb-example-icon">👑</div>
-          <p class="sb-example-text"><?= esc(t('kingdom_question_short')) ?></p>
-          <div class="sb-card-shine"></div>
-        </button>
+    <!-- Example questions -->
+    <section class="sb-examples" aria-labelledby="sbExamplesLabel">
+      <h3 class="sb-label" id="sbExamplesLabel"><?= esc(t('example_questions')) ?></h3>
+      <div class="sb-ex-grid">
+        <?php foreach ($examples as $i => $ex): ?>
+          <button class="sb-ex sb-ex--<?= $ex['accent'] ?>" type="button" style="--i:<?= $i ?>"
+                  data-question="<?= esc(t($ex['q'] . '_question_full')) ?>">
+            <span class="sb-ex-orb"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#sb-i-<?= $ex['q'] ?>"/></svg></span>
+            <span class="sb-ex-text"><?= esc(t($ex['q'] . '_question_short')) ?></span>
+            <svg class="sb-ex-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        <?php endforeach; ?>
       </div>
     </section>
   </main>
 
-  <script src="/aislimbybel/js/aislimbybel.js?v=<?= time() ?>"></script>
+  <div class="sb-toast" id="sbToast" role="status" aria-live="polite"></div>
+
+  <script defer src="<?= sb_asset('/aislimbybel/js/aislimbybel.js') ?>"></script>
 
   <?php require_once __DIR__ . '/../header_footer/footer.php'; ?>
 
