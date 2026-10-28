@@ -498,6 +498,8 @@ input {
 /* ===== THE HYMN — a pane of leaded glass ===== */
 .se-song {
   --se-fs: 1.45rem;
+  --num-w: 42px;     /* the verse-number stamp */
+  --num-gap: 14px;
   padding: 26px 20px 26px;
   overflow: hidden;
   background:
@@ -590,6 +592,13 @@ input {
   transition: background-color 0.25s ease, border-color 0.25s ease, opacity 0.2s ease, transform 0.2s ease;
 }
 
+@media (pointer: coarse) {
+  .se-size-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 .se-size-btn--sm { font-size: 0.95rem; }
 .se-size-btn--lg { font-size: 1.35rem; }
 
@@ -619,20 +628,26 @@ input {
 /* One verse: its number stamped in the margin, the words in serif */
 .se-verse {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: var(--num-w) minmax(0, 1fr);
+  gap: var(--num-gap);
   align-items: start;
 }
 
-.se-verse--plain {
-  grid-template-columns: minmax(0, 1fr);
+/* A stanza without a number lines up with the verses' text ... */
+.se-verse--plain .se-verse-text {
+  grid-column: 2;
+}
+
+/* ... and a hymn without any numbers (1, 306) uses the whole width */
+.se-verses--unnumbered .se-verse {
+  display: block;
 }
 
 .se-verse-num {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: var(--num-w);
+  height: var(--num-w);
   margin-top: 0.12em;
   font-family: var(--font-serif);
   font-size: 1.45rem;
@@ -652,14 +667,14 @@ input {
   font-weight: 500;
   line-height: 1.55;
   color: var(--text-primary);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   transition: font-size 0.2s ease;
 }
 
 /* The chorus: set in from the verses, in italics, on a ruby rule */
 .se-chorus {
   position: relative;
-  margin-left: 56px;
+  margin-left: calc(var(--num-w) + var(--num-gap));
   padding: 2px 0 2px 18px;
   border-left: 2px solid rgba(var(--accent-rgb), 0.55);
 }
@@ -678,9 +693,18 @@ input {
   color: var(--rose-gold-dark);
 }
 
+.se-verses--unnumbered .se-chorus {
+  margin-left: 0;
+}
+
 .se-chorus-text {
   font-style: italic;
   color: var(--text-secondary);
+}
+
+/* A chorus in two parts */
+.se-chorus-text + .se-chorus-text {
+  margin-top: 0.6em;
 }
 
 [data-theme="light"] .se-chorus-text {
@@ -693,6 +717,7 @@ input {
   align-items: center;
   justify-content: center;
   gap: 14px;
+  height: 8px;
   margin-top: 30px;
   background: radial-gradient(circle, var(--accent) 0 3px, transparent 3.5px) center / 8px 8px no-repeat;
 }
@@ -746,7 +771,7 @@ input {
 /* ===== PREVIOUS / NEXT HYMN ===== */
 .se-pager {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));   /* never wider than the screen */
   gap: 10px;
   margin-top: 18px;
 }
@@ -785,15 +810,24 @@ input {
 }
 
 .se-pager-text {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   line-height: 1.25;
+}
+
+/* A long word ("OKWANGAPHAMBILI") ends in "…" instead of pushing the page wide */
+.se-pager-text small,
+.se-pager-text b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .se-pager-text small {
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -867,7 +901,9 @@ input {
   border-bottom: 0;
   border-radius: 26px 26px 0 0;
   box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.8), inset 0 1px 0 var(--sheen);
-  animation: se-sheet-up 0.36s var(--ease) both;
+  /* backwards, not both: a held "transform: none" would stop the sheet
+     from following the finger when it is pulled down */
+  animation: se-sheet-up 0.36s var(--ease) backwards;
   transition: transform 0.2s ease;
 }
 
@@ -979,16 +1015,6 @@ input {
   height: 86dvh;
 }
 
-/* Phones: while the keyboard is open the grid steps aside, so a stray tap
-   cannot open the wrong hymn; the sheet shrinks to the number field */
-.se-picker.is-typing {
-  height: auto;
-}
-
-.se-picker.is-typing .se-sheet-body {
-  display: none;
-}
-
 .se-picker-search {
   flex: none;
   display: flex;
@@ -1056,18 +1082,25 @@ input {
 
 .se-picker-msg {
   flex: none;
-  min-height: 1.5em;
-  margin: 6px 6px 8px;
-  font-size: 0.86rem;
+  margin: 10px 6px 0;
+  font-size: 0.9rem;
   font-weight: 600;
   color: rgb(var(--danger-rgb));
+}
+
+.se-picker-msg:empty {
+  display: none;
+}
+
+.se-picker .se-sheet-body {
+  margin-top: 14px;
 }
 
 .se-picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
   gap: 8px;
-  padding-bottom: 6px;
+  padding: 2px 0 6px;
 }
 
 .se-song-btn {
@@ -1088,6 +1121,13 @@ input {
 
 .se-song-btn:active {
   transform: scale(0.93);
+}
+
+/* The number typed in exactly: Enter (or the arrow) opens this one */
+.se-song-btn.is-match:not(.is-current) {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18);
 }
 
 .se-song-btn.is-current {
@@ -1312,20 +1352,17 @@ input {
     padding: 22px 14px 22px;
   }
 
-  .se-verse {
-    grid-template-columns: 34px minmax(0, 1fr);
-    gap: 10px;
+  .se-song {
+    --num-w: 34px;
+    --num-gap: 10px;
   }
 
   .se-verse-num {
-    width: 34px;
-    height: 34px;
     font-size: 1.2rem;
     border-radius: 11px;
   }
 
   .se-chorus {
-    margin-left: 44px;
     padding-left: 12px;
   }
 
@@ -1370,18 +1407,12 @@ input {
     margin: -16px -24px 4px 0;
   }
 
-  .se-verse {
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 18px;
-  }
-
-  .se-verse-num {
-    width: 46px;
-    height: 46px;
+  .se-song {
+    --num-w: 46px;
+    --num-gap: 18px;
   }
 
   .se-chorus {
-    margin-left: 64px;
     padding-left: 22px;
   }
 

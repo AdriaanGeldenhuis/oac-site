@@ -45,9 +45,15 @@
     if (stack.length) armHistory();
   });
 
+  // Focus rings only for keyboard users: after a tap, giving focus back to
+  // "Soek Lied" must not light it up
+  let usingKeys = false;
+  document.addEventListener('keydown', () => { usingKeys = true; }, true);
+  document.addEventListener('pointerdown', () => { usingKeys = false; }, true);
+
   function focusQuietly(node) {
     if (!node || !node.focus) return;
-    try { node.focus({ preventScroll: true }); } catch (e) { node.focus(); }
+    try { node.focus({ preventScroll: true, focusVisible: usingKeys }); } catch (e) { node.focus(); }
   }
 
   /** Show a [hidden] .se-layer; opts.onClose runs however it is closed */
@@ -95,10 +101,18 @@
   }
 
   document.querySelectorAll('.se-layer').forEach((layer) => {
-    // A tap on the scrim (not the sheet) closes
+    // A tap on the scrim closes, but only when it also started there: a tap
+    // whose layout changes under the finger (the phone's keyboard opening)
+    // or a drag out of the sheet must never close it
+    let downOnScrim = false;
+    layer.addEventListener('pointerdown', (e) => { downOnScrim = e.target === layer; });
     layer.addEventListener('click', (e) => {
-      if (e.target === layer) closeLayer(layer);
-      else if (e.target.closest('[data-se-close]')) closeLayer(layer);
+      if (e.target === layer) {
+        if (downOnScrim) closeLayer(layer);
+      } else if (e.target.closest('[data-se-close]')) {
+        closeLayer(layer);
+      }
+      downOnScrim = false;
     });
 
     // Phones: pull the sheet down by its handle to close it
@@ -107,18 +121,35 @@
     if (!sheet || !grip) return;
     let startY = 0;
     let dy = 0;
-    grip.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; dy = 0; }, { passive: true });
+    grip.addEventListener('touchstart', (e) => {
+      startY = e.touches[0].clientY;
+      dy = 0;
+      sheet.style.transition = 'none'; // follow the finger without lag
+    }, { passive: true });
     grip.addEventListener('touchmove', (e) => {
       dy = Math.max(0, e.touches[0].clientY - startY);
       sheet.style.transform = 'translateY(' + dy + 'px)';
     }, { passive: true });
-    grip.addEventListener('touchend', () => {
+    const release = () => {
+      sheet.style.transition = '';
       if (dy > 90) {
         closeLayer(layer);
       } else {
-        sheet.style.transform = '';
+        sheet.style.transform = ''; // springs back
       }
-    });
+      dy = 0;
+    };
+    grip.addEventListener('touchend', release);
+    grip.addEventListener('touchcancel', release);
+  });
+
+  // Back to this page from the browser's back-forward cache (after opening
+  // a hymn from the picker): close what was open, without touching history
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    historyArmed = false;
+    ignorePop = false;
+    while (stack.length) closeLayer(stack[stack.length - 1].el, { fromHistory: true });
   });
 
   document.addEventListener('keydown', (e) => {
@@ -151,7 +182,6 @@
 
   // ===== SONG PICKER =====
   const picker = $('#songPickerOverlay');
-  const pickerSheet = picker ? $('.se-picker', picker) : null;
   const openBtn = $('#openSongPicker');
   const grid = $('#songPickerGrid');
   const numberInput = $('#songNumberInput');
@@ -159,17 +189,18 @@
   const msg = $('#songNumberMsg');
   const canHover = window.matchMedia('(hover: hover)').matches;
 
-  // Phones: hide the grid while the keyboard is open (see the CSS)
-  function setTyping(on) {
-    if (pickerSheet) pickerSheet.classList.toggle('is-typing', on);
-  }
-
+  /** Show only the numbers that start with what was typed; returns how many */
   function filterGrid(value) {
-    if (!grid) return;
+    if (!grid) return 0;
+    let shown = 0;
     grid.querySelectorAll('.se-song-btn').forEach((btn) => {
       const num = btn.getAttribute('data-song') || '';
-      btn.hidden = value !== '' && num.indexOf(value) !== 0;
+      const show = value === '' || num.indexOf(value) === 0;
+      btn.hidden = !show;
+      btn.classList.toggle('is-match', value !== '' && num === value);
+      if (show) shown++;
     });
+    return shown;
   }
 
   function say(text) {
@@ -184,7 +215,6 @@
     }
     filterGrid('');
     say('');
-    setTyping(false);
     // Only focus the field with a mouse/trackpad, so the phone's keyboard
     // does not cover the numbers
     openLayer(picker, { focus: canHover ? numberInput : null });
@@ -234,13 +264,11 @@
       const digits = numberInput.value.replace(/\D/g, '');
       if (numberInput.value !== digits) numberInput.value = digits;
       numberInput.classList.remove('se-input-error');
-      say('');
-      filterGrid(digits.replace(/^0+(?=\d)/, ''));
-    });
-    numberInput.addEventListener('focus', () => { if (!canHover) setTyping(true); });
-    numberInput.addEventListener('blur', () => {
-      // Let a tap on the arrow land before the grid comes back
-      setTimeout(() => { if (document.activeElement !== numberInput) setTyping(false); }, 150);
+      const shown = filterGrid(digits.replace(/^0+(?=\d)/, ''));
+      // Say it at once when no hymn starts with these digits
+      say(shown === 0 && msg ? msg.getAttribute('data-not-found') : '');
+      const body = $('.se-sheet-body', picker);
+      if (body) body.scrollTop = 0;
     });
     numberInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -287,8 +315,15 @@
   // ===== SONG LANGUAGE: keep the reading position across the switch =====
   const SCROLL_KEY = 'se_scroll';
   document.querySelectorAll('.se-seg-btn').forEach((link) => {
-    link.addEventListener('click', () => {
-      try { sessionStorage.setItem(SCROLL_KEY, String(window.pageYOffset)); } catch (e) { /* private mode */ }
+    link.addEventListener('click', (e) => {
+      // The hymns' language is already this one. (For isiZulu, isiXhosa,
+      // Português and Sesotho readers that is Afrikaans: following the link
+      // would switch the whole app to Afrikaans for nothing.)
+      if (link.classList.contains('is-on')) {
+        e.preventDefault();
+        return;
+      }
+      try { sessionStorage.setItem(SCROLL_KEY, String(window.pageYOffset)); } catch (e2) { /* private mode */ }
     });
   });
 
