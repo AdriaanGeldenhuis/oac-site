@@ -17,7 +17,9 @@ function t(string $key): string {
 function esc($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 $meId = (int)($_SESSION['user_id'] ?? 0);
-$targetId = isset($_GET['u']) && is_numeric($_GET['u']) ? (int)$_GET['u'] : $meId;
+// ?u=ID (older links, such as the birthday notifications, use ?user_id=ID)
+$rawTargetId = $_GET['u'] ?? ($_GET['user_id'] ?? null);
+$targetId = is_numeric($rawTargetId) ? (int)$rawTargetId : $meId;
 
 if ($targetId <= 0) { 
     header('Location: /welcome.php'); 
@@ -118,6 +120,7 @@ $VER = time();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<?= esc(csrf_token()) ?>">
   <title><?= esc(t('profile')) ?> - <?= esc($fullName) ?></title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -195,7 +198,8 @@ $VER = time();
       <?php endif; ?>
       
       <?php if ($canDelete): ?>
-      <button type="button" class="profile-btn profile-btn-danger" onclick="deleteUser(<?= $targetId ?>, '<?= esc($fullName) ?>')">
+      <?php // The name as a JS string: a quote in someone's name can neither break nor inject code ?>
+      <button type="button" class="profile-btn profile-btn-danger" onclick="deleteUser(<?= $targetId ?>, <?= esc(json_encode($fullName, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
         </svg>
@@ -216,7 +220,7 @@ $VER = time();
               <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2"/>
             </svg>
             <div class="profile-info-content">
-              <span class="profile-info-label"><?= esc(t('email')) ?></span>
+              <span class="profile-info-label"><?= esc(t('adm_email')) ?></span>
               <span class="profile-info-value"><?= esc($user['email']) ?></span>
             </div>
           </div>

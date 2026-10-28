@@ -12,6 +12,13 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $userId = (int)$_SESSION['user_id'];
+
+// The header's language switch: remember it, then reload without ?lang= (as account.php)
+if (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) {
+    $_SESSION['language'] = $_GET['lang'];
+    header('Location: /admin/elders.php');
+    exit;
+}
 $lang = validate_language((string)($_SESSION['language'] ?? 'af'));
 
 // Elder permissions + the elder's own town (same lookup as save_teaching.php)

@@ -2,6 +2,10 @@
 declare(strict_types=1);
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../security/auth_gate.php';
+require_once __DIR__ . '/../../includes/admin_api.php';
+
+// Changes someone's office: POST only, with the session's CSRF token (profile.js sends it)
+admin_api_require_post();
 
 $meId = (int)($_SESSION['user_id'] ?? 0);
 $targetId = isset($_POST['user_id']) && is_numeric($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
@@ -41,7 +45,14 @@ try {
         echo json_encode(['success' => false, 'error' => 'Cannot assign role equal to or above your level']);
         exit;
     }
-    
+
+    // Only an office that exists (the list the edit form offers)
+    $stmt = $pdo->prepare("SELECT 1 FROM amptes WHERE id = ? LIMIT 1");
+    $stmt->execute([$newAmpId]);
+    if (!$stmt->fetchColumn()) {
+        admin_api_fail('adm_err_invalid');
+    }
+
     // Check scope
     if ($myAmpId >= 6) {
         // Congregation scope

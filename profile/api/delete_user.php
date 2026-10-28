@@ -2,6 +2,10 @@
 declare(strict_types=1);
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../security/auth_gate.php';
+require_once __DIR__ . '/../../includes/admin_api.php';
+
+// Deletes an account: POST only, with the session's CSRF token (profile.js sends it)
+admin_api_require_post();
 
 $meId = (int)($_SESSION['user_id'] ?? 0);
 $targetId = isset($_POST['user_id']) && is_numeric($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
@@ -131,6 +135,6 @@ try {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    error_log('Delete user error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    // Logged in full; the browser only gets the generic message
+    admin_api_server_error($e, 'profile/delete_user');
 }
