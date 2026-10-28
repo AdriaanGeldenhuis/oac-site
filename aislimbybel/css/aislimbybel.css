@@ -1,10 +1,10 @@
 /* =====================================================================
-   AI Slimbybel — "Light Through Glass", emerald edition
+   AI Slimbybel — "Light Through Glass", silver edition
    The welcome page's atmosphere (rays, halo, stained-glass cards), lit in
-   emerald: the colour AI Slimbybel carries on the welcome tiles. The
+   silver: the colour AI Slimbybel carries on the welcome tiles. The
    question is asked on a glass card, the answer streams onto a pane of
    leaded glass, and the example questions are jewel tiles.
-   Dark = charcoal + emerald (default). Light = ivory + deep emerald & gold.
+   Dark = charcoal + silver (default). Light = ivory + brushed steel.
    ===================================================================== */
 
 /* ===== DARK THEME (DEFAULT) ===== */
@@ -16,13 +16,13 @@
   --bg-input: #121010;
   --card-top: #1d1a19;
 
-  /* The main colour: emerald, with a softer and a deeper step */
-  --accent-rgb: 66, 198, 148;
-  --accent: #42c694;
-  --accent-soft: #86e0bd;
-  --accent-deep: #1f9a6c;
-  --accent-ink: #04150e;
-  --accent-grad: linear-gradient(135deg, #82e6c0 0%, #42c694 48%, #23a273 100%);
+  /* The main colour: silver, with a softer and a deeper step */
+  --accent-rgb: 190, 199, 212;
+  --accent: #bec7d4;
+  --accent-soft: #dde3ec;
+  --accent-deep: #8a96a8;
+  --accent-ink: #10151c;
+  --accent-grad: linear-gradient(135deg, #eef1f6 0%, #bec7d4 48%, #8a96a8 100%);
 
   --rose-gold: #e8b4a8;
   --rose-gold-dark: #c99485;
@@ -31,10 +31,10 @@
   --text-secondary: #c8c0ba;
   --text-muted: #8f8680;
 
-  --border: rgba(66, 198, 148, 0.18);
+  --border: rgba(190, 199, 212, 0.2);
   --border-light: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(66, 198, 148, 0.45);
-  --glow: rgba(66, 198, 148, 0.28);
+  --border-strong: rgba(190, 199, 212, 0.45);
+  --glow: rgba(190, 199, 212, 0.26);
   --shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.9);
   --shadow-sm: 0 12px 30px -18px rgba(0, 0, 0, 0.85);
   --sheen: rgba(255, 255, 255, 0.06);
@@ -48,10 +48,10 @@
   --amethyst-rgb: 170, 128, 255;
   --danger-rgb: 240, 110, 90;
 
-  --aura-rgb: 72, 206, 156;
-  --aura2-rgb: 245, 200, 120;
+  --aura-rgb: 190, 199, 212;
+  --aura2-rgb: 214, 222, 235;
   --aura-op: 1;
-  --name-grad: linear-gradient(115deg, #e6fff4 0%, #9ceccb 36%, #42c694 66%, #ead7a0 100%);
+  --name-grad: linear-gradient(115deg, #ffffff 0%, #dde3ec 38%, #bec7d4 66%, #e8d9b8 100%);
 
   --font-display: 'Parisienne', cursive;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -64,7 +64,7 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
 
-/* ===== LIGHT THEME — warm ivory, charcoal ink, deep emerald & antique gold ===== */
+/* ===== LIGHT THEME — warm ivory, charcoal ink, brushed steel ===== */
 [data-theme="light"] {
   --bg-base: #f6f5f1;
   --bg-elevated: #ffffff;
@@ -73,12 +73,12 @@
   --bg-input: #f7f5f0;
   --card-top: #ffffff;
 
-  --accent-rgb: 22, 128, 94;
-  --accent: #16805e;
-  --accent-soft: #2fa57c;
-  --accent-deep: #0f6449;
+  --accent-rgb: 84, 98, 118;
+  --accent: #546276;
+  --accent-soft: #7a889c;
+  --accent-deep: #3d4859;
   --accent-ink: #ffffff;
-  --accent-grad: linear-gradient(135deg, #2fa57c 0%, #16805e 52%, #0f6449 100%);
+  --accent-grad: linear-gradient(135deg, #7a889c 0%, #546276 52%, #3d4859 100%);
 
   --rose-gold: #a47c38;
   --rose-gold-dark: #8a6427;
@@ -89,8 +89,8 @@
 
   --border: rgba(17, 24, 39, 0.10);
   --border-light: rgba(17, 24, 39, 0.08);
-  --border-strong: rgba(22, 128, 94, 0.45);
-  --glow: rgba(22, 128, 94, 0.2);
+  --border-strong: rgba(84, 98, 118, 0.45);
+  --glow: rgba(84, 98, 118, 0.2);
   --shadow: 0 30px 80px -30px rgba(7, 17, 31, 0.28);
   --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04), 0 18px 40px -26px rgba(7, 17, 31, 0.3);
   --sheen: rgba(255, 255, 255, 0.9);
@@ -104,10 +104,10 @@
   --amethyst-rgb: 112, 68, 206;
   --danger-rgb: 194, 65, 12;
 
-  --aura-rgb: 40, 160, 116;
-  --aura2-rgb: 214, 160, 70;
+  --aura-rgb: 120, 136, 160;
+  --aura2-rgb: 170, 182, 200;
   --aura-op: 0.6;
-  --name-grad: linear-gradient(115deg, #111827 0%, #1d4a3a 38%, #16805e 72%, #a47c38 100%);
+  --name-grad: linear-gradient(115deg, #111827 0%, #2f3a4b 40%, #546276 76%, #8a96a8 100%);
 
   color-scheme: light;
 }
@@ -573,7 +573,7 @@ textarea {
     linear-gradient(160deg, var(--card-top) 0%, var(--bg-card) 60%);
 }
 
-/* Lead-line border in jewel colours, emerald first */
+/* Lead-line border in jewel colours, silver first */
 .sb-answer::after {
   content: '';
   position: absolute;
@@ -582,11 +582,11 @@ textarea {
   padding: 1px;
   background: conic-gradient(
     from 200deg,
-    rgba(var(--emerald-rgb), 0.8),
-    rgba(var(--amber-rgb), 0.5),
-    rgba(var(--sapphire-rgb), 0.5),
-    rgba(var(--rose-rgb), 0.5),
-    rgba(var(--emerald-rgb), 0.8)
+    rgba(var(--accent-rgb), 0.85),
+    rgba(var(--sapphire-rgb), 0.4),
+    rgba(var(--amethyst-rgb), 0.35),
+    rgba(var(--rose-rgb), 0.4),
+    rgba(var(--accent-rgb), 0.85)
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -672,7 +672,7 @@ textarea {
   color: inherit;
 }
 
-/* Scripture: in serif, on an emerald rule */
+/* Scripture: in serif, on a silver rule */
 .sb-verse {
   padding: 4px 0 4px 16px;
   font-family: var(--font-serif);

@@ -1,10 +1,10 @@
 /* =====================================================================
-   Sing Emmanuel — "Light Through Glass", ruby edition
+   Sing Emmanuel — "Light Through Glass", gold edition
    The welcome page's atmosphere (rays, halo, stained-glass cards), lit in
-   ruby: the colour the hymn book carries on the welcome tiles. The hymn
+   gold: the colour the hymn book carries on the welcome tiles. The hymn
    is a pane of leaded glass with its verses set like a hymnal page; the
    number picker and the organ player are sheets (phones) / cards (desktop).
-   Dark = charcoal + ruby (default). Light = ivory + deep ruby & gold.
+   Dark = charcoal + gold (default). Light = ivory + antique gold.
    ===================================================================== */
 
 /* ===== DARK THEME (DEFAULT) ===== */
@@ -16,13 +16,13 @@
   --bg-input: #121010;
   --card-top: #1d1a19;
 
-  /* The main colour: ruby, with a softer and a deeper step */
-  --accent-rgb: 236, 98, 124;
-  --accent: #ec627c;
-  --accent-soft: #f59aab;
-  --accent-deep: #c4405c;
-  --accent-ink: #ffffff;
-  --accent-grad: linear-gradient(135deg, #f2869b 0%, #ec627c 46%, #c23b58 100%);
+  /* The main colour: gold, with a softer and a deeper step */
+  --accent-rgb: 212, 175, 55;
+  --accent: #d4af37;
+  --accent-soft: #ecd27a;
+  --accent-deep: #a8861c;
+  --accent-ink: #1c1505;
+  --accent-grad: linear-gradient(135deg, #f1dc8a 0%, #d4af37 48%, #a8861c 100%);
 
   --rose-gold: #e8b4a8;
   --rose-gold-dark: #c99485;
@@ -33,8 +33,8 @@
 
   --border: rgba(236, 98, 124, 0.18);
   --border-light: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(236, 98, 124, 0.42);
-  --glow: rgba(236, 98, 124, 0.28);
+  --border-strong: rgba(212, 175, 55, 0.45);
+  --glow: rgba(212, 175, 55, 0.28);
   --shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.9);
   --shadow-sm: 0 12px 30px -18px rgba(0, 0, 0, 0.85);
   --sheen: rgba(255, 255, 255, 0.06);
@@ -49,10 +49,10 @@
   --amethyst-rgb: 170, 128, 255;
   --danger-rgb: 240, 110, 90;
 
-  --aura-rgb: 236, 98, 124;
-  --aura2-rgb: 245, 150, 120;
+  --aura-rgb: 212, 175, 55;
+  --aura2-rgb: 236, 214, 140;
   --aura-op: 1;
-  --name-grad: linear-gradient(115deg, #ffd9df 0%, #f3889d 38%, #ec627c 62%, #f6b38c 100%);
+  --name-grad: linear-gradient(115deg, #fff6d6 0%, #ecd27a 38%, #d4af37 66%, #f0e2b0 100%);
 
   --font-display: 'Parisienne', cursive;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -65,7 +65,7 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
 
-/* ===== LIGHT THEME — warm ivory, charcoal ink, deep ruby & antique gold ===== */
+/* ===== LIGHT THEME — warm ivory, charcoal ink, antique gold ===== */
 [data-theme="light"] {
   --bg-base: #f6f5f1;
   --bg-elevated: #ffffff;
@@ -74,12 +74,12 @@
   --bg-input: #f7f5f0;
   --card-top: #ffffff;
 
-  --accent-rgb: 190, 52, 84;
-  --accent: #be3454;
-  --accent-soft: #d4677f;
-  --accent-deep: #9b2742;
+  --accent-rgb: 150, 112, 16;
+  --accent: #96700f;
+  --accent-soft: #b8902a;
+  --accent-deep: #76560a;
   --accent-ink: #ffffff;
-  --accent-grad: linear-gradient(135deg, #dc5876 0%, #be3454 52%, #962240 100%);
+  --accent-grad: linear-gradient(135deg, #c9a038 0%, #96700f 52%, #76560a 100%);
 
   --rose-gold: #a47c38;
   --rose-gold-dark: #8a6427;
@@ -90,8 +90,8 @@
 
   --border: rgba(17, 24, 39, 0.10);
   --border-light: rgba(17, 24, 39, 0.08);
-  --border-strong: rgba(190, 52, 84, 0.45);
-  --glow: rgba(190, 52, 84, 0.22);
+  --border-strong: rgba(150, 112, 16, 0.5);
+  --glow: rgba(150, 112, 16, 0.22);
   --shadow: 0 30px 80px -30px rgba(7, 17, 31, 0.28);
   --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04), 0 18px 40px -26px rgba(7, 17, 31, 0.3);
   --sheen: rgba(255, 255, 255, 0.9);
@@ -106,10 +106,10 @@
   --amethyst-rgb: 112, 68, 206;
   --danger-rgb: 194, 65, 12;
 
-  --aura-rgb: 214, 84, 112;
-  --aura2-rgb: 214, 160, 70;
+  --aura-rgb: 200, 160, 40;
+  --aura2-rgb: 214, 190, 120;
   --aura-op: 0.7;
-  --name-grad: linear-gradient(115deg, #111827 0%, #5e1d30 36%, #be3454 70%, #c7a15a 100%);
+  --name-grad: linear-gradient(115deg, #111827 0%, #4a3a12 40%, #96700f 74%, #c7a15a 100%);
 
   color-scheme: light;
 }
@@ -515,7 +515,7 @@ input {
 .se-song[data-size="3"] { --se-fs: 1.68rem; }
 .se-song[data-size="4"] { --se-fs: 1.95rem; }
 
-/* Lead-line border in jewel colours, ruby first */
+/* Lead-line border in jewel colours, gold first */
 .se-song::after {
   content: '';
   position: absolute;
@@ -524,11 +524,11 @@ input {
   padding: 1px;
   background: conic-gradient(
     from 200deg,
-    rgba(var(--ruby-rgb), 0.8),
+    rgba(var(--accent-rgb), 0.85),
+    rgba(var(--rose-rgb), 0.45),
+    rgba(var(--sapphire-rgb), 0.4),
     rgba(var(--amber-rgb), 0.5),
-    rgba(var(--amethyst-rgb), 0.5),
-    rgba(var(--rose-rgb), 0.55),
-    rgba(var(--ruby-rgb), 0.8)
+    rgba(var(--accent-rgb), 0.85)
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -671,7 +671,7 @@ input {
   transition: font-size 0.2s ease;
 }
 
-/* The chorus: set in from the verses, in italics, on a ruby rule */
+/* The chorus: set in from the verses, in italics, on a gold rule */
 .se-chorus {
   position: relative;
   margin-left: calc(var(--num-w) + var(--num-gap));
