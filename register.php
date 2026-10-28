@@ -71,12 +71,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fullName = trim("$name $surname");
 
             // Find admins who have jurisdiction over this new user
+            // (the same rule as admin_approval_scope() in includes/admin_api.php)
             $adminQuery = null;
             if ($amp >= 7 && $amp <= 10) {
                 // Priester (amp_id=6) in same congregation
                 $adminQuery = $pdo->prepare("SELECT id FROM users WHERE amp_id = 6 AND congregation_id = ? AND status = 'approved'");
                 $adminQuery->execute([$cong ?: null]);
-            } elseif ($amp === 5 || $amp === 6) {
+            } elseif ($amp === 5) {
+                // Oudstes and the Vierfout (amp_id 2-5) in same town: both may approve an Oudste
+                $adminQuery = $pdo->prepare("SELECT id FROM users WHERE amp_id IN (2,3,4,5) AND town_id = ? AND status = 'approved'");
+                $adminQuery->execute([$town ?: null]);
+            } elseif ($amp === 6) {
                 // Oudste (amp_id=5) in same town
                 $adminQuery = $pdo->prepare("SELECT id FROM users WHERE amp_id = 5 AND town_id = ? AND status = 'approved'");
                 $adminQuery->execute([$town ?: null]);

@@ -6,6 +6,12 @@
 (function() {
   'use strict';
 
+  // Every write carries the session's CSRF token (meta tag in profile/index.php)
+  function csrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return (meta && meta.content) || '';
+  }
+
   // Open Edit Modal
   window.openEditModal = async function(userId) {
     try {
@@ -43,6 +49,7 @@
       try {
         const response = await fetch('/profile/api/update_user.php', {
           method: 'POST',
+          headers: {'X-CSRF-Token': csrfToken()},
           body: formData
         });
         
@@ -71,7 +78,7 @@
     try {
       const response = await fetch('/profile/api/delete_user.php', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': csrfToken()},
         body: `user_id=${userId}`
       });
       
