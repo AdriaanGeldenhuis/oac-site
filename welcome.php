@@ -166,7 +166,15 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
   <title><?= wc_e(t('page_title_welcome')) ?></title>
 
   <!-- Reveal-on-scroll only hides content once we know JS is running -->
-  <script>document.documentElement.classList.add('wc-js');</script>
+  <script>
+    // wc-js lets the CSS hide sections until welcome.js reveals them. Should
+    // welcome.js never run (failed download, a WebView that cannot run it),
+    // drop the class after 4 s so every section, the teaching too, shows.
+    (function (root) {
+      root.classList.add('wc-js');
+      setTimeout(function () { if (!window.wcReady) { root.classList.remove('wc-js'); } }, 4000);
+    })(document.documentElement);
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
