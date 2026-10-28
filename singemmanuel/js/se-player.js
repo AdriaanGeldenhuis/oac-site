@@ -17,7 +17,9 @@
   const choiceEl = document.getElementById('playerChoice');
   const bodyEl = document.getElementById('playerBody');
   const versesEl = document.getElementById('playerVerses');
-  const song = openBtn.getAttribute('data-song');
+  // Die lied se nommer word by elke laai gelees: die app se aflyn-kopie van
+  // die bladsy (singemmanuel.js) kan 'n ander lied teken as wat die bediener het.
+  const currentSong = () => openBtn.getAttribute('data-song') || '';
 
   const LABEL_PLAY = playBtn.getAttribute('data-label-play');
   const LABEL_PAUSE = playBtn.getAttribute('data-label-pause');
@@ -217,7 +219,7 @@
     statusEl.textContent = TXT_LOADING;
     playBtn.disabled = true;
     try {
-      const url = '/singemmanuel/api/midi.php?song=' + encodeURIComponent(song) + '&verses=' + verses;
+      const url = '/singemmanuel/api/midi.php?song=' + encodeURIComponent(currentSong()) + '&verses=' + verses;
       const res = await fetch(url, { credentials: 'same-origin' });
       if (!res.ok) throw new Error('http ' + res.status);
       const data = parseMidi(await res.arrayBuffer());

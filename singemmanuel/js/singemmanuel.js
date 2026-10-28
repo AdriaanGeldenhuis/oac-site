@@ -7,12 +7,24 @@
  * the phone's Back button, the app's and the floating back button close it
  * instead of leaving the page. Escape and a tap on the scrim close it too.
  * The text size of the hymn is remembered on the device.
+ *
+ * Offline in the app (sw.js) this page is a saved copy of one hymn page,
+ * shown for every ?song=. When the address asks for another hymn or
+ * language than the page was made for, the hymn is drawn here from the
+ * hymn book JSON, the same way singemmanuel.php draws it.
  */
 (function () {
   'use strict';
 
   const $ = (s, root) => (root || document).querySelector(s);
   const SONG_URL = '/singemmanuel/singemmanuel.php?song=';
+  const LANGS = ['af', 'en', 'zu', 'xh', 'pt', 'st'];
+
+  // A ?lang= in the address goes along to the next hymn (the offline copy
+  // draws hymns in that language; online it is the language already chosen)
+  const query = new URLSearchParams(window.location.search);
+  const urlLang = LANGS.indexOf(query.get('lang') || '') !== -1 ? query.get('lang') : '';
+  const songUrl = (n) => SONG_URL + encodeURIComponent(n) + (urlLang ? '&lang=' + urlLang : '');
 
   // ===== LAYERS =====
   const stack = [];
@@ -229,7 +241,7 @@
     const value = numberInput.value.trim().replace(/^0+(?=\d)/, '');
     if (!value) return;
     if (grid.querySelector('.se-song-btn[data-song="' + value + '"]')) {
-      go(SONG_URL + encodeURIComponent(value));
+      go(songUrl(value));
       return;
     }
     say(msg ? msg.getAttribute('data-not-found') : '');
@@ -255,7 +267,7 @@
         closeLayer(picker);
         return;
       }
-      go(SONG_URL + encodeURIComponent(n));
+      go(songUrl(n));
     });
   }
 
@@ -334,4 +346,260 @@
       window.addEventListener('load', () => window.scrollTo(0, parseInt(y, 10) || 0));
     }
   } catch (e) { /* private mode */ }
+
+  // ===== OFFLINE COPY: DRAW THE HYMN THE ADDRESS ASKS FOR =====
+  const SE_DATA = (() => {
+    try { return JSON.parse($('#seData').textContent) || {}; } catch (e) { return {}; }
+  })();
+  const T = SE_DATA.i18n || {};
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  // PHP's trim()/rtrim() (ASCII whitespace only), so both sides cut the same
+  const phpTrim = (str) => str.replace(/^[ \t\n\r\0\x0B]+|[ \t\n\r\0\x0B]+$/g, '');
+  const phpRtrim = (str, chars) => str.replace(chars ? new RegExp('[' + chars + ']+$', 'u') : /[ \t\n\r\0\x0B]+$/, '');
+
+  /** Port of se_blocks() in singemmanuel.php: numbered verses, choruses, plain stanzas */
+  function seBlocks(verses) {
+    const blocks = [];
+    let inChorus = false;
+    let newChorus = false;
+    (Array.isArray(verses) ? verses : []).forEach((raw) => {
+      if (typeof raw !== 'string') return;
+      const v = phpTrim(raw);
+      if (v === '') return;
+      if (/^(koor|chorus|refrein|refrain)[:.]?$/iu.test(v)) {
+        inChorus = true;
+        newChorus = true;
+        return;
+      }
+      const m = /^(\d{1,2})[.)]?\s*(?=\D)(.+)$/su.exec(v);
+      if (m && parseInt(m[1], 10) >= 1 && parseInt(m[1], 10) <= 20) {
+        inChorus = false;
+        blocks.push({ type: 'verse', num: String(parseInt(m[1], 10)), text: phpTrim(m[2]) });
+      } else if (inChorus) {
+        if (newChorus) {
+          blocks.push({ type: 'chorus', lines: [v] });
+          newChorus = false;
+        } else {
+          blocks[blocks.length - 1].lines.push(v);
+        }
+      } else {
+        blocks.push({ type: 'stanza', text: v });
+      }
+    });
+    return blocks;
+  }
+
+  /** Port of se_first_line(): the hymn's opening words */
+  function seFirstLine(blocks) {
+    if (!blocks.length) return '';
+    const first = blocks[0].text !== undefined ? blocks[0].text : ((blocks[0].lines || [])[0] || '');
+    const text = first.replace(/\s+/gu, ' ');
+    const m = /^(.{12,70}?[!?.;:])(\s|$)/u.exec(text);
+    if (m) return phpRtrim(m[1], '.;:,');
+    const chars = Array.from(text);
+    if (chars.length <= 60) return phpRtrim(text, '.;:,');
+    const cut = chars.slice(0, 60);
+    const comma = cut.lastIndexOf(',');
+    if (comma !== -1 && comma >= 20) return cut.slice(0, comma).join('');
+    return phpRtrim(cut.join('')) + '…';
+  }
+
+  function el(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function chevron(d) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2.2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', d);
+    svg.appendChild(path);
+    return svg;
+  }
+
+  function pagerLink(n, dir) {
+    const a = el('a', 'se-pager-link se-pager-link--' + dir);
+    a.href = songUrl(n);
+    a.rel = dir;
+    const label = el('span', 'se-pager-text');
+    label.appendChild(el('small', '', dir === 'prev' ? (T.prev || '') : (T.next || '')));
+    label.appendChild(el('b', '', (T.hymn || '') + ' ' + n));
+    if (dir === 'prev') {
+      a.appendChild(chevron('M15 5l-7 7 7 7'));
+      a.appendChild(label);
+    } else {
+      a.appendChild(label);
+      a.appendChild(chevron('M9 5l7 7-7 7'));
+    }
+    return a;
+  }
+
+  async function loadHymns(lang) {
+    const url = SE_DATA.paths && SE_DATA.paths[lang];
+    if (!url) return [];
+    const res = await fetch(url, { credentials: 'same-origin' });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const list = await res.json();
+    return Array.isArray(list) ? list : [];
+  }
+
+  async function drawAskedHymn(askedSong, lang) {
+    const verses = $('#songContent .se-verses');
+    if (!song || !verses) return; // a page without a hymn: nothing to redraw
+
+    const [songsAf, songsEn] = await Promise.all([loadHymns('af'), loadHymns('en')]);
+    const songs = lang === 'en' ? songsEn : songsAf;
+    const altSongs = lang === 'en' ? songsAf : songsEn;
+    const find = (list, n) => list.find((s) => String(s.number) === String(n)) || null;
+
+    // Same choice as singemmanuel.php: this language, else the other, else the first hymn
+    let selected = askedSong ? find(songs, askedSong) : null;
+    let fallbackLang = '';
+    if (!selected && askedSong) {
+      selected = find(altSongs, askedSong);
+      if (selected) fallbackLang = lang === 'en' ? 'af' : 'en';
+    }
+    if (!selected && songs.length) selected = songs[0];
+    if (!selected) return;
+
+    const number = String(selected.number);
+    const songLang = fallbackLang || (lang === 'en' ? 'en' : 'af');
+    const blocks = seBlocks(selected.verses);
+    const firstLine = seFirstLine(blocks);
+    const hasNumbers = blocks.some((b) => b.type === 'verse');
+    const chorusLabel = songLang === 'en' ? 'Chorus' : 'Koor';
+
+    // Title and opening words
+    const title = $('#seTitle');
+    if (title) {
+      title.textContent = '';
+      title.appendChild(el('span', 'se-title-word', T.hymn || ''));
+      title.appendChild(el('span', 'se-title-num', number));
+    }
+    const first = $('.se-first-line');
+    if (first) {
+      first.textContent = firstLine !== '' ? firstLine : (T.praiseLord || '');
+      if (firstLine !== '') first.setAttribute('lang', songLang); else first.removeAttribute('lang');
+    }
+
+    // Song language buttons
+    document.querySelectorAll('.se-seg-btn').forEach((link) => {
+      const l = link.getAttribute('lang') === 'en' ? 'en' : 'af';
+      const on = l === 'en' ? lang === 'en' : lang !== 'en';
+      link.href = '/singemmanuel/singemmanuel.php?lang=' + l + '&song=' + encodeURIComponent(number);
+      link.classList.toggle('is-on', on);
+      if (on) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current');
+    });
+
+    // The hymn
+    song.setAttribute('lang', songLang);
+    song.setAttribute('data-song', number);
+    const oldNotice = $('.se-notice', song);
+    if (oldNotice) oldNotice.remove();
+    if (fallbackLang) {
+      // In the page's own language, like the rest of its words
+      const notice = el('p', 'se-notice');
+      notice.setAttribute('lang', SE_DATA.lang || lang);
+      const icon = document.createElementNS(SVG_NS, 'svg');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '2');
+      icon.setAttribute('stroke-linecap', 'round');
+      icon.setAttribute('aria-hidden', 'true');
+      const circle = document.createElementNS(SVG_NS, 'circle');
+      circle.setAttribute('cx', '12');
+      circle.setAttribute('cy', '12');
+      circle.setAttribute('r', '10');
+      const mark = document.createElementNS(SVG_NS, 'path');
+      mark.setAttribute('d', 'M12 8v4M12 16h.01');
+      icon.appendChild(circle);
+      icon.appendChild(mark);
+      notice.appendChild(icon);
+      notice.appendChild(el('span', '', lang === 'en' ? (T.notInEnglish || '') : (T.notInAfrikaans || '')));
+      song.insertBefore(notice, song.firstChild);
+    }
+
+    verses.className = 'se-verses' + (hasNumbers ? '' : ' se-verses--unnumbered');
+    verses.textContent = '';
+    blocks.forEach((b) => {
+      if (b.type === 'verse') {
+        const row = el('div', 'se-verse');
+        const num = el('span', 'se-verse-num', b.num);
+        num.setAttribute('aria-hidden', 'true');
+        const text = el('p', 'se-verse-text');
+        text.appendChild(el('span', 'se-sr', b.num + '. '));
+        text.appendChild(document.createTextNode(b.text));
+        row.appendChild(num);
+        row.appendChild(text);
+        verses.appendChild(row);
+      } else if (b.type === 'chorus') {
+        const box = el('div', 'se-chorus');
+        box.appendChild(el('span', 'se-chorus-label', chorusLabel));
+        b.lines.forEach((line) => box.appendChild(el('p', 'se-chorus-text', line)));
+        verses.appendChild(box);
+      } else {
+        const row = el('div', 'se-verse se-verse--plain');
+        row.appendChild(el('p', 'se-verse-text', b.text));
+        verses.appendChild(row);
+      }
+    });
+
+    // Previous / next through every number in the book (the picker has them all)
+    const numbers = grid ? Array.from(grid.querySelectorAll('.se-song-btn'), (b) => b.getAttribute('data-song')) : [];
+    const pos = numbers.indexOf(number);
+    const prev = pos > 0 ? numbers[pos - 1] : null;
+    const next = pos !== -1 && pos < numbers.length - 1 ? numbers[pos + 1] : null;
+    const oldPager = $('.se-pager');
+    let pager = null;
+    if (prev !== null || next !== null) {
+      pager = el('nav', 'se-pager');
+      pager.setAttribute('aria-label', T.hymn || '');
+      if (prev !== null) pager.appendChild(pagerLink(prev, 'prev'));
+      if (next !== null) pager.appendChild(pagerLink(next, 'next'));
+    }
+    if (oldPager && pager) oldPager.replaceWith(pager);
+    else if (oldPager) oldPager.remove();
+    else if (pager) $('#seMain').appendChild(pager);
+
+    // The picker marks this hymn
+    if (grid) {
+      grid.querySelectorAll('.se-song-btn').forEach((btn) => {
+        const isCurrent = btn.getAttribute('data-song') === number;
+        btn.classList.toggle('is-current', isCurrent);
+        if (isCurrent) btn.setAttribute('aria-current', 'true'); else btn.removeAttribute('aria-current');
+      });
+    }
+
+    // Organ (offices 0-8 only have it on the page): this hymn's music
+    const organ = $('#openPlayer');
+    if (organ) {
+      const midi = (SE_DATA.midi || {})[number];
+      organ.setAttribute('data-song', number);
+      organ.hidden = !midi;
+      const two = $('#playerChoice .se-verse-btn[data-verses="2"]');
+      if (two) two.hidden = midi !== 2;
+      const playerTitle = $('#playerTitle span');
+      if (playerTitle) playerTitle.textContent = (T.hymn || '') + ' ' + number;
+    }
+  }
+
+  // Online the server drew exactly what was asked; a saved copy differs
+  const askedSong = /^[0-9]+$/.test(query.get('song') || '') ? query.get('song') : '';
+  if (askedSong !== (SE_DATA.asked || '') || urlLang !== (SE_DATA.askedLang || '')) {
+    const lang = urlLang || SE_DATA.lang || 'af';
+    drawAskedHymn(askedSong, lang).catch((e) => {
+      if (window.console) console.error('Sing Emmanuel offline hymn:', e);
+    });
+  }
 })();

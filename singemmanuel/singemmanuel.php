@@ -15,6 +15,7 @@ declare(strict_types=1);
 header('Cache-Control: no-cache, must-revalidate');
 require_once __DIR__ . '/../security/auth_gate.php';
 require_once __DIR__ . '/../includes/languages.php';
+require_once __DIR__ . '/../includes/offline.php';
 
 // Language detection
 $lang = $_SESSION['language'] ?? 'af';
@@ -131,6 +132,10 @@ $songParam = null;
 if (isset($_GET['song']) && is_string($_GET['song']) && preg_match('/^[0-9]+$/', $_GET['song'])) {
     $songParam = $_GET['song'];
 }
+// What this page was asked for (singemmanuel.js compares it with the address:
+// the app's offline copy of this page then draws the hymn that was asked for)
+$askedSong = (string)($songParam ?? '');
+$askedLang = (isset($_GET['lang']) && in_array($_GET['lang'], SUPPORTED_LANGS, true)) ? $_GET['lang'] : '';
 
 $selectedSong = null;
 $languageFallback = false; // Flag for showing notice
@@ -172,6 +177,8 @@ $hasMidi = $selectedSong && is_file(__DIR__ . '/media/' . sprintf('%03d', (int)$
 $showPlayer = $canPlay && $hasMidi;
 // 'n R-lêer (bv. 002R.mid) bevat 2 verse; anders is net 1 vers beskikbaar.
 $hasTwoVerses = $showPlayer && is_file(__DIR__ . '/media/' . sprintf('%03d', (int)$selectedSong['number']) . 'R.mid');
+// Vir ampte 0-8 is die orrel altyd op die bladsy (versteek waar die lied geen
+// MIDI het nie), sodat die app se aflyn-kopie dit vir enige lied kan wys.
 
 // What to draw
 $songNumber = $selectedSong ? (string)$selectedSong['number'] : '';
@@ -254,9 +261,9 @@ $icons = [
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
           <span><?= se_e(t('search_song')) ?></span>
         </button>
-        <?php if ($showPlayer): ?>
+        <?php if ($canPlay): ?>
           <button type="button" class="se-btn se-btn--glass" id="openPlayer" aria-haspopup="dialog"
-                  data-song="<?= se_e($songNumber) ?>" title="<?= se_e(t('play_song')) ?>">
+                  data-song="<?= se_e($songNumber) ?>" title="<?= se_e(t('play_song')) ?>"<?= $showPlayer ? '' : ' hidden' ?>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#se-i-organ"/></svg>
             <span><?= se_e(t('play_song')) ?></span>
           </button>
@@ -265,7 +272,7 @@ $icons = [
     </div>
 
     <!-- The hymn -->
-    <article class="se-card se-song" id="songContent" data-size="2" aria-labelledby="seTitle"<?= $selectedSong ? ' lang="' . se_e($songLang) . '"' : '' ?>>
+    <article class="se-card se-song" id="songContent" data-size="2" aria-labelledby="seTitle" data-song="<?= se_e($songNumber) ?>"<?= $selectedSong ? ' lang="' . se_e($songLang) . '"' : '' ?>>
       <?php if ($languageFallback): ?>
         <p class="se-notice" lang="<?= se_e($lang) ?>">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
@@ -361,7 +368,7 @@ $icons = [
     </div>
   </div>
 
-  <?php if ($showPlayer): ?>
+  <?php if ($canPlay): ?>
   <!-- Orrel-speler -->
   <div id="playerOverlay" class="se-layer" hidden>
     <div class="se-sheet se-player" role="dialog" aria-modal="true" aria-labelledby="playerTitle" tabindex="-1">
@@ -379,9 +386,7 @@ $icons = [
         <p class="se-verse-choice-label" id="playerChoiceLabel"><?= se_e(t('player_verses_prompt')) ?></p>
         <div class="se-verse-choice-btns" role="group" aria-labelledby="playerChoiceLabel">
           <button type="button" class="se-verse-btn" data-verses="1"><b>1</b><span><?= se_e(t('player_1_verse')) ?></span></button>
-          <?php if ($hasTwoVerses): ?>
-            <button type="button" class="se-verse-btn" data-verses="2"><b>2</b><span><?= se_e(t('player_2_verses')) ?></span></button>
-          <?php endif; ?>
+          <button type="button" class="se-verse-btn" data-verses="2"<?= $hasTwoVerses ? '' : ' hidden' ?>><b>2</b><span><?= se_e(t('player_2_verses')) ?></span></button>
         </div>
       </div>
       <div class="se-player-body" id="playerBody" hidden>
@@ -401,8 +406,35 @@ $icons = [
   </div>
   <?php endif; ?>
 
+  <?php
+  // For the app's offline copy (singemmanuel.js): what this page was asked
+  // for, where the hymns are, which hymns have organ music, and the words
+  // it needs to draw another hymn without the server
+  $seData = [
+      'asked'     => $askedSong,
+      'askedLang' => $askedLang,
+      'song'      => $songNumber,
+      'lang'      => $lang,
+      'paths'     => [
+          'af' => oac_data_url('/singemmanuel/songs/sing_af.json'),
+          'en' => oac_data_url('/singemmanuel/songs/sing_en.json'),
+      ],
+      'midi'      => $canPlay ? (object)oac_midi_map() : new stdClass(),
+      'i18n'      => [
+          'hymn'              => t('hymn'),
+          'singEmmanuel'      => t('sing_emmanuel'),
+          'praiseLord'        => t('praise_lord_song'),
+          'prev'              => t('se_prev'),
+          'next'              => t('se_next'),
+          'notInEnglish'      => t('song_not_in_english'),
+          'notInAfrikaans'    => t('song_not_in_afrikaans'),
+          'notFound'          => t('song_not_found'),
+      ],
+  ];
+  ?>
+  <script type="application/json" id="seData"><?= json_encode($seData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '{}' ?></script>
   <script defer src="<?= se_asset('/singemmanuel/js/singemmanuel.js') ?>"></script>
-  <?php if ($showPlayer): ?>
+  <?php if ($canPlay): ?>
   <script defer src="<?= se_asset('/singemmanuel/js/se-player.js') ?>"></script>
   <?php endif; ?>
 
