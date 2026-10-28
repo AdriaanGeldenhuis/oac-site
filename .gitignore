@@ -19,3 +19,6 @@ data/*.db
 data/*.db-journal
 data/*.db-wal
 data/*.db-shm
+
+# Content hashes of the data files (includes/offline.php) - rebuilt on the server
+storage/cache/

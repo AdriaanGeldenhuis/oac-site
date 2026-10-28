@@ -1,0 +1,39 @@
+/* =====================================================================
+   Offline pill — shown by offline/js/offline.js while the phone has no
+   connection. Sits just under the global header, out of the way of the
+   back and notification buttons at the bottom.
+   ===================================================================== */
+
+.oac-offline-pill {
+  position: fixed;
+  top: calc(var(--ghf-height, 70px) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9990;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--ghf-bg-card, #171514);
+  border: 1px solid var(--ghf-border, rgba(232, 180, 168, 0.16));
+  color: var(--ghf-text, #f5ebe6);
+  font: 600 13px/1.2 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.oac-offline-pill[hidden] {
+  display: none;
+}
+
+.oac-offline-pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: #f5ba4a;
+  box-shadow: 0 0 8px rgba(245, 186, 74, 0.8);
+}
