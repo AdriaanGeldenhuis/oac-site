@@ -10,6 +10,9 @@
   var doc = document;
   var win = window;
 
+  // Tells the safety net in welcome.php's <head> that the page script runs
+  win.wcReady = true;
+
   var reduceMotion = !!(win.matchMedia && win.matchMedia('(prefers-reduced-motion: reduce)').matches);
   var finePointer = !!(win.matchMedia && win.matchMedia('(hover: hover) and (pointer: fine)').matches);
 
@@ -88,7 +91,13 @@
   }
 
   // ---------------------------------------------------------------------
-  // Reveal sections as they scroll into view
+  // Reveal sections as they scroll into view.
+  // threshold 0: a section is "in view" as soon as any of it is on screen.
+  // A share of the section (it was 6%) can never be on screen at once when
+  // the section is many screens tall — the opened teaching of the month is
+  // easily 20+ phone screens — and Chrome / Android's WebView only report
+  // isIntersecting once that share is reached, so the teaching stayed
+  // invisible for good on phones.
   // ---------------------------------------------------------------------
   function initReveal() {
     var els = doc.querySelectorAll('.wc-reveal');
@@ -101,12 +110,12 @@
 
     var io = new IntersectionObserver(function (entries) {
       for (var n = 0; n < entries.length; n++) {
-        if (entries[n].isIntersecting) {
+        if (entries[n].isIntersecting || entries[n].intersectionRatio > 0) {
           entries[n].target.classList.add('is-in');
           io.unobserve(entries[n].target);
         }
       }
-    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0 });
 
     for (i = 0; i < els.length; i++) { io.observe(els[i]); }
   }
