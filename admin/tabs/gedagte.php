@@ -63,8 +63,13 @@ $gdAi = dt_ai_ready();
       </div>
     </div>
 
-    <div class="admin-right">
+    <div class="admin-right gedagte-actions">
       <button type="button" class="admin-btn admin-btn-secondary" id="thoughtReset" hidden><?= esc(t('cancel')) ?></button>
+      <!-- Send now: today, this moment, whatever the date and time above say -->
+      <button type="button" class="admin-btn admin-btn-secondary" id="thoughtSendNow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        <span class="gedagte-send-label"><?= esc(t('gd_send_now')) ?></span>
+      </button>
       <button type="submit" class="admin-btn admin-btn-primary"><span class="gedagte-submit-label"><?= esc(t('save_thought')) ?></span></button>
     </div>
   </form>
@@ -87,6 +92,12 @@ $gdAi = dt_ai_ready();
       'savedMissing' => t('gd_saved_missing'),
       'saving' => t('gd_saving'),
       'saveLabel' => t('save_thought'),
+      'sendNow' => t('gd_send_now'),
+      'sending' => t('gd_sending'),
+      'sendNowConfirm' => t('gd_send_now_confirm'),
+      'sendNowReplace' => t('gd_send_now_replace'),
+      'sentNow' => t('gd_sent_now'),
+      'sentMissing' => t('gd_sent_missing'),
       'deleted' => t('thought_deleted'),
       'confirmDelete' => t('confirm_delete_thought'),
       'noUpcoming' => t('no_upcoming'),

@@ -5259,6 +5259,54 @@ define('UI_TRANSLATIONS', [
         'pt' => 'A guardar e a traduzir…',
         'st' => 'E a boloka le ho fetolela…'
     ],
+    'gd_send_now' => [
+        'af' => 'Stuur nou',
+        'en' => 'Send now',
+        'zu' => 'Thumela manje',
+        'xh' => 'Thumela ngoku',
+        'pt' => 'Enviar agora',
+        'st' => 'Romela hona joale'
+    ],
+    'gd_sending' => [
+        'af' => 'Stuur…',
+        'en' => 'Sending…',
+        'zu' => 'Kuyathunyelwa…',
+        'xh' => 'Kuyathunyelwa…',
+        'pt' => 'A enviar…',
+        'st' => 'E a romela…'
+    ],
+    'gd_send_now_confirm' => [
+        'af' => 'Stuur hierdie gedagte nou aan al die lede? Dit word vandag se gedagte.',
+        'en' => 'Send this thought to all members now? It becomes today\'s thought.',
+        'zu' => 'Thumela lo mcabango kuwo wonke amalungu manje? Uzoba umcabango wanamuhla.',
+        'xh' => 'Thumela le ngcinga kuwo onke amalungu ngoku? Iya kuba yingcinga yanamhlanje.',
+        'pt' => 'Enviar este pensamento a todos os membros agora? Passa a ser o pensamento de hoje.',
+        'st' => 'Romela mohopolo ona ho litho tsohle hona joale? O tla ba mohopolo oa kajeno.'
+    ],
+    'gd_send_now_replace' => [
+        'af' => 'Die gedagte wat reeds vir vandag gestel is, word vervang.',
+        'en' => 'The thought already set for today will be replaced.',
+        'zu' => 'Umcabango osuvele ubekelwe namuhla uzoshintshwa.',
+        'xh' => 'Ingcinga esele imiselwe namhlanje iya kutshintshwa.',
+        'pt' => 'O pensamento já marcado para hoje será substituído.',
+        'st' => 'Mohopolo o seng o behetsoe kajeno o tla nkeloa sebaka.'
+    ],
+    'gd_sent_now' => [
+        'af' => 'Gedagte gestuur!',
+        'en' => 'Thought sent!',
+        'zu' => 'Umcabango uthunyelwe!',
+        'xh' => 'Ingcinga ithunyelwe!',
+        'pt' => 'Pensamento enviado!',
+        'st' => 'Mohopolo o rometsoe!'
+    ],
+    'gd_sent_missing' => [
+        'af' => 'Gedagte gestuur, maar die vertaling het misluk vir: {langs}.',
+        'en' => 'Thought sent, but the translation failed for: {langs}.',
+        'zu' => 'Umcabango uthunyelwe, kodwa ukuhumusha kwehlulekile kulezi zilimi: {langs}.',
+        'xh' => 'Ingcinga ithunyelwe, kodwa ukuguqulela akuphumelelanga kwezi lwimi: {langs}.',
+        'pt' => 'Pensamento enviado, mas a tradução falhou para: {langs}.',
+        'st' => 'Mohopolo o rometsoe, empa phetolelo e hlolehile lipuong tsena: {langs}.'
+    ],
     'gd_saved_translated' => [
         'af' => 'Gedagte gestoor en in al die tale vertaal.',
         'en' => 'Thought saved and translated into every language.',

@@ -23,7 +23,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/languages.php';
 
 const DT_TZ = 'Africa/Johannesburg';
-const DT_MAX_CHARS = 2000;      // the longest thought an elder may write
+// The longest thought an elder may write: far more than a thought needs, only a
+// guard for the TEXT column (64 KB holds it even at 4 bytes per character)
+const DT_MAX_CHARS = 10000;
 const DT_MAX_AUTHOR = 255;
 const DT_PUSH_BYTES = 3000;     // push body; FCM allows 4096 bytes for all data fields together
 const DT_LINK = '/gedagtes/gedagtes.php';
@@ -279,6 +281,11 @@ function dt_ai_ready(): bool {
     return defined('OPENAI_API_KEY') && OPENAI_API_KEY !== '';
 }
 
+/** Seconds to wait for one AI answer: a long thought takes longer to write out */
+function dt_ai_timeout(string $content): int {
+    return min(120, 60 + intdiv(mb_strlen($content, 'UTF-8'), 100));
+}
+
 function dt_glossary(string $from, string $to): string {
     $lines = [];
     foreach (DT_GLOSSARY_KEYS as $key) {
@@ -361,7 +368,7 @@ function dt_ai_translate(string $content, string $author, string $from, array $t
             ];
         }
 
-        $answers = openai_chat_parallel($requests, 60);
+        $answers = openai_chat_parallel($requests, dt_ai_timeout($content));
         $failed = [];
         foreach ($targets as $lang) {
             $text = dt_ai_field($answers[$lang] ?? null, 'content');
@@ -406,7 +413,7 @@ function dt_ai_proofread(string $content, string $lang): ?string {
             ['role' => 'user', 'content' => json_encode(['content' => $content], JSON_UNESCAPED_UNICODE)],
         ],
         'extra' => ['response_format' => ['type' => 'json_object']],
-    ]], 60);
+    ]], dt_ai_timeout($content));
 
     $text = dt_ai_field($answers['proofread'] ?? null, 'content');
     if ($text === null) return null;

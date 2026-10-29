@@ -6,6 +6,11 @@ declare(strict_types=1);
  * Fields: content, author, lang (the language the thought is written in),
  * display_date (YYYY-MM-DD), display_time (HH:MM, empty = all day), and id
  * when an existing thought is being edited.
+ * send_now=1 ("Send now"): the date and time become this moment (South
+ * African time, the fields are ignored) and the thought goes out at once,
+ * also when it was sent before; today's thought, if any, is replaced. It is
+ * claimed as sent when it is written, so the crons leave it alone while it is
+ * still being translated.
  *
  * One thought per date: a new thought on a taken date replaces it, and an
  * edited thought moved to a taken date replaces the one there.
@@ -46,6 +51,12 @@ $author = dt_line(dt_post('author'));
 $thoughtLang = dt_lang(dt_post('lang'), 'af');
 $displayDate = trim(dt_post('display_date'));
 $displayTime = trim(dt_post('display_time'));
+$sendNow = dt_post('send_now') === '1';
+if ($sendNow) {
+    $now = dt_now();
+    $displayDate = $now->format('Y-m-d');
+    $displayTime = $now->format('H:i');
+}
 
 if ($content === '') {
     admin_api_fail('adm_err_invalid');
@@ -103,16 +114,17 @@ try {
         }
         // Already sent and still on its date: a correction, not a new thought
         $sent = ((string)$editing['display_date'] === $displayDate && (int)$editing['notification_sent'] === 1) ? 1 : 0;
+        if ($sendNow) $sent = 1; // claimed here, sent below (again, if it went out before)
         $update->execute([$content, $author !== '' ? $author : null, $thoughtLang, $hash, $displayDate, $timeFull, $sent, $userId, $thoughtId]);
     } elseif ($onDate !== null) {
         // A new thought on a taken date replaces it
         $thoughtId = $onDate;
-        $update->execute([$content, $author !== '' ? $author : null, $thoughtLang, $hash, $displayDate, $timeFull, 0, $userId, $thoughtId]);
+        $update->execute([$content, $author !== '' ? $author : null, $thoughtLang, $hash, $displayDate, $timeFull, $sendNow ? 1 : 0, $userId, $thoughtId]);
     } else {
         $pdo->prepare('
             INSERT INTO daily_thoughts (content, author, lang, source_hash, display_date, display_time, notification_sent, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, 0, ?)
-        ')->execute([$content, $author !== '' ? $author : null, $thoughtLang, $hash, $displayDate, $timeFull, $userId]);
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ')->execute([$content, $author !== '' ? $author : null, $thoughtLang, $hash, $displayDate, $timeFull, $sendNow ? 1 : 0, $userId]);
         $thoughtId = (int)$pdo->lastInsertId();
     }
 
@@ -143,10 +155,10 @@ try {
     error_log('Daily thought #' . $thoughtId . ' translate on save: ' . $e->getMessage());
 }
 
-// --- Notify now only when the display moment has already come today ---
+// --- Notify now only when the display moment has already come today (always for "Send now") ---
 $now = dt_now();
-$shouldNotify = $displayDate === $now->format('Y-m-d')
-    && ($timeFull === null || $timeFull <= $now->format('H:i:s'));
+$shouldNotify = $sendNow || ($displayDate === $now->format('Y-m-d')
+    && ($timeFull === null || $timeFull <= $now->format('H:i:s')));
 
 // Answer the browser before the FCM fan-out: with many members the pushes
 // take a while, and the thought is already saved.
@@ -160,10 +172,14 @@ if (function_exists('fastcgi_finish_request')) {
 
 if ($shouldNotify) {
     try {
-        // Claim it first, so the crons can never send it a second time meanwhile
-        $claim = $pdo->prepare('UPDATE daily_thoughts SET notification_sent = 1 WHERE id = ? AND notification_sent = 0');
-        $claim->execute([$thoughtId]);
-        if ($claim->rowCount() > 0) {
+        // Claim it first, so the crons can never send it a second time meanwhile ("Send now" was claimed on write)
+        $claimed = $sendNow;
+        if (!$claimed) {
+            $claim = $pdo->prepare('UPDATE daily_thoughts SET notification_sent = 1 WHERE id = ? AND notification_sent = 0');
+            $claim->execute([$thoughtId]);
+            $claimed = $claim->rowCount() > 0;
+        }
+        if ($claimed) {
             dt_send($pdo, $thoughtId, !$tried);
         }
     } catch (Throwable $e) {

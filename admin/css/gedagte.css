@@ -182,6 +182,11 @@
   margin-left: auto;
 }
 
+/* Cancel · Send now · Save: one row, or one under the other on a phone */
+.gedagte-actions {
+  flex-wrap: wrap;
+}
+
 .gedagte-btn--accent {
   color: var(--accent-ink);
   background: var(--accent-grad);
