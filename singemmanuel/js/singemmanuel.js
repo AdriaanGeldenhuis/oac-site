@@ -484,6 +484,9 @@
     if (title) {
       title.textContent = '';
       title.appendChild(el('span', 'se-title-word', T.hymn || ''));
+      // A space between, as in the server's markup: the hymn's name for
+      // screen readers is "Lied 12", not "Lied12"
+      title.appendChild(document.createTextNode(' '));
       title.appendChild(el('span', 'se-title-num', number));
     }
     const first = $('.se-first-line');
@@ -594,12 +597,17 @@
     }
   }
 
-  // Online the server drew exactly what was asked; a saved copy differs
+  // Online the server drew exactly what was asked; a saved copy differs.
+  // The page hides its hymn meanwhile (.se-redraw): shown again when drawn,
+  // or straight away when there is nothing to draw.
+  const showHymn = () => document.documentElement.classList.remove('se-redraw');
   const askedSong = /^[0-9]+$/.test(query.get('song') || '') ? query.get('song') : '';
   if (askedSong !== (SE_DATA.asked || '') || urlLang !== (SE_DATA.askedLang || '')) {
     const lang = urlLang || SE_DATA.lang || 'af';
     drawAskedHymn(askedSong, lang).catch((e) => {
       if (window.console) console.error('Sing Emmanuel offline hymn:', e);
-    });
+    }).then(showHymn);
+  } else {
+    showHymn();
   }
 })();

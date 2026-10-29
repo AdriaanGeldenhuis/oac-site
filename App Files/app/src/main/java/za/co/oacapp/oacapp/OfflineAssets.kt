@@ -19,6 +19,12 @@ import org.json.JSONObject
  * from the app: instant, no data used. Offline the app's copy is used
  * whatever the hash. Otherwise the server has a newer file, and the
  * request goes out as usual.
+ *
+ * Every answer from the app carries X-OAC-App-Copy: <the app's hash>. The
+ * page (bible.js) then need not keep a copy of its own, and when that hash
+ * is not the one asked for (offline, the server has a newer file) the
+ * answer is only lent: bible.js and the service worker never keep it under
+ * the newer version, or they would never fetch the real one.
  */
 class OfflineAssets(private val context: Context) {
 
@@ -48,9 +54,10 @@ class OfflineAssets(private val context: Context) {
     fun intercept(request: WebResourceRequest): WebResourceResponse? {
         if (!request.method.equals("GET", ignoreCase = true)) return null
         val url = request.url
-        if (url.scheme != "https" || url.host !in HOSTS) return null
+        if (url.scheme != "https" || url.host?.lowercase() !in HOSTS) return null
         val entry = entries[url.path ?: return null] ?: return null
-        if (url.getQueryParameter("v") != entry.version && isOnline()) return null
+        val lent = url.getQueryParameter("v") != entry.version
+        if (lent && isOnline()) return null
 
         return try {
             WebResourceResponse(
@@ -59,8 +66,9 @@ class OfflineAssets(private val context: Context) {
                 200,
                 "OK",
                 mapOf(
-                    "Cache-Control" to "public, max-age=2592000, immutable",
-                    "Content-Length" to entry.size.toString()
+                    "Cache-Control" to if (lent) "no-store" else "public, max-age=2592000, immutable",
+                    "Content-Length" to entry.size.toString(),
+                    APP_COPY_HEADER to entry.version
                 ),
                 context.assets.open(entry.asset)
             )
@@ -70,7 +78,8 @@ class OfflineAssets(private val context: Context) {
         }
     }
 
-    private fun isOnline(): Boolean {
+    /** A network that really reaches the internet (not one without data or behind a login page) */
+    fun isOnline(): Boolean {
         val cm = context.getSystemService(ConnectivityManager::class.java) ?: return true
         val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
@@ -79,6 +88,7 @@ class OfflineAssets(private val context: Context) {
     companion object {
         private const val TAG = "OfflineAssets"
         private const val MANIFEST = "offline/manifest.json"
+        private const val APP_COPY_HEADER = "X-OAC-App-Copy"
         val HOSTS = setOf("oacapp.co.za", "www.oacapp.co.za")
     }
 }

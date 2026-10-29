@@ -1456,6 +1456,17 @@ input {
   }
 }
 
+/* ===== OFFLINE COPY, OPENED FOR ANOTHER HYMN =====
+   The saved hymn stays out of sight until singemmanuel.js has drawn the one
+   the address asks for (see the script after #songContent) */
+.se-redraw .se-title,
+.se-redraw .se-first-line,
+.se-redraw .se-notice,
+.se-redraw .se-verses,
+.se-redraw .se-pager {
+  visibility: hidden;
+}
+
 /* ===== ACCESSIBILITY: reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

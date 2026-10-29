@@ -510,8 +510,12 @@
       
       const text = new TextDecoder("utf-8").decode(chunksAll);
       const data = JSON.parse(text);
-      
-      await saveToDB(cacheKey, data);
+
+      // Answered by the Android app from its own copy (OfflineAssets.kt): it
+      // always has it, so 5 MB need not be stored twice. Offline it may even
+      // be an older text lent for a newer ?v=, which must never be kept
+      // under that version.
+      if (!res.headers.get('X-OAC-App-Copy')) await saveToDB(cacheKey, data);
       
       return data;
       

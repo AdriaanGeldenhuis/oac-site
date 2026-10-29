@@ -29,10 +29,13 @@
         android:theme="@style/Theme.OAC"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <!-- configChanges: turning the phone, dark mode switching on at
+             sunset or a keyboard coming and going must not reload the page
+             (a hymn with the organ playing, a half-written note) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="orientation|screenSize"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode|keyboard|keyboardHidden"
             android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/Theme.OAC">
