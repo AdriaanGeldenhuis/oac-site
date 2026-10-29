@@ -5,30 +5,35 @@
  * to live in the web root so that its scope is the whole site.
  *
  *   Pages      /welcome.php, /bible/bible.php, /singemmanuel/singemmanuel.php
- *              network first; after 4 s, or offline, the last copy. Any
- *              ?song= / ?ref= gets the same shell; the page's JS draws the
- *              rest (singemmanuel.js draws the hymn from the hymn JSON).
+ *              network first; after 4 s, offline or on a server error, the
+ *              last copy. Any ?song= / ?ref= gets the same shell; the page's
+ *              JS draws the rest (singemmanuel.js draws the hymn from the
+ *              hymn JSON).
  *   Assets     the pages' CSS/JS/images and the hymn JSON: cache first by
  *              exact URL (?v= changes when the file changes).
- *   Data       the Bible's notes/highlights (bible/api/load_all.php) and the
- *              organ music (offices 0-8): last copy when offline.
+ *   Data       the Bible's notes/highlights (bible/api/load_all.php),
+ *              Welcome's "Up next" (calendar/api/list.php as welcome.js asks
+ *              for it) and the organ music (offices 0-8): last copy when
+ *              offline.
  *   Bible JSON not touched: the app carries it (OfflineAssets.kt) and
  *              bible.js keeps it in IndexedDB.
  *
  * Pages ask for 'oac-warm' on every load; at most every 10 minutes this
  * fetches /offline/api/manifest.php and fills in whatever is missing, so
  * everything is on the phone before the member ever needs it offline.
- * Logout removes the member's own pages, data and organ music.
+ *
+ * The pages are the member's own (name, office, language, the Bible's
+ * session key), so they leave the phone with the member's data and organ
+ * music: at logout, and whenever the server shows the login page.
  *
  * POSTs and the other APIs are never touched.
  */
 'use strict';
 
 const STATIC = 'oac-static-v1'; // CSS/JS/images/fonts, hymn JSON, the offline page
-const PAGES = 'oac-pages-v1';   // Bible + Sing Emmanuel shells (nothing personal)
-const USER = 'oac-user-v1';     // welcome page + Bible notes (removed at logout)
+const USER = 'oac-user-v1';     // the three pages, Bible notes, Up next (removed at logout)
 const MIDI = 'oac-midi-v1';     // organ music, offices 0-8 (removed at logout)
-const OUR_CACHES = [STATIC, PAGES, USER, MIDI];
+const OUR_CACHES = [STATIC, USER, MIDI]; // any other oac-* cache (oac-pages-v1) goes
 
 const OFFLINE_PAGE = '/offline/index.html';
 const META_KEY = '/__oac/offline-meta';
@@ -38,14 +43,25 @@ const WARM_EVERY = 10 * 60 * 1000;
 // Pages that work offline, and the cache that keeps each one's last copy
 const SHELLS = {
   '/welcome.php': USER,
-  '/bible/bible.php': PAGES,
-  '/singemmanuel/singemmanuel.php': PAGES,
+  '/bible/bible.php': USER,
+  '/singemmanuel/singemmanuel.php': USER,
 };
 
 // Member data shown offline
 const USER_DATA = {
   '/bible/api/load_all.php': USER,
 };
+
+// Welcome's "Up next": what is still to come, from whatever day the list was
+// last asked for (welcome.js leaves out what has passed). One key for it, as
+// its ?from= is a new date every day. The calendar page asks with ?to=.
+const UP_NEXT_PATH = '/calendar/api/list.php';
+const UP_NEXT_TYPES = 'event,visit,appointment';
+const UP_NEXT_KEY = UP_NEXT_PATH + '?types=' + UP_NEXT_TYPES;
+
+// Set by the Android app (OfflineAssets.kt) on the Bible / hymn JSON it
+// answers from its own copy: that copy's version
+const APP_COPY_HEADER = 'X-OAC-App-Copy';
 
 const STATIC_EXT = /\.(?:css|js|svg|png|webp|jpe?g|gif|ico|ttf|woff2?)$/i;
 const STATIC_DIRS = ['/header_footer/', '/assets/', '/offline/', '/welcome/', '/bible/', '/singemmanuel/'];
@@ -68,6 +84,8 @@ self.addEventListener('activate', (event) => {
     await Promise.all(names
       .filter((n) => n.startsWith('oac-') && !OUR_CACHES.includes(n))
       .map((n) => caches.delete(n)));
+    // A new worker may keep things the old one did not: warm up on the next page
+    await (await caches.open(STATIC)).delete(META_KEY);
     await self.clients.claim();
   })());
 });
@@ -93,6 +111,15 @@ self.addEventListener('fetch', (event) => {
       event.respondWith(forgetMember().then(() => fetch(req)).catch(() => offlinePage()));
       return;
     }
+    if (path === '/login.php') {
+      // The login page: nobody is signed in here (any more, e.g. the session
+      // ran out). The last member's pages and notes go, as at logout.
+      event.respondWith(fetch(req).then(async (res) => {
+        if (isPage(res)) await forgetMember().catch(() => {});
+        return res;
+      }, () => offlinePage()));
+      return;
+    }
     if (SHELLS[path]) {
       event.respondWith(networkFirst(event, req, path, SHELLS[path], isPage));
       return;
@@ -112,6 +139,10 @@ self.addEventListener('fetch', (event) => {
 
   if (USER_DATA[path]) {
     event.respondWith(networkFirst(event, req, path, USER_DATA[path], isJson));
+    return;
+  }
+  if (path === UP_NEXT_PATH && url.searchParams.get('types') === UP_NEXT_TYPES && !url.searchParams.has('to')) {
+    event.respondWith(networkFirst(event, req, UP_NEXT_KEY, USER, isJson));
     return;
   }
   if (path === MIDI_PATH) {
@@ -147,9 +178,9 @@ function isMidi(res) {
 }
 
 /**
- * Network first. Slow (4 s) or no connection: the copy kept under `key`;
- * the network answer still updates that copy when it arrives.
- * cacheName null = only read (/ and /index.php show the welcome copy).
+ * Network first. Slow (4 s), no connection or a server error (5xx): the copy
+ * kept under `key`; the network answer still updates that copy when it
+ * arrives. cacheName null = only read (/ and /index.php show the welcome copy).
  */
 function networkFirst(event, req, key, cacheName, isGood) {
   const network = fetch(req).then(async (res) => {
@@ -168,10 +199,11 @@ function networkFirst(event, req, key, cacheName, isGood) {
     } catch (e) {
       outcome = 'failed';
     }
-    if (outcome !== 'timeout' && outcome !== 'failed') return outcome;
+    if (outcome !== 'timeout' && outcome !== 'failed' && outcome.status < 500) return outcome;
 
     const kept = await caches.match(key);
     if (kept) return fresh(kept);
+    if (outcome instanceof Response) return outcome; // the server's error, and nothing kept
     if (outcome === 'timeout') {
       try { return await network; } catch (e) { /* offline after all */ }
     }
@@ -234,6 +266,10 @@ async function staleWhileRevalidate(event, req) {
 /** Keep a versioned asset and drop its older versions */
 async function putAsset(cache, href, res) {
   const url = new URL(href);
+  // The app's own copy, lent while offline because the server has a newer
+  // one: kept under that newer ?v= it would hide the real file for good
+  const appCopy = res.headers.get(APP_COPY_HEADER);
+  if (appCopy && appCopy !== url.searchParams.get('v')) return;
   if (url.searchParams.has('v')) {
     const same = await cache.keys(url.origin + url.pathname, { ignoreSearch: true });
     await Promise.all(same
@@ -331,9 +367,9 @@ async function warm() {
       if (isGood(r)) await cache.put(u, r);
     }
   };
-  await keep(PAGES, m.pages || [], isPage);
-  await keep(USER, (m.user || []).filter((u) => SHELLS[u]), isPage);
-  await keep(USER, (m.user || []).filter((u) => USER_DATA[u]), isJson);
+  const own = (m.pages || []).concat(m.user || []);
+  await keep(USER, own.filter((u) => SHELLS[u]), isPage);
+  await keep(USER, own.filter((u) => USER_DATA[u]), isJson);
 
   // Organ music: only for offices 0-8 (the server decides); otherwise none
   if (!Array.isArray(m.midi)) {

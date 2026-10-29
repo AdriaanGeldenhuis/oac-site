@@ -14,6 +14,7 @@ require_once __DIR__ . '/../../security/auth_gate.php';
 require_once __DIR__ . '/../../includes/offline.php';
 
 $userId = (int)$_SESSION['user_id'];
+$lang = (string)($_SESSION['language'] ?? '');
 session_write_close();
 
 header('Content-Type: application/json; charset=utf-8');
@@ -27,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    $manifest = oac_offline_manifest($pdo, $userId);
+    $manifest = oac_offline_manifest($pdo, $userId, $lang);
     echo json_encode(['success' => true] + $manifest, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('Offline manifest failed: ' . $e->getMessage());

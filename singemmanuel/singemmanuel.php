@@ -272,7 +272,7 @@ $icons = [
     </div>
 
     <!-- The hymn -->
-    <article class="se-card se-song" id="songContent" data-size="2" aria-labelledby="seTitle" data-song="<?= se_e($songNumber) ?>"<?= $selectedSong ? ' lang="' . se_e($songLang) . '"' : '' ?>>
+    <article class="se-card se-song" id="songContent" data-size="2" aria-labelledby="seTitle" data-song="<?= se_e($songNumber) ?>" data-asked="<?= se_e($askedSong) ?>" data-asked-lang="<?= se_e($askedLang) ?>"<?= $selectedSong ? ' lang="' . se_e($songLang) . '"' : '' ?>>
       <?php if ($languageFallback): ?>
         <p class="se-notice" lang="<?= se_e($lang) ?>">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
@@ -318,6 +318,19 @@ $icons = [
     <script>
       // Text size before the first paint, so the hymn does not jump
       try { var seSize = localStorage.getItem('se_text_size'); if (/^[0-4]$/.test(seSize || '')) document.getElementById('songContent').setAttribute('data-size', seSize); } catch (e) {}
+      // The app's offline copy of this page, opened for another hymn or
+      // language than it was made for: show no hymn until singemmanuel.js has
+      // drawn the one asked for (it lifts this at once when there is nothing
+      // to draw; 3 s at the very most)
+      try {
+        var seQ = new URLSearchParams(window.location.search);
+        var seArt = document.getElementById('songContent');
+        var seAsked = /^[0-9]+$/.test(seQ.get('song') || '') ? seQ.get('song') : '';
+        if (seAsked !== seArt.getAttribute('data-asked') || (seQ.get('lang') || '') !== seArt.getAttribute('data-asked-lang')) {
+          document.documentElement.classList.add('se-redraw');
+          setTimeout(function () { document.documentElement.classList.remove('se-redraw'); }, 3000);
+        }
+      } catch (e) {}
     </script>
 
     <?php if ($prevSong !== null || $nextSong !== null): ?>

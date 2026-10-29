@@ -14,7 +14,9 @@
  * file time: every deploy gives every file a new mtime, and that used to
  * re-download ~10 MB of Bible. The Android app carries the same files and
  * compares this hash to know its own copy is current (App Files/app/
- * build.gradle.kts computes it the same way: md5, first 12 hex chars).
+ * build.gradle.kts computes it the same way: md5 of the text with LF line
+ * endings, first 12 hex chars - so a copy uploaded from Windows with CRLF
+ * still counts as the same text).
  */
 declare(strict_types=1);
 
@@ -26,7 +28,8 @@ define('OAC_DATA_VERSION_CACHE', OAC_WEB_ROOT . '/storage/cache/data_versions.js
 
 // Bump when the manifest's shape or the service worker's needs change, so
 // every phone fetches its offline copy again
-define('OAC_OFFLINE_SCHEMA', '1');
+// 2: the Bible and Sing Emmanuel pages are the member's own (cache "user")
+define('OAC_OFFLINE_SCHEMA', '2');
 
 /** Cache-bust by file time (same format as bible_asset() / se_asset()) */
 function oac_asset(string $webPath): string {
@@ -34,7 +37,7 @@ function oac_asset(string $webPath): string {
     return $webPath . '?v=' . ($mtime ?: '1');
 }
 
-/** Content version of a data file: md5, first 12 hex chars, cached per size + mtime */
+/** Content version of a data file: md5 of its LF text, first 12 hex chars, cached per size + mtime */
 function oac_data_version(string $webPath): string {
     static $cache = null;
 
@@ -44,7 +47,8 @@ function oac_data_version(string $webPath): string {
     if ($size === false || $mtime === false) {
         return '1';
     }
-    $stamp = $size . ':' . $mtime;
+    // "lf:" - hashes from before line endings were evened out are not reused
+    $stamp = 'lf:' . $size . ':' . $mtime;
 
     if ($cache === null) {
         $cache = [];
@@ -60,11 +64,12 @@ function oac_data_version(string $webPath): string {
         return (string)$cache[$webPath]['v'];
     }
 
-    $hash = @md5_file($abs);
-    if ($hash === false) {
+    $raw = @file_get_contents($abs);
+    if ($raw === false) {
         return (string)$mtime;
     }
-    $version = substr($hash, 0, 12);
+    $version = substr(md5(str_replace("\r\n", "\n", $raw)), 0, 12);
+    unset($raw);
     $cache[$webPath] = ['s' => $stamp, 'v' => $version];
 
     // Best effort: without a writable storage/cache the hash is simply
@@ -131,8 +136,11 @@ function oac_midi_map(): array {
  *
  * The Bible JSON is left out on purpose: the app carries it, and bible.js
  * keeps its own copy in IndexedDB - 10 MB need not be stored a third time.
+ *
+ * $lang is the member's language: the pages are in it, so a new language
+ * makes every phone fetch them again.
  */
-function oac_offline_manifest(PDO $pdo, int $userId): array {
+function oac_offline_manifest(PDO $pdo, int $userId, string $lang = ''): array {
     $static = [
         oac_asset('/header_footer/css/header.css'),
         oac_asset('/header_footer/js/header.js'),
@@ -160,15 +168,15 @@ function oac_offline_manifest(PDO $pdo, int $userId): array {
         'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Parisienne&display=swap',
     ];
 
-    // Page shells (network-first in the service worker; no personal data, so
-    // they stay after logout) and the member's own pages and data, which
-    // logout removes from the phone
-    $pages = [
-        '/bible/bible.php',
-        '/singemmanuel/singemmanuel.php',
-    ];
+    // The pages (network-first in the service worker) and the member's data.
+    // All of it is the member's own - the name on Welcome, the office's organ
+    // on Sing Emmanuel, the Bible's session key - so logout removes it from
+    // the phone. "pages" stays in the answer, empty, for older workers.
+    $pages = [];
     $user = [
         '/welcome.php',
+        '/bible/bible.php',
+        '/singemmanuel/singemmanuel.php',
         '/bible/api/load_all.php',
     ];
 
@@ -184,7 +192,7 @@ function oac_offline_manifest(PDO $pdo, int $userId): array {
         }
     }
 
-    $version = sha1(json_encode([OAC_OFFLINE_SCHEMA, $userId, $canPlay, $static, $fonts, $pages, $user, $midi]));
+    $version = sha1(json_encode([OAC_OFFLINE_SCHEMA, $userId, $lang, $canPlay, $static, $fonts, $pages, $user, $midi]));
 
     return [
         'version' => $version,

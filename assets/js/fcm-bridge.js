@@ -97,6 +97,14 @@ const FCMBridge = {
         // Small delay to ensure native side is ready
         await new Promise(resolve => setTimeout(resolve, 1000));
 
+        // Offline (the app's offline copy of a page): the token cannot be
+        // registered now, and asking for it makes the page wait. The next
+        // page opened online does it.
+        if (navigator.onLine === false) {
+            console.log('FCM Bridge: offline, skipping');
+            return;
+        }
+
         // Get and register token.
         // Always register (cheap POST): the server maps token -> logged-in user,
         // so this keeps the mapping correct after logout/login or a user switch

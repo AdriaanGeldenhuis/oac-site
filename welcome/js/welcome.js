@@ -638,8 +638,9 @@
 
   // ---------------------------------------------------------------------
   // Offline copy: the app may show this page as it was saved hours ago
-  // (sw.js). Greeting, date line and sky tint then follow the phone's clock
-  // in South African time (UTC+2, no daylight saving), like the server's.
+  // (sw.js). Greeting, date line, sky tint and what Up next counts as past
+  // then follow the phone's clock in South African time (UTC+2, no
+  // daylight saving), like the server's.
   // ---------------------------------------------------------------------
   function pad2(n) {
     return (n < 10 ? '0' : '') + n;
@@ -658,6 +659,9 @@
     var h = sa.getUTCHours();
     var tod = h < 12 ? 'morning' : (h < 18 ? 'afternoon' : 'evening');
     var today = sa.getUTCFullYear() + '-' + pad2(sa.getUTCMonth() + 1) + '-' + pad2(sa.getUTCDate());
+    // Up next leaves out what has passed by this clock (its list may be the
+    // offline copy too)
+    data.now = today + ' ' + pad2(h) + ':' + pad2(sa.getUTCMinutes());
     if (today === data.today && tod === data.tod) { return; }
 
     var greetings = T.greetings || {};
