@@ -6,6 +6,8 @@
  * One thought per date: a new thought on a taken date replaces it; "Edit"
  * loads a thought back into the form and saves it under its own id, so
  * changing its date moves it instead of leaving a copy behind.
+ * "Send now" saves it as today's thought and sends it at once, whatever the
+ * date and time fields say.
  */
 (function () {
   'use strict';
@@ -26,6 +28,8 @@
   const resetBtn = document.getElementById('thoughtReset');
   const submitBtn = form.querySelector('button[type="submit"]');
   const submitLabel = form.querySelector('.gedagte-submit-label');
+  const sendBtn = document.getElementById('thoughtSendNow');
+  const sendLabel = form.querySelector('.gedagte-send-label');
   const checkBtn = document.getElementById('thoughtCheck');
   const suggestEl = document.getElementById('thoughtSuggest');
   const suggestText = document.getElementById('thoughtSuggestText');
@@ -103,9 +107,13 @@
     else countEl.textContent = left <= 200 ? fill(L.charsLeft, { n: left }) : '';
   }
 
-  function setSaving(on) {
-    busy(submitBtn, on);
-    if (submitLabel) submitLabel.textContent = on && L.ai ? (L.saving || L.saveLabel) : L.saveLabel;
+  /** Busy on the button that was pressed, the other one off meanwhile */
+  function setSaving(on, now) {
+    busy(now ? sendBtn : submitBtn, on);
+    const other = now ? submitBtn : sendBtn;
+    if (other) other.disabled = on;
+    if (submitLabel) submitLabel.textContent = on && !now && L.ai ? (L.saving || L.saveLabel) : L.saveLabel;
+    if (sendLabel) sendLabel.textContent = on && now ? (L.sending || L.sendNow) : L.sendNow;
   }
 
   function editThought(t) {
@@ -405,32 +413,41 @@
     }
   }
 
-  // ===== SAVE =====
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
+  // ===== SAVE / SEND NOW =====
+  /** Is the form ready to go? Focuses what is missing. "Send now" needs no date. */
+  function ready(needDate) {
     const text = contentEl.value.trim();
     if (!text) {
       contentEl.focus();
-      return;
+      return false;
     }
     if (length(text) > MAX) {
       OACUI.toast(fill(L.tooLong, { n: MAX }), 'error');
       contentEl.focus();
-      return;
+      return false;
     }
-    if (!dateEl.value) {
+    if (needDate && !dateEl.value) {
       dateEl.focus();
-      return;
+      return false;
     }
+    return true;
+  }
 
-    setSaving(true);
-    const data = await OACUI.post('/admin/api/gedagte/save.php', new URLSearchParams(new FormData(form)));
-    setSaving(false);
+  async function save(now) {
+    const body = new URLSearchParams(new FormData(form));
+    if (now) body.set('send_now', '1');
+
+    setSaving(true, now);
+    const data = await OACUI.post('/admin/api/gedagte/save.php', body);
+    setSaving(false, now);
 
     if (data.success) {
       const missing = data.missing || [];
       if (data.ai && missing.length) {
-        OACUI.toast(fill(L.savedMissing, { langs: missing.map((c) => NAMES[c] || c).join(', ') }), 'error', 8000);
+        const langs = missing.map((c) => NAMES[c] || c).join(', ');
+        OACUI.toast(fill(now ? L.sentMissing : L.savedMissing, { langs: langs }), 'error', 8000);
+      } else if (now) {
+        OACUI.toast(L.sentNow || '', 'success');
       } else {
         OACUI.toast((data.ai ? L.savedTranslated : L.saved) || '', 'success');
       }
@@ -440,7 +457,23 @@
     } else {
       OACUI.toast(data.error || '', 'error');
     }
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (ready(true)) save(false);
   });
+
+  if (sendBtn) {
+    sendBtn.addEventListener('click', async function () {
+      if (!ready(false)) return;
+      // One thought per date: another one already on today gives way to this one
+      const today = todayISO();
+      const taken = state.thoughts.some((t) => t.display_date === today && String(t.id) !== idEl.value);
+      const sure = await OACUI.confirm((L.sendNowConfirm || '') + (taken ? ' ' + (L.sendNowReplace || '') : ''), { okText: L.sendNow });
+      if (sure) save(true);
+    });
+  }
 
   resetBtn.addEventListener('click', resetForm);
   contentEl.addEventListener('input', () => {
