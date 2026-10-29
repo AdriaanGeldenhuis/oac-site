@@ -93,7 +93,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            // The status bar draws only the icon's shape: the full-colour
+            // launcher icon would be a plain blob, the church is recognisable
+            .setSmallIcon(R.drawable.baseline_church_24)
             .setContentTitle(title)
             .setContentText(body)
             // Expandable so long bodies (e.g. the daily thought) are fully readable

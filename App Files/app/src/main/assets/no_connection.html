@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>OAC — Geen internet / No internet</title>
   <!--
-    Shown by MainActivity when a page of the site cannot load at all and
-    the site's offline copy (its service worker) is not on this phone yet:
-    the first start, or before the first login. ?u= is the address that
-    failed; "Probeer weer" tries it again.
+    Shown by MainActivity when a page of the site cannot load for want of
+    a connection, and the site's offline copy (its service worker) does not
+    cover it: the first start, before the first login, or a page that needs
+    the server while the phone has no data. ?u= is the address that failed;
+    "Probeer weer" tries it again. The links below open the pages that work
+    offline once a member has signed in (from the phone's own copy).
   -->
   <style>
     :root {
@@ -46,6 +48,24 @@
     h1 { margin: 0 0 6px; font-size: 1.45rem; font-weight: 650; }
     p { margin: 0 0 14px; color: var(--muted); }
     p[lang="en"] { font-size: 0.92em; opacity: 0.85; margin-bottom: 22px; }
+    .hint { margin: 26px 0 10px; font-size: 0.92rem; }
+    .hint span { display: block; font-size: 0.92em; opacity: 0.85; }
+    nav { display: grid; gap: 10px; }
+    .go {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      min-height: 52px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      text-align: left;
+    }
+    .go small { display: block; font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+    .go::after { content: '\203A'; font-size: 1.4rem; color: var(--accent); line-height: 1; }
+    .go:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
     .retry {
       width: 100%;
       min-height: 52px;
@@ -66,9 +86,17 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l20 20"/><path d="M8.5 16.5a5 5 0 017 0"/><path d="M2 8.82a15 15 0 014.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="M16.85 11.25a10 10 0 012.22 1.68"/><path d="M5 13a10 10 0 015.24-2.76"/><path d="M12 20h.01"/></svg>
     </div>
     <h1>Geen internet nie</h1>
-    <p>Koppel aan die internet om aan te meld. Daarna werk Welkom, die Bybel en Sing Emmanuel ook sonder internet.</p>
-    <p lang="en">No internet. Connect to sign in; after that Welcome, the Bible and Sing Emmanuel also work offline.</p>
+    <p>Hierdie bladsy het internet nodig. Kyk of jy data of wifi het, en probeer weer.</p>
+    <p lang="en">No internet. This page needs a connection: check your data or Wi-Fi and try again.</p>
     <button type="button" class="retry" id="retry">Probeer weer · Try again</button>
+
+    <p class="hint">Reeds aangemeld op hierdie foon? Dié werk sonder internet:
+      <span lang="en">Signed in on this phone before? These work offline:</span></p>
+    <nav aria-label="Aflyn / Offline">
+      <a class="go" href="https://oacapp.co.za/welcome.php"><span>Welkom<small lang="en">Welcome</small></span></a>
+      <a class="go" href="https://oacapp.co.za/bible/bible.php"><span>Bybel<small lang="en">Bible</small></span></a>
+      <a class="go" href="https://oacapp.co.za/singemmanuel/singemmanuel.php"><span>Sing Emmanuel<small lang="en">Hymns</small></span></a>
+    </nav>
   </main>
   <script>
     (function () {

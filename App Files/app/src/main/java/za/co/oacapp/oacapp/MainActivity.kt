@@ -32,6 +32,7 @@ import androidx.webkit.WebViewFeature
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.messaging.FirebaseMessaging
 import za.co.oacapp.oacapp.MyFirebaseMessagingService.Companion.EXTRA_NOTIFICATION_LINK
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -67,7 +68,9 @@ class MainActivity : ComponentActivity() {
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
-        webView.settings.allowFileAccess = true
+        // No page needs the phone's files: uploads go through the file
+        // chooser, and our own pages in file:///android_asset load anyway
+        webView.settings.allowFileAccess = false
         webView.settings.allowContentAccess = true
 
         // The Bible and the hymn book inside the app (see OfflineAssets). The
@@ -87,8 +90,10 @@ class MainActivity : ComponentActivity() {
             @JavascriptInterface
             fun getFcmToken(): String {
                 return try {
+                    // The page waits for this answer: never longer than a few
+                    // seconds (without internet a new token may never come)
                     val task = FirebaseMessaging.getInstance().token
-                    val token = Tasks.await(task)
+                    val token = Tasks.await(task, FCM_TOKEN_WAIT_SECONDS, TimeUnit.SECONDS)
                     Log.d("MainActivity", "FCM Token: $token")
                     token
                 } catch (e: Exception) {
@@ -155,37 +160,40 @@ class MainActivity : ComponentActivity() {
         }
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if (url == null) return true
-                val scheme = Uri.parse(url).scheme?.lowercase()
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val uri = request?.url ?: return true
+                val scheme = uri.scheme?.lowercase()
                 if (scheme == "http" || scheme == "https") {
-                    view?.loadUrl(url)
-                    return true
+                    // Our own site stays in the app, and the WebView follows
+                    // its redirects itself: one history entry per page, so
+                    // Back never lands on an address that only redirects
+                    if (uri.host?.lowercase() in OfflineAssets.HOSTS || !request.isForMainFrame) return false
+                    // Anyone else's site (a link in a teaching or on the
+                    // privacy page) opens in the phone's browser: the app has
+                    // no address bar to leave it by. No browser: show it here.
+                    return openOutside(uri)
                 }
                 // Phone, e-mail, SMS, WhatsApp and map links (e.g. in the
                 // teaching of the month) belong to other apps; the WebView
                 // itself can only show an "unknown URL scheme" error for them
-                if (scheme != null && scheme in setOf("tel", "mailto", "sms", "whatsapp", "geo")) {
-                    try {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                    } catch (e: Exception) {
-                        Log.w("MainActivity", "No app to open $url", e)
-                    }
-                }
+                if (scheme != null && scheme in OUTSIDE_SCHEMES) openOutside(uri)
                 return true
             }
 
             override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? =
                 request?.let { offlineAssets.intercept(it) }
 
-            // A page of ours could not load at all: no connection, and the
-            // site's offline copy is not on this phone yet (first start, or
-            // before the first login). Show our own page instead of the
-            // WebView's error; it offers to try that address again.
+            // A page of ours could not load at all for want of a connection
+            // (no internet, no data left, the site out of reach), and the
+            // site's offline copy does not cover it. Show our own page instead
+            // of the WebView's error; it offers to try that address again.
+            // Other errors (Back to a page that was a sent form, a redirect
+            // loop) are not about the connection: the WebView says those.
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 super.onReceivedError(view, request, error)
                 if (request == null || !request.isForMainFrame) return
-                if (request.url.host !in OfflineAssets.HOSTS) return
+                if (request.url.host?.lowercase() !in OfflineAssets.HOSTS) return
+                if (error != null && error.errorCode !in CONNECTION_ERRORS && offlineAssets.isOnline()) return
                 view?.loadUrl(NO_CONNECTION_PAGE + "?u=" + Uri.encode(request.url.toString()))
             }
         }
@@ -222,20 +230,27 @@ class MainActivity : ComponentActivity() {
                     if (webView.canGoBackOrForward(-2)) {
                         webView.goBackOrForward(-2)
                     } else {
-                        isEnabled = false
-                        onBackPressedDispatcher.onBackPressed()
+                        leaveApp()
                     }
                     return
                 }
                 if (webView.canGoBack()) {
                     webView.goBack()
-                } else if (webView.url != baseUrl) {
+                } else if (!isStartPage(webView.url)) {
                     webView.loadUrl(baseUrl)
                 } else {
-                    // Already on home page — let the system exit the app
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
+                    // Already on the home (or login) page — let the system exit the app
+                    leaveApp()
                 }
+            }
+
+            // The system's own Back: closes the app, or on Android 12+ only
+            // moves it to the background. The app then lives on, so this
+            // callback must be on again for the next Back.
+            private fun leaveApp() {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
             }
         })
 
@@ -298,8 +313,38 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Open a link in the app that handles it (browser, phone, mail, ...); false when there is none */
+    private fun openOutside(uri: Uri): Boolean = try {
+        startActivity(Intent(Intent.ACTION_VIEW, uri))
+        true
+    } catch (e: Exception) {
+        Log.w("MainActivity", "No app to open $uri", e)
+        false
+    }
+
+    /**
+     * Where Back closes the app: the home page (/ only redirects to
+     * /welcome.php, so that is where the app really is) and the login page,
+     * which / redirects to when nobody is signed in
+     */
+    private fun isStartPage(url: String?): Boolean {
+        val uri = url?.let { Uri.parse(it) } ?: return true
+        if (uri.host?.lowercase() !in OfflineAssets.HOSTS) return false
+        return uri.path.orEmpty().ifEmpty { "/" } in START_PATHS
+    }
+
     companion object {
         private const val NO_CONNECTION_PAGE = "file:///android_asset/no_connection.html"
+        private const val FCM_TOKEN_WAIT_SECONDS = 5L
+        private val START_PATHS = setOf("/", "/index.php", "/welcome.php", "/login.php")
+        private val OUTSIDE_SCHEMES = setOf("tel", "mailto", "sms", "whatsapp", "geo")
+        // The WebView's errors that mean the site could not be reached
+        private val CONNECTION_ERRORS = setOf(
+            WebViewClient.ERROR_HOST_LOOKUP,
+            WebViewClient.ERROR_CONNECT,
+            WebViewClient.ERROR_TIMEOUT,
+            WebViewClient.ERROR_IO
+        )
     }
 
     private fun askNotificationPermission() {
