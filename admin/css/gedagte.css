@@ -1,245 +1,134 @@
 /* =====================================================================
-   Daily thought tab — amethyst. Fields, buttons and cards come from
-   admin.css; this file only has the thought list.
+   Daily thought tab — the writing card, the spelling suggestion, and the
+   list gedagte.js draws (date, status, the thought in each language,
+   translation editor). Cards, buttons and fields come from bestuur.css.
    ===================================================================== */
 
+.gedagte-compose {
+  margin-bottom: 4px;
+}
+
 .gedagte-textarea {
-  min-height: 200px;
-  font-family: var(--font-serif);
-  font-size: 1.2rem;
-  line-height: 1.6;
+  min-height: 170px;
+  font-size: 1.02rem;
 }
 
-.gedagte-form {
-  margin-bottom: 36px;
-}
-
-.gedagte-list-section {
-  padding-top: 8px;
-}
-
-.gedagte-list {
-  display: grid;
-  gap: 14px;
-}
-
-/* ===== A thought — a small pane of glass ===== */
-.gedagte-item {
-  position: relative;
-  padding: 18px 20px 16px;
-  background:
-    radial-gradient(140% 100% at 0% 0%, rgba(var(--accent-rgb), 0.09) 0%, transparent 60%),
-    linear-gradient(160deg, var(--card-top) 0%, var(--bg-surface) 100%);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 var(--sheen);
-}
-
-.gedagte-item--today {
-  border-color: rgba(var(--accent-rgb), 0.55);
-  box-shadow: 0 16px 34px -20px rgba(var(--accent-rgb), 0.8), inset 0 1px 0 var(--sheen);
-}
-
-.gedagte-item--past {
-  opacity: 0.62;
-}
-
-.gedagte-item-date {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-  margin-bottom: 10px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.gedagte-item-time {
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
-}
-
-.gedagte-item-notif {
-  padding: 2px 10px;
-  font-size: 0.68rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-}
-
-.gedagte-item-notif--sent {
-  color: rgb(var(--ok-rgb));
-  background: rgba(var(--ok-rgb), 0.1);
-  border-color: rgba(var(--ok-rgb), 0.4);
-}
-
-.gedagte-item-notif--pending {
-  color: rgb(var(--amber-rgb));
-  background: rgba(var(--amber-rgb), 0.1);
-  border-color: rgba(var(--amber-rgb), 0.4);
-}
-
-.gedagte-item-content {
-  font-family: var(--font-serif);
-  font-size: 1.2rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.gedagte-item-author {
-  margin-top: 8px;
-  font-size: 0.9rem;
-  font-style: italic;
-  color: var(--text-secondary);
-}
-
-.gedagte-item-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.gedagte-btn {
-  min-height: 40px;
-  padding: 0 18px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  cursor: pointer;
-  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease, transform 0.2s var(--ease);
-}
-
-.gedagte-btn:active {
-  transform: scale(0.96);
-}
-
-.gedagte-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.gedagte-btn--danger {
-  color: rgb(var(--danger-rgb));
-  border-color: rgba(var(--danger-rgb), 0.4);
-}
-
-@media (hover: hover) {
-  .gedagte-btn:not(:disabled):hover {
-    color: var(--text-primary);
-    border-color: rgba(var(--accent-rgb), 0.6);
-    background: rgba(var(--accent-rgb), 0.08);
-  }
-
-  .gedagte-btn--danger:not(:disabled):hover {
-    color: rgb(var(--danger-rgb));
-    border-color: rgb(var(--danger-rgb));
-    background: rgba(var(--danger-rgb), 0.1);
-  }
-}
-
-/* Loading */
-.gedagte-skel {
-  display: grid;
-  gap: 14px;
-}
-
-.gedagte-skel i {
-  display: block;
-  height: 110px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(100deg, var(--bg-surface) 30%, rgba(var(--accent-rgb), 0.1) 50%, var(--bg-surface) 70%);
-  background-size: 250% 100%;
-  animation: admin-shimmer 1.6s linear infinite;
-}
-
-/* ===== Form: counter, spelling check ===== */
 .gedagte-field-foot {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
-  margin-top: 8px;
-}
-
-.gedagte-count {
-  margin-top: 0;
+  gap: 10px;
+  min-height: 24px;
 }
 
 .gedagte-count.is-over {
   font-weight: 700;
-  color: rgb(var(--danger-rgb));
+  color: var(--adm-danger);
 }
 
-.gedagte-btn--check {
-  margin-left: auto;
+/* ===== Small buttons (the list's and the suggestion's) ===== */
+.gedagte-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--adm-text);
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line-2);
+  border-radius: 9px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
 }
 
-/* Cancel · Send now · Save: one row, or one under the other on a phone */
-.gedagte-actions {
-  flex-wrap: wrap;
+.gedagte-btn:hover:not(:disabled) {
+  border-color: var(--adm-text-2);
+}
+
+.gedagte-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.gedagte-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
 }
 
 .gedagte-btn--accent {
-  color: var(--accent-ink);
-  background: var(--accent-grad);
-  border-color: rgba(var(--accent-rgb), 0.7);
+  color: var(--adm-brand-ink);
+  background: var(--adm-brand);
+  border-color: transparent;
+}
+
+.gedagte-btn--accent:hover:not(:disabled) {
+  background: var(--adm-brand-2);
+  border-color: transparent;
+}
+
+.gedagte-btn--check {
+  color: var(--adm-brand);
+  background: var(--adm-brand-soft);
+  border-color: var(--adm-brand-line);
+}
+
+.gedagte-btn--danger {
+  color: var(--adm-danger);
+  background: transparent;
+  border-color: var(--adm-danger-line);
+}
+
+.gedagte-btn--danger:hover:not(:disabled) {
+  background: var(--adm-danger-soft);
+  border-color: var(--adm-danger-line);
 }
 
 .gedagte-btn.is-busy {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  color: transparent !important;
+  pointer-events: none;
 }
 
 .gedagte-btn.is-busy::after {
   content: '';
-  width: 14px;
-  height: 14px;
-  border: 2px solid currentColor;
+  position: absolute;
+  inset: 0;
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  border: 2px solid var(--adm-text-2);
   border-right-color: transparent;
   border-radius: 50%;
-  animation: admin-spin 0.7s linear infinite;
+  animation: adm-spin 0.7s linear infinite;
 }
 
+/* ===== The spelling suggestion ===== */
 .gedagte-suggest {
   margin-top: 12px;
-  padding: 14px 16px;
-  background: rgba(var(--accent-rgb), 0.07);
-  border: 1px solid rgba(var(--accent-rgb), 0.4);
-  border-radius: 14px;
+  padding: 14px;
+  background: var(--adm-brand-soft);
+  border: 1px solid var(--adm-brand-line);
+  border-radius: 12px;
 }
 
 .gedagte-suggest-title {
-  margin-bottom: 8px;
+  margin: 0 0 6px;
   font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--adm-brand);
 }
 
 .gedagte-suggest-text {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-line;
   overflow-wrap: anywhere;
-}
-
-.gedagte-mark {
-  padding: 0 2px;
-  color: inherit;
-  background: rgba(var(--ok-rgb), 0.22);
-  border-bottom: 2px solid rgba(var(--ok-rgb), 0.7);
-  border-radius: 3px;
 }
 
 .gedagte-suggest-actions {
@@ -250,90 +139,198 @@
   margin-top: 12px;
 }
 
-/* ===== A thought's languages ===== */
+.gedagte-mark {
+  padding: 0 2px;
+  color: inherit;
+  background: var(--adm-ok-soft);
+  border-radius: 3px;
+  box-shadow: inset 0 -2px 0 var(--adm-ok);
+}
+
+/* ===== The list ===== */
+.gedagte-list-section {
+  margin-top: 30px;
+}
+
+.gedagte-list {
+  display: grid;
+  gap: 10px;
+}
+
+.gedagte-skel {
+  display: grid;
+  gap: 10px;
+}
+
+.gedagte-skel i {
+  display: block;
+  height: 130px;
+  background: linear-gradient(90deg, var(--adm-surface) 0%, var(--adm-surface-2) 50%, var(--adm-surface) 100%);
+  background-size: 200% 100%;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  animation: adm-shimmer 1.4s linear infinite;
+}
+
+.gedagte-item {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  box-shadow: var(--adm-shadow);
+}
+
+.gedagte-item--today {
+  border-color: var(--adm-brand-line);
+  box-shadow: inset 3px 0 0 var(--adm-brand), var(--adm-shadow);
+}
+
+.gedagte-item--past {
+  opacity: 0.72;
+}
+
+.gedagte-item-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.88rem;
+}
+
+.gedagte-item-day {
+  font-weight: 700;
+  color: var(--adm-text);
+}
+
+.gedagte-item-time {
+  color: var(--adm-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.gedagte-item-notif {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  margin-left: auto;
+  padding: 0 9px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.gedagte-item-notif--sent {
+  color: var(--adm-ok);
+  background: var(--adm-ok-soft);
+}
+
+.gedagte-item-notif--pending {
+  color: var(--adm-warn);
+  background: var(--adm-warn-soft);
+}
+
+.gedagte-item-content {
+  margin: 0;
+  font-family: var(--adm-serif);
+  font-size: 1.24rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--adm-text);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.gedagte-item-author {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: var(--adm-text-2);
+}
+
 .gedagte-item-note {
-  margin-top: 8px;
-  font-size: 0.82rem;
-  color: var(--text-muted);
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--adm-muted);
 }
 
 .gedagte-item-note--warn {
-  color: rgb(var(--amber-rgb));
+  color: var(--adm-warn);
 }
 
+/* One chip per language; the pressed one is shown */
 .gedagte-langs {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 14px;
 }
 
 .gedagte-lang {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 0 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: transparent;
-  border: 1px solid var(--border);
+  height: 30px;
+  padding: 0 11px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--adm-text-2);
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
   border-radius: 999px;
   cursor: pointer;
-  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+}
+
+.gedagte-lang:hover {
+  color: var(--adm-text);
+  border-color: var(--adm-line-2);
 }
 
 .gedagte-lang.is-missing {
-  color: rgb(var(--amber-rgb));
+  color: var(--adm-muted);
   border-style: dashed;
-  border-color: rgba(var(--amber-rgb), 0.55);
 }
 
 .gedagte-lang[aria-pressed="true"] {
-  color: var(--text-primary);
-  background: rgba(var(--accent-rgb), 0.16);
-  border-color: rgba(var(--accent-rgb), 0.7);
-}
-
-.gedagte-lang:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  color: var(--adm-bg);
+  background: var(--adm-text);
+  border-color: transparent;
 }
 
 .gedagte-lang-tag {
+  margin-left: 6px;
   font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent);
+  opacity: 0.75;
 }
 
-@media (hover: hover) {
-  .gedagte-lang:hover {
-    border-color: rgba(var(--accent-rgb), 0.6);
-  }
+.gedagte-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
-/* Correcting a translation by hand */
+/* Correcting a translation */
 .gedagte-tr-edit {
   display: grid;
   gap: 8px;
 }
 
 .gedagte-tr-ref {
+  margin: 0;
   padding: 10px 12px;
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
-  line-height: 1.5;
-  white-space: pre-wrap;
+  font-size: 0.9rem;
+  color: var(--adm-text-2);
+  background: var(--adm-surface-2);
+  border-radius: 10px;
+  white-space: pre-line;
   overflow-wrap: anywhere;
-  color: var(--text-secondary);
-  border-left: 3px solid rgba(var(--accent-rgb), 0.5);
-  background: rgba(var(--accent-rgb), 0.05);
-  border-radius: 0 10px 10px 0;
 }
 
-.gedagte-item-actions {
-  flex-wrap: wrap;
+.gedagte-list > .admin-muted {
+  padding: 18px;
+  text-align: center;
+  background: var(--adm-surface);
+  border: 1px dashed var(--adm-line-2);
+  border-radius: var(--adm-radius);
 }

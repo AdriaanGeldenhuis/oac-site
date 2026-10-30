@@ -3,23 +3,14 @@
 require_once dirname(__DIR__, 2) . '/includes/daily_thoughts.php';
 $gdAi = dt_ai_ready();
 ?>
-<div class="admin-section">
-  <div class="admin-section-header">
-    <div class="admin-icon-wrapper">
-      <svg class="admin-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 21h6M10 17h4M12 2a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2V15h5v-.1c0-.8.4-1.5 1-2A6 6 0 0012 2z"/>
-      </svg>
-    </div>
-    <h2 class="admin-section-title"><?= esc(t('manage_thoughts')) ?></h2>
-  </div>
-
+<div class="adm-card adm-card--pad gedagte-compose">
   <form id="gedagteForm" class="gedagte-form admin-form" novalidate>
     <input type="hidden" id="thoughtId" name="id" value="">
 
     <div class="admin-field">
       <label for="thoughtContent" class="admin-label"><?= esc(t('thought_content')) ?></label>
       <!-- No maxlength: a pasted thought is never cut off silently, the counter says how much is too much -->
-      <textarea id="thoughtContent" name="content" rows="8" data-max="<?= (int)DT_MAX_CHARS ?>" required class="admin-textarea gedagte-textarea" aria-describedby="thoughtCount"></textarea>
+      <textarea id="thoughtContent" name="content" rows="7" data-max="<?= (int)DT_MAX_CHARS ?>" required class="admin-textarea gedagte-textarea" aria-describedby="thoughtCount"></textarea>
       <div class="gedagte-field-foot">
         <span class="admin-hint gedagte-count" id="thoughtCount" aria-live="polite"></span>
         <?php if ($gdAi): ?>
@@ -67,20 +58,22 @@ $gdAi = dt_ai_ready();
       <button type="button" class="admin-btn admin-btn-secondary" id="thoughtReset" hidden><?= esc(t('cancel')) ?></button>
       <!-- Send now: today, this moment, whatever the date and time above say -->
       <button type="button" class="admin-btn admin-btn-secondary" id="thoughtSendNow">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        <?= admin_icon('send') ?>
         <span class="gedagte-send-label"><?= esc(t('gd_send_now')) ?></span>
       </button>
       <button type="submit" class="admin-btn admin-btn-primary"><span class="gedagte-submit-label"><?= esc(t('save_thought')) ?></span></button>
     </div>
   </form>
-
-  <div class="gedagte-list-section">
-    <h3 class="admin-subtitle"><?= esc(t('upcoming_thoughts')) ?></h3>
-    <div id="gedagteList" class="gedagte-list" aria-live="polite" aria-busy="true">
-      <div class="gedagte-skel" aria-hidden="true"><i></i><i></i></div>
-    </div>
-  </div>
 </div>
+
+<section class="adm-section gedagte-list-section" aria-labelledby="gdListTitle">
+  <div class="adm-section-head">
+    <h3 class="adm-section-title" id="gdListTitle"><?= esc(t('upcoming_thoughts')) ?></h3>
+  </div>
+  <div id="gedagteList" class="gedagte-list" aria-live="polite" aria-busy="true">
+    <div class="gedagte-skel" aria-hidden="true"><i></i><i></i></div>
+  </div>
+</section>
 
 <script>
   window.GEDAGTE_LANG = <?= json_encode([

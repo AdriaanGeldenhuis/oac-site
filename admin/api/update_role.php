@@ -1,20 +1,16 @@
 <?php
+declare(strict_types=1);
 /**
- * /api/admin/update_role.php
- * Fix: use amp_id (normalized via approvals_scope) instead of a non-existent `users.amp` column.
- * Returns JSON {success:true} or {error:'...'} with proper HTTP status codes.
+ * Retired: no page and no app version calls this any more.
+ * It was meant to change a member's office (the file was never finished).
+ * Live path: /profile/api/update_user.php (the rule profile/index.php shows the button by)
+ *
+ * The file stays as this stub on purpose. Deploys copy files but never
+ * delete them on the server, so the old version would otherwise stay
+ * reachable there, with an older permission rule than the live path.
  */
 
+http_response_code(410);
 header('Content-Type: application/json; charset=utf-8');
-
-require_once __DIR__ . '/../../session.php';
-require_once __DIR__ . '/../../app/db_connect.php';
-require_once __DIR__ . '/../../approvals_scope.php'; // for amp_norm()
-// Load notification helper for role change notifications
-// Optional notification helper (no-op fallback if missing)
-$__notify = __DIR__ . '/../helpers/notify.php';
-if (is_file($__notify)) { require_once $__notify; }
-if (!function_exists('send_notification')) {
-    function send_notification($pdo, $userId, $type, $payload = []) { /* no-op */ }
-}
-
+header('Cache-Control: no-store');
+echo json_encode(['success' => false, 'error' => 'gone']);

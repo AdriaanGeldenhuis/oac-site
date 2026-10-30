@@ -2,22 +2,21 @@
 /**
  * Approvals tab — members waiting for approval, spouse requests, linked
  * couples. Who sees whom comes from admin_approval_scope() /
- * admin_spouse_scope() (includes/admin_api.php), the rule the badge and
- * the approve / reject endpoints use too. admin.js does the clicking.
- *
- * Wide screens get a table; on phones every row becomes a small card
- * (name, office · congregation, then the buttons), see admin.css.
+ * admin_spouse_scope() (includes/admin_api.php), the rule the counts and
+ * the approve / reject endpoints use too; the box at the top only explains
+ * that rule, it decides nothing. admin.js does the clicking.
+ * Every person is one card: office first ("Oudste Kobus Nel"), where they
+ * belong, when they registered, then one clear main button.
  */
-$pending = [];
 $scope = admin_approval_scope($currentUser);
+
+$pending = [];
 if ($scope !== null) {
     try {
         [$where, $params] = admin_approval_where($scope, 'u');
-        $stmt = $pdo->prepare("SELECT u.id, u.name, u.surname, u.email,
-                CASE WHEN u.gender='vrou' THEN a.female_name ELSE a.male_name END AS amp,
+        $stmt = $pdo->prepare("SELECT u.id, u.name, u.surname, u.email, u.phone, u.photo, u.amp_id, u.gender, u.created_at,
                 c.name AS congregation
                 FROM users u
-                LEFT JOIN amptes a ON a.id = u.amp_id
                 LEFT JOIN congregations c ON c.id = u.congregation_id
                 WHERE {$where}
                 ORDER BY u.surname, u.name");
@@ -25,6 +24,22 @@ if ($scope !== null) {
         $pending = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Throwable $e) {
         error_log('Admin approvals list: ' . $e->getMessage());
+    }
+}
+
+// The offices and the area this member approves (the same scope as above, in words)
+$scopeOffices = [];
+$scopeArea = '';
+if ($scope !== null) {
+    foreach ($scope['roles'] as $roleId) {
+        $scopeOffices[] = admin_office_group($roleId, $lang);
+    }
+    if ($scope['col'] === null) {
+        $scopeArea = t('adm_scope_everywhere');
+    } elseif ($scope['col'] === 'congregation_id') {
+        $scopeArea = (string)($currentUser['congregation_name'] ?? '');
+    } else {
+        $scopeArea = (string)($currentUser['town_name'] ?? '');
     }
 }
 
@@ -48,12 +63,14 @@ if ($spouseScope !== null) {
     }
 
     try {
-        $stmt = $pdo->prepare("SELECT sr.id,
-            u1.name AS req_name, u1.surname AS req_surname,
-            u2.name AS rec_name, u2.surname AS rec_surname
+        $stmt = $pdo->prepare("SELECT sr.id, sr.created_at,
+            u1.name AS a_name, u1.surname AS a_surname, u1.amp_id AS a_amp_id, u1.gender AS a_gender,
+            u2.name AS b_name, u2.surname AS b_surname, u2.amp_id AS b_amp_id, u2.gender AS b_gender,
+            c.name AS congregation
             FROM spouse_requests sr
             JOIN users u1 ON u1.id = sr.requester_id
             JOIN users u2 ON u2.id = sr.receiver_id
+            LEFT JOIN congregations c ON c.id = u1.congregation_id
             WHERE sr.status = 'pending'
             AND {$spouseSql}
             AND u1.spouse_user_id IS NULL
@@ -68,8 +85,8 @@ if ($spouseScope !== null) {
     try {
         // Each couple once
         $stmt = $pdo->prepare("SELECT
-            u1.id AS a_id, u1.name AS a_name, u1.surname AS a_surname,
-            u2.name AS b_name, u2.surname AS b_surname
+            u1.id AS a_id, u1.name AS a_name, u1.surname AS a_surname, u1.amp_id AS a_amp_id, u1.gender AS a_gender,
+            u2.name AS b_name, u2.surname AS b_surname, u2.amp_id AS b_amp_id, u2.gender AS b_gender
             FROM users u1
             JOIN users u2 ON u2.id = u1.spouse_user_id AND u2.spouse_user_id = u1.id
             WHERE u1.id < u2.id
@@ -81,133 +98,134 @@ if ($spouseScope !== null) {
         error_log('Admin linked couples: ' . $e->getMessage());
     }
 }
-
-// The small stroke icons on the buttons
-$iconYes = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
-$iconNo = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-$iconUnlink = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.84 12.25l1.72-1.71a5 5 0 00-7.07-7.07l-1.72 1.71M5.17 11.75l-1.72 1.71a5 5 0 007.07 7.07l1.72-1.71M8 2v3M2 8h3M16 19v3M19 16h3"/></svg>';
 ?>
-<div class="admin-section" id="approvalsRoot">
-  <div class="admin-section-header">
-    <div class="admin-icon-wrapper">
-      <svg class="admin-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-        <path d="M22 4L12 14.01l-3-3"/>
-      </svg>
-    </div>
-    <h2 class="admin-section-title"><?= esc(t('approvals')) ?></h2>
+<div id="approvalsRoot">
+
+  <?php if ($scope === null): ?>
+  <div class="adm-note adm-note--warn" role="note">
+    <?= admin_icon('shield') ?>
+    <p><?= esc(t('adm_scope_none')) ?> <a href="/admin/account.php"><?= esc(t('edit_profile')) ?></a></p>
   </div>
+  <?php else: ?>
+  <dl class="adm-scope">
+    <div>
+      <dt><?= esc(t('adm_scope_offices')) ?></dt>
+      <dd><?php foreach ($scopeOffices as $office): ?><span class="adm-chip"><?= esc($office) ?></span><?php endforeach; ?></dd>
+    </div>
+    <?php if ($scopeArea !== ''): ?>
+    <div>
+      <dt><?= esc(t('adm_scope_area')) ?></dt>
+      <dd><span class="adm-chip adm-chip--place"><?= admin_icon($scope['col'] === null ? 'globe' : 'pin') ?><?= esc($scopeArea) ?></span></dd>
+    </div>
+    <?php endif; ?>
+  </dl>
+  <?php endif; ?>
 
-  <section data-group="users">
-    <h3 class="approval-subtitle">
-      <span><?= esc(t('user_approvals')) ?><?php if (!empty($pending)): ?><span class="admin-count" data-count><?= count($pending) ?></span><?php endif; ?></span>
-    </h3>
+  <section class="adm-section" id="users" data-group="users" aria-labelledby="apUsers">
+    <div class="adm-section-head">
+      <h3 class="adm-section-title" id="apUsers"><?= esc(t('user_approvals')) ?></h3>
+      <?php if ($pending): ?><span class="adm-badge adm-badge--static" data-count><?= count($pending) ?></span><?php endif; ?>
+    </div>
 
-    <?php if (empty($pending)): ?>
-      <p class="admin-muted"><?= esc(t('no_pending_approvals')) ?></p>
+    <?php if (!$pending): ?>
+    <div class="adm-empty" data-empty>
+      <span class="adm-empty-icon"><?= admin_icon('check') ?></span>
+      <p><?= esc(t('no_pending_approvals')) ?></p>
+    </div>
     <?php else: ?>
-      <div class="admin-table-wrap">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th scope="col"><?= esc(t('name')) ?></th>
-              <th scope="col"><?= esc(t('role')) ?></th>
-              <th scope="col"><?= esc(t('congregation')) ?></th>
-              <th scope="col"><span class="admin-sr"><?= esc(t('actions')) ?></span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($pending as $user):
-              $userName = trim(($user['name'] ?? '') . ' ' . ($user['surname'] ?? ''));
-            ?>
-            <tr id="row-<?= (int)$user['id'] ?>" class="ap-row">
-              <td class="ap-person">
-                <strong class="ap-name"><?= esc($userName) ?></strong>
-                <?php if (!empty($user['email'])): ?><span class="ap-sub"><?= esc($user['email']) ?></span><?php endif; ?>
-              </td>
-              <td class="ap-meta"><?= esc($user['amp'] ?? '') ?></td>
-              <td class="ap-meta"><?= esc($user['congregation'] ?? '') ?></td>
-              <td class="ap-actions">
-                <div class="approval-actions">
-                  <button type="button" class="approve-btn" data-id="<?= (int)$user['id'] ?>" aria-label="<?= esc(t('approve') . ': ' . $userName) ?>"><?= $iconYes ?><span><?= esc(t('approve')) ?></span></button>
-                  <button type="button" class="reject-btn" data-id="<?= (int)$user['id'] ?>" aria-label="<?= esc(t('reject') . ': ' . $userName) ?>"><?= $iconNo ?><span><?= esc(t('reject')) ?></span></button>
-                </div>
-              </td>
-            </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
+    <div class="adm-cards" data-list>
+      <?php foreach ($pending as $user):
+        $label = admin_person($user, $lang);
+        $ago = admin_ago_html($user['created_at'] ?? null, $lang);
+      ?>
+      <article class="adm-card adm-person" id="row-<?= (int)$user['id'] ?>" data-row>
+        <div class="adm-person-main">
+          <?= admin_avatar($user['photo'] ?? null, admin_full_name($user)) ?>
+          <div class="adm-person-text">
+            <h4 class="adm-person-name"><?= esc($label) ?></h4>
+            <p class="adm-person-meta">
+              <?php if (!empty($user['congregation'])): ?><span><?= admin_icon('church') ?><?= esc($user['congregation']) ?></span><?php endif; ?>
+              <?php if ($ago !== ''): ?><span><?= admin_icon('clock') ?><?= admin_fill_html(t('adm_registered'), ['ago' => $ago]) ?></span><?php endif; ?>
+            </p>
+            <p class="adm-person-meta adm-person-contact">
+              <?php if (!empty($user['email'])): ?><a href="mailto:<?= esc($user['email']) ?>"><?= admin_icon('mail') ?><?= esc($user['email']) ?></a><?php endif; ?>
+              <?php if (!empty($user['phone'])): ?><a href="tel:<?= esc(preg_replace('/[^\d+]/', '', (string)$user['phone'])) ?>"><?= admin_icon('phone') ?><?= esc($user['phone']) ?></a><?php endif; ?>
+            </p>
+          </div>
+        </div>
+        <div class="adm-person-actions">
+          <button type="button" class="admin-btn admin-btn-ok approve-btn" data-id="<?= (int)$user['id'] ?>" aria-label="<?= esc(t('approve') . ': ' . $label) ?>"><?= admin_icon('check') ?><span><?= esc(t('approve')) ?></span></button>
+          <button type="button" class="admin-btn admin-btn-quiet-danger reject-btn" data-id="<?= (int)$user['id'] ?>" aria-label="<?= esc(t('reject') . ': ' . $label) ?>"><?= admin_icon('x') ?><span><?= esc(t('reject')) ?></span></button>
+        </div>
+      </article>
+      <?php endforeach; ?>
+    </div>
     <?php endif; ?>
   </section>
 
-  <?php if (!empty($spouseRequests)): ?>
-  <section data-group="spouse">
-    <h3 class="approval-subtitle approval-subtitle--gap">
-      <span><?= esc(t('spouse_requests')) ?><span class="admin-count" data-count><?= count($spouseRequests) ?></span></span>
-    </h3>
-    <div class="admin-table-wrap">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th scope="col"><?= esc(t('requester')) ?></th>
-            <th scope="col"><?= esc(t('receiver')) ?></th>
-            <th scope="col"><span class="admin-sr"><?= esc(t('actions')) ?></span></th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($spouseRequests as $req):
-            $pair = trim($req['req_name'] . ' ' . $req['req_surname']) . ' & ' . trim($req['rec_name'] . ' ' . $req['rec_surname']);
-          ?>
-          <tr id="spouse-row-<?= (int)$req['id'] ?>" class="ap-row ap-row--pair">
-            <td class="ap-person"><strong class="ap-name"><?= esc(trim($req['req_name'] . ' ' . $req['req_surname'])) ?></strong></td>
-            <td class="ap-person ap-partner"><strong class="ap-name"><?= esc(trim($req['rec_name'] . ' ' . $req['rec_surname'])) ?></strong></td>
-            <td class="ap-actions">
-              <div class="approval-actions">
-                <button type="button" class="spouse-approve-btn" data-id="<?= (int)$req['id'] ?>" aria-label="<?= esc(t('approve') . ': ' . $pair) ?>"><?= $iconYes ?><span><?= esc(t('approve')) ?></span></button>
-                <button type="button" class="spouse-reject-btn" data-id="<?= (int)$req['id'] ?>" aria-label="<?= esc(t('reject') . ': ' . $pair) ?>"><?= $iconNo ?><span><?= esc(t('reject')) ?></span></button>
-              </div>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+  <?php if ($spouseRequests): ?>
+  <section class="adm-section" id="spouse" data-group="spouse" aria-labelledby="apSpouse">
+    <div class="adm-section-head">
+      <h3 class="adm-section-title" id="apSpouse"><?= esc(t('spouse_requests')) ?></h3>
+      <span class="adm-badge adm-badge--static" data-count><?= count($spouseRequests) ?></span>
     </div>
-    <p class="admin-hint"><?= esc(t('spouse_auto_approve_note')) ?></p>
+    <p class="adm-section-hint"><?= esc(t('spouse_auto_approve_note')) ?></p>
+    <div class="adm-cards" data-list>
+      <?php foreach ($spouseRequests as $req):
+        $a = admin_person($req, $lang, 'a_');
+        $b = admin_person($req, $lang, 'b_');
+        $ago = admin_ago_html($req['created_at'] ?? null, $lang);
+      ?>
+      <article class="adm-card adm-person" id="spouse-row-<?= (int)$req['id'] ?>" data-row>
+        <div class="adm-person-main">
+          <span class="adm-avatar adm-avatar--icon" aria-hidden="true"><?= admin_icon('heart') ?></span>
+          <div class="adm-person-text">
+            <h4 class="adm-person-name adm-person-name--line"><?= admin_fill_html(t('adm_spouse_asks'), ['a' => '<strong>' . esc($a) . '</strong>', 'b' => '<strong>' . esc($b) . '</strong>']) ?></h4>
+            <p class="adm-person-meta">
+              <?php if (!empty($req['congregation'])): ?><span><?= admin_icon('church') ?><?= esc($req['congregation']) ?></span><?php endif; ?>
+              <?php if ($ago !== ''): ?><span><?= admin_icon('clock') ?><?= $ago ?></span><?php endif; ?>
+            </p>
+          </div>
+        </div>
+        <div class="adm-person-actions">
+          <button type="button" class="admin-btn admin-btn-ok spouse-approve-btn" data-id="<?= (int)$req['id'] ?>" aria-label="<?= esc(t('adm_link') . ': ' . $a . ' & ' . $b) ?>"><?= admin_icon('heart') ?><span><?= esc(t('adm_link')) ?></span></button>
+          <button type="button" class="admin-btn admin-btn-quiet-danger spouse-reject-btn" data-id="<?= (int)$req['id'] ?>" aria-label="<?= esc(t('reject') . ': ' . $a . ' & ' . $b) ?>"><?= admin_icon('x') ?><span><?= esc(t('reject')) ?></span></button>
+        </div>
+      </article>
+      <?php endforeach; ?>
+    </div>
   </section>
   <?php endif; ?>
 
-  <?php if (!empty($linkedCouples)): ?>
-  <section data-group="couples">
-    <h3 class="approval-subtitle approval-subtitle--gap">
-      <span><?= esc(t('linked_spouses')) ?><span class="admin-count" data-count><?= count($linkedCouples) ?></span></span>
-    </h3>
-    <div class="admin-table-wrap">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th scope="col"><?= esc(t('name')) ?></th>
-            <th scope="col"><?= esc(t('spouse')) ?></th>
-            <th scope="col"><span class="admin-sr"><?= esc(t('actions')) ?></span></th>
-          </tr>
-        </thead>
-        <tbody>
+  <?php if ($linkedCouples): ?>
+  <section class="adm-section" data-group="couples">
+    <details class="adm-disclosure">
+      <summary>
+        <?= admin_icon('heart') ?>
+        <span class="adm-disclosure-title"><?= esc(t('linked_spouses')) ?></span>
+        <span class="adm-count" data-count><?= count($linkedCouples) ?></span>
+        <?= admin_icon('chevron', 'adm-ico adm-disclosure-caret') ?>
+      </summary>
+      <div class="adm-disclosure-body">
+        <?php if (count($linkedCouples) > 6): ?>
+        <label class="adm-search">
+          <?= admin_icon('search') ?>
+          <span class="admin-sr"><?= esc(t('search')) ?></span>
+          <input type="search" class="admin-input" data-filter="#couplesList" placeholder="<?= esc(t('adm_search_name')) ?>" autocomplete="off">
+        </label>
+        <?php endif; ?>
+        <ul class="adm-list adm-list--plain" id="couplesList" data-list>
           <?php foreach ($linkedCouples as $couple):
-            $pair = trim($couple['a_name'] . ' ' . $couple['a_surname']) . ' & ' . trim($couple['b_name'] . ' ' . $couple['b_surname']);
+            $pair = admin_person($couple, $lang, 'a_') . ' & ' . admin_person($couple, $lang, 'b_');
           ?>
-          <tr id="couple-row-<?= (int)$couple['a_id'] ?>" class="ap-row ap-row--pair">
-            <td class="ap-person"><strong class="ap-name"><?= esc(trim($couple['a_name'] . ' ' . $couple['a_surname'])) ?></strong></td>
-            <td class="ap-person ap-partner"><strong class="ap-name"><?= esc(trim($couple['b_name'] . ' ' . $couple['b_surname'])) ?></strong></td>
-            <td class="ap-actions">
-              <div class="approval-actions">
-                <button type="button" class="spouse-unlink-btn" data-id="<?= (int)$couple['a_id'] ?>" aria-label="<?= esc(t('unlink') . ': ' . $pair) ?>"><?= $iconUnlink ?><span><?= esc(t('unlink')) ?></span></button>
-              </div>
-            </td>
-          </tr>
+          <li class="adm-couple" id="couple-row-<?= (int)$couple['a_id'] ?>" data-row data-search="<?= esc(mb_strtolower($pair)) ?>">
+            <span class="adm-couple-names"><?= esc($pair) ?></span>
+            <button type="button" class="admin-btn admin-btn-sm admin-btn-quiet-danger spouse-unlink-btn" data-id="<?= (int)$couple['a_id'] ?>" aria-label="<?= esc(t('unlink') . ': ' . $pair) ?>"><?= admin_icon('unlink') ?><span><?= esc(t('unlink')) ?></span></button>
+          </li>
           <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
+        </ul>
+      </div>
+    </details>
   </section>
   <?php endif; ?>
 </div>

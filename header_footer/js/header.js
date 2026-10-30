@@ -150,6 +150,35 @@
     });
   }
 
+  // ===== Admin: something waits (a dot on the menu button, a count beside "Admin") =====
+  // The admin pages ask again with "oac:pending-changed" after an approval or an answer.
+  const adminCount = document.querySelector('[data-admin-count]');
+  const adminDot = document.querySelector('[data-admin-dot]');
+
+  async function updateAdminCount() {
+    if (!adminCount && !adminDot) return;
+    if (navigator.onLine === false) return;
+    try {
+      const res = await fetch('/admin/api/pending_count.php', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const n = data && data.success ? (parseInt(data.total, 10) || 0) : 0;
+      if (adminCount) {
+        adminCount.textContent = n > 99 ? '99+' : String(n);
+        adminCount.setAttribute('aria-label', (adminCount.getAttribute('data-label') || '{n}').split('{n}').join(String(n)));
+        adminCount.hidden = n === 0;
+      }
+      if (adminDot) adminDot.hidden = n === 0;
+    } catch (e) { /* no count shown; the admin itself still lists everything */ }
+  }
+
+  updateAdminCount();
+  window.addEventListener('oac:pending-changed', updateAdminCount);
+
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       closeNav();

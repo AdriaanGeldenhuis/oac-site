@@ -165,3 +165,73 @@ function admin_spouse_in_scope(array $me, array $a, array $b): bool {
     }
     return false;
 }
+
+/**
+ * What waits for this member, counted by the same rules as the lists that
+ * show it (so a badge never promises more than the tab has):
+ *   users         members to approve           (admin_approval_scope)
+ *   spouse        spouse requests to approve   (admin_spouse_scope, office bearers)
+ *   appointments  appointment requests made to me, still to answer
+ *   mine          a spouse request made to me, to accept or turn down
+ *   approvals     users + spouse               (the Approvals tab)
+ *   total         everything above             (the menu)
+ * $me is a users row (id, amp_id, town_id, congregation_id). Read-only;
+ * a failing count is logged and counts as 0, it never breaks the page.
+ */
+function admin_pending_counts(PDO $pdo, array $me): array {
+    $c = ['users' => 0, 'spouse' => 0, 'appointments' => 0, 'mine' => 0];
+    $id = (int)($me['id'] ?? 0);
+
+    $scope = admin_approval_scope($me);
+    if ($scope !== null) {
+        try {
+            [$where, $params] = admin_approval_where($scope, 'u');
+            $st = $pdo->prepare("SELECT COUNT(*) FROM users u WHERE {$where}");
+            $st->execute($params);
+            $c['users'] = (int)$st->fetchColumn();
+        } catch (Throwable $e) {
+            error_log('Admin count users: ' . $e->getMessage());
+        }
+    }
+
+    $spouseScope = admin_spouse_scope($me);
+    if ($spouseScope !== null) {
+        try {
+            [$spouseSql, $spouseParams] = $spouseScope;
+            $st = $pdo->prepare("SELECT COUNT(*) FROM spouse_requests sr
+                JOIN users u1 ON u1.id = sr.requester_id
+                JOIN users u2 ON u2.id = sr.receiver_id
+                WHERE sr.status = 'pending'
+                AND {$spouseSql}
+                AND u1.spouse_user_id IS NULL
+                AND u2.spouse_user_id IS NULL");
+            $st->execute($spouseParams);
+            $c['spouse'] = (int)$st->fetchColumn();
+        } catch (Throwable $e) {
+            error_log('Admin count spouse: ' . $e->getMessage());
+        }
+    }
+
+    if ($id > 0) {
+        try {
+            $st = $pdo->prepare("SELECT COUNT(*) FROM ampte_appointments
+                WHERE target_user_id = ? AND status = 'pending' AND appointment_date >= CURDATE()");
+            $st->execute([$id]);
+            $c['appointments'] = (int)$st->fetchColumn();
+        } catch (Throwable $e) {
+            error_log('Admin count appointments: ' . $e->getMessage());
+        }
+
+        try {
+            $st = $pdo->prepare("SELECT COUNT(*) FROM spouse_requests WHERE receiver_id = ? AND status = 'pending'");
+            $st->execute([$id]);
+            $c['mine'] = (int)$st->fetchColumn();
+        } catch (Throwable $e) {
+            error_log('Admin count own spouse request: ' . $e->getMessage());
+        }
+    }
+
+    $c['approvals'] = $c['users'] + $c['spouse'];
+    $c['total'] = $c['users'] + $c['spouse'] + $c['appointments'] + $c['mine'];
+    return $c;
+}

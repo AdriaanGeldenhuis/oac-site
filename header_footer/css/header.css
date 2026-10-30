@@ -874,6 +874,50 @@ body.ghf-open .ghf-nav-list li {
   transition-duration: 0.1s;
 }
 
+/* Something waits in the admin: a red count beside "Admin" in the menu... */
+.ghf-nav-count {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0 7px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  background: #e5484d;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px -3px rgba(229, 72, 77, 0.8);
+}
+
+.ghf-nav-count[hidden],
+.ghf-hamburger-dot[hidden] {
+  display: none;
+}
+
+/* ...and a red dot on the menu button, so it is seen with the menu closed */
+.ghf-hamburger-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 2;
+  width: 11px;
+  height: 11px;
+  background: #e5484d;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(14, 13, 13, 0.9), 0 0 10px rgba(229, 72, 77, 0.8);
+  pointer-events: none;
+}
+
+[data-theme="light"] .ghf-hamburger-dot {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 8px rgba(229, 72, 77, 0.6);
+}
+
 .ghf-nav-link:focus-visible {
   outline: 2px solid rgb(var(--c-rgb));
   outline-offset: 2px;
