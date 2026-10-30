@@ -1,6 +1,6 @@
 /**
  * OAC Admin UI - shared toasts & confirm dialogs (replaces alert/confirm)
- * Styles live in /admin/css/ui.css
+ * Styles live in /admin/css/ui.css (bestuur.css on the admin pages)
  */
 (function() {
   'use strict';

@@ -1,8 +1,9 @@
 /**
- * Appointments tab (amp 1-9): find an office holder and ask for an
- * appointment, answer the requests made to you. Writes go through
- * OACUI.post() to /admin/api/ampte/ (CSRF). The calendar reads the same
- * appointments, so nothing is copied anywhere else.
+ * Appointments tab (amp 1-9): answer the requests made to you, see what is
+ * coming up, find an office bearer (search + office filter) and ask for an
+ * appointment. Writes go through OACUI.post() to /admin/api/ampte/ (CSRF).
+ * The calendar reads the same appointments, so nothing is copied anywhere
+ * else. Dates and the red tab count are admin.js's (window.OACAdmin).
  */
 (function () {
   'use strict';
@@ -14,7 +15,7 @@
 
   const L = window.AFSPRAKE_LANG || {};
   const body = document.body;
-  // The panel is animated (a transform), which would trap a fixed layer inside it: the sheet lives on <body>
+  // A fixed layer must not sit inside anything transformed: the sheet lives on <body>
   body.appendChild(layer);
   const sheet = layer.querySelector('.afsprake-sheet');
   const dateEl = document.getElementById('appointmentDate');
@@ -22,16 +23,7 @@
   const submitBtn = form.querySelector('button[type="submit"]');
   let lastFocus = null;
 
-  // ===== Dates in the member's language =====
-  function localDates(scope) {
-    scope.querySelectorAll('time[data-date]').forEach(function (t) {
-      const d = new Date(t.getAttribute('data-date') + 'T00:00:00');
-      if (!isNaN(d)) {
-        t.textContent = d.toLocaleDateString(L.lang || undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      }
-    });
-  }
-  localDates(root);
+  const admin = () => window.OACAdmin || null;
 
   // ===== "Coming up": fetched again from this page after every change =====
   async function refreshUpcoming() {
@@ -44,7 +36,7 @@
       const fresh = doc.getElementById('afsprakeUpcomingSlot');
       if (!fresh) return;
       slot.innerHTML = fresh.innerHTML;
-      localDates(slot);
+      if (admin()) admin().dates(slot);
     } catch (e) { /* the list stays as it was; a reload shows the rest */ }
   }
 
@@ -132,39 +124,55 @@
     }
   });
 
-  // ===== Search =====
+  // ===== Find an office bearer: search words and one office at a time =====
   const search = document.getElementById('afsprakeSearch');
-  if (search) {
-    const people = Array.prototype.slice.call(document.querySelectorAll('.afsprake-card-person'));
-    const groups = Array.prototype.slice.call(document.querySelectorAll('.afsprake-group'));
-    const none = document.getElementById('afsprakeNoMatch');
+  const chips = Array.prototype.slice.call(root.querySelectorAll('[data-office][aria-pressed]'));
+  const people = Array.prototype.slice.call(root.querySelectorAll('.afsprake-card-person'));
+  const groups = Array.prototype.slice.call(root.querySelectorAll('.afsprake-group'));
+  const none = document.getElementById('afsprakeNoMatch');
+  let office = '';
 
-    search.addEventListener('input', function () {
-      const q = search.value.toLowerCase().trim();
-      people.forEach(function (card) {
-        card.hidden = q !== '' && (card.getAttribute('data-name') || '').indexOf(q) === -1;
+  function applyFilter() {
+    const q = search ? search.value.toLowerCase().trim() : '';
+    let any = false;
+    groups.forEach(function (g) {
+      const inOffice = office === '' || g.getAttribute('data-office') === office;
+      let shown = 0;
+      g.querySelectorAll('.afsprake-card-person').forEach(function (card) {
+        const hit = inOffice && (q === '' || (card.getAttribute('data-name') || '').indexOf(q) !== -1);
+        card.hidden = !hit;
+        if (hit) shown++;
       });
-      let any = false;
-      groups.forEach(function (g) {
-        const show = !!g.querySelector('.afsprake-card-person:not([hidden])');
-        g.hidden = !show;
-        any = any || show;
-      });
-      if (none) none.hidden = any;
+      g.hidden = shown === 0;
+      any = any || shown > 0;
     });
+    if (none) none.hidden = any || !people.length;
   }
+
+  if (search) search.addEventListener('input', applyFilter);
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      office = chip.getAttribute('data-office') || '';
+      chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c === chip)); });
+      applyFilter();
+    });
+  });
 
   // ===== Answer a request, or cancel one that is coming up =====
   function cardGone(card) {
     const section = card.closest('[data-appt-section]');
-    card.remove();
-    if (!section) return;
-    if (!section.querySelector('.afsprake-card')) {
-      section.remove();
-      return;
-    }
-    const count = section.querySelector('[data-count]');
-    if (count) count.textContent = String(section.querySelectorAll('.afsprake-card').length);
+    card.classList.add('is-leaving');
+    setTimeout(function () {
+      card.remove();
+      if (!section) return;
+      const left = section.querySelectorAll('.afsprake-card').length;
+      if (left === 0 && section.id === 'afsprakePending') {
+        section.remove();
+        return;
+      }
+      const count = section.querySelector('[data-count]');
+      if (count) count.textContent = String(left);
+    }, 240);
   }
 
   root.addEventListener('click', async function (e) {
@@ -175,6 +183,7 @@
 
     const id = btn.getAttribute('data-id');
     const card = btn.closest('.afsprake-card');
+    const wasRequest = !!(card && card.closest('#afsprakePending'));
 
     if (no) {
       const sure = await OACUI.confirm(L.confirmCancel || '', { danger: true });
@@ -183,13 +192,16 @@
 
     const buttons = card ? card.querySelectorAll('button') : [btn];
     buttons.forEach(function (b) { b.disabled = true; });
+    btn.classList.add('is-busy');
 
     const data = await OACUI.post(yes ? '/admin/api/ampte/confirm_appointment.php' : '/admin/api/ampte/cancel_appointment.php', { appointment_id: id });
+    btn.classList.remove('is-busy');
     if (data.success) {
       OACUI.toast(yes ? L.confirmed : L.cancelled, 'success');
-      if (card) cardGone(card);
-      // A confirmed request now belongs under "coming up"
-      if (yes) refreshUpcoming();
+      if (wasRequest && admin()) admin().lowerBadge('afsprake');
+      if (wasRequest && card) cardGone(card);
+      // Confirmed or cancelled, "coming up" is now different
+      refreshUpcoming();
     } else {
       OACUI.toast(data.error || '', 'error');
       buttons.forEach(function (b) { b.disabled = false; });

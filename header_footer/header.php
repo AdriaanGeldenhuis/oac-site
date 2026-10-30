@@ -99,6 +99,8 @@ function isActive($url, $currentPath) {
       <span class="ghf-bar"></span>
       <span class="ghf-bar"></span>
       <span class="ghf-shine"></span>
+      <!-- Something waits in the admin (header.js asks /admin/api/pending_count.php) -->
+      <span class="ghf-hamburger-dot" data-admin-dot hidden></span>
     </button>
 
     <!-- Page Title -->
@@ -180,6 +182,9 @@ function isActive($url, $currentPath) {
         <a href="<?= htmlspecialchars($link[0], ENT_QUOTES, 'UTF-8') ?>" class="ghf-nav-link ghf-nav-link--<?= $link[2] ?><?= $isCurrent ? ' active' : '' ?>"<?= $isCurrent ? ' aria-current="page"' : '' ?>>
           <span class="ghf-nav-orb"><svg viewBox="0 0 24 24" aria-hidden="true"><?= $link[3] ?></svg></span>
           <span class="ghf-nav-text"><?= htmlspecialchars(t_hdr($link[1]), ENT_QUOTES, 'UTF-8') ?></span>
+          <?php if ($link[0] === '/admin/index.php'): ?>
+          <span class="ghf-nav-count" data-admin-count data-label="<?= htmlspecialchars(t_hdr('adm_waiting_aria'), ENT_QUOTES, 'UTF-8') ?>" hidden></span>
+          <?php endif; ?>
         </a>
       </li>
     <?php endforeach; ?>

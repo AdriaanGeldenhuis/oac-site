@@ -1,97 +1,177 @@
 /* =====================================================================
-   Edit profile — emerald. Tokens, hero, buttons, fields and notices come
-   from admin.css; this file has the card, the photo and the cropper.
+   Edit profile (/admin/account.php) — only what is its own: one column,
+   the sections, the photo, the save button that stays in reach, the
+   notices after a save, and the photo cropper (account.js).
+   Tokens, cards, buttons and fields come from bestuur.css.
    ===================================================================== */
 
-.account-main {
-  max-width: 720px;
+/* One column, no side navigation */
+.adm-shell--single {
+  display: block;
+  max-width: 760px;
+  padding-bottom: calc(132px + var(--adm-safe-b));
 }
 
-/* ===== The form card ===== */
-.account-card {
-  position: relative;
+@media (min-width: 960px) {
+  .adm-shell--single {
+    padding-top: 28px;
+  }
+
+  .adm-shell--single .adm-main {
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+}
+
+.account-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 16px -4px;
+  padding: 6px 10px 6px 4px;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--adm-text-2);
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.account-back:hover {
+  color: var(--adm-text);
+  background: var(--adm-surface-2);
+}
+
+.account-back-ico {
+  width: 18px;
+  height: 18px;
+  transform: rotate(180deg);
+}
+
+.account-form {
   display: grid;
-  gap: 16px;
-  padding: var(--pad);
-  background:
-    radial-gradient(120% 60% at 100% 0%, rgba(var(--accent-rgb), 0.07) 0%, transparent 60%),
-    linear-gradient(160deg, var(--card-top) 0%, var(--bg-card) 60%);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 var(--sheen);
-  animation: admin-rise 0.7s var(--ease) 0.2s both;
+  gap: 12px;
 }
 
-.account-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 12%;
-  right: 12%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.75), transparent);
-  pointer-events: none;
-}
-
-.account-notice-actions {
+.account-section-title {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--adm-text);
 }
 
-.account-notice-actions .admin-btn {
-  flex: 1 1 140px;
+.account-section-title .adm-ico {
+  width: 18px;
+  height: 18px;
+  color: var(--adm-brand);
+}
+
+.account-section-title label {
+  cursor: pointer;
+}
+
+.account-linked {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  font-size: 0.94rem;
+  color: var(--adm-text-2);
+  background: var(--adm-brand-soft);
+  border: 1px solid var(--adm-brand-line);
+  border-radius: 10px;
+}
+
+.account-linked .adm-ico {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  color: var(--adm-brand);
+}
+
+.account-linked strong {
+  color: var(--adm-text);
+}
+
+.account-spouse {
+  margin-bottom: 12px;
+}
+
+/* ===== After a save ===== */
+.admin-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  border: 1px solid;
+  border-radius: 12px;
+}
+
+.admin-notice .adm-ico {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.admin-notice-success {
+  color: var(--adm-ok);
+  background: var(--adm-ok-soft);
+  border-color: color-mix(in srgb, var(--adm-ok) 35%, transparent);
+}
+
+.admin-notice-error {
+  color: var(--adm-danger);
+  background: var(--adm-danger-soft);
+  border-color: var(--adm-danger-line);
+}
+
+.admin-notice-info {
+  color: var(--adm-text);
+  background: var(--adm-brand-soft);
+  border-color: var(--adm-brand-line);
 }
 
 /* ===== Photo ===== */
 .account-photo-section {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-light);
+  gap: 18px;
 }
 
 .account-avatar-wrapper {
   position: relative;
   flex: none;
-  width: 104px;
-  height: 104px;
+  width: 96px;
+  height: 96px;
   padding: 0;
   background: none;
   border: 0;
   border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.25s var(--ease);
-}
-
-.account-avatar-wrapper:active {
-  transform: scale(0.96);
 }
 
 .account-avatar {
   display: block;
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
+  width: 96px;
+  height: 96px;
   object-fit: cover;
-  box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px rgba(var(--accent-rgb), 0.6), 0 14px 30px -12px rgba(var(--accent-rgb), 0.6);
-}
-
-.account-avatar[hidden] {
-  display: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--adm-surface), 0 0 0 4px var(--adm-brand-line);
 }
 
 .account-avatar-initials {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--accent-ink);
-  background: var(--accent-grad);
+  color: var(--adm-brand);
+  background: var(--adm-brand-soft);
 }
 
 .account-avatar-overlay {
@@ -101,30 +181,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  color: var(--accent-ink);
-  background: var(--accent-grad);
-  border: 2px solid var(--bg-card);
+  width: 32px;
+  height: 32px;
+  color: var(--adm-brand-ink);
+  background: var(--adm-brand);
+  border: 3px solid var(--adm-surface);
   border-radius: 50%;
-  box-shadow: 0 8px 16px -6px rgba(var(--accent-rgb), 0.9);
 }
 
-.account-avatar-overlay svg {
-  width: 17px;
-  height: 17px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
+.account-avatar-overlay .adm-ico {
+  width: 15px;
+  height: 15px;
 }
 
 .account-photo-field {
-  flex: 1;
+  align-items: flex-start;
 }
 
-/* The browser's own file control ("Choose File / No file chosen", always in
-   English) is hidden but still focusable; the button below is its label. */
+/* The real file input stays in the form and the tab order, out of sight */
 .account-input-file {
   position: absolute;
   width: 1px;
@@ -132,88 +206,77 @@
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
-  opacity: 0;
-}
-
-.account-photo-btn {
-  min-height: 44px;
-  padding: 0 20px;
-}
-
-.account-photo-btn svg {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .account-input-file:focus-visible + .account-photo-btn {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
+  outline: 2px solid var(--adm-brand);
+  outline-offset: 2px;
 }
 
-/* ===== Save bar ===== */
-.account-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 4px;
+.account-photo-btn {
+  cursor: pointer;
 }
 
-@media (max-width: 719px) {
-  .account-actions .admin-btn {
-    flex: 1;
-  }
-}
-
-@media (max-width: 480px) {
+@media (max-width: 420px) {
   .account-photo-section {
     flex-direction: column;
-    text-align: center;
-  }
-
-  .account-photo-field {
-    width: 100%;
+    align-items: flex-start;
   }
 }
 
-/* ===== The cropper ===== */
+/* ===== Save, always in reach: between the back button and the bell ===== */
+.account-savebar {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  z-index: 998;
+  width: min(calc(100vw - 184px), 340px);
+  transform: translateX(-50%);
+}
+
+.account-savebar .admin-btn {
+  width: 100%;
+  min-height: 60px;
+  font-size: 1rem;
+  border-radius: 999px;
+  box-shadow: 0 16px 34px -14px var(--adm-brand), 0 0 0 4px var(--adm-bg);
+}
+
+/* ===== The photo cropper (account.js builds it) ===== */
 .cropper-modal {
   position: fixed;
   inset: 0;
-  z-index: 29000;
+  z-index: 25000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: var(--scrim);
-  -webkit-backdrop-filter: blur(6px);
-          backdrop-filter: blur(6px);
+  font-family: var(--adm-font);
+  color: var(--adm-text);
+  background: var(--adm-scrim);
   opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.22s ease, visibility 0.22s;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+  transition: opacity 0.22s ease;
 }
 
 .cropper-modal.show {
   opacity: 1;
-  visibility: visible;
+  pointer-events: auto;
 }
 
 .cropper-content {
-  width: min(100%, 460px);
-  max-height: 96vh;
-  max-height: 96dvh;
+  width: min(100%, 440px);
+  max-height: 94vh;
+  padding: 18px;
   overflow-y: auto;
-  padding: 18px 20px 20px;
-  background:
-    radial-gradient(120% 60% at 100% 0%, rgba(var(--accent-rgb), 0.1) 0%, transparent 60%),
-    linear-gradient(160deg, var(--card-top) 0%, var(--bg-card) 60%);
-  border: 1px solid var(--border-light);
-  border-radius: 26px;
-  box-shadow: var(--shadow), inset 0 1px 0 var(--sheen);
-  transform: translateY(14px) scale(0.98);
-  transition: transform 0.3s var(--ease);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line-2);
+  border-radius: 18px;
+  box-shadow: var(--adm-shadow-lg);
+  transform: translateY(10px) scale(0.98);
+  transition: transform 0.25s var(--adm-ease);
 }
 
 .cropper-modal.show .cropper-content {
@@ -230,38 +293,37 @@
 
 .cropper-header h3 {
   margin: 0;
-  font-family: var(--font-serif);
-  font-size: 1.6rem;
-  font-weight: 600;
-  line-height: 1.15;
+  font-family: var(--adm-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .cropper-close {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
   line-height: 1;
-  color: var(--text-secondary);
+  color: var(--adm-text-2);
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 50%;
+  border: 1px solid var(--adm-line-2);
+  border-radius: 10px;
   cursor: pointer;
 }
 
 .cropper-canvas-wrapper {
-  display: flex;
-  justify-content: center;
+  overflow: hidden;
+  border-radius: 14px;
 }
 
 .cropper-canvas-wrapper canvas {
   display: block;
-  width: min(100%, 400px);
+  width: 100%;
   height: auto;
-  aspect-ratio: 1;
-  border-radius: 20px;
   cursor: grab;
-  touch-action: none;       /* a finger drags the picture, it does not scroll the page */
+  touch-action: none;
 }
 
 .cropper-canvas-wrapper canvas.dragging {
@@ -276,16 +338,16 @@
 }
 
 .cropper-zoom-btn {
-  flex: none;
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.1);
-  border: 1px solid rgba(var(--accent-rgb), 0.35);
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: var(--adm-text);
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line-2);
+  border-radius: 10px;
   cursor: pointer;
 }
 
@@ -300,25 +362,25 @@
 
 .cropper-slider {
   flex: 1;
-  min-width: 0;
-  height: 44px;
-  accent-color: var(--accent);
-  cursor: pointer;
+  accent-color: var(--adm-brand);
 }
 
 .cropper-hint {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
+  font-size: 0.86rem;
+  color: var(--adm-muted);
   text-align: center;
-  font-size: 0.82rem;
-  color: var(--text-muted);
 }
 
 .cropper-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 10px;
   margin-top: 16px;
 }
 
-.cropper-actions .admin-btn {
-  flex: 1;
+@media (max-width: 420px) {
+  .cropper-actions .admin-btn {
+    flex: 1;
+  }
 }

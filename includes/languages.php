@@ -8516,6 +8516,400 @@ define('UI_TRANSLATIONS', [
         'st' => 'Setšoantšo se loketse — boloka ho se boloka.'
     ],
 
+    // The admin area ("Bestuur"): navigation, overview, approvals, appointments (admin/index.php + tabs)
+    'adm_nav_overview' => [
+        'af' => 'Oorsig',
+        'en' => 'Overview',
+        'zu' => 'Isifinyezo',
+        'xh' => 'Isishwankathelo',
+        'pt' => 'Visão geral',
+        'st' => 'Kakaretso'
+    ],
+    'adm_nav_account' => [
+        'af' => 'My rekening',
+        'en' => 'My account',
+        'zu' => 'I-akhawunti yami',
+        'xh' => 'I-akhawunti yam',
+        'pt' => 'A minha conta',
+        'st' => 'Akhaonto ea ka'
+    ],
+    'adm_greet_morning' => [
+        'af' => 'Goeie môre',
+        'en' => 'Good morning',
+        'zu' => 'Sawubona',
+        'xh' => 'Molo',
+        'pt' => 'Bom dia',
+        'st' => 'Dumela'
+    ],
+    'adm_greet_afternoon' => [
+        'af' => 'Goeie middag',
+        'en' => 'Good afternoon',
+        'zu' => 'Sawubona',
+        'xh' => 'Molo',
+        'pt' => 'Boa tarde',
+        'st' => 'Dumela'
+    ],
+    'adm_greet_evening' => [
+        'af' => 'Goeie aand',
+        'en' => 'Good evening',
+        'zu' => 'Sawubona',
+        'xh' => 'Molo',
+        'pt' => 'Boa noite',
+        'st' => 'Dumela'
+    ],
+    'adm_waiting_title' => [
+        'af' => 'Wag op jou',
+        'en' => 'Waiting for you',
+        'zu' => 'Okulindile wena',
+        'xh' => 'Okulindileyo',
+        'pt' => 'À sua espera',
+        'st' => 'Tse u emetseng'
+    ],
+    'adm_waiting_aria' => [
+        'af' => '{n} wag op jou',
+        'en' => '{n} waiting for you',
+        'zu' => '{n} okulindile',
+        'xh' => '{n} okulindileyo',
+        'pt' => '{n} à sua espera',
+        'st' => '{n} tse u emetseng'
+    ],
+    'adm_all_clear' => [
+        'af' => 'Alles is op datum',
+        'en' => 'You are all caught up',
+        'zu' => 'Konke kuhamba kahle',
+        'xh' => 'Yonke into ilungile',
+        'pt' => 'Está tudo em dia',
+        'st' => 'Tsohle li lokile'
+    ],
+    'adm_all_clear_sub' => [
+        'af' => 'Niemand wag tans op jou nie.',
+        'en' => 'Nothing is waiting for you right now.',
+        'zu' => 'Akukho okulindile okwamanje.',
+        'xh' => 'Akukho nto ilindileyo okwangoku.',
+        'pt' => 'Nada está à sua espera de momento.',
+        'st' => 'Ha ho letho le u emetseng hajoale.'
+    ],
+    'adm_wait_users_one' => [
+        'af' => '1 nuwe lid wag op goedkeuring',
+        'en' => '1 new member is waiting for approval',
+        'zu' => 'Ilungu elisha eli-1 lilinde ukugunyazwa',
+        'xh' => 'Ilungu elitsha eli-1 lilinde ukuvunywa',
+        'pt' => '1 novo membro aguarda aprovação',
+        'st' => 'Setho se secha se 1 se emetse tumello'
+    ],
+    'adm_wait_users_many' => [
+        'af' => '{n} nuwe lede wag op goedkeuring',
+        'en' => '{n} new members are waiting for approval',
+        'zu' => 'Amalungu amasha angu-{n} alinde ukugunyazwa',
+        'xh' => 'Amalungu amatsha angama-{n} alinde ukuvunywa',
+        'pt' => '{n} novos membros aguardam aprovação',
+        'st' => 'Litho tse ncha tse {n} li emetse tumello'
+    ],
+    'adm_wait_spouse_one' => [
+        'af' => '1 eggenootversoek wag',
+        'en' => '1 spouse request is waiting',
+        'zu' => 'Isicelo somshado esi-1 silindile',
+        'xh' => 'Isicelo somtshato esi-1 silindile',
+        'pt' => '1 pedido de cônjuge aguarda',
+        'st' => 'Kopo e le 1 ea molekane e emetse'
+    ],
+    'adm_wait_spouse_many' => [
+        'af' => '{n} eggenootversoeke wag',
+        'en' => '{n} spouse requests are waiting',
+        'zu' => 'Izicelo zomshado ezingu-{n} zilindile',
+        'xh' => 'Izicelo zomtshato ezi-{n} zilindile',
+        'pt' => '{n} pedidos de cônjuge aguardam',
+        'st' => 'Likopo tse {n} tsa molekane li emetse'
+    ],
+    'adm_wait_appts_one' => [
+        'af' => '1 afspraakversoek aan jou',
+        'en' => '1 appointment request for you',
+        'zu' => 'Isicelo sokuhlangana esi-1 kuwe',
+        'xh' => 'Isicelo sedinga esi-1 kuwe',
+        'pt' => '1 pedido de compromisso para si',
+        'st' => 'Kopo e le 1 ea kopano ho uena'
+    ],
+    'adm_wait_appts_many' => [
+        'af' => '{n} afspraakversoeke aan jou',
+        'en' => '{n} appointment requests for you',
+        'zu' => 'Izicelo zokuhlangana ezingu-{n} kuwe',
+        'xh' => 'Izicelo zamadinga ezi-{n} kuwe',
+        'pt' => '{n} pedidos de compromisso para si',
+        'st' => 'Likopo tse {n} tsa kopano ho uena'
+    ],
+    'adm_handle_now' => [
+        'af' => 'Hanteer nou',
+        'en' => 'Handle now',
+        'zu' => 'Phatha manje',
+        'xh' => 'Phatha ngoku',
+        'pt' => 'Tratar agora',
+        'st' => 'Sebetsana le eona hona joale'
+    ],
+    'adm_answer' => [
+        'af' => 'Beantwoord',
+        'en' => 'Answer',
+        'zu' => 'Phendula',
+        'xh' => 'Phendula',
+        'pt' => 'Responder',
+        'st' => 'Araba'
+    ],
+    'adm_and_more' => [
+        'af' => 'en {n} meer',
+        'en' => 'and {n} more',
+        'zu' => 'nabanye abangu-{n}',
+        'xh' => 'nabanye aba-{n}',
+        'pt' => 'e mais {n}',
+        'st' => 'le ba bang ba {n}'
+    ],
+    'adm_tools' => [
+        'af' => 'Gereedskap',
+        'en' => 'Tools',
+        'zu' => 'Amathuluzi',
+        'xh' => 'Izixhobo',
+        'pt' => 'Ferramentas',
+        'st' => 'Lisebelisoa'
+    ],
+    'adm_tool_approvals' => [
+        'af' => 'Nuwe lede en eggenootversoeke in jou gebied.',
+        'en' => 'New members and spouse requests in your area.',
+        'zu' => 'Amalungu amasha nezicelo zomshado endaweni yakho.',
+        'xh' => 'Amalungu amatsha nezicelo zomtshato kummandla wakho.',
+        'pt' => 'Novos membros e pedidos de cônjuge na sua área.',
+        'st' => 'Litho tse ncha le likopo tsa molekane sebakeng sa hau.'
+    ],
+    'adm_tool_afsprake' => [
+        'af' => 'Versoeke aan jou, komende afsprake en die ampte.',
+        'en' => 'Requests to you, upcoming appointments and the offices.',
+        'zu' => 'Izicelo kuwe, ukuhlangana okuzayo nezikhundla.',
+        'xh' => 'Izicelo kuwe, amadinga azayo kunye nezikhundla.',
+        'pt' => 'Pedidos para si, compromissos futuros e os ofícios.',
+        'st' => 'Likopo ho uena, likopano tse tlang le liofisi.'
+    ],
+    'adm_tool_gedagte' => [
+        'af' => 'Skryf en skeduleer die daaglikse gedagte.',
+        'en' => 'Write and schedule the daily thought.',
+        'zu' => 'Bhala futhi uhlele umcabango wansuku zonke.',
+        'xh' => 'Bhala kwaye ucwangcise ingcinga yemihla ngemihla.',
+        'pt' => 'Escreva e agende o pensamento diário.',
+        'st' => 'Ngola le ho hlophisa monahano oa letsatsi le letsatsi.'
+    ],
+    'adm_tool_account' => [
+        'af' => 'Jou profiel, foto en wagwoord.',
+        'en' => 'Your profile, photo and password.',
+        'zu' => 'Iphrofayela yakho, isithombe nephasiwedi.',
+        'xh' => 'Iprofayile yakho, umfanekiso kunye negama lokugqitha.',
+        'pt' => 'O seu perfil, foto e senha.',
+        'st' => 'Profaele ea hau, setšoantšo le phasewete.'
+    ],
+    'adm_scope_offices' => [
+        'af' => 'Ampte wat jy goedkeur',
+        'en' => 'Offices you approve',
+        'zu' => 'Izikhundla ozigunyazayo',
+        'xh' => 'Izikhundla ozivumayo',
+        'pt' => 'Ofícios que aprova',
+        'st' => 'Liofisi tseo u li amohelang'
+    ],
+    'adm_scope_area' => [
+        'af' => 'Gebied',
+        'en' => 'Area',
+        'zu' => 'Indawo',
+        'xh' => 'Ummandla',
+        'pt' => 'Área',
+        'st' => 'Sebaka'
+    ],
+    'adm_scope_everywhere' => [
+        'af' => 'Landwyd',
+        'en' => 'Nationwide',
+        'zu' => 'Ezweni lonke',
+        'xh' => 'Kwilizwe lonke',
+        'pt' => 'Todo o país',
+        'st' => 'Naheng eohle'
+    ],
+    'adm_scope_none' => [
+        'af' => 'Jou profiel het nog nie \'n dorp of gemeente nie, daarom is daar niemand vir jou om goed te keur nie. Voeg dit by onder My rekening.',
+        'en' => 'Your profile has no town or congregation yet, so there is nobody for you to approve. Add it under My account.',
+        'zu' => 'Iphrofayela yakho ayinalo idolobha noma ibandla, ngakho akekho ongamgunyaza. Kwengeze ngaphansi kwe-akhawunti yami.',
+        'xh' => 'Iprofayile yakho ayinayo idolophu okanye ibandla, ngoko akukho mntu onokumvuma. Yongeze phantsi kwe-akhawunti yam.',
+        'pt' => 'O seu perfil ainda não tem cidade nem congregação, por isso não há ninguém para aprovar. Adicione-os em A minha conta.',
+        'st' => 'Profaele ea hau ha e na toropo kapa phutheho, kahoo ha ho motho eo u ka mo amohelang. E kenye tlasa Akhaonto ea ka.'
+    ],
+    'adm_registered' => [
+        'af' => 'Geregistreer {ago}',
+        'en' => 'Registered {ago}',
+        'zu' => 'Ubhalise {ago}',
+        'xh' => 'Ubhalise {ago}',
+        'pt' => 'Registou-se {ago}',
+        'st' => 'O ngolisitse {ago}'
+    ],
+    'adm_ago_today' => [
+        'af' => 'vandag',
+        'en' => 'today',
+        'zu' => 'namuhla',
+        'xh' => 'namhlanje',
+        'pt' => 'hoje',
+        'st' => 'kajeno'
+    ],
+    'adm_ago_yesterday' => [
+        'af' => 'gister',
+        'en' => 'yesterday',
+        'zu' => 'izolo',
+        'xh' => 'izolo',
+        'pt' => 'ontem',
+        'st' => 'maobane'
+    ],
+    'adm_ago_days' => [
+        'af' => '{n} dae gelede',
+        'en' => '{n} days ago',
+        'zu' => 'ezinsukwini ezingu-{n} ezedlule',
+        'xh' => 'kwiintsuku ezi-{n} ezidlulileyo',
+        'pt' => 'há {n} dias',
+        'st' => 'matsatsi a {n} a fetileng'
+    ],
+    'adm_spouse_asks' => [
+        'af' => '{a} vra om met {b} te koppel',
+        'en' => '{a} asks to be linked with {b}',
+        'zu' => '{a} ucela ukuxhunyaniswa no-{b}',
+        'xh' => '{a} ucela ukudityaniswa no-{b}',
+        'pt' => '{a} pede para ser ligado a {b}',
+        'st' => '{a} o kopa ho hokahanngoa le {b}'
+    ],
+    'adm_link' => [
+        'af' => 'Koppel',
+        'en' => 'Link',
+        'zu' => 'Xhumanisa',
+        'xh' => 'Dibanisa',
+        'pt' => 'Ligar',
+        'st' => 'Hokahanya'
+    ],
+    'adm_search_name' => [
+        'af' => 'Soek \'n naam…',
+        'en' => 'Search a name…',
+        'zu' => 'Sesha igama…',
+        'xh' => 'Khangela igama…',
+        'pt' => 'Procurar um nome…',
+        'st' => 'Batla lebitso…'
+    ],
+    'adm_requests_to_you' => [
+        'af' => 'Versoeke aan jou',
+        'en' => 'Requests to you',
+        'zu' => 'Izicelo kuwe',
+        'xh' => 'Izicelo kuwe',
+        'pt' => 'Pedidos para si',
+        'st' => 'Likopo ho uena'
+    ],
+    'adm_filter_all' => [
+        'af' => 'Almal',
+        'en' => 'All',
+        'zu' => 'Bonke',
+        'xh' => 'Bonke',
+        'pt' => 'Todos',
+        'st' => 'Bohle'
+    ],
+    'adm_appt_none' => [
+        'af' => 'Geen komende afsprake nie.',
+        'en' => 'No upcoming appointments.',
+        'zu' => 'Akukho ukuhlangana okuzayo.',
+        'xh' => 'Akukho madinga azayo.',
+        'pt' => 'Sem compromissos futuros.',
+        'st' => 'Ha ho likopano tse tlang.'
+    ],
+    'adm_appt_find_hint' => [
+        'af' => 'Kies \'n ampsdraer en stuur \'n versoek.',
+        'en' => 'Pick an office bearer and send a request.',
+        'zu' => 'Khetha isikhulu bese uthumela isicelo.',
+        'xh' => 'Khetha igosa uze uthumele isicelo.',
+        'pt' => 'Escolha um oficial e envie um pedido.',
+        'st' => 'Khetha mookameli ebe u romela kopo.'
+    ],
+    'adm_teach_progress' => [
+        'af' => '{n} van {total} tale klaar',
+        'en' => '{n} of {total} languages done',
+        'zu' => 'Izilimi ezingu-{n} kwezingu-{total} seziqediwe',
+        'xh' => 'Iilwimi ezi-{n} kwezi-{total} zigqityiwe',
+        'pt' => '{n} de {total} línguas prontas',
+        'st' => 'Lipuo tse {n} ho tse {total} li phethiloe'
+    ],
+    'adm_teach_empty' => [
+        'af' => 'Nog leeg',
+        'en' => 'Still empty',
+        'zu' => 'Kusengenalutho',
+        'xh' => 'Kusengenanto',
+        'pt' => 'Ainda vazio',
+        'st' => 'E sa ntse e se na letho'
+    ],
+    'adm_teach_updated' => [
+        'af' => 'Laas gewysig {ago}',
+        'en' => 'Last edited {ago}',
+        'zu' => 'Kugcine ukuhlelwa {ago}',
+        'xh' => 'Kugqibele ukuhlelwa {ago}',
+        'pt' => 'Última edição {ago}',
+        'st' => 'E fetotsoe la ho qetela {ago}'
+    ],
+    'adm_teach_none_yet' => [
+        'af' => 'Nog geen lering vir jou dorp gestoor nie.',
+        'en' => 'No teaching saved for your town yet.',
+        'zu' => 'Ayikho imfundiso esigcinelwe idolobha lakho okwamanje.',
+        'xh' => 'Akukho mfundiso igcinelwe idolophu yakho okwangoku.',
+        'pt' => 'Ainda não há ensino guardado para a sua cidade.',
+        'st' => 'Ha ho thuto e bolokiloeng bakeng sa toropo ea hau hajoale.'
+    ],
+    'adm_thoughts_week' => [
+        'af' => '{n} van die volgende 7 dae geskeduleer',
+        'en' => '{n} of the next 7 days scheduled',
+        'zu' => '{n} kwezinsuku ezi-7 ezizayo sekuhleliwe',
+        'xh' => '{n} kwiintsuku ezi-7 ezizayo zicwangcisiwe',
+        'pt' => '{n} dos próximos 7 dias agendados',
+        'st' => '{n} ho matsatsi a 7 a tlang a hlophisitsoe'
+    ],
+    'adm_sec_personal' => [
+        'af' => 'Persoonlik',
+        'en' => 'Personal',
+        'zu' => 'Okomuntu siqu',
+        'xh' => 'Okobuqu',
+        'pt' => 'Pessoal',
+        'st' => 'Tsa botho'
+    ],
+    'adm_sec_contact' => [
+        'af' => 'Kontak',
+        'en' => 'Contact',
+        'zu' => 'Ukuxhumana',
+        'xh' => 'Unxibelelwano',
+        'pt' => 'Contacto',
+        'st' => 'Puisano'
+    ],
+    'adm_sec_place' => [
+        'af' => 'Woonplek en gemeente',
+        'en' => 'Home and congregation',
+        'zu' => 'Ikhaya nebandla',
+        'xh' => 'Ikhaya nebandla',
+        'pt' => 'Residência e congregação',
+        'st' => 'Lehae le phutheho'
+    ],
+    'adm_sec_family' => [
+        'af' => 'Gesin',
+        'en' => 'Family',
+        'zu' => 'Umndeni',
+        'xh' => 'Usapho',
+        'pt' => 'Família',
+        'st' => 'Lelapa'
+    ],
+    'adm_back_admin' => [
+        'af' => 'Terug na Bestuur',
+        'en' => 'Back to Manage',
+        'zu' => 'Buyela ku-Phatha',
+        'xh' => 'Buyela kwi-Lawula',
+        'pt' => 'Voltar a Gerir',
+        'st' => 'Khutlela ho Laola'
+    ],
+    'adm_see_all' => [
+        'af' => 'Sien alles',
+        'en' => 'See all',
+        'zu' => 'Bona konke',
+        'xh' => 'Bona konke',
+        'pt' => 'Ver tudo',
+        'st' => 'Bona tsohle'
+    ],
+
     // Offline in the app (offline/js/offline.js). zu/xh/st fall back to English.
     'offline_pill' => [
         'af' => 'Jy is aflyn',

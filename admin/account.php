@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 /**
- * Edit profile — "Light Through Glass".
- * Name, contact, language, place, photo (cropped in the browser, see
- * account.js), a spouse request and a few words about yourself. The form
+ * Edit profile — part of the admin ("Bestuur"), in its plain look
+ * (bestuur.css + account.css). Name, contact, language, place, photo
+ * (cropped in the browser, see account.js), a spouse request and a few
+ * words about yourself, in sections. People are named office first. The form
  * posts to this page with the session's CSRF token; a saved form redirects
  * back here (so a refresh never saves twice) with the outcome shown once.
  * Roles are not on this page: a member cannot change their own office.
@@ -64,7 +65,7 @@ $spouseOptions = [];
 if (!empty($currentUser['congregation_id']) && empty($currentUser['spouse_user_id'])) {
     try {
         $oppGender = (strtolower((string)($currentUser['gender'] ?? '')) === 'man') ? 'vrou' : 'man';
-        $stmt = $pdo->prepare("SELECT id, name, surname FROM users
+        $stmt = $pdo->prepare("SELECT id, name, surname, amp_id, gender FROM users
             WHERE congregation_id = ? AND gender = ? AND status = 'approved'
             AND id <> ? AND spouse_user_id IS NULL
             ORDER BY surname, name");
@@ -262,7 +263,7 @@ if (!empty($_SESSION['admin_flash']) && is_array($_SESSION['admin_flash'])) {
 // A spouse request that involves me
 $pendingSpouseRequest = null;
 try {
-    $stmt = $pdo->prepare("SELECT sr.id, sr.requester_id, u.name, u.surname FROM spouse_requests sr
+    $stmt = $pdo->prepare("SELECT sr.id, sr.requester_id, u.name, u.surname, u.amp_id, u.gender FROM spouse_requests sr
         JOIN users u ON u.id = CASE WHEN sr.requester_id = ? THEN sr.receiver_id ELSE sr.requester_id END
         WHERE (sr.requester_id = ? OR sr.receiver_id = ?) AND sr.status = 'pending'
         LIMIT 1");
@@ -275,12 +276,13 @@ try {
 // My spouse, when the link goes both ways
 $spouseData = null;
 if (!empty($currentUser['spouse_user_id'])) {
-    $stmt = $pdo->prepare('SELECT name, surname FROM users WHERE id = ? AND spouse_user_id = ? LIMIT 1');
+    $stmt = $pdo->prepare('SELECT name, surname, amp_id, gender FROM users WHERE id = ? AND spouse_user_id = ? LIMIT 1');
     $stmt->execute([(int)$currentUser['spouse_user_id'], $userId]);
     $spouseData = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
 $fullName = admin_full_name($currentUser);
+$meLabel = admin_person($currentUser, $lang);
 $photoUrl = admin_photo_url($currentUser['photo'] ?? null);
 $widowValue = (strtolower((string)($currentUser['gender'] ?? '')) === 'vrou') ? 'weduwee' : 'wewenaar';
 $pidSel = (string)($currentUser['province_id'] ?? '');
@@ -316,198 +318,205 @@ $accountData = [
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Parisienne&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="<?= admin_asset('/admin/css/admin.css') ?>">
+  <link rel="stylesheet" href="<?= admin_asset('/admin/css/bestuur.css') ?>">
   <link rel="stylesheet" href="<?= admin_asset('/admin/css/account.css') ?>">
-  <link rel="stylesheet" href="<?= admin_asset('/admin/css/ui.css') ?>">
 </head>
-<body class="admin-body" data-tab="account">
+<body class="adm" data-tab="account">
   <?php require_once __DIR__ . '/../header_footer/header.php'; ?>
 
-  <div class="admin-aura" aria-hidden="true"><div class="admin-rays"></div><div class="admin-halo"></div></div>
+  <div class="adm-shell adm-shell--single">
+    <main class="adm-main" id="adminMain">
+      <a class="account-back" href="/admin/index.php?tab=profile"><?= admin_icon('chevron', 'adm-ico account-back-ico') ?><span><?= esc(t('adm_back_admin')) ?></span></a>
 
-  <main class="admin-main account-main" id="adminMain">
-    <section class="admin-hero" aria-labelledby="accountTitle">
-      <p class="admin-eyebrow">
-        <svg class="admin-eyebrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        <span><?= esc(t('my_profile')) ?></span>
-      </p>
-      <h2 class="admin-title" id="accountTitle"><span><?= esc(t('edit_profile')) ?></span></h2>
-      <p class="admin-sub"><?= esc(t('update_personal_info')) ?></p>
-    </section>
+      <header class="adm-head">
+        <p class="adm-kicker"><?= admin_icon('shield') ?><span><?= esc(t('adm_eyebrow')) ?></span></p>
+        <h2 class="adm-title"><?= esc(t('edit_profile')) ?></h2>
+        <p class="adm-sub"><?= esc($meLabel) ?></p>
+      </header>
 
-    <div class="account-card">
       <?php foreach ($flash as $key): ?>
-        <div class="admin-notice admin-notice-success" role="status"><?= esc(t((string)$key)) ?></div>
+      <div class="admin-notice admin-notice-success" role="status"><?= admin_icon('check') ?><span><?= esc(t((string)$key)) ?></span></div>
       <?php endforeach; ?>
       <?php foreach ($errors as $key): ?>
-        <div class="admin-notice admin-notice-error" role="alert"><?= esc(t($key)) ?></div>
+      <div class="admin-notice admin-notice-error" role="alert"><?= admin_icon('x') ?><span><?= esc(t($key)) ?></span></div>
       <?php endforeach; ?>
 
-      <?php if ($pendingSpouseRequest): ?>
-        <div class="admin-notice admin-notice-info" id="spouseNotice">
+      <?php if ($pendingSpouseRequest): $otherLabel = admin_person($pendingSpouseRequest, $lang); ?>
+      <div class="adm-task adm-task--spouse account-spouse" id="spouseNotice">
+        <span class="adm-task-icon"><?= admin_icon('heart') ?></span>
+        <div class="adm-task-body">
           <?php if ((int)$pendingSpouseRequest['requester_id'] === $userId): ?>
-            <?= esc(t('you_sent_spouse_request')) ?>
-            <strong><?= esc(admin_full_name($pendingSpouseRequest)) ?></strong>.
-            <?= esc(t('waiting_approval')) ?>
-            <div class="account-notice-actions">
-              <button type="button" class="admin-btn admin-btn-secondary" data-spouse="cancel" data-id="<?= (int)$pendingSpouseRequest['id'] ?>"><?= esc(t('cancel_request')) ?></button>
-            </div>
+          <p class="adm-task-title"><?= esc(t('you_sent_spouse_request')) ?> <strong><?= esc($otherLabel) ?></strong>. <?= esc(t('waiting_approval')) ?></p>
+          <div class="adm-task-actions account-notice-actions">
+            <button type="button" class="admin-btn admin-btn-secondary" data-spouse="cancel" data-id="<?= (int)$pendingSpouseRequest['id'] ?>"><?= esc(t('cancel_request')) ?></button>
+          </div>
           <?php else: ?>
-            <strong><?= esc(admin_full_name($pendingSpouseRequest)) ?></strong>
-            <?= esc(t('wants_to_marry_you')) ?>
-            <div class="account-notice-actions">
-              <button type="button" class="admin-btn admin-btn-primary" data-spouse="accept" data-id="<?= (int)$pendingSpouseRequest['id'] ?>"><?= esc(t('accept')) ?></button>
-              <button type="button" class="admin-btn admin-btn-secondary" data-spouse="reject" data-id="<?= (int)$pendingSpouseRequest['id'] ?>"><?= esc(t('reject')) ?></button>
-            </div>
+          <p class="adm-task-title"><strong><?= esc($otherLabel) ?></strong> <?= esc(t('wants_to_marry_you')) ?></p>
+          <div class="adm-task-actions account-notice-actions">
+            <button type="button" class="admin-btn admin-btn-ok" data-spouse="accept" data-id="<?= (int)$pendingSpouseRequest['id'] ?>"><?= admin_icon('check') ?><span><?= esc(t('accept')) ?></span></button>
+            <button type="button" class="admin-btn admin-btn-quiet-danger" data-spouse="reject" data-id="<?= (int)$pendingSpouseRequest['id'] ?>"><?= admin_icon('x') ?><span><?= esc(t('reject')) ?></span></button>
+          </div>
           <?php endif; ?>
         </div>
+      </div>
       <?php endif; ?>
 
-      <form method="post" enctype="multipart/form-data" class="account-form admin-form" id="accountForm" novalidate>
+      <form method="post" enctype="multipart/form-data" class="account-form" id="accountForm" novalidate>
         <input type="hidden" name="csrf_token" value="<?= esc(csrf_token()) ?>">
 
-        <div class="account-photo-section">
+        <section class="adm-card adm-card--pad account-photo-section">
           <button type="button" class="account-avatar-wrapper" id="avatarPick" aria-label="<?= esc(t('profile_photo')) ?>">
             <?php if ($photoUrl !== ''): ?>
-            <img id="avatar-preview" src="<?= esc($photoUrl) ?>" alt="" class="account-avatar" width="104" height="104">
+            <img id="avatar-preview" src="<?= esc($photoUrl) ?>" alt="" class="account-avatar" width="96" height="96">
             <?php else: ?>
             <span id="avatar-initials" class="account-avatar account-avatar-initials" aria-hidden="true"><?= esc(admin_initials($fullName)) ?></span>
-            <img id="avatar-preview" src="" alt="" class="account-avatar" width="104" height="104" hidden>
+            <img id="avatar-preview" src="" alt="" class="account-avatar" width="96" height="96" hidden>
             <?php endif; ?>
-            <span class="account-avatar-overlay" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            </span>
+            <span class="account-avatar-overlay" aria-hidden="true"><?= admin_icon('edit') ?></span>
           </button>
           <div class="admin-field account-photo-field">
             <span class="admin-label" id="photoLabel"><?= esc(t('profile_photo')) ?></span>
             <!-- The real input stays in the form (and in the tab order); the button is its label, in the member's language -->
             <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" class="account-input-file" aria-labelledby="photoLabel" aria-describedby="photoHint">
-            <label for="photo" class="admin-btn admin-btn-secondary account-photo-btn">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <label for="photo" class="admin-btn admin-btn-secondary admin-btn-sm account-photo-btn">
+              <svg class="adm-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               <span><?= esc(t('adm_photo_pick')) ?></span>
             </label>
             <span class="admin-hint" id="photoHint"><?= esc(t('photo_hint')) ?></span>
           </div>
-        </div>
+        </section>
 
-        <div class="admin-form-row">
-          <div class="admin-field">
-            <label for="name" class="admin-label"><?= esc(t('name')) ?> *</label>
-            <input type="text" id="name" name="name" value="<?= esc($currentUser['name'] ?? '') ?>" required maxlength="100" autocomplete="given-name" class="admin-input">
+        <section class="adm-card adm-card--pad account-section" aria-labelledby="secPersonal">
+          <h3 class="account-section-title" id="secPersonal"><?= admin_icon('user') ?><?= esc(t('adm_sec_personal')) ?></h3>
+          <div class="admin-form">
+            <div class="admin-form-row">
+              <div class="admin-field">
+                <label for="name" class="admin-label"><?= esc(t('name')) ?> *</label>
+                <input type="text" id="name" name="name" value="<?= esc($currentUser['name'] ?? '') ?>" required maxlength="100" autocomplete="given-name" class="admin-input">
+              </div>
+              <div class="admin-field">
+                <label for="surname" class="admin-label"><?= esc(t('surname')) ?> *</label>
+                <input type="text" id="surname" name="surname" value="<?= esc($currentUser['surname'] ?? '') ?>" required maxlength="100" autocomplete="family-name" class="admin-input">
+              </div>
+            </div>
+            <div class="admin-form-row">
+              <div class="admin-field">
+                <label for="birthdate" class="admin-label"><?= esc(t('birthdate')) ?></label>
+                <input type="date" id="birthdate" name="birthdate" value="<?= esc($currentUser['birthdate'] ?? '') ?>" max="<?= esc(date('Y-m-d')) ?>" autocomplete="bday" class="admin-input">
+              </div>
+              <div class="admin-field">
+                <label for="language" class="admin-label"><?= esc(t('language')) ?></label>
+                <select id="language" name="language" class="admin-select">
+                  <?php foreach (SUPPORTED_LANGS as $lc): ?>
+                    <option value="<?= esc($lc) ?>" <?= ($currentUser['language'] ?? $lang) === $lc ? 'selected' : '' ?>><?= esc(LANG_NAMES[$lc]) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="admin-field">
-            <label for="surname" class="admin-label"><?= esc(t('surname')) ?> *</label>
-            <input type="text" id="surname" name="surname" value="<?= esc($currentUser['surname'] ?? '') ?>" required maxlength="100" autocomplete="family-name" class="admin-input">
-          </div>
-        </div>
+        </section>
 
-        <div class="admin-form-row">
-          <div class="admin-field">
-            <label for="email" class="admin-label"><?= esc(t('adm_email')) ?> *</label>
-            <input type="email" id="email" name="email" value="<?= esc($currentUser['email'] ?? '') ?>" required maxlength="190" autocomplete="email" class="admin-input">
+        <section class="adm-card adm-card--pad account-section" aria-labelledby="secContact">
+          <h3 class="account-section-title" id="secContact"><?= admin_icon('mail') ?><?= esc(t('adm_sec_contact')) ?></h3>
+          <div class="admin-form-row">
+            <div class="admin-field">
+              <label for="email" class="admin-label"><?= esc(t('adm_email')) ?> *</label>
+              <input type="email" id="email" name="email" value="<?= esc($currentUser['email'] ?? '') ?>" required maxlength="190" autocomplete="email" class="admin-input">
+            </div>
+            <div class="admin-field">
+              <label for="phone" class="admin-label"><?= esc(t('phone')) ?></label>
+              <input type="tel" id="phone" name="phone" value="<?= esc($currentUser['phone'] ?? '') ?>" maxlength="30" autocomplete="tel" class="admin-input">
+            </div>
           </div>
-          <div class="admin-field">
-            <label for="phone" class="admin-label"><?= esc(t('phone')) ?></label>
-            <input type="tel" id="phone" name="phone" value="<?= esc($currentUser['phone'] ?? '') ?>" maxlength="30" autocomplete="tel" class="admin-input">
-          </div>
-        </div>
+        </section>
 
-        <div class="admin-form-row">
-          <div class="admin-field">
-            <label for="language" class="admin-label"><?= esc(t('language')) ?></label>
-            <select id="language" name="language" class="admin-select">
-              <?php foreach (SUPPORTED_LANGS as $lc): ?>
-                <option value="<?= esc($lc) ?>" <?= ($currentUser['language'] ?? $lang) === $lc ? 'selected' : '' ?>><?= esc(LANG_NAMES[$lc]) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="admin-field">
-            <label for="birthdate" class="admin-label"><?= esc(t('birthdate')) ?></label>
-            <input type="date" id="birthdate" name="birthdate" value="<?= esc($currentUser['birthdate'] ?? '') ?>" max="<?= esc(date('Y-m-d')) ?>" autocomplete="bday" class="admin-input">
-          </div>
-        </div>
-
-        <div class="admin-form-row">
-          <div class="admin-field">
-            <label for="marital_status" class="admin-label"><?= esc(t('marital_status')) ?></label>
-            <select id="marital_status" name="marital_status" class="admin-select">
-              <option value=""><?= esc(t('select')) ?></option>
-              <option value="getroud" <?= ($currentUser['marital_status'] ?? '') === 'getroud' ? 'selected' : '' ?>><?= esc(t('married')) ?></option>
-              <option value="ongetroud" <?= ($currentUser['marital_status'] ?? '') === 'ongetroud' ? 'selected' : '' ?>><?= esc(t('unmarried')) ?></option>
-              <option value="<?= esc($widowValue) ?>" <?= in_array($currentUser['marital_status'] ?? '', ['weduwee', 'wewenaar'], true) ? 'selected' : '' ?>><?= esc(t($widowValue)) ?></option>
-            </select>
-          </div>
-          <div class="admin-field">
-            <label for="province" class="admin-label"><?= esc(t('province')) ?></label>
-            <select id="province" name="province" class="admin-select">
-              <option value=""><?= esc(t('select')) ?></option>
-              <?php foreach ($provinces as $prov): ?>
-                <option value="<?= (int)$prov['id'] ?>" <?= $pidSel === (string)$prov['id'] ? 'selected' : '' ?>><?= esc($prov['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-        </div>
-
-        <div class="admin-form-row">
-          <div class="admin-field">
-            <label for="town" class="admin-label"><?= esc(t('town_city')) ?></label>
-            <select id="town" name="town" class="admin-select" <?= $pidSel === '' ? 'disabled' : '' ?>>
-              <?php if ($pidSel === ''): ?>
-                <option value=""><?= esc(t('select_province_first')) ?></option>
-              <?php else: ?>
+        <section class="adm-card adm-card--pad account-section" aria-labelledby="secPlace">
+          <h3 class="account-section-title" id="secPlace"><?= admin_icon('church') ?><?= esc(t('adm_sec_place')) ?></h3>
+          <div class="admin-form">
+            <div class="admin-field">
+              <label for="province" class="admin-label"><?= esc(t('province')) ?></label>
+              <select id="province" name="province" class="admin-select">
                 <option value=""><?= esc(t('select')) ?></option>
-                <?php foreach ($townsByProvince[$pidSel] ?? [] as $tw): ?>
-                  <option value="<?= (int)$tw['id'] ?>" <?= $tidSel === (string)$tw['id'] ? 'selected' : '' ?>><?= esc($tw['name']) ?></option>
+                <?php foreach ($provinces as $prov): ?>
+                  <option value="<?= (int)$prov['id'] ?>" <?= $pidSel === (string)$prov['id'] ? 'selected' : '' ?>><?= esc($prov['name']) ?></option>
                 <?php endforeach; ?>
-              <?php endif; ?>
-            </select>
+              </select>
+            </div>
+            <div class="admin-form-row">
+              <div class="admin-field">
+                <label for="town" class="admin-label"><?= esc(t('town_city')) ?></label>
+                <select id="town" name="town" class="admin-select" <?= $pidSel === '' ? 'disabled' : '' ?>>
+                  <?php if ($pidSel === ''): ?>
+                    <option value=""><?= esc(t('select_province_first')) ?></option>
+                  <?php else: ?>
+                    <option value=""><?= esc(t('select')) ?></option>
+                    <?php foreach ($townsByProvince[$pidSel] ?? [] as $tw): ?>
+                      <option value="<?= (int)$tw['id'] ?>" <?= $tidSel === (string)$tw['id'] ? 'selected' : '' ?>><?= esc($tw['name']) ?></option>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
+                </select>
+              </div>
+              <div class="admin-field">
+                <label for="congregation" class="admin-label"><?= esc(t('congregation')) ?></label>
+                <select id="congregation" name="congregation" class="admin-select" <?= $tidSel === '' ? 'disabled' : '' ?>>
+                  <?php if ($tidSel === ''): ?>
+                    <option value=""><?= esc(t('select_town_first')) ?></option>
+                  <?php else: ?>
+                    <option value=""><?= esc(t('select')) ?></option>
+                    <?php foreach ($congsByTown[$tidSel] ?? [] as $cg): ?>
+                      <option value="<?= (int)$cg['id'] ?>" <?= (string)($currentUser['congregation_id'] ?? '') === (string)$cg['id'] ? 'selected' : '' ?>><?= esc($cg['name']) ?></option>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="admin-field">
-            <label for="congregation" class="admin-label"><?= esc(t('congregation')) ?></label>
-            <select id="congregation" name="congregation" class="admin-select" <?= $tidSel === '' ? 'disabled' : '' ?>>
-              <?php if ($tidSel === ''): ?>
-                <option value=""><?= esc(t('select_town_first')) ?></option>
-              <?php else: ?>
+        </section>
+
+        <section class="adm-card adm-card--pad account-section" aria-labelledby="secFamily">
+          <h3 class="account-section-title" id="secFamily"><?= admin_icon('heart') ?><?= esc(t('adm_sec_family')) ?></h3>
+          <div class="admin-form">
+            <div class="admin-field">
+              <label for="marital_status" class="admin-label"><?= esc(t('marital_status')) ?></label>
+              <select id="marital_status" name="marital_status" class="admin-select">
                 <option value=""><?= esc(t('select')) ?></option>
-                <?php foreach ($congsByTown[$tidSel] ?? [] as $cg): ?>
-                  <option value="<?= (int)$cg['id'] ?>" <?= (string)($currentUser['congregation_id'] ?? '') === (string)$cg['id'] ? 'selected' : '' ?>><?= esc($cg['name']) ?></option>
+                <option value="getroud" <?= ($currentUser['marital_status'] ?? '') === 'getroud' ? 'selected' : '' ?>><?= esc(t('married')) ?></option>
+                <option value="ongetroud" <?= ($currentUser['marital_status'] ?? '') === 'ongetroud' ? 'selected' : '' ?>><?= esc(t('unmarried')) ?></option>
+                <option value="<?= esc($widowValue) ?>" <?= in_array($currentUser['marital_status'] ?? '', ['weduwee', 'wewenaar'], true) ? 'selected' : '' ?>><?= esc(t($widowValue)) ?></option>
+              </select>
+            </div>
+
+            <?php if (!empty($spouseOptions) && empty($currentUser['spouse_user_id']) && !$pendingSpouseRequest): ?>
+            <div class="admin-field">
+              <label for="spouse_user_id" class="admin-label"><?= esc(t('spouse')) ?></label>
+              <select id="spouse_user_id" name="spouse_user_id" class="admin-select">
+                <option value=""><?= esc(t('select')) ?>...</option>
+                <?php foreach ($spouseOptions as $spouse): ?>
+                  <option value="<?= (int)$spouse['id'] ?>"><?= esc(admin_person($spouse, $lang)) ?></option>
                 <?php endforeach; ?>
-              <?php endif; ?>
-            </select>
+              </select>
+              <span class="admin-hint"><?= esc(t('spouse_hint')) ?></span>
+            </div>
+            <?php elseif ($spouseData): ?>
+            <p class="account-linked"><?= admin_icon('heart') ?><span><?= esc(t('you_are_linked_to')) ?> <strong><?= esc(admin_person($spouseData, $lang)) ?></strong></span></p>
+            <?php endif; ?>
           </div>
-        </div>
+        </section>
 
-        <?php if (!empty($spouseOptions) && empty($currentUser['spouse_user_id']) && !$pendingSpouseRequest): ?>
-        <div class="admin-field">
-          <label for="spouse_user_id" class="admin-label"><?= esc(t('spouse')) ?></label>
-          <select id="spouse_user_id" name="spouse_user_id" class="admin-select">
-            <option value=""><?= esc(t('select')) ?>...</option>
-            <?php foreach ($spouseOptions as $spouse): ?>
-              <option value="<?= (int)$spouse['id'] ?>"><?= esc(admin_full_name($spouse)) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <span class="admin-hint"><?= esc(t('spouse_hint')) ?></span>
-        </div>
-        <?php elseif ($spouseData): ?>
-        <div class="admin-notice admin-notice-success">
-          <?= esc(t('you_are_linked_to')) ?> <strong><?= esc(admin_full_name($spouseData)) ?></strong>
-        </div>
-        <?php endif; ?>
-
-        <div class="admin-field">
-          <label for="about" class="admin-label"><?= esc(t('about')) ?></label>
+        <section class="adm-card adm-card--pad account-section" aria-labelledby="secAbout">
+          <h3 class="account-section-title" id="secAbout"><?= admin_icon('edit') ?><label for="about"><?= esc(t('about')) ?></label></h3>
           <textarea id="about" name="about" rows="4" maxlength="1000" placeholder="<?= esc(t('about_placeholder')) ?>" class="admin-textarea"><?= esc($currentUser['about'] ?? '') ?></textarea>
-        </div>
+        </section>
 
-        <div class="account-actions">
-          <a href="/admin/index.php" class="admin-btn admin-btn-secondary"><?= esc(t('cancel')) ?></a>
-          <button type="submit" class="admin-btn admin-btn-primary" id="accountSave"><?= esc(t('save')) ?></button>
+        <!-- Save stays in reach at the bottom, between the back button and the bell -->
+        <div class="account-savebar">
+          <button type="submit" class="admin-btn admin-btn-primary" id="accountSave"><?= admin_icon('check') ?><span><?= esc(t('save')) ?></span></button>
         </div>
       </form>
-    </div>
-  </main>
+    </main>
+  </div>
 
   <script>
   window.OAC_UI_STRINGS = <?= json_encode($uiStrings, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
