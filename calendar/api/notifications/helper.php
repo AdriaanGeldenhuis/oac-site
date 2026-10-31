@@ -94,6 +94,7 @@ function createCalendarNotifications(array $userIds, string $type, array $data =
     [$titleKey, $messageKey, $params, $link, $icon, $notifType] = $spec;
 
     $stored = 0;
+    $ids = []; // user id => their notification's id (the push takes it down when tapped)
     try {
         $db = calendarNotificationDb();
         $ins = $db->prepare("
@@ -116,10 +117,14 @@ function createCalendarNotifications(array $userIds, string $type, array $data =
                 'message_key' => $messageKey,
                 'params' => json_encode($params, JSON_UNESCAPED_UNICODE),
             ]);
+            $ids[$uid] = (int)$db->lastInsertId();
             $stored++;
         }
         $db->commit();
     } catch (Throwable $e) {
+        if (isset($db) && $db->inTransaction()) $db->rollBack();
+        $ids = [];
+        $stored = 0;
         error_log('Calendar notification store error: ' . $e->getMessage());
     }
 
@@ -127,18 +132,24 @@ function createCalendarNotifications(array $userIds, string $type, array $data =
     try {
         if (!($pdo instanceof PDO)) return $stored;
         $in = implode(',', array_fill(0, count($userIds), '?'));
-        $st = $pdo->prepare("SELECT t.token, u.language FROM fcm_tokens t JOIN users u ON u.id = t.user_id WHERE t.user_id IN ($in)");
+        $st = $pdo->prepare("SELECT t.token, t.user_id, u.language FROM fcm_tokens t JOIN users u ON u.id = t.user_id WHERE t.user_id IN ($in)");
         $st->execute($userIds);
         $byLang = [];
+        $perToken = []; // each phone: its member's own notification id and open link
         foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $byLang[cal_valid_lang($row['language'] ?? 'af')][] = $row['token'];
+            $uid = (int)$row['user_id'];
+            if (isset($ids[$uid])) {
+                $perToken[$row['token']] = fcmOpenData($uid, $ids[$uid], $link);
+            }
         }
         foreach ($byLang as $lang => $tokens) {
             sendFcmNotification(
                 $tokens,
                 calendarPushTitle(cal_t($titleKey, $lang, $params)),
                 cal_t($messageKey, $lang, $params),
-                ['type' => $notifType, 'link' => $link, 'titleKey' => $titleKey, 'messageKey' => $messageKey, 'params' => $params]
+                ['type' => $notifType, 'link' => $link, 'titleKey' => $titleKey, 'messageKey' => $messageKey, 'params' => $params],
+                $perToken
             );
         }
     } catch (Throwable $e) {

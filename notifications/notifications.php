@@ -7,9 +7,11 @@ declare(strict_types=1);
  * the jewel of the place it comes from (prayers amethyst, Gospel Media
  * ruby, calendar sapphire ...), grouped by day, newest first.
  *
- * The list is drawn by notifications.js from api/list.php; reading,
- * "mark all as read", deleting (with undo) and clearing go through
- * api/mark_read.php with the session CSRF token.
+ * The list is drawn by notifications.js from api/list.php. Tapping a
+ * notification takes it down: open.php deletes it and goes on to its link
+ * (the push on the phone goes the same way). "Mark all as read", deleting
+ * (with undo) and clearing go through api/mark_read.php with the session
+ * CSRF token.
  */
 
 require_once dirname(__DIR__) . '/security/auth_gate.php';

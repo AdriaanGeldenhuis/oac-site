@@ -17,31 +17,48 @@ function t_ftr(string $key): string {
 </div>
 
 <script>
-// Auto-update notification count
-(async function updateNotifCount() {
-  try {
-    // Offline (the app's offline copy): ask again once there is a connection
-    if (navigator.onLine === false) throw null;
-    const response = await fetch('/notifications/api/count.php');
-    const data = await response.json();
-    
-    if (data.success) {
-      const badge = document.getElementById('globalNotifCount');
-      if (badge) {
-        if (data.count > 0) {
-          badge.textContent = data.count > 99 ? '99+' : data.count;
-          badge.hidden = false;
-        } else {
-          badge.hidden = true;
+// Auto-update notification count: every 30 seconds, and at once when this
+// page comes back from memory (Back after opening a notification) or the
+// app comes to the front again, so a notification taken down elsewhere
+// never lingers in the count
+(function () {
+  let timer = 0;
+  let busy = false;
+
+  async function updateNotifCount() {
+    if (busy) return;
+    busy = true;
+    clearTimeout(timer);
+    try {
+      // Offline (the app's offline copy): ask again once there is a connection
+      if (navigator.onLine === false) throw null;
+      const response = await fetch('/notifications/api/count.php', { cache: 'no-store' });
+      const data = await response.json();
+
+      if (data.success) {
+        const badge = document.getElementById('globalNotifCount');
+        if (badge) {
+          if (data.count > 0) {
+            badge.textContent = data.count > 99 ? '99+' : data.count;
+            badge.hidden = false;
+          } else {
+            badge.hidden = true;
+          }
         }
       }
+    } catch (error) {
+      if (error) console.error('Update notif count error:', error);
+    } finally {
+      busy = false;
+      timer = setTimeout(updateNotifCount, 30000);
     }
-  } catch (error) {
-    if (error) console.error('Update notif count error:', error);
   }
-  
-  // Update every 30 seconds
-  setTimeout(updateNotifCount, 30000);
+
+  updateNotifCount();
+  window.addEventListener('pageshow', (e) => { if (e.persisted) updateNotifCount(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') updateNotifCount();
+  });
 })();
 </script>
 

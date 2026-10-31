@@ -134,12 +134,14 @@ try {
             'message_key' => 'birthday_self_msg',
             'params' => json_encode(['age' => $age])
         ]);
+        $selfNotificationId = (int)$notifDb->lastInsertId();
 
-        // Send FCM push to birthday person (translated title)
+        // Send FCM push to birthday person (translated title); tapping it takes the notification down
         try {
             sendPushToUser($birthdayUserId, $selfTitle, $selfMessage, [
                 'type' => 'birthday',
                 'link' => '/profile/index.php',
+                'notification_id' => $selfNotificationId,
                 'titleKey' => 'happy_birthday',
                 'messageKey' => 'birthday_self_msg'
             ]);
@@ -178,12 +180,14 @@ try {
                 'message_key' => 'birthday_notification_msg',
                 'params' => json_encode(['name' => $birthdayName, 'age' => $age, 'user_id' => $birthdayUserId])
             ]);
+            $recipientNotificationId = (int)$notifDb->lastInsertId();
 
-            // Send FCM push notification (translated title)
+            // Send FCM push notification (translated title); tapping it takes the notification down
             try {
                 sendPushToUser($recipientId, $notifyTitle, $notifyMessage, [
                     'type' => 'birthday',
                     'link' => '/profile/index.php?user_id=' . $birthdayUserId,
+                    'notification_id' => $recipientNotificationId,
                     'titleKey' => 'birthday_notification',
                     'messageKey' => 'birthday_notification_msg'
                 ]);

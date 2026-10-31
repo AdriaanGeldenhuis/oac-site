@@ -25,9 +25,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val title = remoteMessage.data[KEY_TITLE] ?: getString(R.string.default_notification_title)
         val body = remoteMessage.data[KEY_BODY] ?: getString(R.string.default_notification_body)
         val link = remoteMessage.data[KEY_LINK] ?: "/notifications/notifications.php"
+        // The stored notification's id (sent with every notification the site
+        // keeps): the tray shows it under that id, so the site can take it
+        // down here too once it is opened there (MainActivity.clearNotification)
+        val serverId = remoteMessage.data[KEY_NOTIFICATION_ID]?.toIntOrNull()?.takeIf { it > 0 }
 
-        Log.d(TAG, "Creating notification - Title: $title, Link: $link")
-        showNotification(title, body, link)
+        Log.d(TAG, "Creating notification - Title: $title, Link: $link, Id: $serverId")
+        showNotification(title, body, link, serverId)
     }
 
     override fun onNewToken(token: String) {
@@ -75,13 +79,18 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }.start()
     }
 
-    private fun showNotification(title: String, body: String, link: String) {
+    private fun showNotification(title: String, body: String, link: String, serverId: Int?) {
+        // One tray id per notification: the server's (positive), or a fresh
+        // negative one for a push without it. Never reused while the other may
+        // still be in the tray, so a new push never replaces an older one or
+        // takes over its tap (the PendingIntent below is keyed by this id too).
+        val id = serverId ?: -localIds.incrementAndGet()
+
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra(EXTRA_NOTIFICATION_LINK, link)
+            putExtra(EXTRA_NOTIFICATION_TRAY_ID, id)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
-
-        val id = notificationId.incrementAndGet()
 
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -100,6 +109,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setContentText(body)
             // Expandable so long bodies (e.g. the daily thought) are fully readable
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            // Tapped: it leaves the tray (and open.php takes it down on the site)
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -116,7 +126,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         private const val KEY_TITLE = "title"
         private const val KEY_BODY = "body"
         private const val KEY_LINK = "click_url"
+        private const val KEY_NOTIFICATION_ID = "notification_id"
         const val EXTRA_NOTIFICATION_LINK = "notification_link"
-        private val notificationId = AtomicInteger(0)
+        const val EXTRA_NOTIFICATION_TRAY_ID = "notification_tray_id"
+        // Pushes without a server id: counted on from the clock (seconds), so
+        // after the app restarts the new ids do not meet ones still in the tray
+        private val localIds = AtomicInteger((System.currentTimeMillis() / 1000 % 1_000_000_000L).toInt())
     }
 }

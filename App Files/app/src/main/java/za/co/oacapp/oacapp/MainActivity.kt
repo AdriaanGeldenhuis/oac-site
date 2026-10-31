@@ -2,6 +2,7 @@ package za.co.oacapp.oacapp
 
 import android.Manifest
 import android.app.DownloadManager
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -32,6 +33,7 @@ import androidx.webkit.WebViewFeature
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.messaging.FirebaseMessaging
 import za.co.oacapp.oacapp.MyFirebaseMessagingService.Companion.EXTRA_NOTIFICATION_LINK
+import za.co.oacapp.oacapp.MyFirebaseMessagingService.Companion.EXTRA_NOTIFICATION_TRAY_ID
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
@@ -111,6 +113,22 @@ class MainActivity : ComponentActivity() {
             @JavascriptInterface
             fun logDebug(message: String) {
                 Log.d("WebViewBridge", message)
+            }
+
+            /**
+             * A notification opened (taken down) on the site leaves the
+             * phone's tray too. The tray shows each one under the site's
+             * own id (MyFirebaseMessagingService).
+             */
+            @JavascriptInterface
+            fun clearNotification(id: Int) {
+                if (id > 0) trayManager().cancel(id)
+            }
+
+            /** The notifications page is on screen, or all is read: the tray's copies go */
+            @JavascriptInterface
+            fun clearAllNotifications() {
+                trayManager().cancelAll()
             }
 
             /**
@@ -272,16 +290,30 @@ class MainActivity : ComponentActivity() {
         handleNotificationIntent(intent)
     }
 
+    /**
+     * A tapped notification: open where it points. Its link goes through
+     * /notifications/open.php, which takes it down on the site first.
+     */
     private fun handleNotificationIntent(intent: Intent): Boolean {
+        // Opened again from Recents: that tap was handled long ago, and
+        // opening it once more would leave the page the member was on
+        if ((intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0) return false
         val link = intent.getStringExtra(EXTRA_NOTIFICATION_LINK)
         if (!link.isNullOrEmpty()) {
+            // Out of the tray (autoCancel does it too, but not on every phone)
+            val trayId = intent.getIntExtra(EXTRA_NOTIFICATION_TRAY_ID, 0)
+            if (trayId != 0) trayManager().cancel(trayId)
             val url = if (link.startsWith("http")) link else "https://oacapp.co.za$link"
             webView.loadUrl(url)
             intent.removeExtra(EXTRA_NOTIFICATION_LINK)
+            intent.removeExtra(EXTRA_NOTIFICATION_TRAY_ID)
             return true
         }
         return false
     }
+
+    private fun trayManager(): NotificationManager =
+        getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
     private fun startDownload(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
         val scheme = Uri.parse(url).scheme?.lowercase()
