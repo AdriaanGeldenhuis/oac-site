@@ -5,10 +5,16 @@
  * Writes: /notifications/api/mark_read.php (read, read_all, delete, delete_read),
  *         POST + the session CSRF token (X-CSRF-Token)
  *
- * Tapping a notification marks it read and opens where it points (only
- * links inside the site are offered by the server). Deleting is undoable
- * for a few seconds: the rows go to the server when the toast closes, or
- * at once when the page is left.
+ * Tapping a notification takes it down: it leaves the list (and the
+ * phone's tray) at once and opens where it points through its open link
+ * (/notifications/open.php deletes it on the server, then goes on; only
+ * links inside the site are offered by the server). One without a link
+ * shows its whole message in a sheet and is deleted as it opens.
+ * Deleting with the bin is undoable for a few seconds: the rows go to the
+ * server when the toast closes, or at once when the page is left.
+ * In the Android app (1.3+) the phone's tray follows the page: opening
+ * this page, "mark all as read" and every notification taken down here
+ * clear their copies there (NativeApp.clearNotification / ...All).
  * Times arrive as Unix seconds; days are South African days.
  */
 (function () {
@@ -152,6 +158,18 @@
     });
   }
 
+  // ===== THE PHONE'S TRAY (Android app 1.3+; elsewhere nothing happens) =====
+  function native(method, arg) {
+    try {
+      const app = window.NativeApp;
+      if (app && typeof app[method] === 'function') {
+        if (arg === undefined) app[method](); else app[method](arg);
+      }
+    } catch (e) { /* an older app without it */ }
+  }
+  const trayClear = (id) => native('clearNotification', id);
+  const trayClearAll = () => native('clearAllNotifications');
+
   // ===== TOAST =====
   let toastTimer = 0;
   function toast(message, opts) {
@@ -191,6 +209,7 @@
     loadedAt: 0
   };
   const pending = { rows: [], timer: 0 }; // deletes waiting for their Undo to pass
+  const gone = new Set(); // ids opened (taken down) on this page; never shown again
 
   const isUnread = (n) => !n.read;
   const matches = (n) => state.filter === 'all' || (state.filter === 'unread' ? isUnread(n) : n.group === state.filter);
@@ -200,6 +219,27 @@
     state.counts.all = Math.max(0, state.counts.all + sign);
     state.counts[n.group] = Math.max(0, (state.counts[n.group] || 0) + sign);
     if (isUnread(n)) state.counts.unread = Math.max(0, state.counts.unread + sign);
+  }
+
+  /**
+   * The server's rows, less those waiting for their Undo and those opened
+   * here (it may not have deleted them yet); its counts likewise.
+   */
+  function accept(d) {
+    const waiting = new Set(pending.rows.map((r) => r.n.id));
+    const rows = [];
+    const leaving = [];
+    (d.notifications || []).forEach((n) => {
+      if (waiting.has(n.id)) return;
+      if (gone.has(n.id)) { leaving.push(n); return; }
+      rows.push(n);
+    });
+    if (d.counts) {
+      state.counts = d.counts;
+      pending.rows.forEach((r) => adjustCounts(r.n, -1)); // still waiting to be deleted
+      leaving.forEach((n) => adjustCounts(n, -1));        // opened here, on its way out
+    }
+    return rows;
   }
 
   // ===== LOADING =====
@@ -226,31 +266,37 @@
       return;
     }
     const d = res.data;
-    const hidden = new Set(pending.rows.map((r) => r.n.id));
-    const rows = (d.notifications || []).filter((n) => !hidden.has(n.id));
+    const rows = accept(d);
     state.items = more ? state.items.concat(rows) : rows;
     state.hasMore = !!d.has_more;
-    if (d.counts) {
-      state.counts = d.counts;
-      pending.rows.forEach((r) => adjustCounts(r.n, -1)); // still waiting to be deleted
-    }
     state.loadedAt = Date.now();
     render();
   }
 
-  /** While the page is open: newer notifications slide in at the top */
+  /**
+   * While the page is open: the first page as the server has it now. New
+   * ones come in at the top; ones opened, deleted or read elsewhere (a push
+   * tapped on the phone) leave or change. Older pages already shown stay.
+   */
   async function refresh() {
     if (state.loading || state.error || document.visibilityState !== 'visible' || layer) return;
+    const req = state.req;
     const res = await api('/notifications/api/list.php?filter=' + encodeURIComponent(state.filter));
-    if (!res.ok || state.loading) return;
-    const top = state.items.length ? state.items[0].id : 0;
-    const hidden = new Set(pending.rows.map((r) => r.n.id));
-    const fresh = (res.data.notifications || []).filter((n) => n.id > top && !hidden.has(n.id));
-    if (res.data.counts) {
-      state.counts = res.data.counts;
-      pending.rows.forEach((r) => adjustCounts(r.n, -1));
+    if (!res.ok || state.loading || req !== state.req || layer) return;
+    const raw = res.data.notifications || [];
+    // The ones already shown stay the same objects (updated): a delete still
+    // in its animation finds its own row afterwards
+    const known = new Map(state.items.map((n) => [n.id, n]));
+    const first = accept(res.data).map((n) => (known.has(n.id) ? Object.assign(known.get(n.id), n) : n));
+    if (res.data.has_more && raw.length) {
+      const oldest = raw[raw.length - 1].id;
+      const older = state.items.filter((n) => n.id < oldest);
+      state.items = first.concat(older);
+      if (!older.length) state.hasMore = true;
+    } else {
+      state.items = first;
+      state.hasMore = false;
     }
-    if (fresh.length) state.items = fresh.concat(state.items);
     state.loadedAt = Date.now();
     render();
   }
@@ -272,9 +318,12 @@
 
     let main;
     if (n.link) {
-      main = el('a', { class: 'nt-item-main', href: n.link, on: { click: (e) => open(e, n) } }, [orb, body, strokeIcon(ICON_NEXT, 'nt-item-go')]);
+      main = el('a', {
+        class: 'nt-item-main', href: n.open || n.link,
+        on: { click: (e) => open(e, n), auxclick: (e) => { if (e.button === 1) openedElsewhere(n); } }
+      }, [orb, body, strokeIcon(ICON_NEXT, 'nt-item-go')]);
     } else {
-      main = el('button', { class: 'nt-item-main', type: 'button', 'aria-expanded': 'false', on: { click: () => toggle(n, main) } }, [orb, body]);
+      main = el('button', { class: 'nt-item-main', type: 'button', 'aria-haspopup': 'dialog', on: { click: () => read(n) } }, [orb, body]);
     }
 
     return el('article', { class: 'nt-item nt-k-' + kind[0] + (isUnread(n) ? ' is-unread' : ''), 'data-id': n.id }, [
@@ -385,40 +434,80 @@
     load(false);
   }
 
-  // ===== READING =====
-  function markReadLocally(n) {
-    if (!isUnread(n)) return false;
-    n.read = true;
-    if (state.counts) state.counts.unread = Math.max(0, state.counts.unread - 1);
-    return true;
+  // ===== OPENING: a tapped notification is taken down =====
+
+  /** Gone from the list, the counts (the bell too) and the phone's tray, at once */
+  function takeDown(n) {
+    gone.add(n.id);
+    trayClear(n.id);
+    const at = state.items.indexOf(n);
+    if (at === -1) return;
+    state.items.splice(at, 1);
+    adjustCounts(n, -1);
+    render();
   }
 
-  /** Mark read and follow the link (the request survives the page change) */
+  /** Where the keyboard was, after an item left: the one now in its place */
+  function focusItemAt(index) {
+    const mains = document.querySelectorAll('#ntList .nt-item-main');
+    const target = mains[Math.min(index, mains.length - 1)];
+    if (target) { target.focus({ preventScroll: true }); return; }
+    const list = $('#ntList');
+    list.setAttribute('tabindex', '-1');
+    list.focus({ preventScroll: true });
+  }
+  const indexOfItem = (n) => Array.prototype.findIndex.call(
+    document.querySelectorAll('#ntList .nt-item'), (node) => node.getAttribute('data-id') === String(n.id));
+
+  /**
+   * Opens where it points. The open link deletes it on the server before
+   * the page there loads; without one (the server could not sign it) the
+   * delete is sent here, and survives the page change.
+   */
   function open(e, n) {
-    if (e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey) {
-      if (markReadLocally(n)) { post({ action: 'read', ids: [n.id] }, true); render(); }
+    if (e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+      openedElsewhere(n);
       return;
     }
     e.preventDefault();
+    if (!n.open) post({ action: 'delete', ids: [n.id] }, true);
     flushDeletes(true);
-    if (markReadLocally(n)) post({ action: 'read', ids: [n.id] }, true);
-    window.location.href = n.link;
+    takeDown(n);
+    window.location.href = n.open || n.link;
   }
 
-  /** No link: the whole message unfolds, and it counts as read */
-  function toggle(n, btn) {
-    const item = btn.closest('.nt-item');
-    const openNow = item.classList.toggle('is-open');
-    btn.setAttribute('aria-expanded', openNow ? 'true' : 'false');
-    if (markReadLocally(n)) {
-      item.classList.remove('is-unread');
-      const dot = $('.nt-dot', item);
-      if (dot) { dot.nextSibling && dot.nextSibling.remove(); dot.remove(); }
-      renderCounts();
-      post({ action: 'read', ids: [n.id] }).then((r) => {
-        if (r.ok && r.data.counts) { state.counts = r.data.counts; pending.rows.forEach((p) => adjustCounts(p.n, -1)); renderCounts(); }
-      });
-    }
+  /** The browser opens it in a new tab (Ctrl/middle click): this list lets it go */
+  function openedElsewhere(n) {
+    if (!n.open) post({ action: 'delete', ids: [n.id] }, true);
+    setTimeout(() => takeDown(n), 0); // after the browser has taken the link
+  }
+
+  /** No link: its whole message in a sheet; opening it takes it down too */
+  function read(n) {
+    const at = indexOfItem(n);
+    takeDown(n);
+    readCard(n).then(() => {
+      if (!document.activeElement || document.activeElement === document.body) focusItemAt(Math.max(0, at));
+    });
+    post({ action: 'delete', ids: [n.id] }).then((r) => {
+      if (!r.ok) {
+        // Not deleted: back it comes, so nothing is lost
+        gone.delete(n.id);
+        if (state.items.indexOf(n) === -1) {
+          state.items.push(n);
+          state.items.sort((a, b) => b.id - a.id);
+          adjustCounts(n, 1);
+        }
+        render();
+        toast(errorText(r.error), { error: true });
+        return;
+      }
+      if (r.data.counts) {
+        state.counts = r.data.counts;
+        pending.rows.forEach((p) => adjustCounts(p.n, -1));
+        renderCounts();
+      }
+    });
   }
 
   async function readAll() {
@@ -432,6 +521,7 @@
     }
     state.items.forEach((n) => { n.read = true; });
     pending.rows.forEach((r) => { r.n.read = true; });
+    trayClearAll(); // all seen: nothing left waiting on the phone either
     state.counts = res.data.counts;
     pending.rows.forEach((r) => adjustCounts(r.n, -1));
     if (state.filter === 'unread') { state.items = []; state.hasMore = false; } // nothing unread is left anywhere
@@ -444,6 +534,7 @@
     const index = state.items.indexOf(n);
     if (index === -1 || n.leaving) return; // a second tap during the animation
     n.leaving = true;
+    trayClear(n.id);
     const node = document.querySelector('.nt-item[data-id="' + n.id + '"]');
     const finish = () => {
       n.leaving = false;
@@ -498,23 +589,29 @@
     }
   }
 
-  // ===== CLEAR EVERYTHING ALREADY READ (asks first) =====
+  // ===== SHEETS: the confirm card, a message to read =====
   let layer = null;
 
-  function confirmCard(title, text, okLabel) {
+  /**
+   * A sheet over the page. opts: role, cls (extra classes), title, kids
+   * (what goes under the title), stops (focusable kids Tab may visit) and
+   * buttons ([label, class, value]); the first button gets the focus.
+   * Escape and the backdrop close it with false. Resolves with the value.
+   */
+  function sheet(opts) {
+    if (layer) layer.close(false);
     return new Promise((resolve) => {
       const prevFocus = document.activeElement;
-      const id = 'ntConfirm' + Math.random().toString(36).slice(2, 8);
-      const cancel = el('button', { class: 'nt-btn nt-btn--glass', type: 'button', text: T.cancel });
-      const ok = el('button', { class: 'nt-btn nt-btn--danger', type: 'button', text: okLabel });
-      const panel = el('div', { class: 'nt-sheet', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': id, tabindex: '-1' }, [
-        el('h2', { class: 'nt-sheet-title', id: id, text: title }),
-        el('p', { class: 'nt-sheet-text', text: text }),
-        el('div', { class: 'nt-sheet-actions' }, [cancel, ok])
-      ]);
+      const id = 'ntSheet' + Math.random().toString(36).slice(2, 8);
+      const buttons = opts.buttons.map((b) => el('button', { class: 'nt-btn ' + b[1], type: 'button', text: b[0] }));
+      const stops = (opts.stops || []).concat(buttons);
+      const panel = el('div', {
+        class: 'nt-sheet' + (opts.cls ? ' ' + opts.cls : ''), role: opts.role, 'aria-modal': 'true', 'aria-labelledby': id, tabindex: '-1'
+      }, (opts.head ? [opts.head(id)] : [el('h2', { class: 'nt-sheet-title', id: id, text: opts.title })])
+        .concat(opts.kids || [], [el('div', { class: 'nt-sheet-actions' }, buttons)]));
       const back = el('div', { class: 'nt-layer' }, [panel]);
       const close = (value) => {
-        if (!layer) return;
+        if (!layer || layer.back !== back) return;
         layer = null;
         document.removeEventListener('keydown', onKey, true);
         back.classList.add('is-closing');
@@ -527,17 +624,51 @@
         if (e.key === 'Escape') { e.preventDefault(); close(false); }
         else if (e.key === 'Tab') {
           e.preventDefault();
-          (document.activeElement === cancel ? ok : cancel).focus();
+          const at = stops.indexOf(document.activeElement);
+          const next = e.shiftKey ? (at <= 0 ? stops.length - 1 : at - 1) : (at + 1) % stops.length;
+          stops[next].focus();
         }
       };
-      layer = { close: close };
+      layer = { close: close, back: back };
       back.addEventListener('click', (e) => { if (e.target === back) close(false); });
-      cancel.addEventListener('click', () => close(false));
-      ok.addEventListener('click', () => close(true));
+      buttons.forEach((b, i) => b.addEventListener('click', () => close(opts.buttons[i][2])));
       document.addEventListener('keydown', onKey, true);
       document.body.append(back);
       document.body.classList.add('nt-locked');
-      cancel.focus();
+      buttons[0].focus();
+    });
+  }
+
+  /** A notification without a link: all of it, to read */
+  function readCard(n) {
+    const kind = kindOf(n.type);
+    const group = GROUP_LABEL[n.group];
+    // No day heading above it here: say the day too, unless it is today ("5 minutes ago")
+    const key = dayKey(n.ts);
+    const when = key === dayKey(nowTs()) ? timeText(n.ts) : dayLabel(key, n.ts) + ' ' + timeText(n.ts);
+    const meta = [el('time', { text: when, datetime: new Date(n.ts * 1000).toISOString() })];
+    if (group) meta.push(el('span', { 'aria-hidden': 'true', text: '·' }), el('span', { class: 'nt-item-area', text: T[group] }));
+    const msg = n.message ? el('div', { class: 'nt-read-msg', tabindex: '0', text: n.message }) : null;
+    return sheet({
+      role: 'dialog',
+      cls: 'nt-sheet--read nt-k-' + kind[0],
+      head: (id) => el('div', { class: 'nt-read-head' }, [
+        el('span', { class: 'nt-orb', 'aria-hidden': 'true' }, [icon(kind[1])]),
+        el('h2', { class: 'nt-sheet-title', id: id, text: n.title })
+      ]),
+      kids: [el('p', { class: 'nt-read-meta' }, meta), msg].filter(Boolean),
+      stops: msg ? [msg] : [],
+      buttons: [[T.close, 'nt-btn--glass', true]]
+    });
+  }
+
+  // ===== CLEAR EVERYTHING ALREADY READ (asks first) =====
+  function confirmCard(title, text, okLabel) {
+    return sheet({
+      role: 'alertdialog',
+      title: title,
+      kids: [el('p', { class: 'nt-sheet-text', text: text })],
+      buttons: [[T.cancel, 'nt-btn--glass', false], [okLabel, 'nt-btn--danger', true]]
     });
   }
 
@@ -571,17 +702,27 @@
 
     // Deletes still waiting for their Undo go out when the page is left
     window.addEventListener('pagehide', () => flushDeletes(true));
+    // Back to this page as it was kept in memory: what was opened meanwhile
+    // (here or on the phone) has gone from the server; show the list as it is
+    window.addEventListener('pageshow', (e) => {
+      if (!e.persisted) return;
+      trayClearAll();
+      load(false);
+    });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
         if (pending.rows.length) hideToast(); // its Undo no longer applies
         flushDeletes(true);
         return;
       }
-      if (Date.now() - state.loadedAt > 60000) refresh();
+      // Back in front: the member sees the list, so the tray's copies go
+      trayClearAll();
+      if (Date.now() - state.loadedAt > 5000) refresh();
     });
     setInterval(refresh, 60000);
   }
 
   bind();
+  trayClearAll(); // the list is on screen: the phone's tray need not say it again
   load(false);
 })();

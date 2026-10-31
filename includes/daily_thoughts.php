@@ -515,12 +515,16 @@ function dt_send(PDO $pdo, int $id, bool $retryTranslations = true): int {
     if (!$groups) return 0;
 
     // Their phones (a missing token table only costs the push, not the in-app notification)
+    $tokenUser = []; // token => member, so each phone's push opens that member's own notification
     try {
         $st = dt_run($pdo, "SELECT f.user_id, f.token FROM fcm_tokens f JOIN users u ON u.id = f.user_id
                             WHERE u.status = 'approved'" . $scope, $scopeParams);
         foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $lang = $langOf[(int)$row['user_id']] ?? null;
-            if ($lang !== null && (string)$row['token'] !== '') $groups[$lang]['tokens'][] = (string)$row['token'];
+            if ($lang !== null && (string)$row['token'] !== '') {
+                $groups[$lang]['tokens'][] = (string)$row['token'];
+                $tokenUser[(string)$row['token']] = (int)$row['user_id'];
+            }
         }
     } catch (Throwable $e) {
         error_log('Daily thought #' . $id . ' tokens: ' . $e->getMessage());
@@ -528,6 +532,7 @@ function dt_send(PDO $pdo, int $id, bool $retryTranslations = true): int {
 
     // In-app notifications first (one transaction per language: fast on SQLite)
     $messages = [];
+    $notificationIds = []; // member => their notification's id (tapping the push takes it down)
     try {
         $db = nt_db();
         $insert = $db->prepare('INSERT INTO notifications (user_id, title, message, type, link, icon, title_key, message_key, params)
@@ -537,14 +542,17 @@ function dt_send(PDO $pdo, int $id, bool $retryTranslations = true): int {
             $title = __t('notif_thought_title', $lang);
             $messages[$lang] = ['title' => $title, 'text' => $text];
             $db->beginTransaction();
+            $groupIds = [];
             foreach ($group['users'] as $uid) {
                 try {
                     $insert->execute([$uid, $title, dt_message($text['content'], $text['author']), 'thought', DT_LINK, '💭', 'notif_thought_title']);
+                    $groupIds[$uid] = (int)$db->lastInsertId();
                 } catch (Throwable $e) {
                     error_log('Daily thought #' . $id . ' notification for user ' . $uid . ': ' . $e->getMessage());
                 }
             }
             $db->commit();
+            $notificationIds += $groupIds; // only ids that were really stored
         }
     } catch (Throwable $e) {
         if (isset($db) && $db->inTransaction()) $db->rollBack();
@@ -559,11 +567,16 @@ function dt_send(PDO $pdo, int $id, bool $retryTranslations = true): int {
         $title = $messages[$lang]['title'] ?? __t('notif_thought_title', $lang);
         $text = $messages[$lang]['text'] ?? dt_text_for($t, $lang);
         try {
+            $perToken = [];
+            foreach ($group['tokens'] as $token) {
+                $uid = $tokenUser[$token] ?? 0;
+                if (isset($notificationIds[$uid])) $perToken[$token] = fcmOpenData($uid, $notificationIds[$uid], DT_LINK);
+            }
             $res = sendFcmNotification($group['tokens'], $title, dt_push_body($text['content'], $text['author']), [
                 'type' => 'thought',
                 'link' => DT_LINK,
                 'titleKey' => 'notif_thought_title',
-            ]);
+            ], $perToken);
             if (empty($res['success'])) {
                 error_log('Daily thought #' . $id . ' push (' . $lang . '): ' . ($res['error'] ?? 'no phone accepted it'));
             }

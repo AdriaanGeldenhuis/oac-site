@@ -114,6 +114,47 @@ function getFcmAccessToken(): ?string {
 }
 
 /**
+ * The push's link to the stored notification: its id (the app shows it in
+ * the tray under that id, so the site can take it down there too) and the
+ * open link that deletes it when tapped (/notifications/open.php), with
+ * the plain link as the way on should it be gone already.
+ * Returns [] without an id; without a signing key only the id.
+ */
+function fcmOpenData(int $userId, $notificationId, ?string $link): array {
+    $id = (int)$notificationId;
+    if ($userId <= 0 || $id <= 0) return [];
+    $out = ['notification_id' => $id];
+    try {
+        require_once dirname(__DIR__, 2) . '/notifications/lib/notifications.php';
+        $path = nt_open_path($userId, $id, $link);
+        if ($path !== null) $out['click_path'] = $path;
+    } catch (Throwable $e) {
+        error_log('FCM open link: ' . $e->getMessage());
+    }
+    return $out;
+}
+
+/**
+ * The data payload the app reads. click_url is where a tap goes: the open
+ * link (click_path) when there is one, else the plain link. FCM data values
+ * must be strings; arrays/objects (e.g. translation params) become JSON
+ * instead of the literal "Array".
+ */
+function fcmPayload(array $data, string $title, string $body): array {
+    $path = (string)($data['click_path'] ?? '');
+    if ($path === '') $path = (string)($data['link'] ?? '');
+    unset($data['click_path']);
+
+    $payload = [];
+    foreach (array_merge($data, ['title' => $title, 'body' => $body, 'click_url' => FCM_SITE_URL . $path]) as $key => $value) {
+        $payload[$key] = (is_scalar($value) || $value === null)
+            ? (string)$value
+            : (string)json_encode($value, JSON_UNESCAPED_UNICODE);
+    }
+    return $payload;
+}
+
+/**
  * Send push notification via FCM V1 API
  *
  * Sends DATA-ONLY messages (no notification block) so onMessageReceived is
@@ -125,9 +166,11 @@ function getFcmAccessToken(): ?string {
  * @param string $title Notification title
  * @param string $body Notification body
  * @param array $data Additional data payload
+ * @param array $perToken token => extra data for that phone only (a fan-out
+ *                        where every member has their own notification id)
  * @return array Result with success status
  */
-function sendFcmNotification($tokens, string $title, string $body, array $data = []): array {
+function sendFcmNotification($tokens, string $title, string $body, array $data = [], array $perToken = []): array {
     $accessToken = getFcmAccessToken();
 
     if (!$accessToken) {
@@ -147,20 +190,7 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
     $failureCount = 0;
     $invalidTokens = [];
 
-    // Build deep link URL if link is provided in data
-    $clickUrl = FCM_SITE_URL;
-    if (!empty($data['link'])) {
-        $clickUrl = FCM_SITE_URL . $data['link'];
-    }
-
-    // FCM data payload values must be strings; arrays/objects (e.g. translation
-    // params) become JSON instead of the literal "Array".
-    $payload = [];
-    foreach (array_merge($data, ['title' => $title, 'body' => $body, 'click_url' => $clickUrl]) as $key => $value) {
-        $payload[$key] = (is_scalar($value) || $value === null)
-            ? (string)$value
-            : (string)json_encode($value, JSON_UNESCAPED_UNICODE);
-    }
+    $payload = fcmPayload($data, $title, $body);
 
     // V1 API requires one request per token — run them in parallel batches.
     foreach (array_chunk($tokens, 25) as $chunk) {
@@ -174,7 +204,7 @@ function sendFcmNotification($tokens, string $title, string $body, array $data =
                     'android' => [
                         'priority' => 'HIGH'
                     ],
-                    'data' => $payload
+                    'data' => isset($perToken[$token]) ? fcmPayload(array_merge($data, $perToken[$token]), $title, $body) : $payload
                 ]
             ];
 
@@ -296,6 +326,11 @@ function sendPushToUser(int $userId, string $title, string $body, array $data = 
 
         if (empty($tokens)) {
             return ['success' => false, 'error' => 'No tokens for user'];
+        }
+
+        // A stored notification: tapping the push takes it down (open.php)
+        if (!empty($data['notification_id']) && !isset($data['click_path'])) {
+            $data = array_merge($data, fcmOpenData($userId, $data['notification_id'], (string)($data['link'] ?? '')));
         }
 
         return sendFcmNotification($tokens, $title, $body, $data);

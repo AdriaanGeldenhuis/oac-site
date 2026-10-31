@@ -177,6 +177,56 @@ function nt_safe_link(?string $link): ?string {
     return $link;
 }
 
+// ===== OPENING: a tapped notification is taken down =====
+
+/**
+ * The key that signs "open" links. Made once (random) and kept in the
+ * store itself; INSERT OR IGNORE lets two first requests race safely.
+ * Null when it cannot be had: links then go straight to the page.
+ */
+function nt_open_key(): ?string {
+    static $key = false;
+    if ($key !== false) return $key;
+    $key = null;
+    try {
+        $db = nt_db();
+        $db->exec('CREATE TABLE IF NOT EXISTS nt_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)');
+        $get = $db->prepare('SELECT v FROM nt_meta WHERE k = ?');
+        $get->execute(['open_key']);
+        $v = $get->fetchColumn();
+        if ($v === false) {
+            $db->prepare('INSERT OR IGNORE INTO nt_meta (k, v) VALUES (?, ?)')->execute(['open_key', bin2hex(random_bytes(32))]);
+            $get->execute(['open_key']);
+            $v = $get->fetchColumn();
+        }
+        if (is_string($v) && strlen($v) >= 32) $key = $v;
+    } catch (Throwable $e) {
+        error_log('Notifications open key: ' . $e->getMessage());
+    }
+    return $key;
+}
+
+/** The signature that lets open.php take notification $id of $userId down */
+function nt_open_sig(int $userId, int $id): ?string {
+    if ($userId <= 0 || $id <= 0) return null;
+    $key = nt_open_key();
+    return $key === null ? null : substr(hash_hmac('sha256', 'open|' . $userId . '|' . $id, $key), 0, 24);
+}
+
+/**
+ * Where a tap on notification $id goes: /notifications/open.php deletes it,
+ * then goes on to its link. $to (pushes): where to go should it already be
+ * gone. Null when no link can be signed: the caller uses the plain link.
+ */
+function nt_open_path(int $userId, int $id, ?string $to = null): ?string {
+    $sig = nt_open_sig($userId, $id);
+    if ($sig === null) return null;
+    $query = ['id' => $id, 's' => $sig];
+    $to = nt_safe_link($to);
+    if ($to !== null) $query['to'] = $to;
+    return '/notifications/open.php?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+}
+
 /** SQLite's "YYYY-MM-DD HH:MM:SS" (UTC) as a Unix time */
 function nt_ts(?string $created): int {
     $created = trim((string)$created);
@@ -292,13 +342,18 @@ function nt_out(array $r, string $lang): array {
     $bare = preg_replace('/^[\p{Extended_Pictographic}\x{FE0F}\x{200D}\x{20E3}\s]+/u', '', $title);
     if (is_string($bare) && trim($bare) !== '') $title = $bare;
 
+    $id = (int)$r['id'];
+    $link = nt_safe_link($r['link'] ?? null);
+
     return [
-        'id' => (int)$r['id'],
+        'id' => $id,
         'title' => trim($title),
         'message' => trim($message),
         'type' => $type,
         'group' => nt_group_of($type),
-        'link' => nt_safe_link($r['link'] ?? null),
+        'link' => $link,
+        // Tapping goes through open.php, which takes the notification down
+        'open' => $link !== null ? nt_open_path((int)($r['user_id'] ?? 0), $id) : null,
         'read' => (int)($r['is_read'] ?? 0) === 1,
         'ts' => nt_ts($r['created_at'] ?? null),
     ];

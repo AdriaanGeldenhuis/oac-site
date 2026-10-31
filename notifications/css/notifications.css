@@ -576,16 +576,16 @@ input {
 }
 
 /* Each kind of notification has its own jewel */
-.nt-item.nt-k-prayer   { --k-rgb: var(--amethyst-rgb); }
-.nt-item.nt-k-gospel   { --k-rgb: var(--ruby-rgb); }
-.nt-item.nt-k-calendar { --k-rgb: var(--sapphire-rgb); }
-.nt-item.nt-k-thought  { --k-rgb: var(--amethyst-rgb); }
-.nt-item.nt-k-birthday { --k-rgb: var(--ruby-rgb); }
-.nt-item.nt-k-spouse   { --k-rgb: var(--rose-rgb); }
-.nt-item.nt-k-ampte    { --k-rgb: var(--amber-rgb); }
-.nt-item.nt-k-account  { --k-rgb: var(--emerald-rgb); }
-.nt-item.nt-k-alert    { --k-rgb: var(--danger-rgb); }
-.nt-item.nt-k-info     { --k-rgb: var(--sapphire-rgb); }
+.nt-item.nt-k-prayer,   .nt-sheet.nt-k-prayer   { --k-rgb: var(--amethyst-rgb); }
+.nt-item.nt-k-gospel,   .nt-sheet.nt-k-gospel   { --k-rgb: var(--ruby-rgb); }
+.nt-item.nt-k-calendar, .nt-sheet.nt-k-calendar { --k-rgb: var(--sapphire-rgb); }
+.nt-item.nt-k-thought,  .nt-sheet.nt-k-thought  { --k-rgb: var(--amethyst-rgb); }
+.nt-item.nt-k-birthday, .nt-sheet.nt-k-birthday { --k-rgb: var(--ruby-rgb); }
+.nt-item.nt-k-spouse,   .nt-sheet.nt-k-spouse   { --k-rgb: var(--rose-rgb); }
+.nt-item.nt-k-ampte,    .nt-sheet.nt-k-ampte    { --k-rgb: var(--amber-rgb); }
+.nt-item.nt-k-account,  .nt-sheet.nt-k-account  { --k-rgb: var(--emerald-rgb); }
+.nt-item.nt-k-alert,    .nt-sheet.nt-k-alert    { --k-rgb: var(--danger-rgb); }
+.nt-item.nt-k-info,     .nt-sheet.nt-k-info     { --k-rgb: var(--sapphire-rgb); }
 
 .nt-chip--prayer   { --k-rgb: var(--amethyst-rgb); }
 .nt-chip--gospel   { --k-rgb: var(--ruby-rgb); }
@@ -711,11 +711,6 @@ input {
   -webkit-box-orient: vertical;
   overflow-wrap: anywhere;
   white-space: pre-line;
-}
-
-.nt-item.is-open .nt-item-msg {
-  display: block;
-  -webkit-line-clamp: unset;
 }
 
 .nt-item-meta {
@@ -1013,6 +1008,49 @@ input {
 .nt-sheet-actions .nt-btn {
   flex: 1;
   min-width: 130px;
+}
+
+/* A notification without a link, opened: all of it, in its own jewel */
+.nt-sheet--read::after {
+  background: linear-gradient(90deg, transparent, rgba(var(--k-rgb), 0.9), transparent);
+}
+
+.nt-read-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.nt-read-head .nt-sheet-title {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+
+.nt-read-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.nt-read-msg {
+  max-height: min(52vh, 440px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: var(--text-secondary);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+}
+
+.nt-read-msg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 /* ===== TOAST (with an Undo when something was deleted) ===== */
