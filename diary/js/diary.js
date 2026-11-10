@@ -6,12 +6,28 @@
  * Files:  export.php (PDF or text download, also in the app)
  * Every POST carries the session CSRF token (X-CSRF-Token).
  *
- * The reader and the writer are full pages below the header with their own
- * history entry, so the phone's Back button, the app's and the floating
- * back button all close them. Unsaved writing is kept on this device until
- * it is saved or discarded (a lost connection or session loses nothing).
- * Dates are plain "YYYY-MM-DD" strings in South African time; the browser
- * never parses a date string (iOS Safari safe).
+ * Built to stand still (the old page jumped while typing and tapping):
+ * - The search and period bar is pinned under the header. When a search,
+ *   period, tag or order changes, the old list stays (dimmed) until the new
+ *   one is in, the list is always at least a screen high, and the page keeps
+ *   the bar exactly where it is. Nothing slides or fades in afterwards.
+ * - The reader and the writer are full pages below the header with their
+ *   actions in a bar at the top, so the phone's keyboard can never cover or
+ *   push them. The page ends where the keyboard begins (--dy-kb, from the
+ *   visual viewport, for browsers that do not shrink the page themselves).
+ * - The writing area grows with the text through a hidden copy of it, so
+ *   it never collapses first (that collapse made the page jump on every
+ *   key, the space bar included).
+ * - While a page or a sheet is open the list underneath is pinned in place
+ *   (body position: fixed, also on iPhones) and comes back exactly where it
+ *   was; the scrollbar keeps its room, so nothing shifts sideways.
+ * - In the reader the text has the focus, so Space and Page Down read on.
+ *
+ * Each page has its own history entry, so the phone's Back button, the
+ * app's and the floating back button all close it. Unsaved writing is kept
+ * on this device until it is saved or discarded. Dates are plain
+ * "YYYY-MM-DD" strings in South African time; the browser never parses a
+ * date string (iOS Safari safe).
  */
 (function () {
   'use strict';
@@ -23,6 +39,10 @@
   const MOOD_EMOJI = { happy: '😊', sad: '😢', excited: '🤗', calm: '😌', thoughtful: '🤔', grateful: '🙏', inspired: '✨', tired: '😴' };
   const WEATHER_EMOJI = { sunny: '☀️', cloudy: '☁️', rainy: '🌧️', stormy: '⛈️', snowy: '❄️', windy: '🌬️' };
   const LIMITS = CFG.limits || { title: 150, body: 60000, tag: 24, tags: 10 };
+  const root = document.documentElement;
+
+  // We put the list back ourselves when a page closes
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) { /* old WebView */ }
 
   // ===== STRINGS =====
   function tr(key, params) {
@@ -41,7 +61,7 @@
   const errorText = (code) => tr(ERRORS[code] || 'dy_err_generic');
 
   // ===== DOM HELPERS =====
-  const $ = (s, root) => (root || document).querySelector(s);
+  const $ = (s, scope) => (scope || document).querySelector(s);
 
   function el(tag, attrs, kids) {
     const n = document.createElement(tag);
@@ -86,6 +106,7 @@
     return s;
   }
   const ICON_CLOSE = 'M6 6l12 12M18 6L6 18';
+  const ICON_BACK = 'M19 12H5M12 19l-7-7 7-7';
   const ICON_EDIT = 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z';
   const ICON_TRASH = 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6';
   const ICON_SHARE = 'M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13';
@@ -95,6 +116,7 @@
   const ICON_CHECK = 'M5 12l5 5L20 7';
   const ICON_PLUS = 'M12 5v14M5 12h14';
   const ICON_UNDO = 'M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 010 11H11';
+  const ICON_SEARCH = 'M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-3.5-3.5';
 
   // ===== DATES (strings in, strings out) =====
   const pad = (n) => String(n).padStart(2, '0');
@@ -199,22 +221,144 @@
     total: 0,
     hasMore: false,
     loading: false,
+    rendered: false,   // something real has been drawn (after that the old list stays while loading)
     error: '',
     req: 0,
     loadedAt: 0
   };
   const filtered = () => !!(state.q || state.period || state.tag);
 
-  // ===== TOAST =====
+  // Whole entries already fetched: the reader opens them at once (prev/next, back from the writer)
+  const full = new Map();
+
+  // ===== LAYOUT: header height, the pinned bar, the phone's keyboard =====
+  function headerHeight() {
+    const v = parseFloat(getComputedStyle(root).getPropertyValue('--ghf-height'));
+    return v > 0 ? v : 70;
+  }
+
+  const bar = $('#dyBar');
+  const sentinel = el('div', { 'aria-hidden': 'true' });
+  if (bar) bar.before(sentinel);
+
+  /** The bar is pinned under the header (the user has scrolled into the list) */
+  function barStuck() {
+    return !!bar && sentinel.getBoundingClientRect().top < headerHeight() - 0.5;
+  }
+
+  function watchBar() {
+    if (!bar) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      if (!locked) bar.classList.toggle('is-stuck', barStuck());
+    };
+    window.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    window.addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    update();
+    // Entries keep clear of the bar when focused (scroll-margin-top in diary.css)
+    const measure = () => root.style.setProperty('--dy-bar-h', Math.round(bar.offsetHeight) + 'px');
+    measure();
+    if (window.ResizeObserver) new ResizeObserver(measure).observe(bar);
+  }
+
+  /**
+   * Before new results are drawn: when the bar is pinned, bring the start of
+   * the results right under it. The bar itself never moves; the list starts
+   * from its first entry instead of somewhere in the middle.
+   */
+  function anchorList() {
+    if (locked || !barStuck()) return;
+    const status = $('.dy-status');
+    if (!status) return;
+    const target = window.scrollY + status.getBoundingClientRect().top - (headerHeight() + bar.offsetHeight);
+    if (target < window.scrollY - 1) window.scrollTo(0, Math.max(0, Math.round(target)));
+  }
+
+  /**
+   * The phone's keyboard. Where the browser does not make the page smaller
+   * (iPhones, some app versions), the open page ends where the keyboard
+   * begins and starts where the visible part begins, so the line being
+   * typed and the Save button always stay in sight.
+   */
+  function watchKeyboard() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let raf = 0;
+    let lastKb = -1;
+    let lastTop = -1;
+    const update = () => {
+      raf = 0;
+      let kb = 0;
+      let top = 0;
+      if (Math.abs((vv.scale || 1) - 1) < 0.01) {           // not while zoomed in with two fingers
+        kb = Math.round(window.innerHeight - vv.height - vv.offsetTop);
+        if (kb < 80) kb = 0;                                  // a toolbar coming and going, not a keyboard
+        if (kb > 0) top = Math.max(0, Math.round(vv.offsetTop));
+      }
+      if (kb !== lastKb) { lastKb = kb; root.style.setProperty('--dy-kb', kb + 'px'); }
+      if (top !== lastTop) { lastTop = top; root.style.setProperty('--dy-vvt', top + 'px'); }
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
+    vv.addEventListener('resize', schedule);
+    vv.addEventListener('scroll', schedule);
+    update();
+  }
+
+  // ===== SCROLL LOCK =====
+  // While a page or a sheet is open the list stands still: the body is
+  // pinned where it was (iPhones ignore overflow: hidden) and comes back to
+  // exactly that place. The rest of the page cannot be reached meanwhile.
+  let locked = false;
+  let lockedY = 0;
+
+  function lockScroll() {
+    const want = !!(layers.length || page);
+    if (want === locked) return;
+    locked = want;
+    const main = $('#dyMain');
+    if (want) {
+      lockedY = window.scrollY || window.pageYOffset || 0;
+      document.body.style.top = -lockedY + 'px';
+      root.classList.add('dy-locked');
+      if (main) main.inert = true;
+    } else {
+      root.classList.remove('dy-locked');
+      document.body.style.top = '';
+      if (main) main.inert = false;
+      window.scrollTo(0, lockedY);
+    }
+  }
+
+  // ===== TOAST (floats, takes no room) =====
   let toastTimer = 0;
-  function toast(message, isError) {
+  /** toast(text) · toast(text, true) for an error · toast(text, {error, action: {label, onClick}, ms}) */
+  function toast(message, opts) {
     const t = $('#dyToast');
     if (!t || !message) return;
-    t.textContent = message;
-    t.classList.toggle('is-error', !!isError);
+    if (typeof opts === 'boolean') opts = { error: opts };
+    opts = opts || {};
+    const text = $('.dy-toast-text', t) || t;
+    text.textContent = message;
+    const old = $('.dy-link-btn', t);
+    if (old) old.remove();
+    if (opts.action) {
+      t.append(el('button', {
+        class: 'dy-link-btn', type: 'button',
+        on: { click: () => { hideToast(); opts.action.onClick(); } }
+      }, [opts.action.icon ? strokeIcon(opts.action.icon) : null, el('span', { text: opts.action.label })]));
+    }
+    t.classList.toggle('has-action', !!opts.action);
+    t.classList.toggle('is-error', !!opts.error);
     t.classList.add('is-on');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('is-on'), isError ? 4800 : 2600);
+    toastTimer = setTimeout(hideToast, opts.ms || (opts.action ? 8000 : (opts.error ? 4800 : 2600)));
+  }
+
+  function hideToast() {
+    clearTimeout(toastTimer);
+    const t = $('#dyToast');
+    if (t) t.classList.remove('is-on');
   }
 
   // ===== SHEETS (small questions above everything) =====
@@ -234,9 +378,9 @@
     const layer = { back: back, panel: panel, onClose: null };
 
     function close() {
-      if (!back.parentNode) return;
+      if (!back.parentNode || back.classList.contains('is-closing')) return;
       back.classList.add('is-closing');
-      setTimeout(() => { if (back.parentNode) back.parentNode.removeChild(back); }, 180);
+      setTimeout(() => { if (back.parentNode) back.parentNode.removeChild(back); }, 170);
       const i = layers.indexOf(layer);
       if (i !== -1) layers.splice(i, 1);
       lockScroll();
@@ -265,17 +409,21 @@
     let startY = 0;
     let dy = 0;
     let dragging = false;
-    grip.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; dy = 0; dragging = true; }, { passive: true });
+    grip.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; dy = 0; dragging = true; panel.style.transition = 'none'; }, { passive: true });
     grip.addEventListener('touchmove', (e) => {
       if (!dragging) return;
       dy = Math.max(0, e.touches[0].clientY - startY);
       panel.style.transform = 'translateY(' + dy + 'px)';
     }, { passive: true });
-    grip.addEventListener('touchend', () => {
+    const end = () => {
+      if (!dragging) return;
       dragging = false;
+      panel.style.transition = 'transform 0.2s ease';
       panel.style.transform = '';
       if (dy > 90) close();
-    });
+    };
+    grip.addEventListener('touchend', end);
+    grip.addEventListener('touchcancel', end);
   }
 
   /** A sheet (phone) / card (desktop) with a title and a close button */
@@ -302,11 +450,11 @@
       let answered = false;
       const ok = el('button', { class: 'dy-btn ' + (danger ? 'dy-btn--danger' : 'dy-btn--primary'), type: 'button', text: okLabel });
       const cancel = el('button', { class: 'dy-btn dy-btn--glass', type: 'button', text: cancelLabel || T.cancel, autofocus: true });
-      panel.append(
+      panel.append(...[
         el('h2', { class: 'dy-sheet-title', id: id, text: title }),
         text ? el('p', { class: 'dy-confirm-text', text: text }) : null,
         el('div', { class: 'dy-form-actions' }, [cancel, ok])
-      );
+      ].filter(Boolean));
       const layer = openLayer(panel, id);
       const finish = (v) => { if (answered) return; answered = true; layer.close(); resolve(v); };
       layer.onClose = () => { if (!answered) { answered = true; resolve(false); } };
@@ -315,30 +463,32 @@
     });
   }
 
-  function action(label, iconNode, onClick, hint, cls) {
-    return el('button', { class: 'dy-action' + (cls ? ' ' + cls : ''), type: 'button', on: { click: onClick } }, [
+  function action(label, iconNode, onClick, hint) {
+    return el('button', { class: 'dy-action', type: 'button', on: { click: onClick } }, [
       iconNode,
       el('span', { class: 'dy-action-text' }, [el('b', { text: label }), hint ? el('small', { text: hint }) : null])
     ]);
   }
 
+  /** Busy: the button is dimmed and its icon pulses; its label (and so its size) stays */
   function setBusy(btn, busy, label) {
     if (!btn) return;
     btn.disabled = !!busy;
     btn.classList.toggle('is-busy', !!busy);
-    const span = btn.querySelector('span') || btn;
-    if (busy && label !== undefined) {
-      btn.dataset.label = span.textContent;
-      span.textContent = label;
-    } else if (!busy && btn.dataset.label) {
-      span.textContent = btn.dataset.label;
-      delete btn.dataset.label;
+    if (busy) {
+      btn.setAttribute('aria-busy', 'true');
+      if (label && btn.dataset.prevLabel === undefined) {
+        btn.dataset.prevLabel = btn.getAttribute('aria-label') || '';
+        btn.setAttribute('aria-label', label);
+      }
+    } else {
+      btn.removeAttribute('aria-busy');
+      if (btn.dataset.prevLabel !== undefined) {
+        if (btn.dataset.prevLabel) btn.setAttribute('aria-label', btn.dataset.prevLabel);
+        else btn.removeAttribute('aria-label');
+        delete btn.dataset.prevLabel;
+      }
     }
-  }
-
-  // Background scrolling stops while a page or sheet is open
-  function lockScroll() {
-    document.body.classList.toggle('dy-locked', !!(layers.length || page));
   }
 
   // ===== COPY (works in WebViews without clipboard permission) =====
@@ -425,11 +575,15 @@
     return s ? '?' + s : '';
   }
 
-  async function load(more) {
+  /** opts.more: the next page · opts.anchor: a filter changed, keep the bar where it is */
+  async function load(opts) {
+    opts = opts || {};
+    const more = !!opts.more;
     const req = ++state.req;
     const offset = more ? state.entries.length : 0;
     state.loading = true;
-    state.error = '';
+    state.error = more ? state.error : '';
+    if (opts.anchor) anchorList();
     if (!more) renderList();
     setBusy($('#dyMore'), true);
 
@@ -439,7 +593,7 @@
     setBusy($('#dyMore'), false);
 
     if (!res.ok) {
-      if (more) { toast(errorText(res.error), true); return; }
+      if (more) { renderList(); toast(errorText(res.error), true); return; }
       state.error = res.error;
       state.entries = [];
       renderList();
@@ -457,27 +611,34 @@
     renderList();
   }
 
-  const reload = () => load(false);
+  const reload = (anchor) => load({ anchor: !!anchor });
 
   // ===== LIST: DRAWING =====
   function renderFilters() {
-    document.querySelectorAll('.dy-chip[data-period]').forEach((b) => {
+    document.querySelectorAll('.dy-seg-btn[data-period]').forEach((b) => {
       b.setAttribute('aria-pressed', b.dataset.period === state.period ? 'true' : 'false');
     });
-    const box = $('#dyFilters');
-    const old = $('.dy-chip--tag', box);
-    if (old) old.remove();
-    if (state.tag) {
-      box.append(el('button', {
-        class: 'dy-chip dy-chip--tag', type: 'button', 'aria-pressed': 'true',
-        'aria-label': T.dy_remove_filter + ': #' + state.tag,
-        on: { click: () => { state.tag = ''; renderFilters(); reload(); } }
-      }, [el('span', { text: tr('dy_tag_filter', { tag: state.tag }) }), strokeIcon(ICON_CLOSE, 'dy-chip-x')]));
+
+    // The tag being shown sits in the status line, which always has the same height
+    const slot = $('#dyTagSlot');
+    if (slot) {
+      const current = slot.firstChild;
+      if (!state.tag) {
+        if (current) slot.replaceChildren();
+      } else if (!current || current.dataset.tag !== state.tag) {
+        slot.replaceChildren(el('button', {
+          class: 'dy-tag-chip', type: 'button', 'data-tag': state.tag,
+          'aria-label': T.dy_remove_filter + ': #' + state.tag,
+          on: { click: () => { state.tag = ''; renderFilters(); reload(true); } }
+        }, [el('span', { text: tr('dy_tag_filter', { tag: state.tag }) }), strokeIcon(ICON_CLOSE)]));
+      }
     }
+
     const sortLabel = $('#dySortLabel');
     if (sortLabel) sortLabel.textContent = state.sort === 'oldest' ? T.oldest_first : T.newest_first;
     const clear = $('#dySearchClear');
-    if (clear) clear.hidden = !$('#dySearch').value;
+    const input = $('#dySearch');
+    if (clear && input) clear.hidden = !input.value;
   }
 
   function stamp(date) {
@@ -490,11 +651,8 @@
 
   function entryCard(e) {
     const words = searchWords();
-    const meta = [];
-    if (e.mood) meta.push(el('span', { class: 'dy-entry-emoji', title: T['mood_' + e.mood], text: MOOD_EMOJI[e.mood] || '' }));
-    if (e.weather) meta.push(el('span', { class: 'dy-entry-emoji', title: T['weather_' + e.weather], text: WEATHER_EMOJI[e.weather] || '' }));
-    (e.tags || []).slice(0, 3).forEach((t) => meta.push(el('span', { class: 'dy-entry-tag', text: '#' + t })));
-    if ((e.tags || []).length > 3) meta.push(el('span', { class: 'dy-entry-tag', text: '+' + (e.tags.length - 3) }));
+    const emoji = (e.mood ? MOOD_EMOJI[e.mood] || '' : '') + (e.weather ? WEATHER_EMOJI[e.weather] || '' : '');
+    const feel = [e.mood ? T['mood_' + e.mood] : '', e.weather ? T['weather_' + e.weather] : ''].filter(Boolean).join(', ');
 
     const rel = relativeDay(e.date);
     const when = (rel ? rel + ' · ' : '') + dayMedium(e.date) + (e.time ? ' · ' + e.time : '');
@@ -503,19 +661,25 @@
     const excerpt = e.excerpt ? el('p', { class: 'dy-entry-excerpt' }) : null;
     if (excerpt) excerpt.append(marked(e.excerpt, words));
 
-    const a = el('a', {
+    const tags = (e.tags || []).slice(0, 3).map((t) => el('span', { class: 'dy-entry-tag', text: '#' + t }));
+    if ((e.tags || []).length > 3) tags.push(el('span', { class: 'dy-entry-tag', text: '+' + (e.tags.length - 3) }));
+
+    return el('a', {
       class: 'dy-entry' + (e.date === today() ? ' is-today' : ''), href: '#e=' + e.id, 'data-id': e.id,
       on: { click: (ev) => { ev.preventDefault(); openReader(e.id); } }
     }, [
       stamp(e.date),
       el('span', { class: 'dy-entry-body' }, [
-        el('span', { class: 'dy-entry-when', text: when }),
+        el('span', { class: 'dy-entry-top' }, [
+          el('span', { class: 'dy-entry-when', text: when }),
+          emoji ? el('span', { class: 'dy-entry-emoji', title: feel, text: emoji }) : null,
+          feel ? el('span', { class: 'dy-sr', text: feel }) : null
+        ]),
         title,
         excerpt,
-        meta.length ? el('span', { class: 'dy-entry-meta' }, meta) : null
+        tags.length ? el('span', { class: 'dy-entry-tags' }, tags) : null
       ])
     ]);
-    return a;
   }
 
   function emptyState(kind) {
@@ -525,17 +689,16 @@
         el('div', { class: 'dy-empty-orb' }, [icon('notes')]),
         el('p', { class: 'dy-empty-text', text: T.dy_load_failed }),
         el('p', { class: 'dy-empty-hint', text: errorText(state.error) }),
-        el('button', { class: 'dy-btn dy-btn--glass', type: 'button', on: { click: reload } }, [el('span', { text: T.dy_retry })])
+        el('button', { class: 'dy-btn dy-btn--glass', type: 'button', on: { click: () => reload() } }, [el('span', { text: T.dy_retry })])
       );
     } else if (kind === 'none') {
       box.append(
-        el('div', { class: 'dy-empty-orb' }, [strokeIcon('M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-3.5-3.5')]),
+        el('div', { class: 'dy-empty-orb' }, [strokeIcon(ICON_SEARCH)]),
         el('p', { class: 'dy-empty-text', text: T.dy_none_found }),
         el('p', { class: 'dy-empty-hint', text: T.dy_none_found_hint }),
         el('button', { class: 'dy-btn dy-btn--glass', type: 'button', on: { click: clearFilters } }, [el('span', { text: T.dy_show_all })])
       );
     } else {
-      box.classList.add('dy-empty--first');
       box.append(
         el('div', { class: 'dy-empty-orb dy-empty-orb--lit' }, [icon('book')]),
         el('p', { class: 'dy-empty-text', text: T.dy_empty_title }),
@@ -548,41 +711,44 @@
     return box;
   }
 
-  function renderOtd() {
-    const box = $('#dyOtd');
-    const list = $('#dyOtdList');
-    if (!box || !list) return;
-    const show = !filtered() && state.otd.length > 0 && !state.error;
-    box.hidden = !show;
-    if (!show) return;
+  /** On this day in earlier years: the first thing in the list (only the plain list) */
+  function otdCard() {
+    if (filtered() || !state.otd.length) return null;
     const year = +today().slice(0, 4);
-    list.replaceChildren(...state.otd.map((e) => {
-      const ago = year - +e.date.slice(0, 4);
-      return el('a', {
-        class: 'dy-otd-item', href: '#e=' + e.id,
-        on: { click: (ev) => { ev.preventDefault(); openReader(e.id); } }
-      }, [
-        el('span', { class: 'dy-otd-ago', text: ago === 1 ? T.dy_year_ago : tr('dy_years_ago', { n: ago }) }),
-        // No title: the first words say more than "Untitled" (as in the calendar)
-        el('span', { class: 'dy-otd-title' + (e.title ? '' : ' is-excerpt'), text: e.title || e.excerpt || T.dy_no_title })
-      ]);
-    }));
+    return el('section', { class: 'dy-card dy-otd', 'aria-labelledby': 'dyOtdTitle' }, [
+      el('h3', { class: 'dy-label', id: 'dyOtdTitle' }, [icon('history'), el('span', { text: T.dy_on_this_day })]),
+      el('div', { class: 'dy-otd-list' }, state.otd.map((e) => {
+        const ago = year - +e.date.slice(0, 4);
+        return el('a', {
+          class: 'dy-otd-item', href: '#e=' + e.id,
+          on: { click: (ev) => { ev.preventDefault(); openReader(e.id); } }
+        }, [
+          el('span', { class: 'dy-otd-ago', text: ago === 1 ? T.dy_year_ago : tr('dy_years_ago', { n: ago }) }),
+          // No title: the first words say more than "Untitled" (as in the calendar)
+          el('span', { class: 'dy-otd-title' + (e.title ? '' : ' is-excerpt'), text: e.title || e.excerpt || T.dy_no_title })
+        ]);
+      }))
+    ]);
   }
 
   function renderList() {
     renderFilters();
-    renderOtd();
     const list = $('#dyList');
     const count = $('#dyCount');
     const moreWrap = $('#dyMoreWrap');
+    if (!list) return;
     list.setAttribute('aria-busy', state.loading ? 'true' : 'false');
-    list.classList.toggle('is-loading', state.loading);
+    if (bar) bar.classList.toggle('is-loading', state.loading);
 
-    if (state.loading && !state.entries.length) {
-      list.replaceChildren(el('div', { class: 'dy-skel', 'aria-hidden': 'true' }, [el('i'), el('i'), el('i')]), el('p', { class: 'dy-sr', text: T.loading_entries }));
-      moreWrap.hidden = true;
+    // Loading again: the list that is there stays (dimmed) until the new one is in
+    if (state.loading) {
+      list.classList.toggle('is-loading', state.rendered);
+      if (!state.rendered) moreWrap.hidden = true;
       return;
     }
+    list.classList.remove('is-loading');
+    state.rendered = true;
+
     if (state.error) {
       count.textContent = '';
       list.replaceChildren(emptyState('error'));
@@ -590,7 +756,7 @@
       return;
     }
     if (!state.entries.length) {
-      count.textContent = '';
+      count.textContent = filtered() ? tr('dy_found_n', { n: 0 }) : '';
       list.replaceChildren(emptyState(filtered() ? 'none' : 'first'));
       moreWrap.hidden = true;
       return;
@@ -610,10 +776,13 @@
       }
       current.items.push(e);
     });
-    list.replaceChildren(...groups.map((g) => el('section', { class: 'dy-month' }, [
-      el('h3', { class: 'dy-month-label', text: monthLabel(g.key) }),
+    const kids = groups.map((g) => el('section', { class: 'dy-month', 'aria-label': monthLabel(g.key) }, [
+      el('h3', { class: 'dy-month-label', 'aria-hidden': 'true', text: monthLabel(g.key) }),
       el('div', { class: 'dy-month-items' }, g.items.map(entryCard))
-    ])));
+    ]));
+    const otd = otdCard();
+    if (otd) kids.unshift(otd);
+    list.replaceChildren(...kids);
     moreWrap.hidden = !state.hasMore;
   }
 
@@ -623,12 +792,13 @@
     state.tag = '';
     const input = $('#dySearch');
     if (input) input.value = '';
-    reload();
+    reload(true);
   }
 
   /** After a save: the list shows the entry as it is now */
   function patchEntry(entry) {
     const short = Object.assign({}, entry, { excerpt: String(entry.body || '').replace(/\s+/g, ' ').trim().slice(0, 280) });
+    delete short.body;
     const i = state.entries.findIndex((e) => e.id === entry.id);
     if (i === -1) return false;
     state.entries[i] = short;
@@ -647,6 +817,7 @@
     const before = state.entries.length;
     state.entries = state.entries.filter((e) => e.id !== id);
     state.otd = state.otd.filter((e) => e.id !== id);
+    full.delete(id);
     if (state.entries.length !== before) state.total = Math.max(0, state.total - 1);
     renderList();
   }
@@ -656,20 +827,46 @@
   // the popstate handler draws what the history now says.
   let page = null; // { kind, id, node, ... }
   let skipGuard = false;
+  let anchorOnClose = false; // a tag was chosen in the reader: show the start of its list
 
   function pageNode(kind, labelId) {
     const node = el('div', { class: 'dy-page dy-page--' + kind, role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': labelId, tabindex: '-1' });
-    const scroll = el('div', { class: 'dy-page-scroll' });
+    const appbar = el('div', { class: 'dy-appbar' });
+    const barInner = el('div', { class: 'dy-appbar-inner' });
+    const scroll = el('div', { class: 'dy-page-scroll', tabindex: '-1' });
     const inner = el('div', { class: 'dy-page-inner' });
-    const bar = el('div', { class: 'dy-page-bar' });
+    appbar.append(barInner);
     scroll.append(inner);
-    node.append(scroll, bar);
-    return { node: node, scroll: scroll, inner: inner, bar: bar };
+    node.append(appbar, scroll);
+    return { node: node, bar: barInner, scroll: scroll, inner: inner };
+  }
+
+  /** A button in a page's top bar. opts: primary, danger, ai, compact (icon only on phones) */
+  function barButton(label, iconNode, onClick, opts) {
+    opts = opts || {};
+    const cls = ['dy-ab-btn'];
+    if (opts.primary) cls.push('is-primary');
+    if (opts.danger) cls.push('is-danger');
+    if (opts.ai) cls.push('is-ai');
+    if (opts.compact) cls.push('is-compact');
+    const b = el('button', {
+      class: cls.join(' '), type: 'button', disabled: !!opts.disabled,
+      title: opts.compact ? label : null,
+      on: { click: onClick }
+    }, [typeof iconNode === 'string' ? strokeIcon(iconNode) : iconNode, el('span', { class: 'dy-ab-label', text: label })]);
+    return b;
+  }
+
+  function focusQuietly(node) {
+    if (!node) return;
+    try { node.focus({ preventScroll: true }); } catch (e) { node.focus(); }
   }
 
   function showPage(p) {
     const prev = page;
     page = p;
+    // Page to page (prev/next, writer to reader): swapped at once, so the list never shows through
+    if (prev) p.node.classList.add('is-swap');
     document.body.appendChild(p.node);
     if (prev) {
       if (prev.cleanup) prev.cleanup();
@@ -684,7 +881,7 @@
     const node = page.node;
     page = null;
     node.classList.add('is-closing');
-    setTimeout(() => node.remove(), 200);
+    setTimeout(() => node.remove(), 170);
     lockScroll();
   }
 
@@ -706,9 +903,20 @@
       if (page) {
         const returnTo = page.kind === 'read' ? page.id : null;
         hidePage();
+        if (anchorOnClose) {
+          anchorOnClose = false;
+          anchorList();
+          return;
+        }
         if (returnTo) {
+          // Back on the card of the entry last read; only scrolled to when it is out of sight
           const card = document.querySelector('.dy-entry[data-id="' + returnTo + '"]');
-          if (card) { try { card.focus({ preventScroll: false }); } catch (e) { card.focus(); } }
+          if (card) {
+            focusQuietly(card);
+            const r = card.getBoundingClientRect();
+            const top = headerHeight() + (bar ? bar.offsetHeight : 0);
+            if (r.bottom < top || r.top > window.innerHeight) card.scrollIntoView({ block: 'center' });
+          }
         }
       }
       return;
@@ -752,6 +960,19 @@
     renderReader(id);
   }
 
+  /** Fetch a whole entry once; later the reader opens it at once */
+  async function fetchEntry(id) {
+    if (full.has(id)) return { ok: true, entry: full.get(id) };
+    const res = await api('/diary/api/get.php?id=' + encodeURIComponent(id));
+    if (!res.ok) return { ok: false, error: res.error };
+    full.set(id, res.data.entry);
+    return { ok: true, entry: res.data.entry };
+  }
+
+  function prefetch(entry) {
+    if (entry && !full.has(entry.id)) fetchEntry(entry.id);
+  }
+
   async function renderReader(id) {
     const labelId = 'dyReadTitle';
     const p = pageNode('read', labelId);
@@ -759,11 +980,25 @@
     p.id = id;
     p.state = { dy: 'read', id: id };
     p.hash = '#e=' + id;
-    p.inner.append(el('div', { class: 'dy-read-skel', 'aria-hidden': 'true' }, [el('i'), el('i'), el('i'), el('i')]), el('h2', { class: 'dy-sr', id: labelId, text: T.dy_reading }));
-    showPage(p);
-    try { p.node.focus({ preventScroll: true }); } catch (e) { p.node.focus(); }
 
-    const res = await api('/diary/api/get.php?id=' + encodeURIComponent(id));
+    // The bar is complete from the start (disabled until the entry is in), so nothing appears later
+    const editBtn = barButton(T.edit, ICON_EDIT, () => { if (p.entry) openWriter(p.entry, { from: 'read' }); }, { primary: true, disabled: true });
+    const shareBtn = barButton(T.share, ICON_SHARE, () => { if (p.entry) openShare(p.entry); }, { compact: true, disabled: true });
+    const delBtn = barButton(T.delete, ICON_TRASH, () => { if (p.entry) removeFlow(p.entry); }, { compact: true, danger: true, disabled: true });
+    p.bar.append(
+      barButton(T.back, ICON_BACK, closePage),
+      el('span', { class: 'dy-appbar-space' }),
+      editBtn, shareBtn, delBtn
+    );
+
+    const cached = full.get(id);
+    if (!cached) {
+      p.inner.append(el('div', { class: 'dy-read-skel', 'aria-hidden': 'true' }, [el('i'), el('i'), el('i'), el('i')]), el('h2', { class: 'dy-sr', id: labelId, text: T.dy_reading }));
+    }
+    showPage(p);
+    focusQuietly(p.scroll);   // Space and Page Down read on
+
+    const res = cached ? { ok: true, entry: cached } : await fetchEntry(id);
     if (page !== p) return;
     if (!res.ok) {
       p.inner.replaceChildren(el('div', { class: 'dy-card dy-empty' }, [
@@ -771,17 +1006,12 @@
         el('p', { class: 'dy-empty-text', id: labelId, text: errorText(res.error) }),
         res.error === 'not_found' ? null : el('button', { class: 'dy-btn dy-btn--glass', type: 'button', on: { click: () => renderReader(id) } }, [el('span', { text: T.dy_retry })])
       ]));
-      p.bar.replaceChildren(barButton(T.close, ICON_CLOSE, closePage, 'is-primary'));
       if (res.error === 'not_found') removeEntry(id);
       return;
     }
-    const e = res.data.entry;
-    p.entry = e;
-    drawReader(p, e, labelId);
-  }
-
-  function barButton(label, d, onClick, cls) {
-    return el('button', { class: 'dy-bar-btn' + (cls ? ' ' + cls : ''), type: 'button', on: { click: onClick } }, [strokeIcon(d), el('span', { text: label })]);
+    p.entry = res.entry;
+    [editBtn, shareBtn, delBtn].forEach((b) => { b.disabled = false; });
+    drawReader(p, res.entry, labelId);
   }
 
   function neighbours(id) {
@@ -803,7 +1033,17 @@
     const nb = neighbours(e.id);
     const tags = (e.tags || []).map((t) => el('button', {
       class: 'dy-pill dy-pill--tag', type: 'button',
-      on: { click: () => { state.tag = t; state.q = ''; $('#dySearch').value = ''; closePage(); reload(); } }
+      on: {
+        click: () => {
+          state.tag = t;
+          state.q = '';
+          const input = $('#dySearch');
+          if (input) input.value = '';
+          anchorOnClose = true;
+          closePage();
+          reload(true);
+        }
+      }
     }, [el('span', { text: '#' + t })]));
     const pills = [];
     if (e.mood) pills.push(el('span', { class: 'dy-pill' }, [el('span', { class: 'dy-pill-emoji', 'aria-hidden': 'true', text: MOOD_EMOJI[e.mood] }), el('span', { text: T['mood_' + e.mood] })]));
@@ -819,11 +1059,11 @@
     }
 
     const navBtn = (entry, d, label) => el('button', {
-      class: 'dy-nav-btn', type: 'button', 'aria-label': label, disabled: !entry,
+      class: 'dy-nav-btn', type: 'button', 'aria-label': label, title: label, disabled: !entry,
       on: { click: () => goTo(entry) }
     }, [strokeIcon(d)]);
 
-    const article = el('article', { class: 'dy-read' }, [
+    p.inner.replaceChildren(el('article', { class: 'dy-read' }, [
       el('div', { class: 'dy-read-top' }, [
         navBtn(nb.prev, ICON_PREV, T.dy_prev),
         el('p', { class: 'dy-read-when' }, [icon('calendar'), el('span', { text: whenText(e) })]),
@@ -836,20 +1076,19 @@
         el('span', { text: footBits.join(' · ') }),
         el('a', { class: 'dy-link', href: '/calendar/calendar.php#d=' + encodeURIComponent(e.date) + '&i=diary-' + e.id }, [icon('calendar'), el('span', { text: T.dy_open_calendar })])
       ])
-    ]);
-    p.inner.replaceChildren(article);
+    ]));
 
-    p.bar.replaceChildren(
-      barButton(T.edit, ICON_EDIT, () => openWriter(e, { from: 'read' })),
-      barButton(T.share, ICON_SHARE, () => openShare(e)),
-      barButton(T.delete, ICON_TRASH, () => removeFlow(e), 'is-danger'),
-      barButton(T.close, ICON_CLOSE, closePage, 'is-primary')
-    );
     enableReaderSwipe(p, nb);
+    // The pages either side open at once
+    prefetch(nb.prev);
+    prefetch(nb.next);
   }
 
   // Swipe sideways through the pages of the journal
   function enableReaderSwipe(p, nb) {
+    if (p.swipeOn) { p.nb = nb; return; }
+    p.swipeOn = true;
+    p.nb = nb;
     let x0 = 0;
     let y0 = 0;
     let tracking = false;
@@ -868,8 +1107,8 @@
       if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
       const sel = window.getSelection ? String(window.getSelection()) : '';
       if (sel) return; // selecting text, not turning a page
-      if (dx < 0 && nb.next) goTo(nb.next);
-      else if (dx > 0 && nb.prev) goTo(nb.prev);
+      if (dx < 0 && p.nb.next) goTo(p.nb.next);
+      else if (dx > 0 && p.nb.prev) goTo(p.nb.prev);
     }, { passive: true });
   }
 
@@ -962,22 +1201,34 @@
     p.state = s;
     p.hash = '#w=' + (s.id || 'new');
     p.dirty = () => false;
+
+    // The bar is complete from the start; Save and AI wait until there is something to save
+    const sparkIcon = icon('spark');
+    p.saveBtn = barButton(T.save, ICON_CHECK, () => { if (p.save) p.save(); }, { primary: true, disabled: true });
+    p.aiBtn = barButton(T.ai_assist, sparkIcon, () => { if (p.askAi) p.askAi(); }, { ai: true, compact: true, disabled: true });
+    p.bar.append(
+      barButton(T.cancel, ICON_CLOSE, closePage),
+      el('span', { class: 'dy-appbar-space' }),
+      p.aiBtn,
+      p.saveBtn
+    );
     showPage(p);
 
-    let entry = known && known.body !== undefined ? known : null;
+    let entry = known && known.body !== undefined ? known : (s.id && full.has(s.id) ? full.get(s.id) : null);
     if (s.id && !entry) {
+      focusQuietly(p.scroll);
       p.inner.append(el('div', { class: 'dy-read-skel', 'aria-hidden': 'true' }, [el('i'), el('i'), el('i')]));
-      const res = await api('/diary/api/get.php?id=' + encodeURIComponent(s.id));
+      const res = await fetchEntry(s.id);
       if (page !== p) return;
       if (!res.ok) {
         // Nothing to edit, but a draft for it would still be on this device
         p.inner.replaceChildren(el('div', { class: 'dy-card dy-empty' }, [
+          el('div', { class: 'dy-empty-orb' }, [icon('notes')]),
           el('p', { class: 'dy-empty-text', id: labelId, text: errorText(res.error) })
         ]));
-        p.bar.replaceChildren(barButton(T.close, ICON_CLOSE, closePage, 'is-primary'));
         return;
       }
-      entry = res.data.entry;
+      entry = res.entry;
     }
     drawWriter(p, s, entry, labelId);
   }
@@ -1005,20 +1256,17 @@
     v.tags = Array.isArray(v.tags) ? v.tags.slice(0, LIMITS.tags) : [];
 
     // ----- fields -----
-    const form = el('form', { class: 'dy-form', novalidate: true });
+    const form = el('form', { class: 'dy-form', novalidate: true, on: { submit: (ev) => ev.preventDefault() } });
     const heading = el('h2', { class: 'dy-write-heading', id: labelId, text: entry ? T.dy_edit_entry : T.new_entry });
 
-    const notice = el('div', { class: 'dy-notice', hidden: !restored, role: 'status' });
-    function showNotice(text, btnLabel, onClick, iconD) {
-      notice.replaceChildren(el('span', { text: text }), btnLabel ? el('button', { class: 'dy-link-btn', type: 'button', on: { click: onClick } }, [iconD ? strokeIcon(iconD) : null, el('span', { text: btnLabel })]) : null);
-      notice.hidden = false;
-    }
-    if (restored) {
-      showNotice(T.dy_draft_restored, T.dy_draft_discard, () => {
-        store(draftKey(s.id), null);
-        renderWriter(s, entry);
-      }, ICON_UNDO);
-    }
+    // Shown from the start (never pops in above the text later)
+    const notice = restored ? el('div', { class: 'dy-notice', role: 'status' }, [
+      el('span', { text: T.dy_draft_restored }),
+      el('button', {
+        class: 'dy-link-btn', type: 'button',
+        on: { click: () => { store(draftKey(s.id), null); if (p.cleanup) p.cleanup(); renderWriter(s, entry); } }
+      }, [strokeIcon(ICON_UNDO), el('span', { text: T.dy_draft_discard })])
+    ]) : null;
 
     const date = el('input', { class: 'dy-input', type: 'date', id: 'dyDate', required: true, value: v.date });
     const time = el('input', { class: 'dy-input', type: 'time', id: 'dyTime', value: v.time });
@@ -1026,18 +1274,21 @@
       class: 'dy-input dy-input--title', type: 'text', id: 'dyTitleIn', maxlength: LIMITS.title,
       placeholder: T.my_thoughts_today, autocomplete: 'off', enterkeyhint: 'next', value: v.title
     });
-    const body = el('textarea', { class: 'dy-input dy-textarea', id: 'dyBody', rows: '8', placeholder: T.write_thoughts_here });
+    const body = el('textarea', { class: 'dy-textarea', id: 'dyBody', rows: '6', placeholder: T.write_thoughts_here });
     body.value = v.body;
+    // The hidden copy behind the text sets the height: it grows, it never collapses first
+    const grow = el('div', { class: 'dy-grow' }, [body]);
     const words = el('span', { class: 'dy-words', 'aria-live': 'polite' });
 
-    const fieldErr = (id) => el('p', { class: 'dy-field-error', id: id + 'Err', role: 'alert', hidden: true });
+    // Screen readers hear what is wrong; on screen a toast says it (nothing is pushed down)
+    const errNote = (id) => el('span', { class: 'dy-sr', id: id + 'Err' });
 
     let mood = v.mood;
     let weather = v.weather;
     let tags = v.tags.slice();
 
     function picker(kind, list, emoji, current, set) {
-      const wrap = el('div', { class: 'dy-picker', role: 'group', 'aria-label': kind === 'mood' ? T.mood : T.weather });
+      const wrap = el('div', { class: 'dy-picks', role: 'group', 'aria-label': kind === 'mood' ? T.mood : T.weather });
       list.forEach((key) => {
         const b = el('button', {
           class: 'dy-pick', type: 'button', 'aria-pressed': key === current ? 'true' : 'false',
@@ -1056,33 +1307,45 @@
       return wrap;
     }
 
-    // ----- tags -----
-    const tagList = el('div', { class: 'dy-tags' });
+    // ----- tags: chips and the input in one box -----
+    const chips = el('span', { class: 'dy-tag-chips', style: 'display: contents' });
     const tagInput = el('input', {
-      class: 'dy-input dy-tag-input', type: 'text', id: 'dyTagIn', maxlength: LIMITS.tag,
+      class: 'dy-tag-input', type: 'text', id: 'dyTagIn', maxlength: LIMITS.tag,
       placeholder: T.dy_tag_ph, autocomplete: 'off', enterkeyhint: 'done', list: 'dyTagSuggest'
     });
     const suggest = el('datalist', { id: 'dyTagSuggest' }, state.tags.map((t) => el('option', { value: t.tag })));
-    const tagAdd = el('button', { class: 'dy-icon-btn', type: 'button', 'aria-label': T.dy_add_tag }, [strokeIcon(ICON_PLUS)]);
+    const tagAdd = el('button', { class: 'dy-tag-add', type: 'button', 'aria-label': T.dy_add_tag, title: T.dy_add_tag }, [strokeIcon(ICON_PLUS)]);
+    // The chips and the input wrap on the left; the + keeps its place on the right
+    const tagWrap = el('div', { class: 'dy-tag-wrap' }, [chips, tagInput]);
+    const tagField = el('div', { class: 'dy-tagfield', tabindex: '-1' }, [tagWrap, tagAdd]);
 
     function cleanTag(t) {
       return String(t || '').replace(/["\\#,[\]]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, LIMITS.tag);
     }
     function drawTags() {
-      tagList.replaceChildren(...tags.map((t) => el('span', { class: 'dy-tag' }, [
+      // Only the chips are drawn again: the input keeps its focus (and the keyboard stays)
+      chips.replaceChildren(...tags.map((t) => el('span', { class: 'dy-tag' }, [
         el('span', { text: '#' + t }),
         el('button', {
           class: 'dy-tag-x', type: 'button', 'aria-label': tr('dy_remove_tag', { tag: t }),
-          on: { click: () => { tags = tags.filter((x) => x !== t); drawTags(); changed(); tagInput.focus(); } }
+          on: {
+            click: (ev) => {
+              tags = tags.filter((x) => x !== t);
+              drawTags();
+              changed();
+              // A tap does not call up the keyboard; the keyboard carries on in the input
+              if (ev.detail === 0 && !tagInput.disabled) tagInput.focus();
+              else focusQuietly(tagField);
+            }
+          }
         }, [strokeIcon(ICON_CLOSE)])
       ])));
       tagInput.disabled = tags.length >= LIMITS.tags;
       tagAdd.disabled = tags.length >= LIMITS.tags;
     }
     function addTag() {
-      const parts2 = tagInput.value.split(',');
       let added = false;
-      parts2.forEach((raw) => {
+      tagInput.value.split(',').forEach((raw) => {
         const t = cleanTag(raw);
         if (!t || tags.length >= LIMITS.tags) return;
         if (tags.some((x) => x.toLowerCase() === t.toLowerCase())) return;
@@ -1097,37 +1360,35 @@
       else if (ev.key === 'Backspace' && !tagInput.value && tags.length) { tags.pop(); drawTags(); changed(); }
     });
     tagInput.addEventListener('change', () => { if (tagInput.value.trim()) addTag(); });
-    tagAdd.addEventListener('click', () => { addTag(); tagInput.focus(); });
+    tagAdd.addEventListener('click', () => { addTag(); if (!tagInput.disabled) tagInput.focus(); });
+    tagField.addEventListener('click', (ev) => {
+      if ((ev.target === tagField || ev.target === tagWrap) && !tagInput.disabled) tagInput.focus();
+    });
     drawTags();
 
     // ----- layout -----
     const label = (forId, text, extra) => el('label', { class: 'dy-field-label', for: forId }, [el('span', { text: text }), extra ? el('small', { text: extra }) : null]);
-    const groupLabel = (text) => el('p', { class: 'dy-field-label' }, [el('span', { text: text })]);
+    const groupLabel = (text) => el('p', { class: 'dy-field-label', 'aria-hidden': 'true' }, [el('span', { text: text })]);
 
-    form.append(
+    form.append(...[
       heading,
       notice,
       el('div', { class: 'dy-row' }, [
-        el('div', { class: 'dy-field' }, [label('dyDate', T.date), date, fieldErr('dyDate')]),
-        el('div', { class: 'dy-field' }, [label('dyTime', T.time, T.dy_optional), time, fieldErr('dyTime')])
+        el('div', { class: 'dy-field' }, [label('dyDate', T.date), date, errNote('dyDate')]),
+        el('div', { class: 'dy-field' }, [label('dyTime', T.time, T.dy_optional), time, errNote('dyTime')])
       ]),
       el('div', { class: 'dy-field' }, [label('dyTitleIn', T.title, T.dy_optional), title]),
       el('div', { class: 'dy-field dy-field--body' }, [
         el('label', { class: 'dy-sr', for: 'dyBody', text: T.dy_writing }),
-        body,
+        grow,
         el('div', { class: 'dy-body-foot' }, [words]),
-        fieldErr('dyBody')
+        errNote('dyBody')
       ]),
       el('div', { class: 'dy-field' }, [groupLabel(T.mood), picker('mood', CFG.moods || [], MOOD_EMOJI, mood, (x) => { mood = x; })]),
       el('div', { class: 'dy-field' }, [groupLabel(T.weather), picker('weather', CFG.weathers || [], WEATHER_EMOJI, weather, (x) => { weather = x; })]),
-      el('div', { class: 'dy-field' }, [
-        label('dyTagIn', T.tags, T.dy_optional),
-        tagList,
-        el('div', { class: 'dy-tag-row' }, [tagInput, tagAdd]),
-        suggest
-      ]),
+      el('div', { class: 'dy-field' }, [label('dyTagIn', T.tags, T.dy_optional), tagField, suggest]),
       el('p', { class: 'dy-hint dy-hint--calendar' }, [icon('calendar'), el('span', { text: T.dy_calendar_note })])
-    );
+    ].filter(Boolean));
     p.inner.replaceChildren(form);
 
     // ----- state -----
@@ -1154,44 +1415,40 @@
       clearTimeout(draftTimer);
       draftTimer = setTimeout(saveDraft, 500);
     }
-    function grow() {
-      body.style.height = 'auto';
-      body.style.height = Math.max(body.scrollHeight + 2, 220) + 'px';
-    }
-    function updateWords() {
+    function syncText() {
+      grow.dataset.value = body.value;
       words.textContent = wordsLabel(countWords(body.value));
     }
     [date, time, title].forEach((n) => n.addEventListener('input', changed));
-    body.addEventListener('input', () => { grow(); updateWords(); changed(); });
+    body.addEventListener('input', () => { syncText(); changed(); });
     title.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); body.focus(); } });
-    updateWords();
-    requestAnimationFrame(grow);
+    syncText();
     // Phones and the app may be put away at any moment: keep the text now
     document.addEventListener('visibilitychange', saveDraft);
+    window.addEventListener('pagehide', saveDraft);
     p.cleanup = () => {
       clearTimeout(draftTimer);
       document.removeEventListener('visibilitychange', saveDraft);
+      window.removeEventListener('pagehide', saveDraft);
     };
 
     // ----- errors -----
     function clearErrors() {
-      form.querySelectorAll('[aria-invalid]').forEach((n) => n.removeAttribute('aria-invalid'));
-      form.querySelectorAll('.dy-field-error').forEach((n) => { n.hidden = true; n.textContent = ''; });
+      form.querySelectorAll('[aria-invalid]').forEach((n) => { n.removeAttribute('aria-invalid'); n.removeAttribute('aria-describedby'); });
+      form.querySelectorAll('.dy-sr[id$="Err"]').forEach((n) => { n.textContent = ''; });
     }
     function fieldError(input, message) {
       const err = form.querySelector('#' + input.id + 'Err');
       input.setAttribute('aria-invalid', 'true');
-      if (err) { err.textContent = message; err.hidden = false; input.setAttribute('aria-describedby', err.id); }
+      if (err) { err.textContent = message; input.setAttribute('aria-describedby', err.id); }
+      toast(message, true);
       try { input.focus({ preventScroll: false }); } catch (e) { input.focus(); }
     }
+    [date, time, body].forEach((n) => n.addEventListener('input', () => {
+      if (n.hasAttribute('aria-invalid')) { n.removeAttribute('aria-invalid'); n.removeAttribute('aria-describedby'); }
+    }));
 
     // ----- save -----
-    const saveBtn = barButton(T.save, ICON_CHECK, () => save(), 'is-primary');
-    const aiBtn = barButton(T.ai_assist, '', () => askAi(), 'is-ai');
-    aiBtn.querySelector('svg').replaceWith(icon('spark'));
-    const cancelBtn = barButton(T.cancel, ICON_CLOSE, closePage);
-    p.bar.replaceChildren(cancelBtn, aiBtn, saveBtn);
-
     let saving = false;
     async function save() {
       if (saving) return;
@@ -1205,11 +1462,11 @@
 
       saving = true;
       saveDraft();
-      setBusy(saveBtn, true, T.dy_saving);
+      setBusy(p.saveBtn, true, T.dy_saving);
       const payload = Object.assign({}, val, { id: s.id || undefined });
       const res = await postJSON(s.id ? '/diary/api/update.php' : '/diary/api/create.php', payload);
       saving = false;
-      setBusy(saveBtn, false);
+      setBusy(p.saveBtn, false);
       if (page !== p) return;
 
       if (!res.ok) {
@@ -1223,6 +1480,8 @@
 
       store(draftKey(s.id), null);
       const saved = res.data.entry;
+      if (saved && saved.id && saved.body !== undefined) full.set(saved.id, saved);
+      else if (saved && saved.id) full.delete(saved.id);
       toast(T.dy_saved);
       p.dirty = () => false;
       if (p.cleanup) p.cleanup();
@@ -1246,7 +1505,6 @@
     p.save = save;
 
     // ----- AI suggestion -----
-    let undoText = null;
     async function askAi() {
       clearErrors();
       const text = body.value.trim();
@@ -1255,9 +1513,9 @@
       const box = el('div', { class: 'dy-ai-box', 'aria-live': 'polite' }, [el('p', { class: 'dy-ai-wait', text: T.dy_ai_working })]);
       layer.body.append(box);
       const res = await postJSON('/diary/api/ai_enhance.php', { text: text });
-      if (!layer.back.parentNode) return; // closed while waiting
+      if (!layer.back.parentNode || layer.back.classList.contains('is-closing')) return; // closed while waiting
       if (!res.ok) {
-        box.replaceChildren(el('p', { class: 'dy-field-error', text: errorText(res.error) }));
+        box.replaceChildren(el('p', { class: 'dy-ai-error', text: errorText(res.error) }));
         return;
       }
       const suggestion = res.data.text;
@@ -1267,34 +1525,37 @@
         class: 'dy-btn dy-btn--primary', type: 'button', text: T.dy_ai_use,
         on: {
           click: () => {
-            undoText = body.value;
+            const before = body.value;
             body.value = suggestion;
-            grow();
-            updateWords();
+            syncText();
             changed();
             layer.close();
-            showNotice(T.dy_ai_used, T.dy_undo, () => {
-              if (undoText === null) return;
-              body.value = undoText;
-              undoText = null;
-              grow();
-              updateWords();
-              changed();
-              notice.hidden = true;
-            }, ICON_UNDO);
+            // Undo lives in a toast: nothing is inserted above the text
+            toast(T.dy_ai_used, {
+              ms: 10000,
+              action: {
+                label: T.dy_undo, icon: ICON_UNDO,
+                onClick: () => {
+                  if (page !== p) return;
+                  body.value = before;
+                  syncText();
+                  changed();
+                }
+              }
+            });
           }
         }
       });
       layer.body.append(el('p', { class: 'dy-hint', text: T.dy_ai_hint }), el('div', { class: 'dy-form-actions' }, [keep, use]));
-      try { use.focus({ preventScroll: true }); } catch (e) { use.focus(); }
+      focusQuietly(use);
     }
+    p.askAi = askAi;
+    p.saveBtn.disabled = false;
+    p.aiBtn.disabled = false;
 
     // New entries start typing straight away; edits wait for a tap
-    if (!entry) {
-      try { title.focus({ preventScroll: true }); } catch (e) { title.focus(); }
-    } else {
-      try { p.node.focus({ preventScroll: true }); } catch (e) { p.node.focus(); }
-    }
+    if (!entry) focusQuietly(title);
+    else focusQuietly(p.scroll);
   }
 
   // ===== START =====
@@ -1307,38 +1568,43 @@
 
     // Search: as you type (a moment after the last key), at once on Enter
     const search = $('#dySearch');
+    const clear = $('#dySearchClear');
     let searchTimer = 0;
     const runSearch = () => {
       clearTimeout(searchTimer);
       const q = search.value.trim();
       if (q === state.q) return;
       state.q = q;
-      reload();
+      reload(true);
     };
     search.addEventListener('input', () => {
-      $('#dySearchClear').hidden = !search.value;
+      clear.hidden = !search.value;
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(runSearch, 350);
+      searchTimer = setTimeout(runSearch, 400);
     });
     search.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); runSearch(); search.blur(); }
-      else if (e.key === 'Escape' && search.value) { e.preventDefault(); search.value = ''; runSearch(); }
+      else if (e.key === 'Escape' && search.value) { e.preventDefault(); search.value = ''; clear.hidden = true; runSearch(); }
     });
-    $('#dySearchClear').addEventListener('click', () => { search.value = ''; runSearch(); search.focus(); });
+    // The browser's own clear (×) on type=search
+    search.addEventListener('search', () => { clear.hidden = !search.value; runSearch(); });
+    clear.addEventListener('click', () => { search.value = ''; clear.hidden = true; runSearch(); search.focus(); });
 
-    document.querySelectorAll('.dy-chip[data-period]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.dy-seg-btn[data-period]').forEach((b) => b.addEventListener('click', () => {
       if (state.period === b.dataset.period) return;
       state.period = b.dataset.period;
-      reload();
+      renderFilters();
+      reload(true);
     }));
 
     $('#dySort').addEventListener('click', () => {
       state.sort = state.sort === 'oldest' ? 'newest' : 'oldest';
       store('sort', state.sort);
-      reload();
+      renderFilters();
+      reload(true);
     });
     $('#dyExport').addEventListener('click', openExport);
-    $('#dyMore').addEventListener('click', () => load(true));
+    $('#dyMore').addEventListener('click', () => load({ more: true }));
 
     document.addEventListener('keydown', (e) => {
       if (layers.length) {
@@ -1348,40 +1614,56 @@
         return;
       }
       if (!page) return;
-      const typing = /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '');
+      if (document.body.classList.contains('ghf-open')) return; // the site menu is open over the page
+      const typing = /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '') || (e.target && e.target.isContentEditable);
       if (e.key === 'Escape') { e.preventDefault(); closePage(); return; }
       if (e.key === 'Tab') { trapTab(e, page.node); return; }
-      if (page.kind === 'write' && (e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'Enter')) {
+      if (page.kind === 'write' && (e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'Enter')) {
         e.preventDefault();
         if (page.save) page.save();
         return;
       }
       if (page.kind === 'read' && !typing && !e.altKey && !e.ctrlKey && !e.metaKey && page.entry) {
         const nb = neighbours(page.id);
-        if (e.key === 'ArrowLeft' && nb.prev) goTo(nb.prev);
-        else if (e.key === 'ArrowRight' && nb.next) goTo(nb.next);
-        else if (e.key === 'e' || e.key === 'E') openWriter(page.entry, { from: 'read' });
+        if (e.key === 'ArrowLeft' && nb.prev) { e.preventDefault(); goTo(nb.prev); }
+        else if (e.key === 'ArrowRight' && nb.next) { e.preventDefault(); goTo(nb.next); }
+        else if (e.key === 'e' || e.key === 'E') { e.preventDefault(); openWriter(page.entry, { from: 'read' }); }
+        else if ((e.key === ' ' || e.key === 'PageDown' || e.key === 'PageUp') && !page.scroll.contains(document.activeElement)) {
+          // Space reads on, wherever the focus is in the page (not only on the text)
+          if (e.target && e.target.closest && e.target.closest('button, a')) return;
+          e.preventDefault();
+          const step = page.scroll.clientHeight * 0.85;
+          page.scroll.scrollBy({ top: (e.shiftKey || e.key === 'PageUp') ? -step : step });
+        }
       }
     });
 
     // Back after a while: fresh data (another phone may have written)
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && !page && Date.now() - state.loadedAt > 120000) reload();
+      if (document.visibilityState === 'visible' && !page && !layers.length && Date.now() - state.loadedAt > 120000) {
+        full.clear();
+        reload();
+      }
     });
   }
 
-  function trapTab(e, root) {
+  function trapTab(e, scope) {
+    // a[href], not [href]: the icons' <use href> are not stops
     const focusable = Array.prototype.filter.call(
-      root.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
-      (n) => !n.disabled && n.offsetParent !== null
+      scope.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+      (n) => n instanceof HTMLElement && !n.disabled && n.offsetParent !== null
     );
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
-    if (e.shiftKey && (document.activeElement === first || document.activeElement === root)) {
+    const active = document.activeElement;
+    if (!scope.contains(active) || active === scope) {
+      e.preventDefault();
+      (e.shiftKey ? last : first).focus();
+    } else if (e.shiftKey && active === first) {
       e.preventDefault();
       last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
+    } else if (!e.shiftKey && active === last) {
       e.preventDefault();
       first.focus();
     }
@@ -1412,7 +1694,9 @@
     }
   }
 
+  watchKeyboard();
+  watchBar();
   bind();
   startRoute();
-  load(false);
+  load();
 })();

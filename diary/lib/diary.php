@@ -365,6 +365,8 @@ function dy_js_strings(string $lang): array {
         // Error codes from the APIs (diary.js maps them)
         'dy_err_empty', 'dy_err_date', 'dy_err_time', 'dy_err_too_long', 'dy_err_session', 'dy_err_offline',
         'dy_err_generic', 'dy_err_rate', 'dy_err_not_found', 'dy_ai_unavailable', 'dy_ai_too_long',
+        // Drawn by diary.js since the redesign (On this day sits in the list, pages have a Back button)
+        'back', 'dy_on_this_day', 'dy_sort_label', 'dy_export',
     ];
     $out = [];
     foreach ($keys as $k) {
