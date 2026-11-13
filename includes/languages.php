@@ -8915,6 +8915,45 @@ define('UI_TRANSLATIONS', [
         'af' => 'Jy is aflyn',
         'en' => 'You are offline',
         'pt' => 'Está offline'
+    ],
+
+    // Lering page (/lering/lering.php): the teaching and the year theme card.
+    // Missing languages fall back to English.
+    'year_theme' => [
+        'af' => 'Jaartema',
+        'en' => 'Year Theme',
+        'zu' => 'Isihloko Sonyaka',
+        'xh' => 'Umxholo Wonyaka',
+        'pt' => 'Tema do Ano',
+        'st' => 'Sehlooho sa Selemo'
+    ],
+    'lr_tabs_label' => [
+        'af' => 'Lering en jaartema',
+        'en' => 'Teaching and year theme',
+        'pt' => 'Ensino e tema do ano'
+    ],
+    'lr_sections' => [
+        'af' => 'Dele van die kaartjie',
+        'en' => 'Parts of the card',
+        'pt' => 'Partes do cartão'
+    ],
+    'lr_read_bible' => [
+        'af' => 'Lees in die Bybel',
+        'en' => 'Read in the Bible',
+        'zu' => 'Funda eBhayibhelini',
+        'xh' => 'Funda eBhayibhileni',
+        'pt' => 'Ler na Bíblia',
+        'st' => 'Bala Bibeleng'
+    ],
+    'lr_updated' => [
+        'af' => 'Bygewerk {date}',
+        'en' => 'Updated {date}',
+        'pt' => 'Atualizado em {date}'
+    ],
+    'lr_other_lang' => [
+        'af' => 'Nog nie in jou taal nie. Hier in: {lang}',
+        'en' => 'Not yet in your language. Shown in: {lang}',
+        'pt' => 'Ainda não está no seu idioma. Mostrado em: {lang}'
     ]
 
 ]);

@@ -1,0 +1,1446 @@
+/* =====================================================================
+   Lering — "Light Through Glass", emerald edition
+   The welcome page's atmosphere lit in emerald, the colour of the Lering
+   tile. Two tabs: the Teaching of the Month (its text keeps the rose-gold
+   reading styles it always had, mirrored by the editor in
+   /admin/css/elders.css) and the Year theme card.
+   Dark = charcoal + emerald (default). Light = ivory + deep green.
+   ===================================================================== */
+
+/* ===== DARK THEME (DEFAULT) ===== */
+:root {
+  --bg-base: #0a0a0a;
+  --bg-elevated: #121110;
+  --bg-card: #171514;
+  --bg-surface: #1d1a19;
+  --card-top: #1d1a19;
+
+  /* The page colour: emerald, with a softer and a deeper step */
+  --accent-rgb: 66, 198, 148;
+  --accent: #52d3a3;
+  --accent-soft: #a3ecd0;
+  --accent-deep: #239b70;
+  --accent-ink: #04140d;
+  --accent-grad: linear-gradient(135deg, #7be6bd 0%, #45c896 46%, #1f936a 100%);
+
+  /* Reading colours of the teaching (same values the welcome page had) */
+  --rose-gold: #e8b4a8;
+  --rose-gold-light: #f0c9bf;
+  --rose-gold-dark: #c99485;
+  --peach-light: #fae8e0;
+
+  --text-primary: #f5ebe6;
+  --text-secondary: #c8c0ba;
+  --text-muted: #8f8680;
+
+  --border: rgba(232, 180, 168, 0.16);
+  --border-light: rgba(255, 255, 255, 0.07);
+  --border-accent: rgba(66, 198, 148, 0.3);
+  --border-strong: rgba(66, 198, 148, 0.5);
+  --glow: rgba(66, 198, 148, 0.3);
+  --shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.9);
+  --shadow-sm: 0 12px 30px -18px rgba(0, 0, 0, 0.85);
+  --sheen: rgba(255, 255, 255, 0.06);
+  --bar-bg: rgba(10, 10, 10, 0.78);
+
+  --rose-rgb: 232, 180, 168;
+  --ruby-rgb: 236, 98, 124;
+  --amber-rgb: 245, 186, 74;
+  --sapphire-rgb: 98, 152, 255;
+  --amethyst-rgb: 170, 128, 255;
+
+  --aura-rgb: 82, 211, 163;
+  --aura2-rgb: 232, 180, 168;
+  --aura-op: 1;
+  --name-grad: linear-gradient(115deg, #eafff6 0%, #b4f0d8 34%, #5fd3a6 66%, #f0c9bf 100%);
+
+  --font-display: 'Parisienne', cursive;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+
+  --radius: 22px;
+  --radius-sm: 16px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --head-h: var(--ghf-height, 70px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+/* ===== LIGHT THEME — warm ivory, charcoal ink, deep green ===== */
+[data-theme="light"] {
+  --bg-base: #f6f5f1;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-surface: #faf9f6;
+  --card-top: #ffffff;
+
+  --accent-rgb: 22, 128, 94;
+  --accent: #15795a;
+  --accent-soft: #2a9a75;
+  --accent-deep: #0f5c44;
+  --accent-ink: #ffffff;
+  --accent-grad: linear-gradient(135deg, #3db58b 0%, #1d8b66 52%, #12684c 100%);
+
+  --rose-gold: #a47c38;
+  --rose-gold-light: #c7a15a;
+  --rose-gold-dark: #8a6427;
+  --peach-light: #1f2937;
+
+  --text-primary: #111827;
+  --text-secondary: #5a6474;
+  --text-muted: #6b7482;
+
+  --border: rgba(17, 24, 39, 0.11);
+  --border-light: rgba(17, 24, 39, 0.08);
+  --border-accent: rgba(22, 128, 94, 0.28);
+  --border-strong: rgba(22, 128, 94, 0.45);
+  --glow: rgba(22, 128, 94, 0.18);
+  --shadow: 0 30px 80px -30px rgba(7, 17, 31, 0.28);
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04), 0 18px 40px -26px rgba(7, 17, 31, 0.3);
+  --sheen: rgba(255, 255, 255, 0.9);
+  --bar-bg: rgba(246, 245, 241, 0.86);
+
+  --rose-rgb: 164, 124, 56;
+  --ruby-rgb: 190, 52, 84;
+  --amber-rgb: 176, 118, 20;
+  --sapphire-rgb: 44, 98, 214;
+  --amethyst-rgb: 112, 68, 206;
+
+  --aura-rgb: 40, 160, 118;
+  --aura2-rgb: 214, 160, 70;
+  --aura-op: 0.6;
+  --name-grad: linear-gradient(115deg, #111827 0%, #1d4d3c 40%, #15795a 74%, #a47c38 100%);
+
+  color-scheme: light;
+}
+
+/* ===== BASE ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg-base);
+  scroll-padding-top: calc(var(--head-h) + 92px);   /* jump links land just under the header + tabs */
+}
+
+.lr-body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-elevated) 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+:where(.lr-body) :is(h2, h3, h4, p, figure, blockquote) {
+  margin: 0;
+}
+
+/* Zero specificity, so every button's own rules win */
+:where(.lr-body) button {
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.lr-main [hidden] {
+  display: none !important;
+}
+
+::selection {
+  background: rgba(var(--accent-rgb), 0.3);
+}
+
+.lr-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ===== ATMOSPHERE (calm: the rays stand still, the halo breathes) ===== */
+.lr-aura {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lr-aura::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(55vmax 55vmax at 0% 106%, rgba(var(--aura-rgb), 0.08), transparent 60%),
+    radial-gradient(45vmax 45vmax at 104% 38%, rgba(var(--aura2-rgb), 0.045), transparent 60%);
+  opacity: var(--aura-op);
+}
+
+.lr-rays {
+  --size: 160vmin;
+  position: absolute;
+  left: calc(50% - var(--size) / 2);
+  top: calc(var(--head-h) + 50px - var(--size) / 2);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 6deg at 50% 50%, rgba(var(--aura-rgb), 0.12) 0deg 2.2deg, transparent 2.2deg 12deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.42) 30%, transparent 60%);
+          mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.42) 30%, transparent 60%);
+  opacity: var(--aura-op);
+}
+
+.lr-halo {
+  --hs: min(120vmin, 680px);
+  position: absolute;
+  left: calc(50% - var(--hs) / 2);
+  top: calc(var(--head-h) + 50px - var(--hs) / 2);
+  width: var(--hs);
+  height: var(--hs);
+  background: radial-gradient(closest-side, rgba(var(--aura-rgb), 0.28) 0%, rgba(var(--aura-rgb), 0.09) 42%, rgba(var(--aura2-rgb), 0.035) 70%, transparent 100%);
+  opacity: var(--aura-op);
+  animation: lr-breathe 9s ease-in-out infinite alternate;
+}
+
+@keyframes lr-breathe {
+  from { opacity: calc(var(--aura-op) * 0.75); }
+  to   { opacity: var(--aura-op); }
+}
+
+@keyframes lr-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes lr-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ===== MAIN ===== */
+.lr-main {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 4px 16px calc(130px + var(--safe-b));
+}
+
+/* ===== HERO ===== */
+.lr-hero {
+  padding: 22px 0 18px;
+  text-align: center;
+}
+
+.lr-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 6px 16px 6px 7px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid var(--border-accent);
+  border-radius: 999px;
+  animation: lr-rise 0.7s var(--ease) both;
+}
+
+.lr-eyebrow-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 5px;
+  color: var(--accent-ink);
+  fill: currentColor;
+  border-radius: 50%;
+  background: var(--accent-grad);
+  box-shadow: 0 6px 14px -6px rgba(var(--accent-rgb), 0.9);
+}
+
+.lr-title {
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  animation: lr-rise 0.8s var(--ease) 0.08s both;
+}
+
+.lr-title span {
+  display: inline-block;
+  padding: 0.04em 0.16em 0.16em;   /* room for the script flourish */
+  font-size: clamp(3rem, 14vw, 5rem);
+  background: var(--name-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--accent);
+  filter: drop-shadow(0 4px 22px var(--glow));
+}
+
+/* ===== TABS — stay under the header while reading ===== */
+.lr-bar {
+  display: none;                   /* without lering.js both parts show, one under the other */
+}
+
+.lr-js .lr-bar {
+  display: block;
+  position: sticky;
+  top: var(--head-h);
+  z-index: 20;
+  /* edge to edge of the screen, the tabs themselves stay in the column */
+  margin: 0 calc(50% - 50vw);
+  padding: 10px calc(50vw - 50%) 0;
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+          backdrop-filter: blur(14px) saturate(140%);
+  animation: lr-rise 0.8s var(--ease) 0.14s both;
+}
+
+.lr-tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 5px;
+  background: rgba(var(--accent-rgb), 0.07);
+  border: 1px solid var(--border-accent);
+  border-radius: 18px;
+}
+
+.lr-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 52px;
+  padding: 6px 10px;
+  text-align: left;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lr-tab-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  color: var(--accent);
+  opacity: 0.8;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.lr-tab-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lr-tab-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.lr-tab-sub {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+.lr-tab[aria-selected="true"] {
+  color: var(--accent-ink);
+  background: var(--accent-grad);
+  border-color: rgba(var(--accent-rgb), 0.6);
+  box-shadow: 0 10px 22px -12px rgba(var(--accent-rgb), 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.lr-tab[aria-selected="true"] .lr-tab-icon {
+  color: currentColor;
+  opacity: 1;
+}
+
+.lr-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .lr-tab[aria-selected="false"]:hover {
+    color: var(--text-primary);
+    background: rgba(var(--accent-rgb), 0.1);
+  }
+}
+
+/* Reading progress, drawn along the bottom of the tab bar, edge to edge */
+.lr-progress {
+  height: 3px;
+  margin: 10px calc(50% - 50vw) 0;
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+.lr-progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, rgb(var(--accent-rgb)), rgb(var(--amber-rgb)), rgb(var(--rose-rgb)));
+  transform: scaleX(var(--p, 0));
+  transform-origin: left center;
+  transition: transform 0.15s linear;
+}
+
+/* ===== TEXT SIZE ===== */
+.lr-tools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 14px 0 12px;
+}
+
+.lr-size-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.08);
+  border: 1px solid var(--border-accent);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.lr-size-btn--sm { font-size: 0.95rem; }
+.lr-size-btn--lg { font-size: 1.5rem; }
+
+.lr-size-btn:active {
+  transform: scale(0.92);
+}
+
+.lr-size-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.lr-size-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .lr-size-btn:not(:disabled):hover {
+    background: rgba(var(--accent-rgb), 0.16);
+  }
+}
+
+/* ===== PANELS ===== */
+.lr-panel + .lr-panel {
+  margin-top: 36px;                /* both showing (no lering.js) */
+}
+
+.lr-panel:focus {
+  outline: none;
+}
+
+.lr-panel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+}
+
+/* Only the chosen tab (lering.js / the head script set data-lr-tab) */
+.lr-js[data-lr-tab="month"] .lr-panel--year,
+.lr-js[data-lr-tab="year"] .lr-panel--month {
+  display: none;
+}
+
+.lr-js .lr-panel + .lr-panel {
+  margin-top: 0;
+}
+
+.lr-js .lr-panel.is-entering {
+  animation: lr-fade 0.35s var(--ease) both;
+}
+
+/* The tab names it already; the heading is for screen readers and for the
+   stacked fallback without lering.js */
+.lr-panel-title {
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.lr-js .lr-panel-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ===== CARD BASE ===== */
+.lr-card {
+  position: relative;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, var(--card-top) 0%, var(--bg-card) 60%);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 var(--sheen);
+  overflow: hidden;
+}
+
+[data-theme="light"] .lr-card {
+  background: #ffffff;
+  border-color: rgba(17, 24, 39, 0.09);
+}
+
+/* The teaching's rose-gold edge, as on the welcome page */
+.lr-card-edge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--rose-gold) 0%, var(--rose-gold-dark) 60%, transparent 100%);
+  box-shadow: 0 0 14px rgba(var(--rose-rgb), 0.25);
+}
+
+[data-theme="light"] .lr-card-edge {
+  width: 2px;
+  background: linear-gradient(180deg, #c7a15a 0%, #a47c38 55%, transparent 100%);
+  box-shadow: none;
+}
+
+/* "Updated 3 November 2026" · "Not yet in your language" */
+.lr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lr-teach > .lr-meta {
+  padding: 18px 24px 0 28px;
+}
+
+.lr-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 9px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  background: rgba(var(--accent-rgb), 0.07);
+  border: 1px solid var(--border-accent);
+  border-radius: 999px;
+}
+
+.lr-meta-item svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  color: var(--accent);
+}
+
+.lr-meta-item--note {
+  color: var(--text-primary);
+  background: rgba(var(--amber-rgb), 0.1);
+  border-color: rgba(var(--amber-rgb), 0.35);
+}
+
+.lr-meta-item--note svg {
+  color: rgb(var(--amber-rgb));
+}
+
+/* Nothing saved yet */
+.lr-empty {
+  padding: 52px 24px;
+  text-align: center;
+}
+
+.lr-empty svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  fill: currentColor;
+  color: var(--accent);
+  opacity: 0.45;
+}
+
+.lr-empty p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* =====================================================================
+   TEACHING CONTENT — moved here from the welcome page unchanged in look.
+   /admin/css/elders.css mirrors these rules so the elder sees exactly what
+   members see: change both together.
+   ===================================================================== */
+
+/* The welcome page zeroed every margin and padding (`*`), and the rules
+   below were made on top of that. Same start here, inside the teaching
+   only; zero specificity, so every rule below and every inline style wins. */
+:where(.lr-content) * {
+  margin: 0;
+  padding: 0;
+}
+
+.lr-content {
+  padding: 18px 24px 30px 28px;
+  font-family: var(--font-body);
+  font-size: calc(1rem * var(--lr-scale, 1));
+  font-weight: 300;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  overflow-wrap: break-word;
+}
+
+.lr-content h1,
+.lr-content h2,
+.lr-content h3 {
+  font-weight: 400;
+  color: var(--rose-gold);
+  margin: 28px 0 14px;
+  line-height: 1.3;
+}
+
+.lr-content h1 {
+  font-family: var(--font-display);
+  font-size: 2em;
+}
+
+.lr-content h2 {
+  font-family: var(--font-body);
+  font-size: 1.4em;
+}
+
+.lr-content h3 {
+  font-family: var(--font-body);
+  font-size: 1.2em;
+}
+
+/* !important: the content files carry inline margins that would otherwise
+   leave a big empty gap above the first heading */
+.lr-content h1:first-child,
+.lr-content h2:first-child,
+.lr-content h3:first-child {
+  margin-top: 0 !important;
+}
+
+.lr-content p {
+  font-family: var(--font-body);
+  font-size: 1em;
+  font-weight: 300;
+  line-height: 1.9;
+  margin: 0 0 16px;
+  color: var(--text-primary);
+}
+
+.lr-content p:last-child {
+  margin-bottom: 0;
+}
+
+.lr-content strong {
+  font-weight: 500;
+  color: var(--peach-light);
+}
+
+[data-theme="light"] .lr-content strong {
+  color: var(--text-primary);
+}
+
+/* Bold inside a coloured run keeps that colour */
+.lr-content [style^="color"] strong, .lr-content [style^="color"] b,
+.lr-content [style*="; color"] strong, .lr-content [style*="; color"] b,
+.lr-content [style*=";color"] strong, .lr-content [style*=";color"] b,
+.lr-content font[color] strong, .lr-content font[color] b {
+  color: inherit;
+}
+
+.lr-content ul,
+.lr-content ol {
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+
+.lr-content li {
+  font-family: var(--font-body);
+  font-size: 1em;
+  font-weight: 300;
+  line-height: 1.9;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+/* Bible Verse Styling */
+.lr-content .vref {
+  font-family: var(--font-display);
+  font-size: 1.15em;
+  font-weight: 500;
+  color: var(--rose-gold);
+  margin: 24px 0 8px;
+  display: block;
+}
+
+.lr-content .vtxt {
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.9;
+  margin: 0 0 20px;
+  padding-left: 16px;
+  border-left: 2px solid var(--rose-gold-dark);
+}
+
+.lr-content .vtxt sup {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: var(--rose-gold);
+  margin-right: 2px;
+  vertical-align: super;
+  font-style: normal;
+}
+
+[data-theme="light"] .lr-content .vref {
+  color: var(--rose-gold-dark);
+}
+
+[data-theme="light"] .lr-content .vtxt {
+  color: var(--text-secondary);
+  border-left-color: var(--rose-gold-dark);
+}
+
+[data-theme="light"] .lr-content .vtxt sup {
+  color: var(--rose-gold-dark);
+}
+
+/* Quote blocks, dividers & links from the teaching editor */
+.lr-content blockquote {
+  margin: 0 0 20px;
+  padding: 14px 20px;
+  border-left: 3px solid var(--rose-gold);
+  background: rgba(232, 180, 168, 0.06);
+  border-radius: 0 10px 10px 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.lr-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.lr-content hr {
+  border: none;
+  height: 1px;
+  margin: 28px auto;
+  background: linear-gradient(90deg, transparent, var(--rose-gold-dark), transparent);
+}
+
+.lr-content a {
+  color: var(--rose-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Kept by "paste with formatting" (Word / Google Docs / web) */
+.lr-content li > ul,
+.lr-content li > ol {
+  margin: 8px 0 0;
+}
+
+.lr-content u {
+  text-underline-offset: 2px;
+}
+
+.lr-content sup,
+.lr-content sub {
+  font-size: 0.7em;
+}
+
+.lr-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 0 0 20px;
+  font-size: 0.95em;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lr-content th,
+.lr-content td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.lr-content th {
+  font-weight: 500;
+  color: var(--rose-gold);
+  background: rgba(var(--rose-rgb), 0.06);
+}
+
+.lr-content td > p:last-child,
+.lr-content th > p:last-child {
+  margin-bottom: 0;
+}
+
+/* Paragraphs inside quotes and table cells look like their container
+   (quotes pasted from the web and Word table cells hold <p>s) */
+.lr-content blockquote p,
+.lr-content td p,
+.lr-content th p,
+.lr-content caption p {
+  color: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.lr-content caption {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .lr-content blockquote {
+  border-left-color: #a47c38;
+  background: rgba(164, 124, 56, 0.07);
+}
+
+[data-theme="light"] .lr-content hr {
+  background: linear-gradient(90deg, transparent, rgba(164, 124, 56, 0.55), transparent);
+}
+
+[data-theme="light"] .lr-content a {
+  color: var(--rose-gold-dark);
+}
+
+/* Verse blocks keep their own gold / soft colours (they are <p> too) */
+[data-theme="light"] .lr-content,
+[data-theme="light"] .lr-content p:not(.vref):not(.vtxt),
+[data-theme="light"] .lr-content li {
+  color: #1f2937 !important;
+}
+
+/* ...and so do paragraphs inside quotes / cells (more specific than above) */
+[data-theme="light"] .lr-content blockquote p:not(.vref):not(.vtxt) {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .lr-content td p:not(.vref):not(.vtxt),
+[data-theme="light"] .lr-content caption p:not(.vref):not(.vtxt) {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .lr-content th p:not(.vref):not(.vtxt) {
+  color: var(--rose-gold) !important;
+}
+
+[data-theme="light"] .lr-content h1,
+[data-theme="light"] .lr-content h2,
+[data-theme="light"] .lr-content h3 {
+  color: var(--rose-gold-dark) !important;
+}
+
+/* ===== INLINE COLOR SAFETY =====
+   Text colors picked in the editor can be unreadable on the opposite
+   theme (white text on the ivory light theme, black text on dark).
+   Remap them so the teaching stays legible in both themes. */
+
+/* Dark ink chosen in the editor -> light text on the dark theme */
+.lr-content [style*="#1a1816" i],
+.lr-content [style*="rgb(26, 24, 22)"],
+.lr-content [style*="rgb(26,24,22)"],
+.lr-content [style*="#3d3835" i],
+.lr-content [style*="rgb(61, 56, 53)"],
+.lr-content [style*="rgb(61,56,53)"],
+.lr-content font[color="#1a1816" i],
+.lr-content font[color="#3d3835" i] {
+  color: var(--text-primary) !important;
+}
+
+/* White / peach / silver ink -> dark text on the light theme */
+[data-theme="light"] .lr-content [style*="#fff" i],
+[data-theme="light"] .lr-content [style*="rgb(255, 255, 255)"],
+[data-theme="light"] .lr-content [style*="rgb(255,255,255)"],
+[data-theme="light"] .lr-content [style*="#fae8e0" i],
+[data-theme="light"] .lr-content [style*="rgb(250, 232, 224)"],
+[data-theme="light"] .lr-content [style*="rgb(250,232,224)"],
+[data-theme="light"] .lr-content [style*="#f5d5c8" i],
+[data-theme="light"] .lr-content [style*="rgb(245, 213, 200)"],
+[data-theme="light"] .lr-content [style*="rgb(245,213,200)"],
+[data-theme="light"] .lr-content [style*="#b8b8b8" i],
+[data-theme="light"] .lr-content [style*="rgb(184, 184, 184)"],
+[data-theme="light"] .lr-content [style*="rgb(184,184,184)"],
+[data-theme="light"] .lr-content font[color="#ffffff" i],
+[data-theme="light"] .lr-content font[color="white" i],
+[data-theme="light"] .lr-content font[color="#fae8e0" i],
+[data-theme="light"] .lr-content font[color="#f5d5c8" i],
+[data-theme="light"] .lr-content font[color="#b8b8b8" i],
+[data-theme="light"] .lr-content [style*="#c0c0c0" i],
+[data-theme="light"] .lr-content [style*="rgb(192, 192, 192)"],
+[data-theme="light"] .lr-content [style*="rgb(192,192,192)"],
+[data-theme="light"] .lr-content font[color="#c0c0c0" i] {
+  color: #1f2937 !important;
+}
+
+/* Pale rose-gold ink -> deep antique gold that reads on warm white */
+[data-theme="light"] .lr-content [style*="#e8b4a8" i],
+[data-theme="light"] .lr-content [style*="rgb(232, 180, 168)"],
+[data-theme="light"] .lr-content [style*="rgb(232,180,168)"],
+[data-theme="light"] .lr-content [style*="#c99485" i],
+[data-theme="light"] .lr-content [style*="rgb(201, 148, 133)"],
+[data-theme="light"] .lr-content [style*="rgb(201,148,133)"],
+[data-theme="light"] .lr-content font[color="#e8b4a8" i],
+[data-theme="light"] .lr-content font[color="#c99485" i],
+[data-theme="light"] .lr-content [style*="#f3c3b1" i],
+[data-theme="light"] .lr-content [style*="rgb(243, 195, 177)"],
+[data-theme="light"] .lr-content [style*="rgb(243,195,177)"],
+[data-theme="light"] .lr-content [style*="#b76e79" i],
+[data-theme="light"] .lr-content [style*="rgb(183, 110, 121)"],
+[data-theme="light"] .lr-content [style*="rgb(183,110,121)"],
+[data-theme="light"] .lr-content font[color="#f3c3b1" i],
+[data-theme="light"] .lr-content font[color="#b76e79" i] {
+  color: var(--rose-gold-dark) !important;
+}
+
+/* =====================================================================
+   YEAR THEME CARD — background, theme, text and objectives
+   ===================================================================== */
+.lr-year {
+  font-size: calc(1rem * var(--lr-scale, 1));
+}
+
+/* A thin leaded line in jewel colours around the card */
+.lr-year::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 210deg,
+    rgba(var(--accent-rgb), 0.75),
+    rgba(var(--amber-rgb), 0.5),
+    rgba(var(--rose-rgb), 0.55),
+    rgba(var(--sapphire-rgb), 0.4),
+    rgba(var(--accent-rgb), 0.75)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.lr-year-head {
+  position: relative;
+  padding: 30px 22px 22px;
+  text-align: center;
+  background: radial-gradient(120% 100% at 50% 0%, rgba(var(--accent-rgb), 0.12), transparent 70%);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.lr-year-kicker {
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.lr-year-num {
+  margin-top: 4px;
+  font-family: var(--font-serif);
+  font-size: 2.6em;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: lining-nums;
+  background: var(--name-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--accent);
+}
+
+.lr-year-head .lr-meta {
+  justify-content: center;
+  margin-top: 14px;
+  font-size: 1rem;
+}
+
+/* Jump links: Background · Theme · Text · Objectives */
+.lr-jump {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 18px 4px;
+}
+
+.lr-jump-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: rgba(var(--accent-rgb), 0.06);
+  border: 1px solid var(--border-accent);
+  border-radius: 999px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.lr-jump-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .lr-jump-link:hover {
+    color: var(--text-primary);
+    background: rgba(var(--accent-rgb), 0.14);
+    border-color: var(--border-strong);
+  }
+}
+
+.lr-y-sec {
+  padding: 26px 22px 6px;
+}
+
+.lr-y-sec:last-child {
+  padding-bottom: 28px;
+}
+
+/* Section label with a small jewel and a fading line */
+.lr-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-family: var(--font-body);
+  font-size: 0.8em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+.lr-label::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--accent-grad);
+  box-shadow: 0 0 12px var(--glow);
+  transform: rotate(45deg);
+}
+
+.lr-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-strong), transparent);
+}
+
+.lr-prose p {
+  margin-bottom: 14px;
+  font-size: 1em;
+  font-weight: 300;
+  line-height: 1.85;
+  color: var(--text-primary);
+}
+
+.lr-prose p:last-child {
+  margin-bottom: 0;
+}
+
+[data-theme="light"] .lr-prose p {
+  font-weight: 400;
+  color: #1f2937;
+}
+
+/* The theme: a pane of leaded glass */
+.lr-pane {
+  position: relative;
+  padding: 40px 24px 26px;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(var(--accent-rgb), 0.14), transparent 70%),
+    rgba(var(--accent-rgb), 0.04);
+  border: 1px solid var(--border-accent);
+}
+
+.lr-pane::before {
+  content: '\201C';
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 4.2rem;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.lr-pane-text {
+  font-family: var(--font-serif);
+  font-size: 1.4em;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* The text: a way into the Bible */
+.lr-scripture {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(155deg, rgba(var(--amber-rgb), 0.16) 0%, rgba(var(--amber-rgb), 0.05) 60%, transparent 100%);
+  border: 1px solid rgba(var(--amber-rgb), 0.35);
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+a.lr-scripture:active {
+  transform: scale(0.98);
+}
+
+a.lr-scripture:focus-visible {
+  outline: 2px solid rgb(var(--amber-rgb));
+  outline-offset: 2px;
+}
+
+.lr-scripture-orb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: #fff;
+  border-radius: 13px;
+  background: linear-gradient(145deg, rgba(var(--amber-rgb), 1), rgba(var(--amber-rgb), 0.55));
+  box-shadow: 0 10px 20px -10px rgba(var(--amber-rgb), 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.lr-scripture-orb svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.lr-scripture-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lr-scripture-ref {
+  font-family: var(--font-serif);
+  font-variant-numeric: lining-nums;   /* Cormorant's old-style 1 reads like an I */
+  font-size: 1.35em;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.lr-scripture-hint {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgb(var(--amber-rgb));
+}
+
+.lr-chev {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: rgb(var(--amber-rgb));
+  opacity: 0.8;
+  transition: transform 0.3s var(--ease);
+}
+
+.lr-scripture--plain {
+  justify-content: center;
+}
+
+@media (hover: hover) {
+  a.lr-scripture:hover {
+    border-color: rgba(var(--amber-rgb), 0.7);
+    box-shadow: 0 0 30px -10px rgba(var(--amber-rgb), 0.6);
+  }
+
+  a.lr-scripture:hover .lr-chev {
+    transform: translateX(3px);
+  }
+}
+
+/* The objectives, a) to h) like the printed card */
+.lr-obj-intro {
+  margin-bottom: 16px;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.lr-obj {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lr-obj-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 14px 14px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(var(--accent-rgb), 0.04);
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="light"] .lr-obj-item {
+  background: #fbfaf7;
+  border-color: rgba(17, 24, 39, 0.07);
+}
+
+.lr-obj-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-top: 1px;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1;
+  color: var(--accent-ink);
+  border-radius: 11px;
+  background: var(--accent-grad);
+  box-shadow: 0 8px 16px -9px rgba(var(--accent-rgb), 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.lr-obj-text {
+  min-width: 0;
+  font-size: 1em;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .lr-obj-text {
+  font-weight: 400;
+  color: #1f2937;
+}
+
+/* "verse 1-3": opens the Bible there */
+.lr-verse {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 9px;
+  font-size: 0.82em;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.7;
+  white-space: nowrap;
+  color: rgb(var(--amber-rgb));
+  text-decoration: none;
+  background: rgba(var(--amber-rgb), 0.12);
+  border: 1px solid rgba(var(--amber-rgb), 0.35);
+  border-radius: 999px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a.lr-verse:focus-visible {
+  outline: 2px solid rgb(var(--amber-rgb));
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  a.lr-verse:hover {
+    background: rgba(var(--amber-rgb), 0.22);
+  }
+}
+
+/* ===== TABLET + DESKTOP ===== */
+@media (min-width: 720px) {
+  .lr-main {
+    padding: 8px 32px calc(140px + var(--safe-b));
+  }
+
+  .lr-js .lr-bar {
+    padding-top: 12px;
+  }
+
+  .lr-progress {
+    margin-top: 12px;
+  }
+
+  .lr-tab-name {
+    font-size: 0.98rem;
+  }
+
+  .lr-content {
+    padding: 22px 44px 36px 48px;
+  }
+
+  .lr-teach > .lr-meta {
+    padding: 24px 44px 0 48px;
+  }
+
+  .lr-year-head {
+    padding: 38px 40px 26px;
+  }
+
+  .lr-y-sec {
+    padding: 30px 40px 6px;
+  }
+
+  .lr-y-sec:last-child {
+    padding-bottom: 36px;
+  }
+
+  .lr-pane {
+    padding: 46px 40px 30px;
+  }
+
+  .lr-pane-text {
+    font-size: 1.6em;
+  }
+}
+
+/* ===== SMALL PHONES ===== */
+@media (max-width: 360px) {
+  .lr-main {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .lr-js .lr-bar {
+    padding-top: 8px;
+  }
+
+  .lr-progress {
+    margin-top: 8px;
+  }
+
+  .lr-tab {
+    gap: 7px;
+    padding: 6px 8px;
+  }
+
+  .lr-tab-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .lr-tab-name {
+    font-size: 0.84rem;
+  }
+
+  .lr-content {
+    padding: 16px 18px 26px 22px;
+  }
+
+  .lr-teach > .lr-meta {
+    padding: 16px 18px 0 22px;
+  }
+
+  .lr-y-sec {
+    padding: 24px 16px 6px;
+  }
+
+  .lr-pane {
+    padding: 38px 16px 22px;
+  }
+
+  .lr-obj-item {
+    gap: 11px;
+    padding: 12px 12px 12px 10px;
+  }
+}
+
+/* ===== ACCESSIBILITY: reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===== PRINT: the chosen tab, plain ===== */
+@media print {
+  .lr-aura,
+  .lr-bar,
+  .lr-tools,
+  .lr-jump {
+    display: none !important;
+  }
+
+  .lr-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  .lr-year::after {
+    display: none;
+  }
+
+  .lr-content,
+  .lr-content p,
+  .lr-content li,
+  .lr-prose p,
+  .lr-obj-text,
+  .lr-pane-text {
+    color: #000 !important;
+  }
+}

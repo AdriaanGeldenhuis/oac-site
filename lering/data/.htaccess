@@ -1,0 +1,9 @@
+# The year theme card is read by PHP (lering/lib/lering.php) and drawn into
+# /lering/lering.php behind the login. Never serve the data file directly.
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>
