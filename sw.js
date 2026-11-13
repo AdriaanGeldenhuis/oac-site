@@ -1,10 +1,13 @@
 /**
- * OAC service worker - Welcome, the Bible and Sing Emmanuel without internet.
+ * OAC service worker - Welcome, the Bible, Sing Emmanuel and Lering without
+ * internet.
  *
  * Registered by /offline/js/offline.js, only inside the Android app. It has
  * to live in the web root so that its scope is the whole site.
  *
- *   Pages      /welcome.php, /bible/bible.php, /singemmanuel/singemmanuel.php
+ *   Pages      /welcome.php, /bible/bible.php, /singemmanuel/singemmanuel.php,
+ *              /lering/lering.php (the teaching of the month and the year
+ *              theme card, both tabs in the one page)
  *              network first; after 4 s, offline or on a server error, the
  *              last copy. Any ?song= / ?ref= gets the same shell; the page's
  *              JS draws the rest (singemmanuel.js draws the hymn from the
@@ -23,15 +26,16 @@
  * everything is on the phone before the member ever needs it offline.
  *
  * The pages are the member's own (name, office, language, the Bible's
- * session key), so they leave the phone with the member's data and organ
- * music: at logout, and whenever the server shows the login page.
+ * session key, the town's teaching), so they leave the phone with the
+ * member's data and organ music: at logout, and whenever the server shows
+ * the login page.
  *
  * POSTs and the other APIs are never touched.
  */
 'use strict';
 
 const STATIC = 'oac-static-v1'; // CSS/JS/images/fonts, hymn JSON, the offline page
-const USER = 'oac-user-v1';     // the three pages, Bible notes, Up next (removed at logout)
+const USER = 'oac-user-v1';     // the four pages, Bible notes, Up next (removed at logout)
 const MIDI = 'oac-midi-v1';     // organ music, offices 0-8 (removed at logout)
 const OUR_CACHES = [STATIC, USER, MIDI]; // any other oac-* cache (oac-pages-v1) goes
 
@@ -45,6 +49,7 @@ const SHELLS = {
   '/welcome.php': USER,
   '/bible/bible.php': USER,
   '/singemmanuel/singemmanuel.php': USER,
+  '/lering/lering.php': USER,
 };
 
 // Member data shown offline
@@ -64,7 +69,7 @@ const UP_NEXT_KEY = UP_NEXT_PATH + '?types=' + UP_NEXT_TYPES;
 const APP_COPY_HEADER = 'X-OAC-App-Copy';
 
 const STATIC_EXT = /\.(?:css|js|svg|png|webp|jpe?g|gif|ico|ttf|woff2?)$/i;
-const STATIC_DIRS = ['/header_footer/', '/assets/', '/offline/', '/welcome/', '/bible/', '/singemmanuel/'];
+const STATIC_DIRS = ['/header_footer/', '/assets/', '/offline/', '/welcome/', '/bible/', '/singemmanuel/', '/lering/'];
 const MIDI_PATH = '/singemmanuel/api/midi.php';
 
 // ===== LIFECYCLE =====

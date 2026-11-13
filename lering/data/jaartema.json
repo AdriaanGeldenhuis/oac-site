@@ -1,0 +1,61 @@
+{
+  "_note": "Year theme card (Lering agtergrond, tema, teks en doelwitte). Replace once a year with the new card. Languages without their own block are shown in English. 'v' is the verse range in the text, for the Bible links.",
+  "year": "2026/2027",
+  "bible": { "book": "1 Corinthians", "chapter": 1, "from": 1, "to": 31 },
+  "langs": {
+    "af": {
+      "title": "Lering agtergrond, tema, teks en doelwitte",
+      "background_label": "Agtergrond",
+      "background": [
+        "As lede van die Liggaam van Christus en verdedigers van die geloof, is dit noodsaaklik dat ons harte as God se kinders in moeilike tye vertroos word. Ons moet onthou dat die genade en vrede van God die Vader altyd oor ons heers in ons Here Jesus Christus.",
+        "Vervuld in Jesus Christus, dra ons Sy beeld en identiteit deur die werking van die Heilige Gees, en lê ons alles af wat met Hom meeding. In Sy identiteit groei ons geestelik, word ons in geloof versterk en voortdurend toeberei om selfs onoorkombare uitdagings te weerstaan.",
+        "Alhoewel misleiding (drogredes), duisternis en wêreldse filosofieë steeds voorkom, word geleenthede geskep om ons geloof in die Almagtige God en ons gemeenskap met Jesus Christus te bely, in wie al God se kinders elke verdeeldheid oorwin.",
+        "Ons word aangemoedig om voort te gaan as lewende getuies wat Christelike liefde, eenheid van gees en Goddelike diens openbaar maak, deur onsself voortdurend te verloën, daagliks ons kruis op te neem en Jesus te volg. Die gesindheid van Christus vereis dat ons aan die kruis moet wees, die enigste plek waar ons in eenheid met Hom is, Wie vir ons die wysheid, geregtigheid, heiligmaking en verlossing van die Almagtige God is.",
+        "Daar word van ons as Apostolies vereis om voort te gaan om in gemeenskap met Jesus Christus te leef, die ou mens af te sterf, beklee te wees met God se liefde en vrede, en om Sy Heilige Gees toe te laat om ons te lei in alles wat ons sê en doen."
+      ],
+      "theme_label": "Tema",
+      "theme": "Volwasse in die volheid en oppergesag van Christus, bemagtig deur die Gees van Waarheid, word ons volmaak verenig in een gesindheid en oordeel, wat ons eenheid definieer in die Liggaam van Christus, Wie die krag en wysheid van God is.",
+      "text_label": "Teks",
+      "text": "1 Korintiërs 1:1-31",
+      "objectives_label": "Lering doelwitte",
+      "objectives_intro": "Deur ons eenheid as nederige diensknegte in die Liggaam van Christus, sal ons –",
+      "objectives": [
+        { "text": "lewe as Heiliges, deur die wil van God geroep, geheilig, verenig en toeberei om geseënd te wees deur die genade en vrede van God in Jesus Christus.", "ref": "verse 1-3", "v": [1, 3], "end": ";" },
+        { "text": "dankbaar en onberispelik wees, en aan niks ontbreek nie, verryk deur ons gemeenskap in Hom.", "ref": "verse 4-9", "v": [4, 9], "end": ";" },
+        { "text": "vanuit een mond die gesindheid van Christus verkondig, terwyl ons alle vorme van verdeeldheid verwerp.", "ref": "verse 10-13", "v": [10, 13], "end": ";" },
+        { "text": "die evangelie van Jesus Christus as ons hoof fokus verkondig, en so die kruis ’n werklikheid maak.", "ref": "verse 14-17", "v": [14, 17], "end": ";" },
+        { "text": "vertrou in die verkondiging van die kruis, want dit is die krag van God tot verlossing vir hulle wat gered is", "ref": "verse 18-19", "v": [18, 19], "end": ";" },
+        { "text": "God se weg tot verlossing deur die kruisiging van Christus verklaar, die krag en wysheid van God.", "ref": "verse 20-24", "v": [20, 24], "end": ";" },
+        { "text": "die Wysheid van God omarm, Wie doelbewus die nederiges uitverkies om die wyse te beskaam sodat geen vlees in Sy teenwoordigheid verheerlik word nie.", "ref": "verse 25-29", "v": [25, 29], "end": ";" },
+        { "text": "God die Vader in Sy Seun, Jesus Christus, verheerlik. Deur ons eenheid met Hom is Hy vir ons die wysheid, geregtigheid, heiligmaking, en verlossing.", "ref": "verse 30-31", "v": [30, 31], "end": "." }
+      ]
+    },
+    "en": {
+      "title": "Teaching background, theme, text and objectives",
+      "background_label": "Background",
+      "background": [
+        "As members in the Body of Christ and defenders of the faith, it is imperative that our hearts as God’s children be comforted during challenging times. We must remember that the grace and peace of God the Father are always upon us in our Lord Jesus Christ.",
+        "Being complete in Jesus Christ, we embrace His image and identity through the working of the Holy Spirit, removing all that compete with Him. In His identity, we grow spiritually, are strengthened in faith and continuously prepared to withstand even insurmountable challenges.",
+        "Although deception, darkness and worldly philosophies persist, opportunities are created for us to declare our faith in the Almighty God and our fellowship with Jesus Christ, in Whom all God’s children overcome every division.",
+        "We are encouraged to continue as living testimonies, demonstrating Christ-like love, spiritual unity and godly service, by continually denying ourselves, taking up our cross daily and following Jesus. The likeness of Christ requires the bearing of the cross, the only place where there is union with Him, Who unto us is the wisdom, righteousness, sanctification and redemption of the Almighty God.",
+        "As Apostolics, we are required to continue living in fellowship with Jesus Christ, putting off the old man, being clothed with God’s love and peace, and allowing His Holy Spirit to guide us in everything we say and do."
+      ],
+      "theme_label": "Theme",
+      "theme": "Matured in the fullness and supremacy of Christ, the Spirit of Truth empowers us and perfectly joins us in one mind and judgement, defining our unity in the Body of Christ, Who is the power and wisdom of God.",
+      "text_label": "Text",
+      "text": "1 Corinthians 1:1-31",
+      "objectives_label": "Teaching objectives",
+      "objectives_intro": "Through our unity as humble servants in the Body of Christ, we shall –",
+      "objectives": [
+        { "text": "live as saints, called by the will of God, sanctified, united and sustained to be blessed by the grace and peace of God in Jesus Christ", "ref": "verses 1-3", "v": [1, 3], "end": ";" },
+        { "text": "be thankful, blameless, and lack nothing, being enriched by our fellowship in Him.", "ref": "verses 4-9", "v": [4, 9], "end": ";" },
+        { "text": "speak from one mouth, the mind of Christ, rejecting all forms of division", "ref": "verses 10-13", "v": [10, 13], "end": ";" },
+        { "text": "preach the gospel of Jesus Christ as our main focus to make the cross a reality", "ref": "verses 14-17", "v": [14, 17], "end": ";" },
+        { "text": "trust in the preaching of the cross, for it is the power of God unto salvation for them who are saved", "ref": "verses 18-19", "v": [18, 19], "end": ";" },
+        { "text": "declare God’s way of salvation through Christ crucified, the power and wisdom of God", "ref": "verses 20-24", "v": [20, 24], "end": ";" },
+        { "text": "embrace the Wisdom of God, Who deliberately chooses the humble to shame the wise so that no flesh should glory in His presence", "ref": "verses 25-29", "v": [25, 29], "end": "; and" },
+        { "text": "glorify God the Father in His Son, Jesus Christ, Who is for us wisdom, righteousness, sanctification, and redemption through our union with Him", "ref": "verses 30-31", "v": [30, 31], "end": "." }
+      ]
+    }
+  }
+}

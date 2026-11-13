@@ -5,7 +5,6 @@ header('Cache-Control: no-cache, must-revalidate');
 header('Pragma: no-cache');
 require_once __DIR__ . '/security/auth_gate.php';
 require_once __DIR__ . '/includes/languages.php';
-require_once __DIR__ . '/includes/teaching.php';
 require_once __DIR__ . '/includes/offline.php';
 require_once __DIR__ . '/gedagtes/lib/gedagtes.php';
 require_once __DIR__ . '/security/config.php';
@@ -87,9 +86,8 @@ try {
     error_log("Welcome page - DB error: " . $e->getMessage());
 }
 
-// Teaching of the month: the town's own teaching in the reader's language,
-// falling back to English, then Afrikaans (see includes/teaching.php)
-$teachingHtml = teaching_reader_html(teaching_dir((string)$province, (string)$town), $lang);
+// The Teaching of the Month has its own page now (/lering/lering.php, the
+// Lering tile below), next to the year theme card.
 
 // Today's thought once its display_time has come, in the reader's language.
 // Same rules as the thoughts page (South African time, not the database clock).
@@ -137,6 +135,9 @@ $wcData = [
 // 'accent' picks the stained-glass colour of the tile.
 $navItems = [
     ['id' => 'bible',    'href' => '/bible/bible.php',                'key' => 'bible',          'accent' => 'amber',    'size' => 'feature', 'icon' => '<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>'],
+    // The Teaching of the Month + the year theme card. A second hero tile, so
+    // the grid still fills every row (phone: 2 columns, tablet up: 4).
+    ['id' => 'lering',   'href' => '/lering/lering.php',              'key' => 'teaching',       'accent' => 'emerald',  'size' => 'feature', 'icon' => '<path d="M12 11.55C9.64 9.35 6.48 8 3 8v11c3.48 0 6.64 1.35 9 3.55 2.36-2.19 5.52-3.55 9-3.55V8c-3.48 0-6.64 1.35-9 3.55zM12 8c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z"/>'],
     ['id' => 'prayers',  'href' => '/prayers/prayers.php',            'key' => 'prayers',        'accent' => 'amethyst', 'size' => '',        'icon' => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>'],
     ['id' => 'sing',     'href' => '/singemmanuel/singemmanuel.php',  'key' => 'sing_emmanuel',  'accent' => 'gold',     'size' => '',        'icon' => '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>'],
     ['id' => 'calendar', 'href' => '/calendar/calendar.php',          'key' => 'calendar',       'accent' => 'sapphire', 'size' => 'wide',    'icon' => '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>'],
@@ -147,6 +148,7 @@ $navItems = [
     ['id' => 'notif',    'href' => '/notifications/notifications.php','key' => 'notifications', 'accent' => 'sapphire', 'size' => '',        'icon' => '<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>'],
     ['id' => 'thoughts', 'href' => '/gedagtes/gedagtes.php',          'key' => 'thought_history','accent' => 'amethyst', 'size' => '',        'icon' => '<path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>'],
 ];
+$navIcon = array_column($navItems, 'icon', 'id');
 
 // Time-of-day glyph for the greeting eyebrow
 $todIcons = [
@@ -177,7 +179,7 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
   <script>
     // wc-js lets the CSS hide sections until welcome.js reveals them. Should
     // welcome.js never run (failed download, a WebView that cannot run it),
-    // drop the class after 4 s so every section, the teaching too, shows.
+    // drop the class after 4 s so every section shows.
     (function (root) {
       root.classList.add('wc-js');
       setTimeout(function () { if (!window.wcReady) { root.classList.remove('wc-js'); } }, 4000);
@@ -228,7 +230,7 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
       </h2>
       <div class="wc-meta">
         <span class="wc-chip" id="wcDateChip">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><?= $navItems[3]['icon'] ?></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><?= $navIcon['calendar'] ?></svg>
           <?= wc_e($dateLine) ?>
         </span>
         <?php if ($town || $province): ?>
@@ -298,45 +300,6 @@ $nameSize = $nameLen > 18 ? ' wc-hello--sm' : ($nameLen > 10 ? ' wc-hello--md' :
           </div>
         <?php endforeach; ?>
       </div>
-    </section>
-
-    <!-- Teaching of the month -->
-    <section class="wc-teaching-section wc-reveal" aria-labelledby="wcTeachLabel">
-      <h3 class="wc-label" id="wcTeachLabel"><?= wc_e(t('teaching_of_month')) ?></h3>
-      <p class="wc-sub"><?= wc_e(t('grow_faith')) ?></p>
-      <article class="wc-card wc-teaching-card wc-foldable" id="wcTeach">
-        <div class="wc-read-progress" aria-hidden="true"><i id="wcReadBar"></i></div>
-        <div class="wc-card-decoration"></div>
-
-        <div class="wc-teach-tools" id="wcTeachTools" hidden>
-          <button type="button" class="wc-size-btn wc-size-btn--sm" id="wcSizeDown" aria-label="<?= wc_e(t('decrease')) ?>" title="<?= wc_e(t('decrease')) ?>">A</button>
-          <button type="button" class="wc-size-btn wc-size-btn--lg" id="wcSizeUp" aria-label="<?= wc_e(t('increase')) ?>" title="<?= wc_e(t('increase')) ?>">A</button>
-        </div>
-
-        <div class="wc-fold-body" id="wcTeachBody">
-          <div class="wc-teaching-content">
-            <?php
-              // Sanitized on the way out too, so older files are just as safe
-              if ($teachingHtml !== '') {
-                echo $teachingHtml;
-              } else {
-                echo '<div class="wc-no-content">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                        </svg>
-                        <p>' . wc_e(t('no_content')) . '</p>
-                      </div>';
-              }
-            ?>
-          </div>
-          <div class="wc-fold-fade" aria-hidden="true"></div>
-        </div>
-
-        <button type="button" class="wc-fold-toggle" id="wcTeachToggle" aria-expanded="false" aria-controls="wcTeachBody" hidden>
-          <span class="wc-fold-label" id="wcTeachToggleText"><?= wc_e(t('read_more')) ?></span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </button>
-      </article>
     </section>
 
     <!-- Closing verse, by candlelight -->

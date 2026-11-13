@@ -2,8 +2,8 @@
 /**
  * Offline in the app - shared helpers
  * ====================================
- * The app keeps Welcome, the Bible and Sing Emmanuel working without
- * internet (see /sw.js). These helpers give every page the same asset URLs
+ * The app keeps Welcome, the Bible, Sing Emmanuel and Lering working
+ * without internet (see /sw.js). These helpers give every page the same asset URLs
  * and tell the service worker what to keep.
  *
  *   oac_asset('/welcome/css/welcome.css')        -> '/welcome/css/welcome.css?v=<mtime>'
@@ -29,7 +29,8 @@ define('OAC_DATA_VERSION_CACHE', OAC_WEB_ROOT . '/storage/cache/data_versions.js
 // Bump when the manifest's shape or the service worker's needs change, so
 // every phone fetches its offline copy again
 // 2: the Bible and Sing Emmanuel pages are the member's own (cache "user")
-define('OAC_OFFLINE_SCHEMA', '2');
+// 3: the Lering page (teaching of the month + year theme card)
+define('OAC_OFFLINE_SCHEMA', '3');
 
 /** Cache-bust by file time (same format as bible_asset() / se_asset()) */
 function oac_asset(string $webPath): string {
@@ -131,6 +132,38 @@ function oac_midi_map(): array {
 }
 
 /**
+ * What the member's Lering page shows that is not in its code: the town's
+ * teaching files (size + time) and the year theme card. Part of the
+ * manifest version, so the phone fetches the page again as soon as an
+ * elder saves a new teaching, even if the member never opens it online.
+ */
+function oac_offline_content_stamp(PDO $pdo, int $userId): string {
+    require_once __DIR__ . '/teaching.php';
+
+    $town = '';
+    $province = '';
+    try {
+        $stmt = $pdo->prepare('
+            SELECT t.name AS town, p.name AS province
+            FROM users u
+            LEFT JOIN towns t ON t.id = u.town_id
+            LEFT JOIN provinces p ON p.id = t.province_id
+            WHERE u.id = ?
+            LIMIT 1
+        ');
+        $stmt->execute([$userId]);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $town = (string)($row['town'] ?? '');
+            $province = (string)($row['province'] ?? '');
+        }
+    } catch (Throwable $e) {
+        error_log('Offline content stamp: ' . $e->getMessage());
+    }
+
+    return teaching_stamp(teaching_dir($province, $town)) . ':' . oac_data_version('/lering/data/jaartema.json');
+}
+
+/**
  * Everything the service worker keeps for this member, as exact URLs (the
  * same ones the pages ask for, so a cached copy is always found).
  *
@@ -154,6 +187,8 @@ function oac_offline_manifest(PDO $pdo, int $userId, string $lang = ''): array {
         oac_asset('/singemmanuel/css/singemmanuel.css'),
         oac_asset('/singemmanuel/js/singemmanuel.js'),
         oac_asset('/singemmanuel/js/se-player.js'),
+        oac_asset('/lering/css/lering.css'),
+        oac_asset('/lering/js/lering.js'),
         oac_data_url('/singemmanuel/songs/sing_af.json'),
         oac_data_url('/singemmanuel/songs/sing_en.json'),
         // Asked for without a version by the pages / header.css
@@ -162,7 +197,7 @@ function oac_offline_manifest(PDO $pdo, int $userId, string $lang = ''): array {
         '/offline/index.html',
     ];
 
-    // Exactly as the pages link them (welcome + Sing Emmanuel, and the Bible)
+    // Exactly as the pages link them (welcome, Sing Emmanuel and Lering; the Bible)
     $fonts = [
         'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Parisienne&display=swap',
         'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Parisienne&display=swap',
@@ -170,13 +205,15 @@ function oac_offline_manifest(PDO $pdo, int $userId, string $lang = ''): array {
 
     // The pages (network-first in the service worker) and the member's data.
     // All of it is the member's own - the name on Welcome, the office's organ
-    // on Sing Emmanuel, the Bible's session key - so logout removes it from
-    // the phone. "pages" stays in the answer, empty, for older workers.
+    // on Sing Emmanuel, the Bible's session key, the town's teaching on
+    // Lering - so logout removes it from the phone. "pages" stays in the
+    // answer, empty, for older workers.
     $pages = [];
     $user = [
         '/welcome.php',
         '/bible/bible.php',
         '/singemmanuel/singemmanuel.php',
+        '/lering/lering.php',
         '/bible/api/load_all.php',
     ];
 
@@ -192,7 +229,11 @@ function oac_offline_manifest(PDO $pdo, int $userId, string $lang = ''): array {
         }
     }
 
-    $version = sha1(json_encode([OAC_OFFLINE_SCHEMA, $userId, $lang, $canPlay, $static, $fonts, $pages, $user, $midi]));
+    // A new teaching or year card changes the version too, so the pages
+    // are fetched again (sw.js warm-up)
+    $content = oac_offline_content_stamp($pdo, $userId);
+
+    $version = sha1(json_encode([OAC_OFFLINE_SCHEMA, $userId, $lang, $canPlay, $content, $static, $fonts, $pages, $user, $midi]));
 
     return [
         'version' => $version,

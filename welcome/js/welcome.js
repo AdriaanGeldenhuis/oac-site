@@ -94,10 +94,10 @@
   // Reveal sections as they scroll into view.
   // threshold 0: a section is "in view" as soon as any of it is on screen.
   // A share of the section (it was 6%) can never be on screen at once when
-  // the section is many screens tall — the opened teaching of the month is
-  // easily 20+ phone screens — and Chrome / Android's WebView only report
-  // isIntersecting once that share is reached, so the teaching stayed
-  // invisible for good on phones.
+  // the section is many screens tall — the opened teaching of the month
+  // (it lived here then) was easily 20+ phone screens — and Chrome /
+  // Android's WebView only report isIntersecting once that share is
+  // reached, so such a section stayed invisible for good on phones.
   // ---------------------------------------------------------------------
   function initReveal() {
     var els = doc.querySelectorAll('.wc-reveal');
@@ -483,8 +483,8 @@
   }
 
   // ---------------------------------------------------------------------
-  // Foldable cards: teaching of the month + thought of the day.
-  // Collapsed by default, remembers what the reader chose, and only folds
+  // Foldable card: thought of the day (the Teaching of the Month moved to
+  // /lering/lering.php). Collapsed by default, remembers what the reader chose, and only folds
   // content that is genuinely long. The collapsed height is the card's own
   // CSS variable --fold-h, so the number lives in one place (the stylesheet).
   // ---------------------------------------------------------------------
@@ -579,63 +579,6 @@
     makeFoldable(card, { content: '.wc-thought-main', storeKey: 'wc_thought_open', worth: 70 });
   }
 
-  // Teaching of the month: adds adjustable text size and a reading-progress
-  // line along the top edge on top of the shared fold behaviour
-  function initTeaching() {
-    var card = byId('wcTeach');
-    var tools = byId('wcTeachTools');
-    var sizeDown = byId('wcSizeDown');
-    var sizeUp = byId('wcSizeUp');
-    if (!card) { return; }
-
-    var content = card.querySelector('.wc-teaching-content');
-    if (!content || content.querySelector('.wc-no-content')) {
-      card.classList.add('is-static');
-      return;
-    }
-
-    var SCALES = [0.9, 1, 1.12, 1.26, 1.42];
-    var scaleIndex = SCALES.indexOf(parseFloat(store.get('wc_read_scale')));
-    if (scaleIndex < 0) { scaleIndex = 1; }
-    var fold = null;
-
-    function applyScale() {
-      card.style.setProperty('--wc-read-scale', String(SCALES[scaleIndex]));
-      if (sizeDown) { sizeDown.disabled = scaleIndex === 0; }
-      if (sizeUp) { sizeUp.disabled = scaleIndex === SCALES.length - 1; }
-    }
-
-    function updateProgress() {
-      var p = 0;
-      if (!card.classList.contains('is-collapsed')) {
-        var r = card.getBoundingClientRect();
-        var vh = win.innerHeight || 700;
-        p = clamp((vh * 0.75 - r.top) / (r.height || 1), 0, 1);
-      }
-      card.style.setProperty('--p', p.toFixed(3));
-    }
-
-    function changeScale(step) {
-      var next = clamp(scaleIndex + step, 0, SCALES.length - 1);
-      if (next === scaleIndex) { return; }
-      scaleIndex = next;
-      store.set('wc_read_scale', String(SCALES[scaleIndex]));
-      applyScale();
-      if (fold) { fold.refresh(); }
-      updateProgress();
-    }
-
-    applyScale();
-    if (tools) { tools.hidden = false; }
-    fold = makeFoldable(card, { content: '.wc-teaching-content', storeKey: 'wc_teach_open', worth: 90, onChange: updateProgress });
-    updateProgress();
-
-    if (sizeDown) { sizeDown.addEventListener('click', function () { changeScale(-1); }); }
-    if (sizeUp) { sizeUp.addEventListener('click', function () { changeScale(1); }); }
-
-    scrollSubs.push(updateProgress);
-  }
-
   // ---------------------------------------------------------------------
   // Offline copy: the app may show this page as it was saved hours ago
   // (sw.js). Greeting, date line, sky tint and what Up next counts as past
@@ -697,7 +640,7 @@
   var features = [
     initClock,
     initReveal, initEmbers, initParallax, initTiles, initNotifBadge,
-    initUpNext, initThought, initThoughtFold, initTeaching
+    initUpNext, initThought, initThoughtFold
   ];
 
   for (var f = 0; f < features.length; f++) {

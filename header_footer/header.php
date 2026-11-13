@@ -36,6 +36,8 @@ $isBiblePage = strpos($reqPath, '/bible/bible.php') !== false || strpos($reqPath
 
 if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !== false) {
   $pageTitle = t_hdr('welcome');
+} elseif (strpos($reqPath, '/lering/lering.php') !== false) {
+  $pageTitle = t_hdr('teaching');
 } elseif (strpos($reqPath, '/gospel_media/gospel.php') !== false || strpos($reqPath, '/gospel_media/rooms.php') !== false) {
   $pageTitle = t_hdr('gospel_media');
 } elseif (strpos($reqPath, '/prayers/prayers.php') !== false) {
@@ -68,6 +70,7 @@ if (strpos($reqPath, '/welcome.php') !== false || strpos($reqPath, '/welkom/') !
 // Colours/icons match the quick-navigation tiles on the welcome page.
 $navLinks = [
   ['/welcome.php', 'welcome', 'rose', '<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>'],
+  ['/lering/lering.php', 'teaching', 'emerald', '<path d="M12 11.55C9.64 9.35 6.48 8 3 8v11c3.48 0 6.64 1.35 9 3.55 2.36-2.19 5.52-3.55 9-3.55V8c-3.48 0-6.64 1.35-9 3.55zM12 8c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z"/>'],
   ['/gospel_media/gospel.php', 'gospel_media', 'ruby', '<path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zM10 15l5.5-4.5L10 6v9z"/>'],
   ['/prayers/prayers.php', 'prayers', 'amethyst', '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>'],
   ['/aislimbybel/aislimbybel.php', 'ai_smart_bible', 'silver', '<path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>'],

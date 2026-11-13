@@ -3,13 +3,18 @@
  * Teaching of the Month - shared helpers
  * ======================================
  * Single source of truth for WHERE the monthly teaching lives, WHICH file
- * belongs to which language, HOW the welcome page falls back when a
+ * belongs to which language, HOW the reader's page falls back when a
  * translation is missing, and HOW stored HTML is made safe.
  *
  * Used by:
  *   - /admin/elders.php                    (editor - loads every language)
  *   - /admin/api/elders/save_teaching.php  (writes / removes the files)
- *   - /welcome.php                         (shows the teaching to members)
+ *   - /lering/lering.php                   (shows the teaching to members)
+ *   - /includes/offline.php                (teaching_stamp: the app's offline
+ *                                           copy is renewed when it changes)
+ *
+ * The files still live under /welcome (where the teaching used to be shown):
+ * moving them would strand every town's saved teaching on the server.
  *
  * Storage layout (relative to the web root):
  *   /welcome/south_africa/<province_slug>/<town_slug>/lering_content.html        (af)
@@ -106,24 +111,30 @@ function teaching_load_all(string $dir): array {
     return $out;
 }
 
+/** Folders a reader's teaching can come from: the town's own, then the shared one */
+function teaching_reader_dirs(string $townDir): array {
+    $dirs = [];
+    if ($townDir !== '' && $townDir !== TEACHING_BASE_DIR) {
+        $dirs[] = $townDir;
+    }
+    $dirs[] = TEACHING_BASE_DIR;
+    return $dirs;
+}
+
 /**
- * The teaching HTML (sanitized) the welcome page shows for a reader, or ''.
+ * The teaching a reader is shown:
+ *   ['html' => sanitized HTML, 'lang' => language it is in, 'updated' => unix time]
+ * or ['html' => '', 'lang' => '', 'updated' => 0] when there is none.
  * Order:
  *   town:   own language -> English -> legacy English -> Afrikaans
  *   shared: own language -> English -> legacy English -> Afrikaans
  * A town's own teaching in another language beats the shared fallback, and
  * files without real content (e.g. an old placeholder) are skipped.
  */
-function teaching_reader_html(string $townDir, string $lang): string {
-    $dirs = [];
-    if ($townDir !== '' && $townDir !== TEACHING_BASE_DIR) {
-        $dirs[] = $townDir;
-    }
-    $dirs[] = TEACHING_BASE_DIR;
-
+function teaching_reader(string $townDir, string $lang): array {
     $order = array_values(array_unique([$lang, 'en', '__legacy', 'af']));
 
-    foreach ($dirs as $dir) {
+    foreach (teaching_reader_dirs($townDir) as $dir) {
         foreach ($order as $code) {
             $file = $code === '__legacy'
                 ? $dir . '/' . TEACHING_LEGACY_EN_FILE
@@ -133,11 +144,36 @@ function teaching_reader_html(string $townDir, string $lang): string {
             }
             $html = teaching_sanitize_html((string)@file_get_contents($file));
             if (teaching_has_content($html)) {
-                return $html;
+                return [
+                    'html'    => $html,
+                    'lang'    => $code === '__legacy' ? 'en' : $code,
+                    'updated' => (int)@filemtime($file),
+                ];
             }
         }
     }
-    return '';
+    return ['html' => '', 'lang' => '', 'updated' => 0];
+}
+
+/**
+ * Changes whenever any teaching file a reader of this town could be shown is
+ * saved or removed (size + time of each, no file is read). The app's offline
+ * copy of /lering/lering.php is fetched again when it changes.
+ */
+function teaching_stamp(string $townDir): string {
+    $parts = [];
+    $names = array_merge(array_values(TEACHING_FILES), [TEACHING_LEGACY_EN_FILE]);
+    foreach (teaching_reader_dirs($townDir) as $dir) {
+        foreach ($names as $name) {
+            $file = $dir . '/' . $name;
+            clearstatcache(true, $file);
+            if (is_file($file)) {
+                $parts[] = $name . ':' . (int)@filesize($file) . ':' . (int)@filemtime($file);
+            }
+        }
+        $parts[] = '|';
+    }
+    return substr(sha1(implode(',', $parts)), 0, 12);
 }
 
 /**
@@ -182,7 +218,7 @@ const TEACHING_ALLOWED_TAGS = [
     'th' => ['colspan', 'rowspan'], 'td' => ['colspan', 'rowspan'], 'caption' => []
 ];
 
-// Classes with meaning on the welcome page (Bible verse blocks)
+// Classes with meaning on the reader's page (Bible verse blocks)
 const TEACHING_ALLOWED_CLASSES = ['vref', 'vtxt', 'verse-ref', 'verse-text'];
 
 const TEACHING_ALLOWED_CSS = [

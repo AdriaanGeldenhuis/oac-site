@@ -3,8 +3,8 @@
    The page, its toolbars, buttons and dialogs wear admin.css's "Light
    Through Glass"; the editor itself does not:
    Heading / paragraph / verse styles MUST stay in step with the
-   .wc-teaching-content rules in /welcome/css/welcome.css, so what the
-   elder sees here is what members see on the welcome page.
+   .lr-content rules in /lering/css/lering.css, so what the elder sees
+   here is what members see on the Lering page.
    ===================================================================== */
 
 /* ===== The editor's own names, mapped onto admin.css's tokens ===== */
@@ -20,7 +20,7 @@
     --success: rgb(var(--ok-rgb));
     --error: rgb(var(--danger-rgb));
     --warning: rgb(var(--amber-rgb));
-    --editor-bg: #171514;         /* welcome teaching card */
+    --editor-bg: #171514;         /* Lering teaching card */
 }
 
 [data-theme="light"] .admin-body {
@@ -310,17 +310,17 @@
 }
 
 /* =====================================================================
-   TEACHING CONTENT - a mirror of `.wc-teaching-content` in
-   /welcome/css/welcome.css, so the elder sees exactly what members see.
+   TEACHING CONTENT - a mirror of `.lr-content` in
+   /lering/css/lering.css, so the elder sees exactly what members see.
    Change both together. Colours come from the --c-* tokens below, which
-   hold the welcome page's values for each theme.
+   hold the Lering page's values for each theme.
    ===================================================================== */
 .editor {
-    --c-text: #f5ebe6;            /* welcome --text-primary            */
-    --c-text-2: #c8c0ba;          /* welcome --text-secondary          */
-    --c-strong: #fae8e0;          /* welcome --peach-light             */
-    --c-gold: #e8b4a8;            /* welcome --rose-gold               */
-    --c-gold-dark: #c99485;       /* welcome --rose-gold-dark          */
+    --c-text: #f5ebe6;            /* lering --text-primary            */
+    --c-text-2: #c8c0ba;          /* lering --text-secondary          */
+    --c-strong: #fae8e0;          /* lering --peach-light             */
+    --c-gold: #e8b4a8;            /* lering --rose-gold               */
+    --c-gold-dark: #c99485;       /* lering --rose-gold-dark          */
     --c-heading: #e8b4a8;
     --c-link: #e8b4a8;
     --c-quote-line: #e8b4a8;
@@ -330,10 +330,10 @@
     --c-th: #e8b4a8;
     --c-th-bg: rgba(232, 180, 168, 0.06);
     --c-td: #f5ebe6;
-    --c-dark-ink: #f5ebe6;        /* welcome remaps dark ink to --text-primary */
+    --c-dark-ink: #f5ebe6;        /* lering remaps dark ink to --text-primary */
 }
 [data-theme="light"] .editor {
-    --c-text: #1f2937;            /* welcome forces p / li to #1f2937  */
+    --c-text: #1f2937;            /* lering forces p / li to #1f2937  */
     --c-text-2: #5a6474;
     --c-strong: #111827;
     --c-gold: #a47c38;
@@ -394,7 +394,7 @@
     font-weight: 500;
     color: var(--c-strong);
 }
-/* Bold inside a coloured run keeps that colour (same rule on the welcome page) */
+/* Bold inside a coloured run keeps that colour (same rule on the Lering page) */
 .editor [style^="color"] strong, .editor [style^="color"] b,
 .editor [style*="; color"] strong, .editor [style*="; color"] b,
 .editor [style*=";color"] strong, .editor [style*=";color"] b,
@@ -478,7 +478,7 @@
     font-style: normal;
 }
 
-/* ===== INLINE COLOR SAFETY (same remaps as the welcome page) ===== */
+/* ===== INLINE COLOR SAFETY (same remaps as the Lering page) ===== */
 /* Dark ink -> normal text on the dark theme */
 .editor [style*="#1a1816" i],
 .editor [style*="rgb(26, 24, 22)"],
